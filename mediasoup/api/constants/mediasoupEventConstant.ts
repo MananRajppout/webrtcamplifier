@@ -1,0 +1,13 @@
+export const JOIN_ROOM = "event:join-room";
+export const NEW_PARTCIPANT_JOIN = "event:new-partcipant-join";
+export const DISCONNECT = "disconnect";
+export const PARTICIPANTS_DISCONNECT = "event:partipant-disconnect";
+export const CREATE_WEBRTC_TRANSPORT = "event:create-webrtc-transport";
+export const CONNECT_TRANSPORT = "event:transport-connect";
+export const PRODUCE_TRANSPORT = "event:transport-produce";
+export const GET_PRODUCERS = "event:get-producer";
+export const TRANSPORT_RECV_CONNECT = "event:transport-recv-connect";
+export const CONSUME = "event:consume";
+export const CONSUME_RESUME = "event:consumer-resume";
+export const NEW_PRODUCER = "event:new_producer";
+export const MUTE_UNMUTE = "event:mute_unmute";

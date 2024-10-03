@@ -1,0 +1,30 @@
+FROM node
+RUN apt-get update && \
+   apt-get install -y build-essential pip net-tools iputils-ping iproute2 curl
+
+WORKDIR /app/backend
+COPY . /app/backend/
+
+RUN npm install
+
+
+ENV REDIS_URL=rediss://default:AVNS_OYEAN6Ks8_JfywhEEji@caching-3f0f6733-wi223488-e007.c.aivencloud.com:19558
+ENV REDIS_REPLICA_URL=rediss://default:AVNS_OYEAN6Ks8_JfywhEEji@replica-caching-3f0f6733-wi223488-e007.c.aivencloud.com:19558
+ENV REDIS_HOST=caching-3f0f6733-wi223488-e007.c.aivencloud.com
+ENV REDIS_PORT=19558
+ENV REDIS_USER=default
+ENV REDIS_PASS=AVNS_OYEAN6Ks8_JfywhEEji
+
+ENV MEDIASOUP_PORT=4000
+ENV CHAT_PORT=4001
+
+# ENV PUBLIC_IP=127.0.0.1
+# ENV MIN_PORT=2000
+# ENV MAX_PORT=2020
+
+EXPOSE 4000
+EXPOSE 4001
+EXPOSE 2000-2020
+EXPOSE 10000-10900
+
+CMD [ "npm","run","start" ]
