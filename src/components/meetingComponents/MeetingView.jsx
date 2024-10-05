@@ -27,7 +27,7 @@ const MeetingView = ({
   iframeLink,meetingDetails
 }) => {
   const handleCopyParticipantLink = () => {
-    const meetingLink = `https://amplifier.hgsingalong.com/join-meeting/${meetingDetails._id}`;
+    const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
    
     const textToCopy = `Meeting Link- ${meetingLink}`;
 
@@ -42,7 +42,7 @@ const MeetingView = ({
   };
 
   const handleCopyObserverLink = () => {
-    const meetingLink = `https://amplifier.hgsingalong.com/join-meeting-observer/${meetingDetails._id}`;
+    const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meetingDetails._id}`;
     const meetingPassword = `${meetingDetails.meetingPasscode}`;
     const textToCopy = `Meeting Link- ${meetingLink}\nMeeting Password - ${meetingPassword}`;
 

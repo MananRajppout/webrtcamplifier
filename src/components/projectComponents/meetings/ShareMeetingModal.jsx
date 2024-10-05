@@ -8,8 +8,8 @@ const ShareMeetingModal = ({ meeting, onClose }) => {
   const handleCopyInvite = () => {
     const inviteText =
       accessLevel === "Observer Access"
-        ? `Nancy Jones has just created a Project named ${meeting.name}. The project is now accessible to you as an observer.\n\nJoin Project\nhttps://amplify.us/j/${meeting._id}\nPasscode: ${meeting.meetingPasscode}\n\nOr\n\nCreate an account\nhttps://amplify.us/register`
-        : `Nancy Jones has invited you to a scheduled meeting for the project ${meeting.name}.\n\nTitle: Focus Group Meeting\nJoin Meeting\nhttps://amplify.us/j/${meeting._id}`;
+        ? `Nancy Jones has just created a Project named ${meeting.title}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting._id}\nPasscode: ${meeting.meetingPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
+        : `Nancy Jones has invited you to a scheduled meeting for the project ${meeting.title}.\n\nTitle: Focus Group Meeting\nJoin Meeting\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting._id}`;
 
     navigator.clipboard.writeText(inviteText);
     alert("Project invite copied to clipboard!");

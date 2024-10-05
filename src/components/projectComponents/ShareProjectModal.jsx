@@ -8,8 +8,8 @@ const ShareProjectModal = ({ project, onClose }) => {
   const handleCopyInvite = () => {
     const inviteText =
       accessLevel === "Observer Access"
-        ? `Nancy Jones has just created a Project named ${project.name}. The project is now accessible to you as an observer.\n\nJoin Project\nhttps://amplify.us/j/${project._id}\nPasscode: ${project.projectPasscode}\n\nOr\n\nCreate an account\nhttps://amplify.us/register`
-        : `Nancy Jones has invited you to a scheduled meeting for the project ${project.name}.\n\nTitle: Focus Group Meeting\nJoin Meeting\nhttps://amplify.us/j/${project._id}`;
+        ? `Nancy Jones has just created a Project named ${project.name}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/login\nPasscode: ${project.projectPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
+        : `Participant does not have access to the project.`;
 
     navigator.clipboard.writeText(inviteText);
     alert("Project invite copied to clipboard!");
