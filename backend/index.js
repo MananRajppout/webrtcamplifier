@@ -1,29 +1,34 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const session = require("express-session");
 const dotenv = require("dotenv");
-const mongoose = require("mongoose");
-const app = express();
-const http = require("http").createServer(app);
 const jwt = require("jsonwebtoken");
+const session = require("express-session");
+
 const cors = require("cors");
 const { Timestamp } = require("mongodb");
+const { default: mongoose } = require("mongoose");
+const app = express();
+const http = require("http").createServer(app);
 
 const io = require("socket.io")(http, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
-});
+    methods: ["GET", "POST"],
+  },
+);
 
 dotenv.config();
 app.use(
   cors({
-    origin: "*",
+    origin: [process.env.FRONTEND_BASE_URL,"https://new-amplify-fe-kj4c.vercel.app", "http://localhost:3000", "http://localhost:3001","http://localhost:5173" ],
   })
 );
 app.use(express.json());
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Import models
 const User = require("./src/api/models/userModelMessage.js");
@@ -48,6 +53,7 @@ require("./src/api/routes/moderatorInvitationRoute.js")(app);
 require("./src/api/routes/breakoutroomRoutes.js")(app);
 require("./src/api/routes/videoRoute.js")(app);
 require("./src/api/routes/companyRoute.js")(app);
+require("./src/api/routes/repositoryRoute.js")(app);
 
 mongoose.set("strictQuery", false);
 
@@ -75,8 +81,7 @@ app.use(
     saveUninitialized: true,
   })
 );
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ extended: true }));
+
 
 // Use the user routes
 // app.use("/api", uploadFileRoutes);

@@ -8,8 +8,9 @@ class ParticipantModel {
     isMicMute;
     isWebCamMute;
     isShareScreen;
+    role;
 
-    constructor(name,socketId,isWebCamMute=true,isMicMute=true,isShareScreen=false){
+    constructor(name,socketId,isWebCamMute=true,isMicMute=true,isShareScreen=false,role="participant"){
         this.name = name;
         this.socketId = socketId;
         this.audioTrack = null;
@@ -17,6 +18,7 @@ class ParticipantModel {
         this.isMicMute = isMicMute;
         this.isWebCamMute = isWebCamMute;
         this.isShareScreen = isShareScreen;
+        this.role = role;
     }
 
 

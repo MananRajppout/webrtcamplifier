@@ -45,7 +45,7 @@ const OngoingMeeting = () => {
 
 
   const { audioPermisson, cameraPermisson } = useCheckPermission();
-  const { handleJoin, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected);
+  const { handleJoin, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role);
 
 
 
@@ -171,10 +171,6 @@ const OngoingMeeting = () => {
 
 
   useEffect(() => {
-    // const extractedFullName = getFullNameFromQuery();
-    // const extractedRoomId = getRoomIdFromUrl();
-    // setFullName(extractedFullName);
-    // setRoomId(extractedRoomId);
 
     // Check if the page has already been reloaded
     const hasReloaded = localStorage.getItem("hasReloaded");
@@ -186,62 +182,63 @@ const OngoingMeeting = () => {
     }
   }, []);
 
-  // // Function to extract the 'fullName' from the URL
-  // const getFullNameFromQuery = () => {
 
-  //   if (typeof window !== "undefined") {
-
-
-  //     const params = new URLSearchParams(window.location.search);
-  //     return params.get("fullName") || "Guest";
-  //   }
-  //   return "Guest";
-  // };
-
-  // // Function to extract the roomId from the URL (e.g., '66f4fda28313630156cb7646')
-  // const getRoomIdFromUrl = () => {
-  //   if (typeof window !== "undefined") {
-  //     const urlPath = window.location.pathname;
-  //     const roomId = urlPath.split("/meeting/")[1]?.split("?")[0];
-  //     return roomId || "defaultRoomId"; // Default if no roomId found
-  //   }
-  //   return "defaultRoomId";
-  // };
 
   return (
-    <div className="md:block ">
+    <div className="md:block mt-5">
       <div
         className="rounded-md pb-10 h-[75vh] overflow-y-hidden"
         style={{ width: "100%", position: "relative" }}
       >
         <div className='section w-[100%] h-[70vh] overflow-hidden relative' onClick={handleClick}>
 
-          {/* sessions  */}
           <video ref={videoCanvasRef} style={{ display: "none" }}></video>
           <canvas ref={canvasRef} width={640} height={480} style={{ display: "none" }}></canvas>
 
+
           <div className={`flex flex-row h-[65vh] relative`}>
             <div className='flex flex-1 flex-col md:flex-row relative h-[65vh] '>
-
-              {/* videos  */}
+              {/* cards center  */}
               {
-                participantsRef.current && participantsRef.current.filter(participant => (participant.isWebCamMute == false || participant.isShareScreen == true)).length > 0 &&
-                <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-y-auto cursor-pointer  flex flex-row justify-end items-end md:!flex-col md:gap-0 w-[100vw] md:w-[16vw] xl:w-[17vw] ${participantsRef.current.length > 1 ? 'bg-[#3C3C3C]' : 'bg-white'}`}>
+                participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length == 0 &&
+                <>
                   {
-                    participantsRef.current.map((participant,index) => ({...participant,index})).filter(participant => (participant.isWebCamMute == false || participant.isShareScreen == true)).map((participant, index) => (
-                      <RenderParticipants key={participant.socketId} onClick={() => setSelected(index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} />
+                    participantsRef.current.length > 1 ?
+                      <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-center items-center  w-[100%] bg-[#3C3C3C]`}>
+                        {
+                          participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").map((participant, index) => (
+                            <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]}/>
+                          ))
+                        }
+                      </div>
+                      :
+                      <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-center items-center  w-[100%] bg-[#3C3C3C]`}>
+                        <h1 className='text-3xl font-semibold text-white z-10 select-none text-center'>{participantsRef.current[0]?.name}</h1>
+                      </div>
+                  }
+                </>
+              }
+
+              {/* card left  */}
+              {
+                participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length > 0 &&
+                <div className={`md:h-[65vh] h-[30vh] !p-2 relative overflow-y-auto cursor-pointer  flex flex-row justify-end items-end md:!flex-col md:gap-0 w-[100vw] md:w-[16vw] xl:w-[17vw] bg-[#3C3C3C]`}>
+                  {
+                    participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
+                      <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={false} stream={remoteVideoTracksRef.current[participant.socketId]}/>
                     ))
                   }
                 </div>
               }
 
+
               {/* audios  */}
-               {
+              {
                 participantsRef.current && participantsRef.current.length > 0 &&
                 <>
                   {
                     participantsRef.current.map((participant, index) => (
-                      <RenderParticipantsAudio  key={participant.socketId} {...participant} audiosElementRef={audiosElementRef} />
+                      <RenderParticipantsAudio key={participant.socketId} {...participant} audiosElementRef={audiosElementRef} />
                     ))
                   }
                 </>
@@ -251,17 +248,7 @@ const OngoingMeeting = () => {
                 {
 
                   participantsRef.current && participantsRef.current.length > 0 && participantsRef.current[selected] &&
-                  <div className={`w-full flex items-center justify-center ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} ${participantsRef.current.length > 1 ? 'bg-[#3C3C3C] text-white' : 'bg-white'}`} key={participantsRef.current[selected].socketId}>
-                    <div className={`absolute top-[50%] left-[50%]  -translate-x-[50%] -translate-y-[50%] ${(participantsRef.current[selected].isWebCamMute === true && participantsRef.current[selected].isShareScreen === false) ? 'block' : 'hidden'}`}>
-
-
-                      <h1 className='text-4xl font-semibold hello-text text-center select-none'>
-                        {`${participantsRef.current[selected].socketId == socketIdRef.current && participantsRef.current.length == 1 ? "Hello!" : ""} ${participantsRef.current[selected].name}`}
-                        
-                      </h1>
-
-
-                    </div>
+                  <div className={`w-full flex items-center justify-center ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} bg-[#3C3C3C] text-white`} key={participantsRef.current[selected].socketId}>
 
                     <div className={`${(participantsRef.current[selected].isWebCamMute == false || participantsRef.current[selected].isShareScreen === true) ? 'block' : 'hidden'} w-full h-full`}>
                       <video ref={selectedVideoRef} autoPlay className='w-full h-full object-cover'> </video>
@@ -271,16 +258,7 @@ const OngoingMeeting = () => {
 
                 {
                   participantsRef.current && participantsRef.current.length > 0 && !participantsRef.current[selected] &&
-                  <div className={`w-full  flex items-center justify-center ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} ${participantsRef.current.length > 1 ? 'bg-[#3C3C3C] text-white' : 'bg-white'}`} key={participantsRef.current[0].socketId}>
-                    <div className={`absolute top-[50%] left-[50%]  -translate-x-[50%] -translate-y-[50%] ${(participantsRef.current[0].isWebCamMute == true || participantsRef.current[0].isShareScreen == true) ? 'block' : 'hidden'}`}>
-                      <h1 className='text-4xl font-semibold hello-text text-center select-none'>
-
-                        {`${participantsRef.current[0].socketId == socketIdRef.current && participantsRef.current.length == 1 ? "Hello!" : ""} ${participantsRef.current[0].name}`}
-                        
-                      </h1>
-
-
-                    </div>
+                  <div className={`w-full  flex items-center justify-center ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} bg-[#3C3C3C] text-white`} key={participantsRef.current[0].socketId}>
                     <div className={`${(participantsRef.current[0].isWebCamMute == false || participantsRef.current[0].isShareScreen === true) ? 'block' : 'hidden'} w-full h-full`}>
                       <video ref={selectedVideoRef} autoPlay className='w-full h-full object-cover'> </video>
                     </div>
@@ -294,6 +272,13 @@ const OngoingMeeting = () => {
             </div>
 
           </div>
+
+
+
+
+
+
+
 
           {/* controlls */}
           {
@@ -324,7 +309,7 @@ const OngoingMeeting = () => {
                       <MdOutlineDeblur />
                     </button>
 
-               
+
 
                     <a href="/" className='p-2 title-notification-container px-4 text-2xl rounded-full bg-red-600 text-white relative' title='Disconnect'>
                       <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Disconnect</span>

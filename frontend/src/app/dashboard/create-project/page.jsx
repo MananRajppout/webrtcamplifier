@@ -10,7 +10,6 @@ import { HiOutlineMinus } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/context/GlobalContext";
 import Button from "@/components/shared/button";
-import { timeZone } from "@/constant/Index";
 
 const Page = () => {
   const router = useRouter();
@@ -46,14 +45,13 @@ const Page = () => {
       description: "",
       startDate: "",
       startTime: "",
-      timeZone: timeZone[0],
+      timeZone: "",
       duration: "",
       ongoing: false,
       enableBreakoutRoom: false,
       meetingPasscode: "",
     },
   });
-
 
   useEffect(() => {
     fetchContacts();
@@ -63,7 +61,7 @@ const Page = () => {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/get-all/contact/${user?._id}`
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/contact/${user?._id}`
       );
       if (!response.ok) {
         throw new Error(`Failed to fetch contacts: ${response.statusText}`);
@@ -107,11 +105,10 @@ const Page = () => {
       },
       status,
     };
-   
-    
+
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create/project`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/project`,
         updatedFormData
       );
 

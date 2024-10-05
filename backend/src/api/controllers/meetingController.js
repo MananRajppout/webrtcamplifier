@@ -39,7 +39,7 @@ const getAllMeetings = async (req, res) => {
       .skip(skip)
       .limit(limit);
       
-    // console.log('meetings', meetings)
+   
     // Count total documents matching the projectId
     const totalDocuments = await Meeting.countDocuments({ projectId: req.params.projectId  });
 
@@ -72,11 +72,10 @@ const getAllMeetings = async (req, res) => {
 //Verify moderator meeting passcode
 const verifyModeratorMeetingPasscode = async (req, res) => {
   const { meetingId, passcode } = req.body;
-  console.log(meetingId, passcode)
+
   try {
     const meeting = await Meeting.findById(meetingId);
-    console.log(meeting.meetingPasscode)
-    console.log(meeting.meetingPasscode === passcode)
+    
     if (!meeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }
@@ -91,9 +90,24 @@ const verifyModeratorMeetingPasscode = async (req, res) => {
   }
 };
 
+const getMeetingById = async(req, res) => {
+  const { meetingId } = req.params;
+  try {
+    const meeting = await Meeting.findById(meetingId).populate('moderator');
+    if (!meeting) {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+    res.status(200).json({message: "Meeting found", meetingDetails: meeting });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+  
+}
+
 
 module.exports = {
   createMeeting,
-  getAllMeetings, verifyModeratorMeetingPasscode
+  getAllMeetings, verifyModeratorMeetingPasscode,
+  getMeetingById
 
 };

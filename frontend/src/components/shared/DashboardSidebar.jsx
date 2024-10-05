@@ -12,6 +12,8 @@ import { FaUser } from "react-icons/fa";
 import { IoIosLogOut } from "react-icons/io";
 import LogoutModal from "../singleComponent/LogoutModal";
 import Link from "next/link";
+import { useGlobalContext } from "@/context/GlobalContext";
+import { useDashboardContext } from "@/context/DashboardContext";
 
 const DashboardSidebar = ({
   handleLogoutModalOpen,
@@ -19,7 +21,7 @@ const DashboardSidebar = ({
   user,
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+const { setViewProject } = useDashboardContext()
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const modalRef = useRef(null);
@@ -63,7 +65,9 @@ const DashboardSidebar = ({
             <Logo />
           </div>
           <div className=" flex-grow">
-            <Link href="/dashboard/project">
+            <Link href="/dashboard/project"
+            onClick={() => setViewProject(false)}
+            >
               <div className="flex justify-start items-center gap-3">
                 <FaListAlt className="text-base text-[#6A7E88]" />
                 <p className="text-base text-[#6A7E88] font-semibold">
@@ -112,7 +116,7 @@ const DashboardSidebar = ({
                   isModalOpen ? "flex" : "hidden"
                 }`}
               >
-                <Link href="/dashboard/my-profile">
+                <Link href={`/dashboard/my-profile/${user?._id}`}>
                   <div className="flex justify-start items-center gap-2 cursor-pointer">
                     <FaUser className="text-[#697e89] h-3 w-3" />
                     <p className="text-sm text-[#697e89]">My Profile</p>
@@ -205,7 +209,7 @@ const DashboardSidebar = ({
             </div>
             {isModalOpen && (
               <div className=" md:hidden absolute  bottom-20   -right-24 z-50 bg-white rounded-lg h-[90px] w-[125px] flex flex-col justify-center items-start px-3 gap-4">
-                <Link href="/dashboard/my-profile">
+                <Link href={`/dashboard/my-profile/${user?._id}`}>
                   <div className="flex justify-start items-center gap-2 cursor-pointer">
                     <FaUser className="text-[#697e89] h-3 w-3" />
                     <p className="text-sm text-[#697e89]">My Profile</p>

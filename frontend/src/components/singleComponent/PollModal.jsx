@@ -1,35 +1,30 @@
-import Button from "@/components/shared/button";
-import FormDropdownLabel from "@/components/shared/FormDropdownLabel";
-import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
-import InputField from "@/components/shared/InputField";
-import { useGlobalContext } from "@/context/GlobalContext";
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { FiMinus } from "react-icons/fi";
-import { GoPlus } from "react-icons/go";
-import { IoTrashSharp } from "react-icons/io5";
+import React, { useEffect, useState } from 'react';
+import HeadingBlue25px from '../shared/HeadingBlue25px';
+import InputField from '../shared/InputField';
+import { IoTrashSharp } from 'react-icons/io5';
+import { GoPlus } from 'react-icons/go';
+import FormDropdownLabel from '../shared/FormDropdownLabel';
+import { FiMinus } from 'react-icons/fi';
+import Button from '../shared/button';
 
-const AddPoolModal = ({ onClose, poolToEdit, project, fetchProjects }) => {
-  const { user } = useGlobalContext();
+const PollModal = ({ onClose, formData, setFormData, pollToEdit }) => {
   const [newPoll, setNewPoll] = useState({
-    pollName: "",
-    isActive: false,
+    name: '',
+    active: false,
     questions: [
       {
-        question: "",
-        type: "single",
-        answers: [{ answer: "" }, { answer: "" }],
+        question: '',
+        type: 'single',
+        answers: [{ answer: '' }, { answer: '' }],
       },
     ],
   });
 
   useEffect(() => {
-    if (poolToEdit) {
-      console.log("pollToEdit:", poolToEdit);
-      setNewPoll(poolToEdit);
+    if (pollToEdit) {
+      setNewPoll(pollToEdit);
     }
-  }, [poolToEdit]);
+  }, [pollToEdit]);
 
   const addQuestion = () => {
     setNewPoll({
@@ -37,9 +32,9 @@ const AddPoolModal = ({ onClose, poolToEdit, project, fetchProjects }) => {
       questions: [
         ...newPoll.questions,
         {
-          question: "",
-          type: "single",
-          answers: [{ answer: "" }, { answer: "" }],
+          question: '',
+          type: 'single',
+          answers: [{ answer: '' }, { answer: '' }],
         },
       ],
     });
@@ -68,7 +63,7 @@ const AddPoolModal = ({ onClose, poolToEdit, project, fetchProjects }) => {
 
   const addAnswer = (index) => {
     const updatedQuestions = newPoll.questions.map((q, i) =>
-      i === index ? { ...q, answers: [...q.answers, { answer: "" }] } : q
+      i === index ? { ...q, answers: [...q.answers, { answer: '' }] } : q
     );
     setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
@@ -87,70 +82,43 @@ const AddPoolModal = ({ onClose, poolToEdit, project, fetchProjects }) => {
     setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
-  const handleSave = async () => {
-    try {
-      const dataToSend = {
-        project: project._id,
-        createdBy: user._id,
-        pollName: newPoll.pollName,
-        isActive: newPoll.isActive,
-        questions: newPoll.questions,
-      };
-
-      console.log("data to send:", dataToSend);
-
-      if (poolToEdit) {
-        // If editing, send PUT request to update the poll
-        const response = await axios.put(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/update-poll/${poolToEdit._id}`,
-          dataToSend
-        );
-
-        if (response.status === 200) {
-          toast.success("Poll updated successfully");
-        }
-      } else {
-        // If adding a new poll, send POST request
-        const response = await axios.post(
-          "https://amplifybe-2.onrender.com/api/create/poll",
-          dataToSend
-        );
-
-        if (response.status === 201) {
-          toast.success("Poll created successfully");
-        }
-      }
-
-      fetchProjects(); // Refresh project data
-      onClose(); // Close the modal
-    } catch (error) {
-      console.error("Error saving the poll:", error);
-      toast.error("Error saving the poll");
+  const handleSave = () => {
+    let updatedPolls = [...formData.polls];
+    
+    if (pollToEdit) {
+      // Update existing poll
+      updatedPolls[pollToEdit.index] = newPoll;
+    } else {
+      // Add new poll
+      updatedPolls.push(newPoll);
     }
-  };
 
-  console.log("new poll", newPoll);
+    setFormData({
+      ...formData,
+      polls: updatedPolls,
+    });
+    onClose();
+  };
+  
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl h-[90%] overflow-y-scroll">
-        <HeadingBlue25px children={poolToEdit ? "Edit Poll" : "Add Poll"} />
+        <HeadingBlue25px children={pollToEdit ? "Edit Poll" : "Add Poll"} />
         <div className="pt-5">
           <InputField
-            label="Title"
+            label="Name"
             type="text"
-            value={newPoll.pollName}
-            onChange={(e) =>
-              setNewPoll({ ...newPoll, pollName: e.target.value })
-            }
+            value={newPoll.name}
+            onChange={(e) => setNewPoll({ ...newPoll, name: e.target.value })}
           />
         </div>
         <div className="flex items-center mt-2">
           <input
             type="checkbox"
-            checked={newPoll.isActive}
+            checked={newPoll.active}
             onChange={(e) =>
-              setNewPoll({ ...newPoll, isActive: e.target.checked })
+              setNewPoll({ ...newPoll, active: e.target.checked })
             }
           />
           <FormDropdownLabel children="Active" className="ml-2 " />
@@ -171,23 +139,23 @@ const AddPoolModal = ({ onClose, poolToEdit, project, fetchProjects }) => {
                 className="w-full mt-2 p-2 border-[0.5px] border-custom-dark-blue-1 bg-white rounded-xl"
                 value={question.question}
                 onChange={(e) =>
-                  updateQuestion(qIndex, "question", e.target.value)
+                  updateQuestion(qIndex, 'question', e.target.value)
                 }
               />
               <div className="flex items-center mt-2 pl-5">
                 <input
                   type="radio"
                   name={`type-${qIndex}`}
-                  checked={question.type === "single"}
-                  onChange={() => updateQuestion(qIndex, "type", "single")}
+                  checked={question.type === 'single'}
+                  onChange={() => updateQuestion(qIndex, 'type', 'single')}
                 />
                 <FormDropdownLabel children="Single Choice" className="ml-2" />
                 <input
                   type="radio"
                   name={`type-${qIndex}`}
                   className="ml-4"
-                  checked={question.type === "multiple"}
-                  onChange={() => updateQuestion(qIndex, "type", "multiple")}
+                  checked={question.type === 'multiple'}
+                  onChange={() => updateQuestion(qIndex, 'type', 'multiple')}
                 />
                 <FormDropdownLabel
                   children="Multiple Choice"
@@ -250,7 +218,7 @@ const AddPoolModal = ({ onClose, poolToEdit, project, fetchProjects }) => {
             <Button
               type="button"
               variant="save"
-              children={poolToEdit ? "Save" : "Add"}
+              children="Save Poll"
               className="px-5 py-1 rounded-xl"
               onClick={handleSave}
             />
@@ -261,4 +229,4 @@ const AddPoolModal = ({ onClose, poolToEdit, project, fetchProjects }) => {
   );
 };
 
-export default AddPoolModal;
+export default PollModal;

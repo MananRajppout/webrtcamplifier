@@ -1,54 +1,58 @@
-import React, { useEffect, useState } from 'react';
-import HeadingBlue25px from '../shared/HeadingBlue25px';
-import InputField from '../shared/InputField';
-import { IoTrashSharp } from 'react-icons/io5';
-import { GoPlus } from 'react-icons/go';
-import FormDropdownLabel from '../shared/FormDropdownLabel';
-import { FiMinus } from 'react-icons/fi';
-import Button from '../shared/button';
+import Button from "@/components/shared/button";
+import FormDropdownLabel from "@/components/shared/FormDropdownLabel";
+import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
+import InputField from "@/components/shared/InputField";
+import { useGlobalContext } from "@/context/GlobalContext";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { FiMinus } from "react-icons/fi";
+import { GoPlus } from "react-icons/go";
+import { IoTrashSharp } from "react-icons/io5";
 
-const PoolModal = ({ onClose, formData, setFormData, poolToEdit }) => {
-  const [newPool, setNewPool] = useState({
-    name: '',
-    active: false,
+const AddPollModal = ({ onClose, pollToEdit, project, setLocalProjectState, setPolls }) => {
+  const { user } = useGlobalContext();
+  const [newPoll, setNewPoll] = useState({
+    pollName: "",
+    isActive: false,
     questions: [
       {
-        question: '',
-        type: 'single',
-        answers: [{ answer: '' }, { answer: '' }],
+        question: "",
+        type: "single",
+        answers: [{ answer: "" }, { answer: "" }],
       },
     ],
   });
 
   useEffect(() => {
-    if (poolToEdit) {
-      setNewPool(poolToEdit);
+    if (pollToEdit) {
+      setNewPoll(pollToEdit);
     }
-  }, [poolToEdit]);
+  }, [pollToEdit]);
 
   const addQuestion = () => {
-    setNewPool({
-      ...newPool,
+    setNewPoll({
+      ...newPoll,
       questions: [
-        ...newPool.questions,
+        ...newPoll.questions,
         {
-          question: '',
-          type: 'single',
-          answers: [{ answer: '' }, { answer: '' }],
+          question: "",
+          type: "single",
+          answers: [{ answer: "" }, { answer: "" }],
         },
       ],
     });
   };
 
   const updateQuestion = (index, field, value) => {
-    const updatedQuestions = newPool.questions.map((q, i) =>
+    const updatedQuestions = newPoll.questions.map((q, i) =>
       i === index ? { ...q, [field]: value } : q
     );
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const updateAnswer = (qIndex, aIndex, value) => {
-    const updatedQuestions = newPool.questions.map((q, i) =>
+    const updatedQuestions = newPoll.questions.map((q, i) =>
       i === qIndex
         ? {
             ...q,
@@ -58,73 +62,100 @@ const PoolModal = ({ onClose, formData, setFormData, poolToEdit }) => {
           }
         : q
     );
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const addAnswer = (index) => {
-    const updatedQuestions = newPool.questions.map((q, i) =>
-      i === index ? { ...q, answers: [...q.answers, { answer: '' }] } : q
+    const updatedQuestions = newPoll.questions.map((q, i) =>
+      i === index ? { ...q, answers: [...q.answers, { answer: "" }] } : q
     );
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const removeAnswer = (qIndex, aIndex) => {
-    const updatedQuestions = newPool.questions.map((q, i) =>
+    const updatedQuestions = newPoll.questions.map((q, i) =>
       i === qIndex
         ? { ...q, answers: q.answers.filter((_, j) => j !== aIndex) }
         : q
     );
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const removeQuestion = (index) => {
-    const updatedQuestions = newPool.questions.filter((_, i) => i !== index);
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    const updatedQuestions = newPoll.questions.filter((_, i) => i !== index);
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
-  const handleSave = () => {
-    let updatedPolls = [...formData.polls];
-    
-    if (poolToEdit) {
-      // Update existing poll
-      updatedPolls[poolToEdit.index] = newPool;
-    } else {
-      // Add new poll
-      updatedPolls.push(newPool);
+  const handleSave = async () => {
+    try {
+      const dataToSend = {
+        project: project._id,
+        createdBy: user._id,
+        pollName: newPoll.pollName,
+        isActive: newPoll.isActive,
+        questions: newPoll.questions,
+      };
+
+      if (pollToEdit) {
+        // If editing, send PUT request to update the poll
+        const response = await axios.put(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-poll/${pollToEdit._id}`,
+          dataToSend
+        );
+
+        if (response.status === 200) {
+          setPolls(response.data.polls)
+          toast.success("Poll updated successfully");
+        }
+      } else {
+        // If adding a new poll, send POST request
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
+          dataToSend
+        );
+
+        console.log('response form addd poll', response.data)
+        if (response.status === 201) {
+          setPolls(response.data.polls)
+          toast.success("Poll created successfully");
+        }
+      }
+
+      
+            onClose(); // Close the modal
+    } catch (error) {
+      console.error("Error saving the poll:", error);
+      toast.error("Error saving the poll");
     }
-
-    setFormData({
-      ...formData,
-      polls: updatedPolls,
-    });
-    onClose();
   };
-  
+
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl h-[90%] overflow-y-scroll">
-        <HeadingBlue25px children={poolToEdit ? "Edit Poll" : "Add Poll"} />
+        <HeadingBlue25px children={pollToEdit ? "Edit Poll" : "Add Poll"} />
         <div className="pt-5">
           <InputField
-            label="Name"
+            label="Title"
             type="text"
-            value={newPool.name}
-            onChange={(e) => setNewPool({ ...newPool, name: e.target.value })}
+            value={newPoll.pollName}
+            onChange={(e) =>
+              setNewPoll({ ...newPoll, pollName: e.target.value })
+            }
           />
         </div>
         <div className="flex items-center mt-2">
           <input
             type="checkbox"
-            checked={newPool.active}
+            checked={newPoll.isActive}
             onChange={(e) =>
-              setNewPool({ ...newPool, active: e.target.checked })
+              setNewPoll({ ...newPoll, isActive: e.target.checked })
             }
           />
           <FormDropdownLabel children="Active" className="ml-2 " />
         </div>
         <div className="bg-[#f3f3f3] -mx-6 p-6 mt-3">
-          {newPool.questions.map((question, qIndex) => (
+          {newPoll.questions.map((question, qIndex) => (
             <div key={qIndex} className="mt-4 ">
               <div className="flex justify-between items-center">
                 <FormDropdownLabel
@@ -139,23 +170,23 @@ const PoolModal = ({ onClose, formData, setFormData, poolToEdit }) => {
                 className="w-full mt-2 p-2 border-[0.5px] border-custom-dark-blue-1 bg-white rounded-xl"
                 value={question.question}
                 onChange={(e) =>
-                  updateQuestion(qIndex, 'question', e.target.value)
+                  updateQuestion(qIndex, "question", e.target.value)
                 }
               />
               <div className="flex items-center mt-2 pl-5">
                 <input
                   type="radio"
                   name={`type-${qIndex}`}
-                  checked={question.type === 'single'}
-                  onChange={() => updateQuestion(qIndex, 'type', 'single')}
+                  checked={question.type === "single"}
+                  onChange={() => updateQuestion(qIndex, "type", "single")}
                 />
                 <FormDropdownLabel children="Single Choice" className="ml-2" />
                 <input
                   type="radio"
                   name={`type-${qIndex}`}
                   className="ml-4"
-                  checked={question.type === 'multiple'}
-                  onChange={() => updateQuestion(qIndex, 'type', 'multiple')}
+                  checked={question.type === "multiple"}
+                  onChange={() => updateQuestion(qIndex, "type", "multiple")}
                 />
                 <FormDropdownLabel
                   children="Multiple Choice"
@@ -218,7 +249,7 @@ const PoolModal = ({ onClose, formData, setFormData, poolToEdit }) => {
             <Button
               type="button"
               variant="save"
-              children="Save Poll"
+              children={pollToEdit ? "Save" : "Add"}
               className="px-5 py-1 rounded-xl"
               onClick={handleSave}
             />
@@ -229,4 +260,4 @@ const PoolModal = ({ onClose, formData, setFormData, poolToEdit }) => {
   );
 };
 
-export default PoolModal;
+export default AddPollModal;

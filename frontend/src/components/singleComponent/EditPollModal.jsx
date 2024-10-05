@@ -8,16 +8,18 @@ import FormDropdownLabel from "../shared/FormDropdownLabel";
 import { FiMinus } from "react-icons/fi";
 import Button from "../shared/button";
 
-const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
-  const [pool, setPool] = useState(null); // State to store fetched pool data
+const EditPollModal = ({ onClose, formData, setFormData, polls }) => {
+  const [poll, setPoll] = useState(null); // State to store fetched poll data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPollById = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/get/poll-id/${pools}`);
-        setPool(response.data);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get/poll-id/${polls}`
+        );
+        setPoll(response.data);
         setLoading(false);
       } catch (error) {
         setError(error.message);
@@ -26,9 +28,9 @@ const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
     };
 
     fetchPollById();
-  }, [pools]);
+  }, [polls]);
 
-  const [newPool, setNewPool] = useState({
+  const [newPoll, setNewPoll] = useState({
     name: "",
     active: false,
     questions: [
@@ -41,20 +43,20 @@ const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
   });
 
   useEffect(() => {
-    if (pool) {
-      setNewPool({
-        name: pool.pollName,
-        active: pool.isActive,
-        questions: pool.questions,
+    if (poll) {
+      setNewPoll({
+        name: poll.pollName,
+        active: poll.isActive,
+        questions: poll.questions,
       });
     }
-  }, [pool]);
+  }, [poll]);
 
   const addQuestion = () => {
-    setNewPool({
-      ...newPool,
+    setNewPoll({
+      ...newPoll,
       questions: [
-        ...newPool.questions,
+        ...newPoll.questions,
         {
           question: "",
           type: "single",
@@ -65,14 +67,14 @@ const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
   };
 
   const updateQuestion = (index, field, value) => {
-    const updatedQuestions = newPool.questions.map((q, i) =>
+    const updatedQuestions = newPoll.questions.map((q, i) =>
       i === index ? { ...q, [field]: value } : q
     );
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const updateAnswer = (qIndex, aIndex, value) => {
-    const updatedQuestions = newPool.questions.map((q, i) =>
+    const updatedQuestions = newPoll.questions.map((q, i) =>
       i === qIndex
         ? {
             ...q,
@@ -82,49 +84,49 @@ const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
           }
         : q
     );
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const addAnswer = (index) => {
-    const updatedQuestions = newPool.questions.map((q, i) =>
+    const updatedQuestions = newPoll.questions.map((q, i) =>
       i === index ? { ...q, answers: [...q.answers, { answer: "" }] } : q
     );
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const removeAnswer = (qIndex, aIndex) => {
-    const updatedQuestions = newPool.questions.map((q, i) =>
+    const updatedQuestions = newPoll.questions.map((q, i) =>
       i === qIndex
         ? { ...q, answers: q.answers.filter((_, j) => j !== aIndex) }
         : q
     );
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const removeQuestion = (index) => {
-    const updatedQuestions = newPool.questions.filter((_, i) => i !== index);
-    setNewPool({ ...newPool, questions: updatedQuestions });
+    const updatedQuestions = newPoll.questions.filter((_, i) => i !== index);
+    setNewPoll({ ...newPoll, questions: updatedQuestions });
   };
 
   const handleSave = async () => {
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/update-poll/${pools}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-poll/${polls}`,
         {
-          pollName: newPool.name,
-          isActive: newPool.active,
-          questions: newPool.questions,
+          pollName: newPoll.name,
+          isActive: newPoll.active,
+          questions: newPoll.questions,
           choice: null, // or any default value if needed
         }
       );
-    //   const updatedPools = formData.pools
-    //     ? formData.pools.map((p) => (p._id === pools ? response.data : p))
-    //     : [response.data];
+      //   const updatedPolls = formData.polls
+      //     ? formData.polls.map((p) => (p._id === polls ? response.data : p))
+      //     : [response.data];
 
-    //   setFormData({
-    //     ...formData,
-    //     pools: updatedPools,
-    //   });
+      //   setFormData({
+      //     ...formData,
+      //     polls: updatedPolls,
+      //   });
 
       onClose(); // Close the modal after successful save
     } catch (error) {
@@ -143,23 +145,27 @@ const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
           <InputField
             label="Name"
             type="text"
-            value={newPool.name}
-            onChange={(e) => setNewPool({ ...newPool, name: e.target.value })}
+            value={newPoll.name}
+            onChange={(e) => setNewPoll({ ...newPoll, name: e.target.value })}
           />
         </div>
         <div className="flex items-center mt-2">
           <input
             type="checkbox"
-            checked={newPool.active}
-            onChange={(e) => setNewPool({ ...newPool, active: e.target.checked })}
+            checked={newPoll.active}
+            onChange={(e) =>
+              setNewPoll({ ...newPoll, active: e.target.checked })
+            }
           />
           <FormDropdownLabel children="Active" className="ml-2" />
         </div>
         <div className="bg-[#f3f3f3] -mx-6 p-6 mt-3">
-          {newPool.questions.map((question, qIndex) => (
+          {newPoll.questions.map((question, qIndex) => (
             <div key={qIndex} className="mt-4">
               <div className="flex justify-between items-center">
-                <FormDropdownLabel children={`${qIndex + 1}. Type your question`} />
+                <FormDropdownLabel
+                  children={`${qIndex + 1}. Type your question`}
+                />
                 <IoTrashSharp
                   className="bg-custom-orange-1 text-white p-2 text-3xl rounded-xl cursor-pointer"
                   onClick={() => removeQuestion(qIndex)}
@@ -168,7 +174,9 @@ const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
               <textarea
                 className="w-full mt-2 p-2 border-[0.5px] border-custom-dark-blue-1 bg-white rounded-xl"
                 value={question.question}
-                onChange={(e) => updateQuestion(qIndex, "question", e.target.value)}
+                onChange={(e) =>
+                  updateQuestion(qIndex, "question", e.target.value)
+                }
               />
               <div className="flex items-center mt-2 pl-5">
                 <input
@@ -185,16 +193,24 @@ const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
                   checked={question.type === "multiple"}
                   onChange={() => updateQuestion(qIndex, "type", "multiple")}
                 />
-                <FormDropdownLabel children="Multiple Choice" className="ml-2" />
+                <FormDropdownLabel
+                  children="Multiple Choice"
+                  className="ml-2"
+                />
               </div>
               {question.answers.map((answer, aIndex) => (
-                <div key={aIndex} className="flex justify-between items-center mt-2 w-full">
+                <div
+                  key={aIndex}
+                  className="flex justify-between items-center mt-2 w-full"
+                >
                   <div className="flex-grow">
                     <InputField
                       label={`Answer ${aIndex + 1}`}
                       type="text"
                       value={answer.answer}
-                      onChange={(e) => updateAnswer(qIndex, aIndex, e.target.value)}
+                      onChange={(e) =>
+                        updateAnswer(qIndex, aIndex, e.target.value)
+                      }
                     />
                   </div>
                   <FiMinus
@@ -247,4 +263,4 @@ const EditPoolModal = ({ onClose, formData, setFormData, pools }) => {
   );
 };
 
-export default EditPoolModal;
+export default EditPollModal;

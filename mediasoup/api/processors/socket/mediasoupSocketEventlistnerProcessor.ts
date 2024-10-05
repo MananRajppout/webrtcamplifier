@@ -31,11 +31,12 @@ class createMediasoupListener {
         const connection = this._io;
         connection.on('connection', (socket) => {
             console.log('user connect ', socket.id);
-            socket.on(JOIN_ROOM, async ({ room_id, username,isMicMute,isWebCamMute }, callback) => {
+            socket.on(JOIN_ROOM, async ({ room_id, username,isMicMute,isWebCamMute,role = "participant"  }, callback) => {
                 socket.join(room_id);
                 const router = await this.createRoom(room_id, socket.id);
                 const isAdmin = rooms.get(room_id) ? false : true;
-                const newPeer: PeerService = new PeerService(socket.id, isAdmin, username, room_id,isWebCamMute,isMicMute);
+                const newPeer: PeerService = new PeerService(socket.id, isAdmin, username, room_id,isWebCamMute,isMicMute,false,role);
+
                 peers.set(socket.id, newPeer);
                 const rtpCapabilities: mediasoup.types.RtpCapabilities = router.rtpCapabilities;
                 
@@ -51,7 +52,7 @@ class createMediasoupListener {
                 console.log(rtpCapabilities,participants,socket.id)
                 callback(socket.id, rtpCapabilities, participants);
                 // connection.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute });
-                socket.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute });
+                socket.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute,role });
             });
 
 

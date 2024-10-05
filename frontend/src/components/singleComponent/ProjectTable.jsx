@@ -9,22 +9,23 @@ import { RiPencilFill } from "react-icons/ri";
 import ViewProject from "./ViewProject";
 import ShareProjectModal from "../projectComponents/ShareProjectModal";
 import Button from "../shared/button";
+import { useDashboardContext } from "@/context/DashboardContext";
 
-const ProjectTable = ({ projects, setProjects, fetchProjects, user }) => {
+const ProjectTable = ({ projects,  fetchProjects, user }) => {
+  const { viewProject, setViewProject } = useDashboardContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [selectedProject, setSelectedProject] = useState(null);
-  const [viewProject, setViewProject] = useState(false);
+ 
   const [isShareProjectModalOpen, setIsShareProjectModalOpen] = useState(false);
   const modalRef = useRef();
 
-  console.log("isShareProjectModalOpen", isShareProjectModalOpen);
 
   const getRole = (project) => {
-    if (project.createdBy === user._id) {
+    if (project.createdBy === user?._id) {
       return "Admin";
     } else {
-      const person = project?.people?.find((p) => p.userId === user._id);
+      const person = project?.people?.find((p) => p.userId === user?._id);
       return person ? person.role : "No Role";
     }
   };
@@ -64,24 +65,19 @@ const ProjectTable = ({ projects, setProjects, fetchProjects, user }) => {
   const handleAction = (status, project) => {
     switch (status) {
       case "Draft":
-        // Redirect to edit page or open edit modal
-        // Implement edit logic here
+        
         break;
       case "Active":
-        // Continue project (perhaps redirect to the project page)
-        // Implement continue logic here
+        
         break;
       case "Complete":
-        // Close project
-        // Implement close logic here
+        
         break;
       case "Inactive":
-        // Reactivate project
-        // Implement reactivate logic here
+        
         break;
       case "Closed":
-        // Archive project
-        // Implement archive logic here
+        
         break;
       default:
     }

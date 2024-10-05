@@ -24,13 +24,13 @@ const Page = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/get-all/project/${userId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/project/${userId}`,
         {
           params: { page, limit: 10 },
         }
       );
       setProjects(response.data.projects);
-      console.log('project data set using fetchProjects', response.data.projects)
+     
       setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -127,11 +127,11 @@ const Page = () => {
 
       <div className="flex-grow mx-auto w-full">
         {loading ? (
-          <p>Loading...</p>
+          <p className="text-center pt-20 font-bold text-5xl text-custom-orange-1">Loading...</p>
         ) : projects && projects.length > 0 ? (
           <ProjectTable
             projects={projects}
-            setProjects={setProjects}
+          
             fetchProjects={fetchProjects}
             user={user}
           />

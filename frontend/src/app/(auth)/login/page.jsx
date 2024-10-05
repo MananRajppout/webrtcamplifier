@@ -22,6 +22,7 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,9 +34,11 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+   
     try {
+      setIsLoading(true);
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/signin`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/signin`,
         {
           email: formData.email,
           password: formData.password,
@@ -49,9 +52,10 @@ const Login = () => {
       router.push(`/dashboard/my-profile/${response.data._id}`);
       // Handle successful sign-in (e.g., redirect to dashboard, store token, etc.)
     } catch (error) {
-      
-      toast.error(`${error.response.data.message}`)
+      toast.error(`${error.response.data.message}`);
       setError(`${error.response.data.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -122,9 +126,13 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-custom-orange-1 text-white font-semibold py-2 rounded-lg hover:bg-orange-600"
+              // className={`${isLoading ? 'bg-gray-600' : ''}w-full bg-custom-orange-1 text-white font-semibold py-2 rounded-lg hover:bg-orange-600`}
+              disabled={isLoading}
+              className={`w-full text-white font-semibold py-2 rounded-lg ${
+                isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-custom-orange-1 hover:bg-orange-600'
+              }`}
             >
-              Login
+              { isLoading ? 'Loading...' : 'Login' }
             </button>
           </form>
           <p className="mt-4 text-center">

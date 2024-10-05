@@ -32,7 +32,7 @@ let params = {
 
 
 
-const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected) => {
+const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role) => {
   const [socketId, setSocketId] = useState(null);
   const [, forceRender] = useState(false);
 
@@ -60,6 +60,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
   const socketIdRef = useRef(null);
   const usermediaRef = useRef(null);
   const remoteVideoTracksRef = useRef({});
+  const handleJoinCallAlreadyExist = useRef(false);
 
 
 
@@ -156,12 +157,12 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
             delete remoteVideoTracksRef.current[socketId];
           }
           remoteVideoTracksRef.current[socketId] = track;
-          if(videosElementsRef.current[socketId]){
-            videosElementsRef.current[socketId].srcObject = new MediaStream([track])
-            videosElementsRef.current[socketId].play().catch(error => {
-              console.error('Error attempting to play the media:', error);
-            });
-          }
+          // if(videosElementsRef.current[socketId]){
+          //   videosElementsRef.current[socketId].srcObject = new MediaStream([track])
+          //   videosElementsRef.current[socketId].play().catch(error => {
+          //     console.error('Error attempting to play the media:', error);
+          //   });
+          // }
           
         }
       }
@@ -315,8 +316,14 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
     // functions
     const handleJoin = useCallback(async () => {
+      
 
-      socketRef.current?.emit(JOIN_ROOM, { room_id, username,isMicMute:isMicMuteRef.current,isWebCamMute:isWebCamMuteRef.current }, async (socketId, rtpCapabilities, participants) => {
+      if(handleJoinCallAlreadyExist.current){
+        return
+      }
+
+      handleJoinCallAlreadyExist.current = true;
+      socketRef.current?.emit(JOIN_ROOM, { room_id, username,isMicMute:isMicMuteRef.current,isWebCamMute:isWebCamMuteRef.current,role }, async (socketId, rtpCapabilities, participants) => {
         setSocketId(socketId);
         socketIdRef.current = socketId;
         rtpCapabilitiesRef.current = rtpCapabilities;
@@ -366,7 +373,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         }
 
         //add own self in  participants
-        const newParticipant = new ParticipantModel(username, socketId,isWebCamMuteRef.current,isMicMuteRef.current, isScreenShareRef.current);
+        const newParticipant = new ParticipantModel(username, socketId,isWebCamMuteRef.current,isMicMuteRef.current, isScreenShareRef.current,role);
         newParticipant.audioTrack =  audioParamsRef.current;
         newParticipant.videoTrack =  videoParamsRef.current;
 
@@ -374,7 +381,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
         //add others participants
         participants.forEach(participant => {
-          const newPartcipant = new ParticipantModel(participant.username, participant.socketId,participant.isWebCamMute,participant.isMicMuteRef);
+          const newPartcipant = new ParticipantModel(participant.username, participant.socketId,participant.isWebCamMute,participant.isMicMuteRef,participant.isShareScreen,participant.role);
           participantsRef.current = [...participantsRef.current, newPartcipant];
         });
 
@@ -458,7 +465,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
           participant.isShareScreen = true;
           participant.isWebCamMute = true;
         }
-        socketRef.current?.emit(MUTE_UNMUTE,{value:false,type:'cam',socketId: socketIdRef.current});
+        socketRef.current?.emit(MUTE_UNMUTE,{value:true,type:'screen',socketId: socketIdRef.current});
         setSelected(participantIndex);
       }else{
 
@@ -467,8 +474,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         if( participant){
           participant.isShareScreen = false;
         }
-        socketRef.current?.emit(MUTE_UNMUTE,{value:true,type:'cam',socketId: socketIdRef.current});
-        setIsScreenShare
+        socketRef.current?.emit(MUTE_UNMUTE,{value:false,type:'screen',socketId: socketIdRef.current});
         setIsScreenShare(false)
       }
 
@@ -485,14 +491,14 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
     // events listners 
     useEffect(() => {
-      socketRef.current?.on(NEW_PARTCIPANT_JOIN, ({ socketId, username,isMicMute,isWebCamMute }) => {
+      socketRef.current?.on(NEW_PARTCIPANT_JOIN, ({ socketId, username,isMicMute,isWebCamMute,role }) => {
         const partcipantExist = participantsRef.current.find((participant) => participant.socketId == socketId);
         if (partcipantExist) return
 
 
 
 
-        const newParticipant = new ParticipantModel(username, socketId,isWebCamMute,isMicMute);
+        const newParticipant = new ParticipantModel(username, socketId,isWebCamMute,isMicMute,false,role);
 
         participantsRef.current = [...participantsRef.current, newParticipant];
         forceRender((prev) => !prev);
@@ -518,18 +524,21 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         console.log(value,type,socketId)
         const participant = participantsRef.current.find((participant) => participant.socketId == socketId);
         const participantIndex = participantsRef.current.findIndex((participant) => participant.socketId == socketId);
-        const myIndex = participantsRef.current.findIndex((participant) => participant.socketId == socketIdRef.current);
+        // const myIndex = participantsRef.current.findIndex((participant) => participant.role == "Moderator");
 
 
         if(participant){
           if(type == 'mic'){
             participant.isMicMute = value;
-          }else{
+          }else if(type == 'cam'){
             participant.isWebCamMute = value;
-            if(!value){
+          }else{
+            if(value){
               setSelected(participantIndex);
+              participant.isShareScreen = value;
+              participant.isWebCamMute = true;
             }else{
-              setSelected(myIndex);
+              participant.isShareScreen = value;
             }
           }
         }

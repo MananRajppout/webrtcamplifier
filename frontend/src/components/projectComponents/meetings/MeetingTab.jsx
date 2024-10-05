@@ -47,32 +47,27 @@ const MeetingTab = ({ meetings }) => {
   };
 
   const handleShareMeeting = (meeting) => {
-    console.log("share meeting", meeting);
     setSelectedMeeting(meeting);
     setIsShareMeetingModalOpen(true);
     closeModal();
   };
 
   const handleView = (meeting) => {
-    console.log("view meeting", meeting);
     closeModal();
   };
 
   const handleJoinMeeting = async (meeting) => {
-    console.log("meeting", meeting);
     if (meeting.moderator.email === user.email) {
-      
       const fullName = `${user.firstName} ${user.lastName}`;
       const postingrole = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user-role`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
         { name: `${user.firstName} ${user.lastName}`, role: "Moderator" }
       );
       localStorage.setItem("RoletoSend", postingrole.data._id);
       sessionStorage.setItem("room", meeting._id);
       sessionStorage.setItem("username", meeting.name);
-      console.log("posting successs", postingrole);
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/live-meeting/start-meeting`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/start-meeting`,
         { user, meetingId: meeting._id }
       );
 
