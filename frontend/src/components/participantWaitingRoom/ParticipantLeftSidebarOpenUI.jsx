@@ -29,8 +29,6 @@ const ParticipantLeftSidebarOpenUI = () => {
   return (
     <>
       <div className="">
-      
-
         {/* Backroom chat and icon */}
         <div className="flex justify-start items-center gap-2 pb-4 pt-14 mx-4">
           <BsChatSquareFill className="text-custom-dark-blue-1" />
@@ -52,7 +50,7 @@ const ParticipantLeftSidebarOpenUI = () => {
           </div>
 
           {/* Participant chat */}
-          {participant.map((user) => (
+          {/* {participant.map((user) => (
             <div
               key={user.name}
               className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer"
@@ -62,7 +60,7 @@ const ParticipantLeftSidebarOpenUI = () => {
                 <p className="pb-1 font-bold">{user.name}</p>
               </div>
             </div>
-          ))}
+          ))} */}
         </div>
       </div>
     </>

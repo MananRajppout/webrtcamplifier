@@ -57,7 +57,7 @@ const MeetingView = ({
   };
 
   return (
-    <div className="px-5 sm:py-5  flex-col justify-between items-between h-full  bg-custom-meet-bg">
+    <div className="px-5 sm:py-5  flex-col justify-between items-between h-full  meeting_bg">
       <div className="md:h-1/5 h-auto py-2">
         {/* First ------ nav bar */}
         <div className="flex justify-between items-center pb-2">
@@ -90,20 +90,23 @@ const MeetingView = ({
         <div className="flex justify-between items-center pb-4 ">
           <HeadingBlue25px children={meetingDetails?.title} />
 
+         {
+          role === "Moderator" &&
           <div className="flex justify-between items-center gap-3">
-            <Button
-            children="Copy Link for Participants"
-            type="button"
-            onClick={handleCopyParticipantLink}
-            className=" rounded-lg text-custom-dark-blue-1 text-xs px-3 py-1 "
-            />
-            <Button
-            children="Copy Link for Observers"
-            type="button"
-            className=" rounded-lg text-custom-dark-blue-1 text-xs px-3 py-1 "
-            onClick={handleCopyObserverLink}
-            />
-          </div>
+          <Button
+          children="Copy Link for Participants"
+          type="button"
+          onClick={handleCopyParticipantLink}
+          className=" rounded-lg text-custom-dark-blue-1 text-xs px-3 py-1 "
+          />
+          <Button
+          children="Copy Link for Observers"
+          type="button"
+          className=" rounded-lg text-custom-dark-blue-1 text-xs px-3 py-1 "
+          onClick={handleCopyObserverLink}
+          />
+        </div>
+         }
           {/* <Button
             children="Leave"
             type="submit"
