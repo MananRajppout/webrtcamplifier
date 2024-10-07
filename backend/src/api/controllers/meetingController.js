@@ -104,10 +104,23 @@ const getMeetingById = async(req, res) => {
   
 }
 
+const deleteMeeting = async(req, res) => {
+  const { meetingId} = req.params;
+  try {
+    const meeting = await Meeting.deleteOne({ _id: meetingId });
+    if (!meeting) {
+      return res.status(404).json({message: "Meeting Not Found"})
+    }
+    res.status(200).json({message: "Meeting successfully deleted", meeting });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
 
 module.exports = {
   createMeeting,
   getAllMeetings, verifyModeratorMeetingPasscode,
-  getMeetingById
+  getMeetingById, deleteMeeting
 
 };

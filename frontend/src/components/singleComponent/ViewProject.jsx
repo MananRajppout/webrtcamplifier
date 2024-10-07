@@ -182,7 +182,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   useEffect(() => {
     fetchMeetings();
     fetchPolls();
-    fetchRepositories(localProjectState._id)
+    fetchRepositories(localProjectState?._id)
   }, [localProjectState]);
 
   const handleAddMeetingModal = () => {

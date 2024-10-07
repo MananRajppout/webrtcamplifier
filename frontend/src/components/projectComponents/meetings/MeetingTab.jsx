@@ -8,8 +8,10 @@ import { BsFillEnvelopeAtFill, BsThreeDotsVertical } from "react-icons/bs";
 import { FaShareAlt, FaUser } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import ShareMeetingModal from "./ShareMeetingModal";
+import toast from "react-hot-toast";
 
 const MeetingTab = ({ meetings }) => {
+  const [localMeetingState, setLocalMeetingState]  = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
@@ -45,6 +47,11 @@ const MeetingTab = ({ meetings }) => {
   const closeModal = () => {
     setIsModalOpen(false);
   };
+
+  useEffect(() => {
+    // Update localMeetingState whenever meetings prop changes
+    setLocalMeetingState(meetings);
+  }, [meetings]);
 
   const handleShareMeeting = (meeting) => {
     setSelectedMeeting(meeting);
@@ -86,6 +93,36 @@ const MeetingTab = ({ meetings }) => {
     }
   };
 
+  const handleDeleteMeeting = async (meeting) => {
+    console.log('meeting', meeting)    
+    const isConfirmed = confirm("Are you sure you want to delete this meeting?");
+    
+    if (!isConfirmed) {
+      return; // If the user cancels, exit the function
+    }
+  
+    try {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-meeting/${meeting._id}`
+      );
+  
+      if (response.status === 200) {
+        console.log("Meeting deleted successfully");
+        toast.success(`${response.data.message}`)
+        // Update the meetings state by filtering out the deleted meeting
+        const updatedMeetings = localMeetingState.filter((m) => m._id !== meeting._id);
+        setIsModalOpen(false)
+        setLocalMeetingState(updatedMeetings);
+      } else {
+        console.error("Failed to delete meeting");
+      }
+    } catch (error) {
+      console.error("Error deleting meeting:", error);
+    }
+  };
+  
+      
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white shadow-md rounded-lg ">
@@ -100,7 +137,7 @@ const MeetingTab = ({ meetings }) => {
           </tr>
         </thead>
         <tbody>
-          {meetings?.map((meeting, index) => (
+          {localMeetingState?.map((meeting, index) => (
             <tr key={index} className="hover:bg-gray-100">
               <TableData>{meeting?.title}</TableData>
               {/*  {new Date(meeting.startDate).toLocaleDateString()}{" "}
@@ -163,7 +200,7 @@ const MeetingTab = ({ meetings }) => {
             </li>
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={closeModal}
+              onClick={()=>handleDeleteMeeting(selectedMeeting)}
             >
               <BsFillEnvelopeAtFill />
               <span>Delete</span>

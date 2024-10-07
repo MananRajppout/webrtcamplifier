@@ -5,4 +5,6 @@ module.exports = function (app) {
   app.get("/api/get-single-meeting/:meetingId", controller.getMeetingById);
   app.get("/api/get-all/meeting/:projectId", controller.getAllMeetings);
   app.post("/api/verify-meeting-passcode", controller.verifyModeratorMeetingPasscode);
+  app.delete("/api/delete-meeting/:meetingId", controller.deleteMeeting)
+
 };
