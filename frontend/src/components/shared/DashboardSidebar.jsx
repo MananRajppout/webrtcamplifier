@@ -33,23 +33,23 @@ const { setViewProject } = useDashboardContext()
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (modalRef.current && !modalRef.current.contains(event.target)) {
-  //       setIsModalOpen(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setIsModalOpen(false);
+      }
+    };
 
-  //   if (isModalOpen) {
-  //     document.addEventListener("mousedown", handleClickOutside);
-  //   } else {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   }
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
 
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   };
-  // }, [isModalOpen]);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]);
 
   return (
     <>
@@ -209,15 +209,17 @@ const { setViewProject } = useDashboardContext()
             </div>
             {isModalOpen && (
               <div className=" md:hidden absolute  bottom-20   -right-24 z-50 bg-white rounded-lg h-[90px] w-[125px] flex flex-col justify-center items-start px-3 gap-4">
-                <Link href={`/dashboard/my-profile/${user?._id}`}>
-                  <div className="flex justify-start items-center gap-2 cursor-pointer">
+                <Link href={`/dashboard/my-profile/${user?._id}`} >
+                  <div className="flex justify-start items-center gap-2 cursor-pointer" onClick={()=>{setIsModalOpen(false)}}>
                     <FaUser className="text-[#697e89] h-3 w-3" />
                     <p className="text-sm text-[#697e89]">My Profile</p>
                   </div>
                 </Link>
                 <div
                   className="flex justify-start items-center gap-2 cursor-pointer "
-                  onClick={(e) => handleLogoutModalOpen(e)}
+                  onClick={(e) => handleLogoutModalOpen(e)
+                    
+                  }
                 >
                   <IoIosLogOut className="text-[#697e89] h-3 w-3" />
                   <p className="text-sm text-[#697e89]">Logout</p>
