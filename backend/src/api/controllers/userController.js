@@ -91,8 +91,9 @@ const signup = async (req, res) => {
       termsAcceptedTime: new Date(), // Log the timestamp of the acceptance
     });
     // Save the new user
-    await newUser.save();
+    const userSavedData = await newUser.save();
 
+   
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
 
@@ -102,6 +103,19 @@ const signup = async (req, res) => {
       // Update all matching contacts to set isUser field to true
       await Contact.updateMany({ email }, { $set: { isUser: true } });
     }
+
+    const newContact = new Contact({
+      firstName,
+      lastName,
+      email,
+      companyName: "N/A",
+      roles: ["Moderator"],
+      createdBy: userSavedData._id,
+      isUser: true,
+    });
+
+    await newContact.save();
+
 
     // Respond with success message
     return res.status(200).json({

@@ -11,6 +11,7 @@ export function GlobalContextProvider({ children }) {
   const router = useRouter()
 
   const handleLogout = () => {
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     router.push('/login')
     localStorage.clear();
     setUser(null)
@@ -30,7 +31,7 @@ export function GlobalContextProvider({ children }) {
 
     
   if (loading) {
-    return null; // Return null or a loader component while loading
+    return null; 
   }
   
   const value = {
