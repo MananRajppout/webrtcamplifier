@@ -10,20 +10,23 @@ const { Timestamp } = require("mongodb");
 const { default: mongoose } = require("mongoose");
 const app = express();
 const http = require("http").createServer(app);
+const { Server } = require("socket.io");
 
-const io = require("socket.io")(http, {
+const io = new Server(http, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
+    credentials: true,
   },
-    methods: ["GET", "POST"],
-  },
-);
+});
+
+let participants = [];
+let moderators = [];
+
 
 dotenv.config();
 app.use(
   cors({
-    origin: [process.env.FRONTEND_BASE_URL,"https://new-amplify-fe-kj4c.vercel.app", "http://localhost:3000", "http://localhost:3001","http://localhost:5173" ],
+    origin: [process.env.FRONTEND_BASE_URL, "https://new-amplify-fe-kj4c.vercel.app", "http://localhost:3000", "http://localhost:3001", "http://localhost:5173"],
   })
 );
 app.use(express.json());
@@ -81,6 +84,53 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+io.on("connection", (socket) => {
+  console.log("A user connected", socket.id);
+
+  socket.on("register", ({ username, role }) => {
+    socket.username = username;
+    socket.role = role;
+
+    if (role === "moderator") {
+      moderators.push({ id: socket.id, username });
+    } else {
+      participants.push({ id: socket.id, username });
+    }
+
+    io.emit("moderators", moderators);
+  });
+
+  // Handle message sending
+  socket.on("message", (message) => {
+    if (socket.role === "moderator") {
+      io.emit("message", { ...message, role: "moderator", starred: true });
+    } else {
+      moderators.forEach((mod) => {
+        io.to(mod.id).emit("message", { ...message, role: "participant" });
+      });
+    }
+  });
+
+  socket.on("broadcast", (message) => {
+    io.emit("broadcast", { ...message, role: "moderator", broadcast: true });
+  });
+
+  // Handle disconnections
+  socket.on("disconnect", () => {
+    console.log(`${socket.username} disconnected`);
+
+    // Remove user from respective role list
+    if (socket.role === "moderator") {
+      moderators = moderators.filter((mod) => mod.id !== socket.id);
+    } else {
+      participants = participants.filter((part) => part.id !== socket.id);
+    }
+
+    io.emit("moderators", moderators);
+  });
+});
+
 
 
 // Use the user routes
