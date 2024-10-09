@@ -2,7 +2,7 @@ import React from 'react'
 
 const TableData = ({children}) => {
   const truncateFileName = (fileName) => {
-    if (fileName.length > 15) {
+    if (fileName?.length > 15) {
       return fileName.substring(0, 15) + '...';
     }
     return fileName;

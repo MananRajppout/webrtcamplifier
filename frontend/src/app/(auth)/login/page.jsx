@@ -34,9 +34,14 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-   
+
+    // if (!router.isReady) return;
+
+    
+    
     try {
       setIsLoading(true);
+      console.log('formData', formData);
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/signin`,
         {
@@ -44,12 +49,18 @@ const Login = () => {
           password: formData.password,
         }
       );
+      console.log('response', response);
       setUser(response.data);
-      localStorage.setItem("token", response.data.accessToken);
+      // Store the token in cookies
+      document.cookie = `token=${response.data.accessToken}; path=/; max-age=86400;`;
+
 
       localStorage.setItem("user", JSON.stringify(response.data));
 
-      router.push(`/dashboard/my-profile/${response.data._id}`);
+      const redirectUrl = router.query?.redirect || `/dashboard/my-profile/${response.data._id}`;
+        router.replace(redirectUrl);
+
+
       // Handle successful sign-in (e.g., redirect to dashboard, store token, etc.)
     } catch (error) {
       toast.error(`${error.response.data.message}`);

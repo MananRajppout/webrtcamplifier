@@ -120,7 +120,7 @@ const signin = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User Not found.", status: 404 });
     }
-
+    console.log('user:', user);
     var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
 
     if (!passwordIsValid) {

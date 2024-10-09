@@ -15,6 +15,7 @@ import NotificationModal from "@/components/singleComponent/NotificationModal";
 import HeadingParagaraph from "@/components/shared/HeadingParagaraph";
 import Link from "next/link";
 import Button from "@/components/shared/button";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const initialNotifications = [
   {
@@ -54,6 +55,8 @@ const Page = () => {
   const handlePasswordChangeClick = () => {
     setShowModal(true);
   };
+  const {user}= useGlobalContext()
+  console.log('Rendering profile page for user:', user);
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -101,36 +104,36 @@ const Page = () => {
     }
   };
 
-  useEffect(() => {
-    const checkToken = () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        router.push("/logout");
-      }
-    };
+  // useEffect(() => {
+  //   const checkToken = () => {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       router.push("/logout");
+  //     }
+  //   };
 
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/find-by-id`,
-          {
-            params: { id: id },
-          }
-        );
-        if (response.data.result) {
-          setUserData(response.data.result);
-        } else {
-          router.push("/register");
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        router.push("/register");
-      }
-    };
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/find-by-id`,
+  //         {
+  //           params: { id: id },
+  //         }
+  //       );
+  //       if (response.data.result) {
+  //         setUserData(response.data.result);
+  //       } else {
+  //         router.push("/register");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching user data:", error);
+  //       router.push("/register");
+  //     }
+  //   };
 
-    checkToken();
-    fetchUserData();
-  }, [id, router]);
+  //   checkToken();
+  //   fetchUserData();
+  // }, [id, router]);
 
   const unreadCount = notifications.filter(
     (notification) => !notification.read
@@ -207,9 +210,9 @@ const Page = () => {
               />
               <div className="flex-grow">
                 <h1 className="text-3xl font-semibold text-custom-dark-blue-1">
-                  {userData ? userData.firstName.toUpperCase() : "Loading..."}
+                  {user ? user.firstName.toUpperCase() : "Loading..."}
                 </h1>
-                <p>{userData ? userData.role.toUpperCase() : "Loading..."}</p>
+                <p>{user ? user.role.toUpperCase() : "Loading..."}</p>
               </div>
             </div>
             <div>
@@ -219,15 +222,15 @@ const Page = () => {
               <div className="space-y-7 pt-7">
                 <HeadingParagaraph
                   heading="First Name"
-                  paragraph={userData && userData.firstName.toUpperCase()}
+                  paragraph={user && user.firstName.toUpperCase()}
                 />
                 <HeadingParagaraph
                   heading="Last Name"
-                  paragraph={userData && userData.lastName.toUpperCase()}
+                  paragraph={user && user.lastName.toUpperCase()}
                 />
                 <HeadingParagaraph
                   heading="Email"
-                  paragraph={userData && userData.email}
+                  paragraph={user && user.email}
                 />
               </div>
             </div>
@@ -268,10 +271,10 @@ const Page = () => {
               />
               <div className="flex-grow items-center justify-center">
                 <h1 className="text-3xl md:text-3xl font-semibold text-center text-custom-teal">
-                  {userData ? userData.firstName.toUpperCase() : "Loading..."}
+                  {user ? user.firstName.toUpperCase() : "Loading..."}
                 </h1>
                 <p className="text-sm text-center text-gray-400">
-                  {userData ? userData.role.toUpperCase() : "Loading..."}
+                  {user ? user.role.toUpperCase() : "Loading..."}
                 </p>
               </div>
             </div>
@@ -283,15 +286,15 @@ const Page = () => {
               <div className="space-y-7 pt-7">
                 <HeadingParagaraph
                   heading="First Name"
-                  paragraph={userData && userData.firstName.toUpperCase()}
+                  paragraph={user && user.firstName.toUpperCase()}
                 />
                 <HeadingParagaraph
                   heading="Last Name"
-                  paragraph={userData && userData.lastName.toUpperCase()}
+                  paragraph={user && user.lastName.toUpperCase()}
                 />
                 <HeadingParagaraph
                   heading="Email"
-                  paragraph={userData && userData.email}
+                  paragraph={user && user.email}
                 />
               </div>
             </div>
