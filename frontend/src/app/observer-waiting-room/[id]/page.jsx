@@ -5,7 +5,7 @@ import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import Logo from "@/components/shared/Logo";
 import axios from "axios";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { FaVideo } from "react-icons/fa";
 import { IoLogOutSharp } from "react-icons/io5";
@@ -16,7 +16,7 @@ const page = () => {
   const router = useRouter();
   const fullName = searchParams.get("fullName");
   const userRole = searchParams.get("role");
-  const [meetingDetails, setMeetingDetails] = useState([])
+  const [meetingDetails, setMeetingDetails] = useState([]);
 
   const getMeetingDetails = async (meetingId) => {
     try {

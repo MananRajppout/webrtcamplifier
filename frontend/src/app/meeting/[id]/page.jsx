@@ -642,24 +642,6 @@ const page = () => {
           </>
         ) : userRole === "Observer" && isMeetingOngoing ? (
           <>
-            {/* <div className="h-full">
-              <LeftSidebar
-                users={users}
-                setUsers={setUsers}
-                role={role}
-                isWhiteBoardOpen={isWhiteBoardOpen}
-                setIsWhiteBoardOpen={setIsWhiteBoardOpen}
-                isRecordingOpen={isRecordingOpen}
-                setIsRecordingOpen={setIsRecordingOpen}
-                isBreakoutRoom={isBreakoutRoom}
-                setIsBreakoutRoom={setIsBreakoutRoom}
-                breakoutRooms={breakoutRooms}
-                setBreakoutRooms={setBreakoutRooms}
-                handleBreakoutRoomChange={handleBreakoutRoomChange}
-                selectedRoom={selectedRoom}
-                setSelectedRoom={setSelectedRoom}
-              />
-            </div> */}
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
               <MeetingView
                 role={userRole}
