@@ -32,7 +32,7 @@ const RenderParticipants = ({socketId,name,videosElementsRef,audiosElementRef,so
         return
       }
     }
-  },[socketId,socketIdRef.current,videoTrackRef.current,superForceRender])
+  },[socketId,socketIdRef.current,videoTrackRef.current,superForceRender]);
 
   return (
 

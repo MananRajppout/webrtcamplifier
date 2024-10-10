@@ -141,6 +141,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         if (params.kind == 'audio') {
           
           participantRef.audioTrack = track;
+          console.log(track,'track coming audio')
           
           if(audiosElementRef.current[socketId]){
             audiosElementRef.current[socketId].srcObject = new MediaStream([track])
@@ -151,7 +152,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         } else {
           participantRef.videoTrack = track;
 
-          console.log(track,'track coming')
+          console.log(track,'track coming video')
           
           if(remoteVideoTracksRef.current[socketId]){
             delete remoteVideoTracksRef.current[socketId];
@@ -358,6 +359,12 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         videoTrackRef.current = userMedia[0];
         audioTrackRef.current = userMedia[1];
 
+
+        if(remoteVideoTracksRef.current[socketId]){
+          delete remoteVideoTracksRef.current[socketId];
+        }
+        
+
         
 
         audioParamsRef.current = { track: audioTrackRef.current };
@@ -388,6 +395,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         createSendTransport();
         getProducers();
         forceRender((prev) => !prev);
+        setSuperForceRender(Math.random() * 1000);
 
       });
     }, [socketRef.current,isMicMuteRef.current,isWebCamMuteRef.current]);
