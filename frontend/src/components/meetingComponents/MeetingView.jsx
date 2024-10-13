@@ -4,7 +4,7 @@ import {
   FaVideo,
 } from "react-icons/fa";
 import HeadingBlue25px from "../shared/HeadingBlue25px";
-import {  IoLogOutSharp } from "react-icons/io5";
+import { IoLogOutSharp } from "react-icons/io5";
 import WhiteBoard from "./WhiteBoard";
 import OngoingMeeting from "./OngoingMeeting";
 import EndOFMeeting from "./EndOFMeeting";
@@ -24,11 +24,11 @@ const MeetingView = ({
   breakoutRooms,
   setBreakoutRooms,
   projectStatus,
-  iframeLink,meetingDetails
+  iframeLink, meetingDetails,
 }) => {
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
-   
+
     const textToCopy = `Meeting Link- ${meetingLink}`;
 
     navigator.clipboard.writeText(textToCopy)
@@ -90,23 +90,23 @@ const MeetingView = ({
         <div className="flex justify-between items-center pb-4 ">
           <HeadingBlue25px children={meetingDetails?.title} />
 
-         {
-          role === "Moderator" &&
-          <div className="flex justify-between items-center gap-3">
-          <Button
-          children="Copy Link for Participants"
-          type="button"
-          onClick={handleCopyParticipantLink}
-          className=" rounded-lg text-custom-dark-blue-1 text-xs px-3 py-1 "
-          />
-          <Button
-          children="Copy Link for Observers"
-          type="button"
-          className=" rounded-lg text-custom-dark-blue-1 text-xs px-3 py-1 "
-          onClick={handleCopyObserverLink}
-          />
-        </div>
-         }
+          {
+            role === "Moderator" &&
+            <div className="flex justify-between items-center gap-3">
+              <Button
+                children="Copy Link for Participants"
+                type="button"
+                onClick={handleCopyParticipantLink}
+                className=" rounded-lg text-custom-dark-blue-1 text-xs px-3 py-1 "
+              />
+              <Button
+                children="Copy Link for Observers"
+                type="button"
+                className=" rounded-lg text-custom-dark-blue-1 text-xs px-3 py-1 "
+                onClick={handleCopyObserverLink}
+              />
+            </div>
+          }
           {/* <Button
             children="Leave"
             type="submit"
@@ -118,9 +118,9 @@ const MeetingView = ({
       </div>
 
       {/*Third ---------- meeting stream */}
-      {meetingStatus  ? (
+      {meetingStatus ? (
         <>
-          {isRecordingOpen ? (
+          {/* {isRecordingOpen ? (
             <div className="flex-1 h-full">
               <EndOFMeeting role={role} />
             </div>
@@ -132,7 +132,23 @@ const MeetingView = ({
             <div className="flex-1 h-full">
               <OngoingMeeting users={users} iframeLink={iframeLink} role={role}/>
             </div>
-          )}
+          )} */}
+
+
+          
+            <div className={`flex-1 h-full ${isRecordingOpen ? 'block' : 'hidden'}`}>
+              <EndOFMeeting role={role} />
+            </div>
+         
+            <div className={`h-4/5 max-h-4/5 ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
+              <WhiteBoard role={role} users={users}/>
+            </div>
+
+            <div className={`flex-1 h-full ${!isRecordingOpen && !isWhiteBoardOpen ? 'block' : 'hidden'}`}>
+              <OngoingMeeting users={users} iframeLink={iframeLink} role={role} />
+            </div>
+
+
         </>
       ) : (
         <div className="flex-1 h-full">

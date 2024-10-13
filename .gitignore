@@ -23,8 +23,11 @@
 /mediasoup/yarn-debug.log.*
 /mediasoup/npm-debug.log
 /mediasoup/npm-debug.log.*
+/whiteboard-server/node_modules
+/whiteboard-server/package-lock.json
 
 # env 
 /frontend/.env.local
 /backend/.env
 /mediasoup/.env
+/whiteboard-server/.env

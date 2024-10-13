@@ -236,6 +236,7 @@ const LeftSidebar = ({
               removeParticipant={removeParticipant}
               isStreaming={isStreaming}
               setStartStreaming={setStartStreaming}
+              setIsWhiteBoardOpen={setIsWhiteBoardOpen}
             />
           ) : (
             <LeftSidebarCloseUi

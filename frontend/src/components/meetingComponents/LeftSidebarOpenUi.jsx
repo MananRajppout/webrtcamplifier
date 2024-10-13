@@ -48,7 +48,8 @@ const LeftSidebarOpenUi = ({
   meetingId,
   removeParticipant,
   isStreaming,
-  setStartStreaming
+  setStartStreaming,
+  setIsWhiteBoardOpen
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -249,6 +250,15 @@ const LeftSidebarOpenUi = ({
               }
               onClick={toggleRecordingButton}
             /> */}
+            
+              <Button
+               children="Whiteboard"
+               variant="meeting"
+               type="submit"
+               className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+               onClick={() => setIsWhiteBoardOpen(prev => !prev)}
+             />
+            
             {
               role === "Moderator" && !isStreaming && (
                 <Button
@@ -260,6 +270,8 @@ const LeftSidebarOpenUi = ({
                 />
               )
             }
+
+            
 
           </div>
 

@@ -33,7 +33,7 @@ const page = () => {
   const meetingStatus = "Ongoing";
   const projectStatus = "Open";
 
-  const [isWhiteBoardOpen, setIsWhiteBoardOpen] = useState(false);
+  const [isWhiteBoardOpen, setIsWhiteBoardOpen] = useState(true);
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isBreakoutRoom, setIsBreakoutRoom] = useState(false);
@@ -524,6 +524,8 @@ const page = () => {
     }
   };
 
+
+
   return (
     <>
       <div className="flex justify-between min-h-screen max-h-screen meeting_bg ">
@@ -542,7 +544,6 @@ const page = () => {
                 setUsers={setUsers}
                 role={userRole}
                 isWhiteBoardOpen={isWhiteBoardOpen}
-                setIsWhiteBoardOpen={setIsWhiteBoardOpen}
                 isRecordingOpen={isRecordingOpen}
                 setIsRecordingOpen={setIsRecordingOpen}
                 isBreakoutRoom={isBreakoutRoom}
@@ -557,6 +558,7 @@ const page = () => {
                 userName={fullName}
                 meetingId={params.id}
                 removeParticipant={removeParticipant}
+                setIsWhiteBoardOpen={setIsWhiteBoardOpen}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
