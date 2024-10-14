@@ -43,10 +43,11 @@ let myHeight = window.innerHeight;
 let myZoom = 1;
 let zoomPoint = { x: 0, y: 0 }
 let userId = null;
-const WhiteBoard = ({ role, users,isWhiteBoardOpen }) => {
+const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
   const params = useParams();
   const searchParams = useSearchParams();
   const roomId = params.id;
+  const role = searchParams.get("role");
 
 
   const [navActive, setNavActive] = useState(false);
@@ -417,7 +418,7 @@ const WhiteBoard = ({ role, users,isWhiteBoardOpen }) => {
         <div className='box' onMouseMove={() => onDraw()} ref={boxRef} onScroll={onScroll}>
 
 
-          <nav className='top_nav'>
+          <nav className={`top_nav ${role === "Observer" ? "!hidden" : ""}`}>
             <button
               id="rectangle"
               onClick={() => toolHandler("rectangle")}
@@ -466,7 +467,8 @@ const WhiteBoard = ({ role, users,isWhiteBoardOpen }) => {
           <canvas
             id="canvas"
             ref={canvasRef}
-            style={{overflow: 'auto'}}
+            style={{overflow: 'auto',pointerEvents: role === "Observer" ? "none" : "auto"}}
+            
           >
           </canvas>
         </div>

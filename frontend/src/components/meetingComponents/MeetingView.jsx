@@ -81,6 +81,16 @@ const MeetingView = ({
               variant={`${role !== "Moderator" ? "secondary" : "primary"}`}
               className={`text-white py-1 px-3 rounded-xl text-sm hidden md:flex`}
             />
+            {
+              role === "Observer" &&
+              <Button
+              children={isWhiteBoardOpen ? "Close Whiteboard" : "Open Whiteboard"}
+              type="button"
+              variant={`${role !== "Moderator" ? "secondary" : "primary"}`}
+              className={`text-white py-1 px-3 rounded-xl text-sm hidden md:flex`}
+              onClick={()=>setIsWhiteBoardOpen(prev => !prev)}
+            />
+            }
           </div>
           {/* logo */}
           <Logo />
