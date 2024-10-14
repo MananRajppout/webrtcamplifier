@@ -300,7 +300,6 @@ const page = () => {
     }
   };
 
-  console.log('meeting details', meetingDetails);
 
   const getWaitingList = async (meetingId) => {
     try {

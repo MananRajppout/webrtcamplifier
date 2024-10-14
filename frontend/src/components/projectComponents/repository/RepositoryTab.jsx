@@ -15,7 +15,6 @@ const RepositoryTab = ({
     try {
       const newFileName = prompt("Enter the new file name:");
       if (!newFileName) return;
-      console.log('id, newFileName', id, newFileName);
       const response = await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/rename-file/${id}`, {
         fileName: newFileName,
       });

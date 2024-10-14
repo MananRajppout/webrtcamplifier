@@ -21,7 +21,6 @@ const RenderParticipants = ({socketId,name,videosElementsRef,audiosElementRef,so
   },[stream])
 
   useEffect(() => {
-    console.log(videoRef.current && videoTrackRef.current,videoTrackRef.current,'ppppppp')
     if(socketIdRef.current == socketId){
       if(videoRef.current && displayTrackRef.current){
         videoRef.current.srcObject = new MediaStream([displayTrackRef.current])

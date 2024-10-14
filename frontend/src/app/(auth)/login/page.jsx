@@ -41,7 +41,6 @@ const Login = () => {
     
     try {
       setIsLoading(true);
-      console.log('formData', formData);
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/signin`,
         {
@@ -49,7 +48,6 @@ const Login = () => {
           password: formData.password,
         }
       );
-      console.log('response', response);
       setUser(response.data);
       // Store the token in cookies
       document.cookie = `token=${response.data.accessToken}; path=/; max-age=86400;`;

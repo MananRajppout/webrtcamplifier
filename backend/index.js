@@ -1,24 +1,33 @@
 const express = require("express");
-const path = require("path");
+const http = require("http");
+const setupSocket = require("./src/api/socket/socket.js");
+
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const session = require("express-session");
-
 const cors = require("cors");
 const { Timestamp } = require("mongodb");
 const { default: mongoose } = require("mongoose");
 const app = express();
-const http = require("http").createServer(app);
+const server = http.createServer(app);
 
-const io = require("socket.io")(http, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
-    methods: ["GET", "POST"],
-  },
-);
+const io = setupSocket(server);
+
+
+
+
+// const http = require("http").createServer(app);
+
+
+// const io = require("socket.io")(http, {
+//   cors: {
+//     origin: "*",
+//     methods: ["GET", "POST"],
+//   },
+//     methods: ["GET", "POST"],
+//   },
+// );
 
 dotenv.config();
 app.use(
@@ -88,6 +97,6 @@ app.use(
 
 // Start the server
 const PORT = process.env.PORT || 8008;
-http.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

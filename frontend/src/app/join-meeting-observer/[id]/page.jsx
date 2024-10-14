@@ -38,7 +38,7 @@ const page = () => {
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
         {
           name: formData.fullName,
-          role: "Observer", // Fixed role as Observer,
+          role: "Observer", 
         }
       );
       // Redirect based on the role and the API response

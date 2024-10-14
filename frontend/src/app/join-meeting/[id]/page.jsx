@@ -9,11 +9,13 @@ import InputField from "@/components/shared/InputField";
 import Button from "@/components/shared/button";
 import joinMeetingImage from "../../../../public/join-meeting.png";
 import Footer from "@/components/shared/Footer";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const Page = () => {
   const [formData, setFormData] = useState({
     fullName: "Participant 1",
   });
+  const { socket } = useGlobalContext();
 
   const params = useParams();
   const meetingId = params.id;

@@ -2,7 +2,6 @@ const UserRole = require("../models/userMeetJoinModal");
 
 // Controller to create a new user role
 const createUserRole = async (req, res) => {
-    console.log("triggers")
   const { name, role } = req.body;
 
   if (!name || !role) {

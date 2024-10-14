@@ -45,7 +45,6 @@ const MemberBulkUpdate = ({ onClose, project, setLocalProjectState}) => {
           members: members,
         }
       );
-    console.log('response. data', response.data)
       if (response.status === 200) {
         toast.success(`${response.data.message}`);
       setLocalProjectState(response.data.updatedProject);

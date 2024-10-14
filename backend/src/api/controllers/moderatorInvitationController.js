@@ -26,7 +26,6 @@ The Amplify Research team.`,
 
   try {
     let info = await transporter.sendMail(mailOptions);
-    console.log("Email sent: " + info.response);
   } catch (error) {
     console.error("Error sending email:", error);
     throw error; // Rethrow the error to be caught by the calling function
@@ -35,7 +34,6 @@ The Amplify Research team.`,
 
 // Controller function to handle create request
 const createModerator = async (req, res) => {
-  console.log("calling")
   const { firstName, lastName, email, project } = req.body;
 
   // Validate input data
@@ -105,7 +103,6 @@ module.exports = { updateModerator };
 const deleteModerator = async (req, res) => {
  
   const  id  = req.query.id;
-console.log(id)
   try {
     const deletedModerator = await Moderator.findByIdAndDelete(id);
 

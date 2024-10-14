@@ -56,7 +56,6 @@ const Page = () => {
     setShowModal(true);
   };
   const {user}= useGlobalContext()
-  console.log('Rendering profile page for user:', user);
 
   const handleCloseModal = () => {
     setShowModal(false);
