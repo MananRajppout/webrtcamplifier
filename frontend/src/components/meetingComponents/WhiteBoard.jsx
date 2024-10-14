@@ -43,7 +43,7 @@ let myHeight = window.innerHeight;
 let myZoom = 1;
 let zoomPoint = { x: 0, y: 0 }
 let userId = null;
-const WhiteBoard = ({ role, users }) => {
+const WhiteBoard = ({ role, users,isWhiteBoardOpen }) => {
   const params = useParams();
   const searchParams = useSearchParams();
   const roomId = params.id;
@@ -202,7 +202,7 @@ const WhiteBoard = ({ role, users }) => {
       canvas.dispose()
     }
 
-  }, [data]);
+  }, [data,isWhiteBoardOpen]);
 
   const handelPencil = useCallback(() => {
     canvas.off('mouse:down', handleMouseDown);

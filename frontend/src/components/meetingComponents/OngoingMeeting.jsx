@@ -35,7 +35,7 @@ const OngoingMeeting = () => {
   const isMobile = false;
 
   const timeoutref = useRef(null);
-
+  const localVideoElementRef = useRef(null);
 
 
 
@@ -99,6 +99,12 @@ const OngoingMeeting = () => {
   }, [selected, videoTrackRef.current, remoteVideoTracksRef.current, participantsRef.current, displayTrackRef.current, superForceRender])
 
 
+  useEffect(() => {
+    if (localVideoElementRef.current && videoTrackRef.current) {
+      localVideoElementRef.current.srcObject = new MediaStream([videoTrackRef.current]);
+      localVideoElementRef.current.play();
+    }
+  }, [videoTrackRef.current]);
 
 
   useEffect(() => {
@@ -213,6 +219,9 @@ const OngoingMeeting = () => {
                       </div>
                       :
                       <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-center items-center  w-[100%] bg-[#3C3C3C]`}>
+                        <div className={`${(participantsRef.current[0]?.isWebCamMute == false || participantsRef.current[0]?.isShareScreen === true) ? 'block' : 'hidden'} w-full h-full absolute top-0 left-0 right-0 bottom-0`}>
+                          <video autoPlay className='w-full h-full object-cover' ref={localVideoElementRef}> </video>
+                        </div>
                         <h1 className='text-3xl font-semibold text-white z-10 select-none text-center'>{participantsRef.current[0]?.name}</h1>
                       </div>
                   }

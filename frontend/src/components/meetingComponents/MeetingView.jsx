@@ -141,7 +141,7 @@ const MeetingView = ({
             </div>
          
             <div className={`h-4/5 max-h-4/5 ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
-              <WhiteBoard role={role} users={users}/>
+              <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen}/>
             </div>
 
             <div className={`flex-1 h-full ${!isRecordingOpen && !isWhiteBoardOpen ? 'block' : 'hidden'}`}>

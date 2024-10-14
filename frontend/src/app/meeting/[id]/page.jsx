@@ -33,7 +33,7 @@ const page = () => {
   const meetingStatus = "Ongoing";
   const projectStatus = "Open";
 
-  const [isWhiteBoardOpen, setIsWhiteBoardOpen] = useState(true);
+  const [isWhiteBoardOpen, setIsWhiteBoardOpen] = useState(false);
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isBreakoutRoom, setIsBreakoutRoom] = useState(false);
