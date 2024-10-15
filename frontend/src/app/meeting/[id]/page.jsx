@@ -13,7 +13,7 @@ const page = () => {
   const searchParams = useSearchParams();
   const params = useParams();
   const router = useRouter();
-  const { user } = useGlobalContext();
+  const { user, socket } = useGlobalContext();
   const fullName = searchParams.get("fullName");
   const userRole = searchParams.get("role");
   const [meetingDetails, setMeetingDetails] = useState([])
@@ -74,6 +74,8 @@ const page = () => {
   };
 
   // Use effect for getting meeting link
+  // TODO We can remove this use effect as it is related older webrtc implementation
+
   useEffect(() => {
     getIframeLinkMeetingId(params.id);
   }, [fullName, userRole, params.id]);
