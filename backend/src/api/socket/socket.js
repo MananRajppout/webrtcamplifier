@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const Meeting = require("../models/meetingModel");
 const LiveMeeting = require("../models/liveMeetingModel");
 const { v4: uuidv4 } = require("uuid");
+const ChatMessage = require("../models/chatModel");
 
 const setupSocket = (server) => {
   const io = new Server(server, {
@@ -353,6 +354,98 @@ const setupSocket = (server) => {
         });
       }
     });
+
+    socket.on("participantSendMessage", async (data) => {
+      console.log("Received participantSendMessage event:", data);
+      const { meetingId, message } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("participantSendMessageResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        // Create a new ChatMessage document
+        const newChatMessage = new ChatMessage({
+          senderName: message.senderName,
+          receiverName: message.receiverName,
+          message: message.message,
+        });
+
+        // Save the new chat message
+        const savedChatMessage = await newChatMessage.save(); 
+
+        liveMeeting.participantChat.push(savedChatMessage._id);
+        await liveMeeting.save();
+
+        const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
+
+        socket.emit("participantChatResponse", {
+          success: true,
+          message: "Message sent to participant",
+          participantMessages: updatedLiveMeeting.participantChat,
+        }); 
+      } catch (error) {
+        console.error("Error in participantSendMessage:", error);
+        socket.emit("participantChatResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+    socket.on("getParticipantChat", async (data) => {
+      console.log("Received getParticipantChat event:", data);
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
+        if (!liveMeeting) {
+          socket.emit("participantChatResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        if (!liveMeeting.participantChat || liveMeeting.participantChat.length === 0) {
+          socket.emit("participantChatResponse", {
+            success: false,
+            message: "No chat messages found for this meeting",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        socket.emit("participantChatResponse", {
+          success: true,
+          message: "Participant chat retrieved successfully",
+          participantMessages: liveMeeting.participantChat,
+        });
+      } catch (error) {
+        console.error("Error in getParticipantChat:", error);
+        socket.emit("participantChatResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+    
+    
+     
+
+
+
+        // Add the saved chat message's ID to the liveMeeting's participantChat array
+    
+
 
     socket.on("disconnect", () => {
       console.log("User disconnected");

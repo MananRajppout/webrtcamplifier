@@ -86,10 +86,11 @@ const page = () => {
     socket.on("getParticipantListResponse", handleParticipantList);
 
     socket.on("removeParticipantFromMeetingResponse", handleRemoveParticipantFromMeetingResponse);
+    socket.on("participantChatResponse", handleParticipantChatResponse);
 
     // Initial request
     requestParticipantList();
-
+    getParticipantChat(params.id);
     // Set up interval to request participant list every 5 seconds
     const requestParticipantListIntervalId = setInterval(
       requestParticipantList,
@@ -119,10 +120,19 @@ const page = () => {
       clearInterval(requestParticipantListIntervalId);
       socket.off("getParticipantListResponse", handleParticipantList);
       socket.off("removeParticipantFromMeetingResponse", handleRemoveParticipantFromMeetingResponse);
+      socket.off("participantChatResponse", handleParticipantChatResponse);
     };
   }, [userRole, params.id]);
 
-  console.log("removed participant list", removedParticipants);
+
+  // * get participant chat response function
+  const handleParticipantChatResponse = (response) => {
+    if (response.success) {
+      setParticipantMessages(response.participantMessages);
+    } else {
+      console.error("Failed to get participant chat:", response.message);
+    }
+  };
 
   // * remove participant from meeting response function
   const handleRemoveParticipantFromMeetingResponse = (response) => {
@@ -181,6 +191,51 @@ const removeParticipant = async (name, role, meetingId) => {
 };
 
 
+// * participant send message function
+const sendMessageParticipant = async (message) => {
+  socket.emit("participantSendMessage", { message, meetingId: params.id });
+};
+
+// * get participant chat request function
+const getParticipantChat = async (meetingId) => {
+  socket.emit("getParticipantChat", { meetingId });
+};
+
+// ! get participant chat
+
+// const getParticipantChat = async (meetingId) => {
+//   try {
+//     const response = await axios.get(
+//       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-participant-chat/${meetingId}`
+//     );
+
+//     if (
+//       response?.data?.message === "Participant chat retrieved successfully"
+//     ) {
+//       setParticipantMessages(response?.data?.participantMessages);
+//     }
+//   } catch (error) {
+//     console.error("Error:", error);
+//   }
+// };
+
+// ! participant send message
+// const sendMessageParticipant = async (message) => {
+//   try {
+//     const response = await axios.post(
+//       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/send-message-to-participant`,
+//       {
+//         message: message,
+//         meetingId: params.id,
+//       }
+//     );
+//     if (response?.data?.message === "Chat message saved successfully") {
+//       setParticipantMessages(response?.data?.participantMessages);
+//     }
+//   } catch (error) {
+//     console.error("error", error);
+//   }
+// };
 
   // ! remove participant from meeting
   // const removeParticipant = async (name, role, meetingId) => {
@@ -506,22 +561,22 @@ const removeParticipant = async (name, role, meetingId) => {
 
   const startMeeting = () => {};
 
-  const sendMessageParticipant = async (message) => {
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/send-message-to-participant`,
-        {
-          message: message,
-          meetingId: params.id,
-        }
-      );
-      if (response?.data?.message === "Chat message saved successfully") {
-        setParticipantMessages(response?.data?.participantMessages);
-      }
-    } catch (error) {
-      console.error("error", error);
-    }
-  };
+  // const sendMessageParticipant = async (message) => {
+  //   try {
+  //     const response = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/send-message-to-participant`,
+  //       {
+  //         message: message,
+  //         meetingId: params.id,
+  //       }
+  //     );
+  //     if (response?.data?.message === "Chat message saved successfully") {
+  //       setParticipantMessages(response?.data?.participantMessages);
+  //     }
+  //   } catch (error) {
+  //     console.error("error", error);
+  //   }
+  // };
   const sendMessageObserver = async (message) => {
     try {
       const response = await axios.post(
@@ -539,21 +594,7 @@ const removeParticipant = async (name, role, meetingId) => {
     }
   };
 
-  const getParticipantChat = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-participant-chat/${meetingId}`
-      );
-
-      if (
-        response?.data?.message === "Participant chat retrieved successfully"
-      ) {
-        setParticipantMessages(response?.data?.participantMessages);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
+ 
 
   const getObserverChat = async (meetingId) => {
     try {

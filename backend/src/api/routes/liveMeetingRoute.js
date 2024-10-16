@@ -9,15 +9,15 @@ module.exports = function(app) {
   // app.get("/api/live-meeting/participant-list/:meetingId", controller.getParticipantList);
   app.get("/api/live-meeting/observer-list/:meetingId", controller.getObserverList);
   app.get("/api/live-meeting/get-meeting-status/:meetingId", controller.getMeetingStatus);
-  app.post("/api/live-meeting/send-message-to-participant", controller.participantSendMessage);
-  app.get("/api/live-meeting/get-participant-chat/:meetingId", controller.getParticipantChat);
+  // app.post("/api/live-meeting/send-message-to-participant", controller.participantSendMessage);
+  // app.get("/api/live-meeting/get-participant-chat/:meetingId", controller.getParticipantChat);
   app.get("/api/live-meeting/get-observer-chat/:meetingId", controller.getObserverChat);
   app.post("/api/live-meeting/send-message-to-observer", controller.observerSendMessage);
   // app.put("/api/live-meeting/remove-participant-from-meeting", controller.removeParticipantFromMeeting);
   app.put("/api/live-meeting/participant-left-from-meeting", controller.participantLeaveFromMeeting);
   app.get("/api/live-meeting/get-webrtc-meeting-id/:meetingId", controller.getWebRtcMeetingId);
   app.get("/api/live-meeting/get-iframe-link/:meetingId", controller.getIframeLink);
-  app.get("/api/live-meeting/get-removed-participants-list/:meetingId", controller.getRemovedParticipantsList);
+  // app.get("/api/live-meeting/get-removed-participants-list/:meetingId", controller.getRemovedParticipantsList);
   app.put("/api/live-meeting/start-streaming", controller.startMeetingStreaming);
   app.get("/api/live-meeting/get-streaming-status/:meetingId", controller.getStreamingStatus);
 }
