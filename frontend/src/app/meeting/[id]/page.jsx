@@ -83,7 +83,13 @@ const page = () => {
   //! Use effect for getting waiting list
   useEffect(() => {
     let intervalId;
-    socket.on("participantList", handleParticipantList);
+    socket.on("getParticipantListResponse", handleParticipantList);
+
+     // Initial request
+  requestParticipantList();
+
+  // Set up interval to request participant list every 5 seconds
+  const requestParticipantListIntervalId = setInterval(requestParticipantList, 1000);
 
     if (userRole === "Moderator") {
       // Initial call
@@ -105,7 +111,8 @@ const page = () => {
       if (intervalId) {
         clearInterval(intervalId);
       }
-      socket.off("participantList", handleParticipantList);
+      clearInterval(requestParticipantListIntervalId);
+      socket.off("getParticipantListResponse", handleParticipantList);
     };
   }, [userRole, params.id]);
 
@@ -129,6 +136,11 @@ const handleGetWaitingListResponse = (response) => {
   }
 }
 
+
+  // *Function to request participant list
+  const requestParticipantList = () => {
+    socket.emit("getParticipantList", { meetingId: params.id });
+  };
   // Use effect for getting participant and observer list and participant and observer chat for moderator
   useEffect(() => {
     let intervalId;
