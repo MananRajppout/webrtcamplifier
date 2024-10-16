@@ -83,6 +83,7 @@ const page = () => {
   //! Use effect for getting waiting list
   useEffect(() => {
     let intervalId;
+    socket.on("participantList", handleParticipantList);
 
     if (userRole === "Moderator") {
       // Initial call
@@ -104,11 +105,22 @@ const page = () => {
       if (intervalId) {
         clearInterval(intervalId);
       }
+      socket.off("participantList", handleParticipantList);
     };
   }, [userRole, params.id]);
 
-console.log('waitingRoom', waitingRoom)
-  // Add this new function to handle the response
+  console.log('participant list', participants)
+
+// * get participant list
+const handleParticipantList = (response) => {
+  if (response.success) {
+    setParticipants(response.participantList);
+  } else {
+    console.error("Failed to update participant list:", response.message);
+  }
+};
+
+  // * get waiting list response function
 const handleGetWaitingListResponse = (response) => {
   if (response.success) {
     setWaitingRoom(response.waitingRoom);
@@ -333,6 +345,10 @@ const handleGetWaitingListResponse = (response) => {
   //   }
   // };
 
+
+  
+
+  // !get participant list
   const getParticipantList = async (meetingId) => {
     try {
       const response = await axios.get(
@@ -355,19 +371,25 @@ const handleGetWaitingListResponse = (response) => {
     }
   };
 
+  // *accept participant from waiting list
   const acceptParticipant = async (participant) => {
-    try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/accept-from-waiting-list`,
-        {
-          participant: participant,
-          meetingId: params.id,
-        }
-      );
-    } catch (error) {
-      console.error("Error:", error);
-    }
+    socket.emit("acceptFromWaitingRoom", { participant, meetingId: params.id });
   };
+
+  // !accept participant from waiting list
+  // const acceptParticipant = async (participant) => {
+  //   try {
+  //     const response = await axios.put(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/accept-from-waiting-list`,
+  //       {
+  //         participant: participant,
+  //         meetingId: params.id,
+  //       }
+  //     );
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
 
   const getMeetingStatus = async (meetingId) => {
     try {

@@ -214,6 +214,93 @@ const setupSocket = (server) => {
       }
     });
 
+    socket.on("acceptFromWaitingRoom", async (data) => {
+      console.log("Received acceptFromWaitingRoom event:", data);
+      const { meetingId, participant } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("acceptFromWaitingRoomResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+        const participantIndex = liveMeeting.waitingRoom.findIndex(
+          (p) => p.name === participant.name
+        );
+    
+        if (participantIndex === -1) {
+          socket.emit("acceptFromWaitingRoomResponse", {
+            success: false,
+            message: "Participant not found in waiting room",
+            meetingId: meetingId,
+          });
+          return;
+        }
+       
+        const [removedParticipant] = liveMeeting.waitingRoom.splice(participantIndex, 1);
+
+        const participantWithId = {
+          ...removedParticipant.toObject(),
+          id: uuidv4()
+        };
+
+        liveMeeting.participantsList.push(participantWithId);
+        await liveMeeting.save();
+
+        socket.emit("participantList", {
+          success: true,
+          message: "Participant added to participants list",
+          participantList: liveMeeting.participantsList,
+        });
+      } catch (error) {
+        console.error("Error in acceptFromWaitingRoom:", error);
+        socket.emit("acceptFromWaitingRoomResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+    socket.on("getParticipantList", async (data) => {
+      console.log("Received getParticipantList event:", data);
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("getParticipantListResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+       
+        const fullParticipantList = [
+          liveMeeting.moderator,
+          ...liveMeeting.participantsList
+        ];
+
+        socket.emit("getParticipantListResponse", {
+          success: true,
+          message: "Participant list retrieved",
+          participantList: fullParticipantList,
+        });
+      } catch (error) {
+        console.error("Error in getParticipantList:", error);
+        socket.emit("getParticipantListResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+
+
 
     socket.on("disconnect", () => {
       console.log("User disconnected");
