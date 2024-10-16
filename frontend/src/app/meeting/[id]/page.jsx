@@ -28,7 +28,7 @@ const page = () => {
   const [isMeetingOngoing, setIsMeetingOngoing] = useState(false);
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [isAdmitted, setIsAdmitted] = useState(false);
-  const [socket, setSocket] = useState(null);
+  // const [socket, setSocket] = useState(null);
 
   const meetingStatus = "Ongoing";
   const projectStatus = "Open";

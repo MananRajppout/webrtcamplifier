@@ -127,6 +127,7 @@ const setupSocket = (server) => {
     socket.on("observerJoinMeeting", async (data) => {
       console.log("Received observerJoinMeeting event:", data);
       const { meetingId, name, role, passcode } = data;
+      console.log('meetingId', meetingId)
 
       const meeting = await Meeting.findById(meetingId);
       if (!meeting) {
@@ -146,7 +147,9 @@ const setupSocket = (server) => {
         });
         return;
       }
-
+      console.log(
+      'meeting', meeting
+      )
       let liveMeeting = await LiveMeeting.findOne({ meetingId });
       if (!liveMeeting) {
         socket.emit("observerJoinMeetingResponse", {
@@ -156,7 +159,7 @@ const setupSocket = (server) => {
         });
         return;
       }
-
+      console.log('liveMeeting', liveMeeting)
       const isInObserverList = liveMeeting.observerList.some(
         (observer) => observer.name === name
       );

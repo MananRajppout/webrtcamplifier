@@ -44,7 +44,7 @@ const page = () => {
     });
 
     socket.on("observerJoinMeetingResponse", (response) => {
-
+     
       if(response.message === "Meeting not found") {
         toast.error("Meeting not found");
       } else if (response.message === "Invalid passcode") {
@@ -58,10 +58,8 @@ const page = () => {
           )}&role=Observer`
         );
       } else if (response.message === "Observer added to the meeting") {
-        const { isStreaming } = response.data;
-        localStorage.setItem("RoletoSend", response.data._id);
-
-        if (isStreaming) {
+        // localStorage.setItem("RoletoSend", response.data._id);
+        if (response.isStreaming) {
           router.push(
             `/meeting/${meetingId}?fullName=${encodeURIComponent(
               formData.fullName
