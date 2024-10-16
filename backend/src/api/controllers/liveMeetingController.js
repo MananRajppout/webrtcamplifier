@@ -265,40 +265,7 @@ const getWaitingList = async (req, res) => {
   }
 };
 
-// const acceptFromWaitingRoom = async (req, res) => {
-//   const { participant, meetingId } = req.body;
 
-//   try {
-//     const liveMeeting = await LiveMeeting.findOne({ meetingId });
-
-//     if (!liveMeeting) {
-//       return res.status(404).json({ message: 'Live meeting not found' });
-//     }
-
-//     const participantIndex = liveMeeting.waitingRoom.findIndex(p => p.name === participant.name);
-
-//     if (participantIndex === -1) {
-//       return res.status(404).json({ message: 'Participant not found in waiting room' });
-//     }
-
-//     const [removedParticipant] = liveMeeting.waitingRoom.splice(participantIndex, 1);
-
-
-//     // Add a unique ID to the participant before adding to participantsList
-//     const participantWithId = {
-//       ...removedParticipant.toObject(),
-//       id: uuidv4()
-//     };
-
-//     liveMeeting.participantsList.push(participantWithId);
-
-//     await liveMeeting.save();
-
-//     res.status(200).json({ message: 'Participant moved to participants list', updatedLiveMeeting: liveMeeting });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error accepting participant from waiting room', error: error.message });
-//   }
-// };
 
 const acceptFromWaitingRoom = async (req, res) => {
   const { participant, meetingId } = req.body;

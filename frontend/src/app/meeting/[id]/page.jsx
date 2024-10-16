@@ -80,18 +80,23 @@ const page = () => {
     getIframeLinkMeetingId(params.id);
   }, [fullName, userRole, params.id]);
 
-  // Use effect for getting waiting list
+  //! Use effect for getting waiting list
   useEffect(() => {
     let intervalId;
 
     if (userRole === "Moderator") {
       // Initial call
       getWaitingList(params.id);
+      socket.on("getWaitingListResponse", handleGetWaitingListResponse);
 
       // Set up interval to call getWaitingList every 10 seconds
       intervalId = setInterval(() => {
         getWaitingList(params.id);
-      }, 10000);
+      }, 1000);
+
+      return () => {
+        socket.off("getWaitingListResponse", handleGetWaitingListResponse);
+      };
     }
 
     // Clean up function to clear the interval when component unmounts or userRole changes
@@ -101,6 +106,16 @@ const page = () => {
       }
     };
   }, [userRole, params.id]);
+
+console.log('waitingRoom', waitingRoom)
+  // Add this new function to handle the response
+const handleGetWaitingListResponse = (response) => {
+  if (response.success) {
+    setWaitingRoom(response.waitingRoom);
+  } else {
+    console.error("Failed to get waiting list:", response.message);
+  }
+}
 
   // Use effect for getting participant and observer list and participant and observer chat for moderator
   useEffect(() => {
@@ -302,17 +317,21 @@ const page = () => {
     }
   };
 
+// !get waiting list
 
-  const getWaitingList = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/waiting-list/${meetingId}`
-      );
-      setWaitingRoom(response?.data?.waitingRoom);
-    } catch (error) {
-      console.error(error?.response?.data?.message);
-    }
-  };
+  const getWaitingList = async(meetingId) => {
+    socket.emit("getWaitingList", { meetingId });
+  }
+  // const getWaitingList = async (meetingId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/waiting-list/${meetingId}`
+  //     );
+  //     setWaitingRoom(response?.data?.waitingRoom);
+  //   } catch (error) {
+  //     console.error(error?.response?.data?.message);
+  //   }
+  // };
 
   const getParticipantList = async (meetingId) => {
     try {

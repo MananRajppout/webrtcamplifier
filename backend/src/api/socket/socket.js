@@ -186,6 +186,35 @@ const setupSocket = (server) => {
       });
     });
 
+    socket.on("getWaitingList", async (data) => {
+      console.log("Received getWaitingList event:", data);
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("getWaitingListResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+        socket.emit("getWaitingListResponse", {
+          success: true,
+          message: "Waiting list retrieved",
+          waitingRoom: liveMeeting.waitingRoom,
+        });
+      } catch (error) {
+        console.error("Error in getWaitingList:", error);
+        socket.emit("getWaitingListResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+
     socket.on("disconnect", () => {
       console.log("User disconnected");
     });
