@@ -561,32 +561,6 @@ const observerSendMessage = async (req, res) => {
   }
 }
 
-// const removeParticipantFromMeeting = async(req, res) => {
-//   const { meetingId, name, role } = req.body;
-//   try {
-//     const liveMeeting = await LiveMeeting.findOne({ meetingId });
-
-//     if (!liveMeeting) {
-//       return res.status(404).json({ message: "Live meeting not found" });
-//     }
-
-//     if (role === 'Participant') {
-//       liveMeeting.waitingRoom = liveMeeting.waitingRoom.filter(participant => participant.name !== name);
-//       liveMeeting.participantsList = liveMeeting.participantsList.filter(participant => participant.name !== name);
-//     } else if (role === 'Observer') {
-//       liveMeeting.observerList = liveMeeting.observerList.filter(observer => observer.name !== name);
-//     } else {
-//       return res.status(400).json({ message: "Invalid role provided" });
-//     }
-
-//     await liveMeeting.save();
-
-//     res.status(200).json({ message: "Participant removed successfully" });
-//   } catch (error) {
-//     console.error("Error removing participant:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// }
 
 
 const removeParticipantFromMeeting = async (req, res) => {

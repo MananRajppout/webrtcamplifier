@@ -127,7 +127,7 @@ const setupSocket = (server) => {
     socket.on("observerJoinMeeting", async (data) => {
       console.log("Received observerJoinMeeting event:", data);
       const { meetingId, name, role, passcode } = data;
-      console.log('meetingId', meetingId)
+      console.log("meetingId", meetingId);
 
       const meeting = await Meeting.findById(meetingId);
       if (!meeting) {
@@ -147,9 +147,7 @@ const setupSocket = (server) => {
         });
         return;
       }
-      console.log(
-      'meeting', meeting
-      )
+      console.log("meeting", meeting);
       let liveMeeting = await LiveMeeting.findOne({ meetingId });
       if (!liveMeeting) {
         socket.emit("observerJoinMeetingResponse", {
@@ -159,7 +157,7 @@ const setupSocket = (server) => {
         });
         return;
       }
-      console.log('liveMeeting', liveMeeting)
+      console.log("liveMeeting", liveMeeting);
       const isInObserverList = liveMeeting.observerList.some(
         (observer) => observer.name === name
       );
@@ -176,7 +174,7 @@ const setupSocket = (server) => {
 
       liveMeeting.observerList.push({ name, role, id: observerId });
       await liveMeeting.save();
-      console.log('liveMeeting', liveMeeting)
+      console.log("liveMeeting", liveMeeting);
 
       socket.emit("observerJoinMeetingResponse", {
         success: true,
@@ -230,7 +228,7 @@ const setupSocket = (server) => {
         const participantIndex = liveMeeting.waitingRoom.findIndex(
           (p) => p.name === participant.name
         );
-    
+
         if (participantIndex === -1) {
           socket.emit("acceptFromWaitingRoomResponse", {
             success: false,
@@ -239,12 +237,15 @@ const setupSocket = (server) => {
           });
           return;
         }
-       
-        const [removedParticipant] = liveMeeting.waitingRoom.splice(participantIndex, 1);
+
+        const [removedParticipant] = liveMeeting.waitingRoom.splice(
+          participantIndex,
+          1
+        );
 
         const participantWithId = {
           ...removedParticipant.toObject(),
-          id: uuidv4()
+          id: uuidv4(),
         };
 
         liveMeeting.participantsList.push(participantWithId);
@@ -278,10 +279,10 @@ const setupSocket = (server) => {
           });
           return;
         }
-       
+
         const fullParticipantList = [
           liveMeeting.moderator,
-          ...liveMeeting.participantsList
+          ...liveMeeting.participantsList,
         ];
 
         socket.emit("getParticipantListResponse", {
@@ -299,8 +300,59 @@ const setupSocket = (server) => {
       }
     });
 
+    socket.on("removeParticipantFromMeeting", async (data) => {
+      console.log("Received removeParticipantFromMeeting event:", data);
+      const { meetingId, name, role } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("removeParticipantFromMeetingResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
 
+        if (role === "Participant") {
+          const initialParticipantsLength = liveMeeting.participantsList.length;
 
+          // Remove the participant from participantsList
+          const participantToRemove = liveMeeting.participantsList.find(
+            (participant) => participant.name === name
+          );
+
+          liveMeeting.participantsList = liveMeeting.participantsList.filter(
+            (participant) => participant.name !== name
+          );
+
+          // Add the removed participant to removedParticipants list
+          liveMeeting.removedParticipants.push({
+            name: name,
+            role: role,
+          });
+          await liveMeeting.save();
+
+          socket.emit("removeParticipantFromMeetingResponse", {
+            success: true,
+            message: "Participant removed from meeting",
+            removeParticipantList: liveMeeting.removedParticipants,
+          });
+          socket.emit("participantList", {
+            success: true,
+            message: "Participant list retrieved",
+            participantList: liveMeeting.participantsList,
+          });
+        }
+      } catch (error) {
+        console.error("Error in removeParticipantFromMeeting:", error);
+        socket.emit("removeParticipantFromMeetingResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
 
     socket.on("disconnect", () => {
       console.log("User disconnected");

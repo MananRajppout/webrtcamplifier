@@ -16,7 +16,7 @@ const page = () => {
   const { user, socket } = useGlobalContext();
   const fullName = searchParams.get("fullName");
   const userRole = searchParams.get("role");
-  const [meetingDetails, setMeetingDetails] = useState([])
+  const [meetingDetails, setMeetingDetails] = useState([]);
   const [users, setUsers] = useState([]);
   const [participants, setParticipants] = useState([]);
   const [observers, setObservers] = useState([]);
@@ -85,11 +85,16 @@ const page = () => {
     let intervalId;
     socket.on("getParticipantListResponse", handleParticipantList);
 
-     // Initial request
-  requestParticipantList();
+    socket.on("removeParticipantFromMeetingResponse", handleRemoveParticipantFromMeetingResponse);
 
-  // Set up interval to request participant list every 5 seconds
-  const requestParticipantListIntervalId = setInterval(requestParticipantList, 1000);
+    // Initial request
+    requestParticipantList();
+
+    // Set up interval to request participant list every 5 seconds
+    const requestParticipantListIntervalId = setInterval(
+      requestParticipantList,
+      1000
+    );
 
     if (userRole === "Moderator") {
       // Initial call
@@ -113,48 +118,104 @@ const page = () => {
       }
       clearInterval(requestParticipantListIntervalId);
       socket.off("getParticipantListResponse", handleParticipantList);
+      socket.off("removeParticipantFromMeetingResponse", handleRemoveParticipantFromMeetingResponse);
     };
   }, [userRole, params.id]);
 
-  console.log('participant list', participants)
+  console.log("removed participant list", removedParticipants);
 
-// * get participant list
-const handleParticipantList = (response) => {
-  if (response.success) {
-    setParticipants(response.participantList);
-  } else {
-    console.error("Failed to update participant list:", response.message);
-  }
-};
+  // * remove participant from meeting response function
+  const handleRemoveParticipantFromMeetingResponse = (response) => {
+    if (response.success) {
+      setRemovedParticipants(response.removeParticipantList);
+      const participantMatched =
+          response?.removeParticipantList.some(
+            (participant) => participant.name === fullName
+          );
+
+        if (participantMatched) {
+          // Redirect to the "remove participant" page if the user is removed
+          router.push("/remove-participant");
+        }
+    } else {
+      console.error("Failed to remove participant from meeting:", response.message);
+    }
+  };
+
+  // * get participant list
+  const handleParticipantList = (response) => {
+    if (response.success) {
+      setParticipants(response.participantList);
+    } else {
+      console.error("Failed to update participant list:", response.message);
+    }
+  };
 
   // * get waiting list response function
-const handleGetWaitingListResponse = (response) => {
-  if (response.success) {
-    setWaitingRoom(response.waitingRoom);
-  } else {
-    console.error("Failed to get waiting list:", response.message);
-  }
-}
+  const handleGetWaitingListResponse = (response) => {
+    if (response.success) {
+      setWaitingRoom(response.waitingRoom);
+    } else {
+      console.error("Failed to get waiting list:", response.message);
+    }
+  };
 
+  // * function to request waiting list
+  const getWaitingList = async (meetingId) => {
+    socket.emit("getWaitingList", { meetingId });
+  };
 
   // *Function to request participant list
   const requestParticipantList = () => {
     socket.emit("getParticipantList", { meetingId: params.id });
   };
+
+   // *accept participant from waiting list
+   const acceptParticipant = async (participant) => {
+    socket.emit("acceptFromWaitingRoom", { participant, meetingId: params.id });
+  };
+
+// * request function for removing participant  from meeting
+const removeParticipant = async (name, role, meetingId) => {
+  socket.emit("removeParticipantFromMeeting", { name, role, meetingId });
+};
+
+
+
+  // ! remove participant from meeting
+  // const removeParticipant = async (name, role, meetingId) => {
+  //   try {
+  //     response = await axios.put(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/remove-participant-from-meeting`,
+  //       {
+  //         name: name,
+  //         role: role,
+  //         meetingId: meetingId,
+  //       }
+  //     );
+  //   } catch (error) {
+  //     if (error?.response?.data?.message === "Participant not found") {
+  //       console.error("Participant not found");
+  //     } else {
+  //       console.error("Error:", error);
+  //     }
+  //   }
+  // };
+
   // Use effect for getting participant and observer list and participant and observer chat for moderator
   useEffect(() => {
     let intervalId;
 
     if (userRole === "Moderator") {
       // Initial call
-      getParticipantList(params.id);
+      // getParticipantList(params.id);
       getObserverList(params.id);
       getParticipantChat(params.id);
       getObserverChat(params.id);
       getIframeLinkMeetingId(params.id);
       // Set up interval to call getParticipantList every 10 seconds
       intervalId = setInterval(() => {
-        getParticipantList(params.id);
+        // getParticipantList(params.id);
         getObserverList(params.id);
         getParticipantChat(params.id);
         getObserverChat(params.id);
@@ -176,12 +237,12 @@ const handleGetWaitingListResponse = (response) => {
 
     if (userRole === "Participant") {
       // Initial call
-      getParticipantList(params.id);
+      // getParticipantList(params.id);
       getParticipantChat(params.id);
       getIframeLinkMeetingId(params.id);
       // Set up interval to call getParticipantList every 10 seconds
       intervalId = setInterval(() => {
-        getParticipantList(params.id);
+        // getParticipantList(params.id);
         getParticipantChat(params.id);
         getIframeLinkMeetingId(params.id);
       }, 3000);
@@ -201,12 +262,13 @@ const handleGetWaitingListResponse = (response) => {
 
     if (userRole === "Participant" && !isAdmitted) {
       // Initial call
-      getParticipantList(params.id);
+      // getParticipantList(params.id);
+      requestParticipantList();
 
       // Set up interval to call getWaitingList every 10 seconds
       intervalId = setInterval(() => {
-        getParticipantList(params.id);
-      }, 5000);
+        requestParticipantList();
+      }, 1000);
     }
 
     // Clean up function to clear the interval when component unmounts or userRole changes
@@ -341,12 +403,9 @@ const handleGetWaitingListResponse = (response) => {
     }
   };
 
-// !get waiting list
+  // !get waiting list
 
-  const getWaitingList = async(meetingId) => {
-    socket.emit("getWaitingList", { meetingId });
-  }
-  // const getWaitingList = async (meetingId) => {
+   // const getWaitingList = async (meetingId) => {
   //   try {
   //     const response = await axios.get(
   //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/waiting-list/${meetingId}`
@@ -358,19 +417,18 @@ const handleGetWaitingListResponse = (response) => {
   // };
 
 
-  
 
   // !get participant list
-  const getParticipantList = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/participant-list/${meetingId}`
-      );
-      setParticipants(response?.data?.participantsList);
-    } catch (error) {
-      console.error("Error in getting participant list", error);
-    }
-  };
+  // const getParticipantList = async (meetingId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/participant-list/${meetingId}`
+  //     );
+  //     setParticipants(response?.data?.participantsList);
+  //   } catch (error) {
+  //     console.error("Error in getting participant list", error);
+  //   }
+  // };
 
   const getObserverList = async (meetingId) => {
     try {
@@ -383,10 +441,7 @@ const handleGetWaitingListResponse = (response) => {
     }
   };
 
-  // *accept participant from waiting list
-  const acceptParticipant = async (participant) => {
-    socket.emit("acceptFromWaitingRoom", { participant, meetingId: params.id });
-  };
+ 
 
   // !accept participant from waiting list
   // const acceptParticipant = async (participant) => {
@@ -514,24 +569,7 @@ const handleGetWaitingListResponse = (response) => {
     }
   };
 
-  const removeParticipant = async (name, role, meetingId) => {
-    try {
-      response = await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/remove-participant-from-meeting`,
-        {
-          name: name,
-          role: role,
-          meetingId: meetingId,
-        }
-      );
-    } catch (error) {
-      if (error?.response?.data?.message === "Participant not found") {
-        console.error("Participant not found");
-      } else {
-        console.error("Error:", error);
-      }
-    }
-  };
+
   const participantLeft = async (name, role, meetingId) => {
     try {
       response = await axios.put(
@@ -577,8 +615,6 @@ const handleGetWaitingListResponse = (response) => {
       }
     }
   };
-
-
 
   return (
     <>
