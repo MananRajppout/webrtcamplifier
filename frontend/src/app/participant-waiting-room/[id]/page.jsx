@@ -36,6 +36,16 @@ const page = () => {
   useEffect(() => {
     getMeetingDetails(params.id);
 
+    // Add listener for participant removal
+    socket.on("participantRemovedFromWaiting", (data) => {
+      console.log('participant removed from waiting', data)
+      if (data.name === fullName && data.role === userRole) {
+        router.push("/remove-participant");
+      }
+    });
+
+  
+      
     // Set up socket listener for participant list
     socket.on("getParticipantListResponse", (response) => {
       if (response.success) {
@@ -77,6 +87,7 @@ const page = () => {
     // Clean up function
     return () => {
       socket.off("getParticipantListResponse");
+      socket.off("participantRemovedFromWaiting");
       clearInterval(intervalId);
     };
   }, [params.id, socket, fullName, userRole, router]);

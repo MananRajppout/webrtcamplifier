@@ -247,6 +247,12 @@ const startStreaming = async (meetingId) => {
     socket.emit("getStreamingStatus", { meetingId });
   };
 
+  // * remove from waiting room
+  const removeFromWaitingRoom = (participant, meetingId) => {
+    console.log('remove from waiting room', participant)
+    socket.emit("removeFromWaitingRoom", { meetingId, participant });
+  };
+
 
 
   // * get streaming status response function
@@ -806,6 +812,7 @@ const startStreaming = async (meetingId) => {
                 removeParticipant={removeParticipant}
                 isStreaming={isStreaming}
                 setStartStreaming={startStreaming}
+                removeFromWaitingRoom={removeFromWaitingRoom}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">

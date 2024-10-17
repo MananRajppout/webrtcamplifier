@@ -289,32 +289,7 @@ const setupSocket = (server) => {
       }
     });
 
-    socket.on("getRemovedParticipantsList", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("removeParticipantFromMeetingResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        socket.emit("removeParticipantFromMeetingResponse", {
-          success: true,
-          message: "Participant removed from meeting",
-          removeParticipantList: liveMeeting.removedParticipants,
-        });
-      } catch (error) {
-        console.error("Error in getRemovedParticipantsList:", error);
-        socket.emit("removeParticipantFromMeetingResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
+   
 
     socket.on("removeParticipantFromMeeting", async (data) => {
       const { meetingId, name, role } = data;
@@ -626,6 +601,45 @@ const setupSocket = (server) => {
         });
       }
     });
+
+    socket.on("removeFromWaitingRoom", async (data) => {
+      const { meetingId, participant } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("removeFromWaitingRoomResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+    
+        // Remove the participant from the waiting room
+        liveMeeting.waitingRoom = liveMeeting.waitingRoom.filter(
+          (p) => p.name !== participant.name
+        );
+        await liveMeeting.save();
+    
+        socket.emit("removeFromWaitingRoomResponse", {
+          success: true,
+          message: "Participant removed from waiting room",
+          removedParticipant: participant,
+        });
+    
+        // Notify the removed participant
+        io.emit("participantRemovedFromWaiting", { name: participant.name, role: participant.role });
+    
+      } catch (error) {
+        console.error("Error in removeFromWaitingRoom:", error);
+        socket.emit("removeFromWaitingRoomResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
 
         // Add the saved chat message's ID to the liveMeeting's participantChat array
     

@@ -30,7 +30,7 @@ const LeftSidebar = ({
   meetingId,
   removeParticipant,
   isStreaming,
-  setStartStreaming,
+  setStartStreaming,removeFromWaitingRoom
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -237,6 +237,7 @@ const LeftSidebar = ({
               isStreaming={isStreaming}
               setStartStreaming={setStartStreaming}
               setIsWhiteBoardOpen={setIsWhiteBoardOpen}
+              removeFromWaitingRoom={removeFromWaitingRoom}
             />
           ) : (
             <LeftSidebarCloseUi

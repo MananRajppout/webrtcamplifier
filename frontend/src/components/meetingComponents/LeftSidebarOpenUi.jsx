@@ -49,7 +49,7 @@ const LeftSidebarOpenUi = ({
   removeParticipant,
   isStreaming,
   setStartStreaming,
-  setIsWhiteBoardOpen
+  setIsWhiteBoardOpen, removeFromWaitingRoom
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -536,6 +536,7 @@ const LeftSidebarOpenUi = ({
                     type="submit"
                     children="Remove"
                     className="text-xs px-2 py-1 rounded-lg text-white"
+                    onClick={() => removeFromWaitingRoom(user, meetingId)}
                   />
                 </div>
               </div>
