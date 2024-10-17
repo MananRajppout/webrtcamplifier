@@ -289,8 +289,36 @@ const setupSocket = (server) => {
       }
     });
 
+    socket.on("getRemovedParticipantsList", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("removeParticipantFromMeetingResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+        socket.emit("removeParticipantFromMeetingResponse", {
+          success: true,
+          message: "Participant removed from meeting",
+          removeParticipantList: liveMeeting.removedParticipants,
+        });
+      } catch (error) {
+        console.error("Error in getRemovedParticipantsList:", error);
+        socket.emit("removeParticipantFromMeetingResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
     socket.on("removeParticipantFromMeeting", async (data) => {
       const { meetingId, name, role } = data;
+      console.log("name in removeParticipantFromMeeting", name, role, meetingId);
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
         if (!liveMeeting) {
@@ -321,11 +349,14 @@ const setupSocket = (server) => {
           });
           await liveMeeting.save();
 
+          io.emit("participantRemoved", { name, role });
+
           socket.emit("removeParticipantFromMeetingResponse", {
             success: true,
             message: "Participant removed from meeting",
             removeParticipantList: liveMeeting.removedParticipants,
           });
+          console.log("liveMeeting.participantsList in removeParticipantFromMeeting", liveMeeting.removedParticipants);
           socket.emit("participantList", {
             success: true,
             message: "Participant list retrieved",
@@ -523,7 +554,6 @@ const setupSocket = (server) => {
           });
           return;
         }
-        console.log("liveMeeting.observerChat in getObserverChat", liveMeeting.observerChat);
         socket.emit("observerChatResponse", {
           success: true,
           message: "Observer chat retrieved successfully",
@@ -540,9 +570,62 @@ const setupSocket = (server) => {
       }
     });
 
-      
+    socket.on("startStreaming", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("startStreamingResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+        liveMeeting.isStreaming = true;
+        await liveMeeting.save();
+        socket.emit("getStreamingStatusResponse", {
+          success: true,
+          message: "Streaming started successfully",
+          isStreaming: liveMeeting.isStreaming,
+        });
+      } catch (error) {
+        console.error("Error in startStreaming:", error);
+        socket.emit("startStreamingResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
 
-
+    socket.on("getStreamingStatus", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("getStreamingStatusResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+        socket.emit("getStreamingStatusResponse", {
+          success: true,
+          message: "Streaming status retrieved successfully",
+          isStreaming: liveMeeting.isStreaming,
+          
+        });
+      } catch (error) {
+        console.error("Error in getStreamingStatus:", error);
+        socket.emit("getStreamingStatusResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
 
         // Add the saved chat message's ID to the liveMeeting's participantChat array
     

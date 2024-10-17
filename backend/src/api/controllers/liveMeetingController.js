@@ -561,8 +561,6 @@ const observerSendMessage = async (req, res) => {
   }
 }
 
-
-
 const removeParticipantFromMeeting = async (req, res) => {
   const { meetingId, name, role } = req.body;
   try {

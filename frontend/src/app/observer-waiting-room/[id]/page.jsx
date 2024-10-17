@@ -3,6 +3,7 @@
 import Button from "@/components/shared/button";
 import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import Logo from "@/components/shared/Logo";
+import { useGlobalContext } from "@/context/GlobalContext";
 import axios from "axios";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ const page = () => {
   const fullName = searchParams.get("fullName");
   const userRole = searchParams.get("role");
   const [meetingDetails, setMeetingDetails] = useState([]);
+  const { socket} = useGlobalContext()
 
   const getMeetingDetails = async (meetingId) => {
     try {
@@ -30,41 +32,78 @@ const page = () => {
   };
  
 
-  const getStreamingStatus = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-streaming-status/${meetingId}`
-      );
+  // const getStreamingStatus = async (meetingId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-streaming-status/${meetingId}`
+  //     );
 
-      if (response.data.isStreaming) {
+  //     if (response.data.isStreaming) {
+  //       router.push(
+  //         `/meeting/${params.id}?fullName=${encodeURIComponent(
+  //           fullName
+  //         )}&role=${encodeURIComponent(userRole)}`
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error in getting participant list", error);
+  //   }
+  // };
+
+   // Use effect for getting meeting details
+   
+    // * get streaming status
+  const getStreamingStatus = async (meetingId) => {
+    socket.emit("getStreamingStatus", { meetingId });
+  };
+
+  
+
+  // * get streaming status response function
+  const handleGetStreamingStatusResponse = (response) => {
+    if (response.success) {
+      setIsStreaming(response.isStreaming);
+          if (response.isStreaming) {
         router.push(
           `/meeting/${params.id}?fullName=${encodeURIComponent(
             fullName
           )}&role=${encodeURIComponent(userRole)}`
         );
       }
-    } catch (error) {
-      console.error("Error in getting participant list", error);
+    } else {
+      console.error("Failed to get streaming status:", response.message);
     }
   };
 
-   // Use effect for getting meeting details
+  useEffect(() => {
+    let intervalId;
+    socket.on("getStreamingStatusResponse", handleGetStreamingStatusResponse);
+
+    getStreamingStatus(params.id);
+
+    return () => {
+      socket.off("getStreamingStatusResponse", handleGetStreamingStatusResponse);
+      clearInterval(intervalId);
+    };
+  }, [params.id]);
+
+   
    useEffect(() => {
     getMeetingDetails(params.id);
   }, [params.id]);
 
-  useEffect(() => {
-    const meetingId = params?.id; // Ensure params id is used correctly
-    if (meetingId) {
-      // Set an interval to fetch participant list every 3 seconds
-      const intervalId = setInterval(() => {
-        getStreamingStatus(meetingId);
-      }, 3000);
+  // useEffect(() => {
+  //   const meetingId = params?.id; // Ensure params id is used correctly
+  //   if (meetingId) {
+  //     // Set an interval to fetch participant list every 3 seconds
+  //     const intervalId = setInterval(() => {
+  //       getStreamingStatus(meetingId);
+  //     }, 3000);
 
-      // Cleanup interval when the component is unmounted
-      return () => clearInterval(intervalId);
-    }
-  }, [params?.id]);
+  //     // Cleanup interval when the component is unmounted
+  //     return () => clearInterval(intervalId);
+  //   }
+  // }, [params?.id]);
 
   return (
     <div className="flex justify-between min-h-screen max-h-screen meeting_bg">
