@@ -5,10 +5,12 @@ class ParticipantModel {
     socketId;
     audioTrack;
     videoTrack;
+    displayTrack;
     isMicMute;
     isWebCamMute;
     isShareScreen;
     role;
+
 
     constructor(name,socketId,isWebCamMute=true,isMicMute=true,isShareScreen=false,role="participant"){
         this.name = name;

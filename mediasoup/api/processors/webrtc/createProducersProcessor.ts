@@ -11,12 +11,14 @@ export class Producer {
     public socketId:string
     public producer: mediasoup.types.Producer
     public room_id:string
+    public type: 'webcam' | 'mic' | 'display';
 
-    constructor(socketId:string,producer: mediasoup.types.Producer,room_id:string){
-   
+    constructor(socketId:string,producer: mediasoup.types.Producer,room_id:string,type: 'webcam' | 'mic' | 'display'){
+      
         this.producer = producer;
         this.room_id = room_id;
         this.socketId = socketId;
+        this.type = type;
     }
 }
 
@@ -48,7 +50,7 @@ class ProducerProcessor {
     }
 
     getAllProducer(room_id:string,socketId:string):IProducerData[]{
-        return this.producers.filter((producer:Producer) => producer.room_id == room_id && producer.socketId != socketId).map((producer:Producer) => ({producerId: producer.producer.id,socketId: producer.socketId}));
+        return this.producers.filter((producer:Producer) => producer.room_id == room_id && producer.socketId != socketId).map((producer:Producer) => ({producerId: producer.producer.id,socketId: producer.socketId,type: producer.type}));
     }
 
 

@@ -45,7 +45,7 @@ const OngoingMeeting = () => {
 
 
   const { audioPermisson, cameraPermisson } = useCheckPermission();
-  const { handleJoin, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role);
+  const { handleJoin, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef,remoteDisplayTracksRef } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role);
 
 
 
@@ -53,8 +53,13 @@ const OngoingMeeting = () => {
   useEffect(() => {
 
     const id = participantsRef.current[selected]?.socketId
-    if (id && selectedVideoRef.current && remoteVideoTracksRef.current[id]) {
-      selectedVideoRef.current.srcObject = new MediaStream([remoteVideoTracksRef.current[id]]);
+    // if (id && selectedVideoRef.current && remoteVideoTracksRef.current[id]) {
+    //   selectedVideoRef.current.srcObject = new MediaStream([remoteVideoTracksRef.current[id]]);
+    //   selectedVideoRef.current.play();
+    //   return
+    // }
+    if (id && selectedVideoRef.current && remoteDisplayTracksRef.current[id]) {
+      selectedVideoRef.current.srcObject = new MediaStream([remoteDisplayTracksRef.current[id]]);
       selectedVideoRef.current.play();
       return
     }
@@ -96,7 +101,7 @@ const OngoingMeeting = () => {
 
 
 
-  }, [selected, videoTrackRef.current, remoteVideoTracksRef.current, participantsRef.current, displayTrackRef.current, superForceRender])
+  }, [selected, videoTrackRef.current, remoteVideoTracksRef.current, participantsRef.current, displayTrackRef.current, superForceRender, remoteDisplayTracksRef])
 
 
   useEffect(() => {
@@ -128,8 +133,6 @@ const OngoingMeeting = () => {
       handleMuteUnmute(false, 'cam');
       setIsWebCamMute(false);
     } else {
-      setIsScreenShare(false);
-      handleScreenShare('unshare');
       setIsWebCamMute(true);
       handleMuteUnmute(true, 'cam');
     }
@@ -158,7 +161,6 @@ const OngoingMeeting = () => {
       handleScreenShare('unshare');
     } else {
       handleScreenShare('share');
-      setIsWebCamMute(true);
       setIsScreenShare(true)
     }
   }, [isScreenShare]);

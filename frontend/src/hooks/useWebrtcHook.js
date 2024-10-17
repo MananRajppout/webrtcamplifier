@@ -60,6 +60,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
   const socketIdRef = useRef(null);
   const usermediaRef = useRef(null);
   const remoteVideoTracksRef = useRef({});
+  const remoteDisplayTracksRef = useRef({});
   const handleJoinCallAlreadyExist = useRef(false);
 
 
@@ -100,7 +101,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
   }, []);
 
 
-  const connectRecvTransport = useCallback((consumerTransport, remoteProducerId, serverConsumerTransportId, socketId) => {
+  const connectRecvTransport = useCallback((consumerTransport, remoteProducerId, serverConsumerTransportId, socketId,type) => {
     socketRef.current?.emit(CONSUME,{
       rtpCapabilities: deviceRef.current?.rtpCapabilities,
       remoteProducerId,
@@ -134,6 +135,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
       const { track } = consumer;
 
       const participantRef = participantsRef.current.find((perticipant) => perticipant.socketId == socketId);
+      const participantRefIndex = participantsRef.current.findIndex((perticipant) => perticipant.socketId == socketId);
      
       
 
@@ -150,21 +152,21 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
             });
           }
         } else {
-          participantRef.videoTrack = track;
-
-          console.log(track,'track coming video')
-          
-          if(remoteVideoTracksRef.current[socketId]){
-            delete remoteVideoTracksRef.current[socketId];
+          if(type == 'display'){
+            participantRef.displayTrack = track;
+            if(remoteDisplayTracksRef.current[socketId]){
+              delete remoteDisplayTracksRef.current[socketId];
+            }
+            remoteDisplayTracksRef.current[socketId] = track;
+            setSelected(participantRefIndex);
+          }else{
+            participantRef.videoTrack = track;
+            
+            if(remoteVideoTracksRef.current[socketId]){
+              delete remoteVideoTracksRef.current[socketId];
+            }
+            remoteVideoTracksRef.current[socketId] = track;
           }
-          remoteVideoTracksRef.current[socketId] = track;
-          // if(videosElementsRef.current[socketId]){
-          //   videosElementsRef.current[socketId].srcObject = new MediaStream([track])
-          //   videosElementsRef.current[socketId].play().catch(error => {
-          //     console.error('Error attempting to play the media:', error);
-          //   });
-          // }
-          
         }
       }
       console.log('audio',audiosElementRef.current[socketId])
@@ -175,7 +177,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
   },[videosElementsRef.current,audiosElementRef.current]);
 
 
-  const signalNewConsumerTransport = useCallback(async (remoteProducerId,socketId) => {
+  const signalNewConsumerTransport = useCallback(async (remoteProducerId,socketId,type) => {
     
     if (consumingTransports.current.includes(remoteProducerId)) return;
     consumingTransports.current.push(remoteProducerId);
@@ -215,7 +217,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
       })
 
       if(consumerTransport){
-        connectRecvTransport(consumerTransport,remoteProducerId,params.id,socketId);
+        connectRecvTransport(consumerTransport,remoteProducerId,params.id,socketId,type);
       }
       
     })
@@ -225,7 +227,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
     const getProducers = useCallback(() => {
       socketRef.current?.emit(GET_PRODUCERS, (producerIds) => {
-        producerIds.forEach((producerId) => signalNewConsumerTransport(producerId.producerId,producerId.socketId))
+        producerIds.forEach((producerId) => signalNewConsumerTransport(producerId.producerId,producerId.socketId,producerId.type))
         console.log(producerIds,'producersids')
       })
     }, [])
@@ -363,12 +365,9 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         if(remoteVideoTracksRef.current[socketId]){
           delete remoteVideoTracksRef.current[socketId];
         }
-        
 
-        
-
-        audioParamsRef.current = { track: audioTrackRef.current };
-        videoParamsRef.current = { track: videoTrackRef.current, ...params };
+        audioParamsRef.current = { track: audioTrackRef.current,appData: {type: 'mic'} };
+        videoParamsRef.current = { track: videoTrackRef.current, ...params,appData: {type: 'webcam'} };
 
         // default mic and cam
         if(isMicMuteRef.current == true && audioTrackRef.current){
@@ -426,19 +425,14 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
         }else{
           participant.isWebCamMute = value;
-          participant.isShareScreen = false;
-          displayTrackRef.current = null;
 
            //producer audio
            if(!videoTrackRef.current){
               videoTrackRef.current = await usermediaRef.current?.getVideoTrack();
+              videoParamsRef.current = { track: videoTrackRef.current, ...params };
+              ProduceTrack('video',videoProducerRef,videoParamsRef);
             }
-           
-
-          if(videoTrackRef.current){
-            videoParamsRef.current = { track: videoTrackRef.current, ...params };
-            ProduceTrack('video',videoProducerRef,videoParamsRef);
-          }
+          
 
           if(value && videoTrackRef.current){
             videoTrackRef.current.enabled = false;
@@ -466,12 +460,11 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
         displayTrackRef.current.onended = () => handleScreenShare('unshare');
 
-        displayParamsRef.current = { track: displayTrackRef.current, ...params };
+        displayParamsRef.current = { track: displayTrackRef.current, ...params,appData:{type: 'display'} };
         ProduceTrack('video',displayProducerRef,displayParamsRef);
         
         if( participant){
           participant.isShareScreen = true;
-          participant.isWebCamMute = true;
         }
         socketRef.current?.emit(MUTE_UNMUTE,{value:true,type:'screen',socketId: socketIdRef.current});
         setSelected(participantIndex);
@@ -521,14 +514,15 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
 
 
-      socketRef.current?.on(NEW_PRODUCER,({producerId,socketId}) => {
-        console.log('new producerer',producerId,socketId);
-        signalNewConsumerTransport(producerId,socketId);
+      socketRef.current?.on(NEW_PRODUCER,({producerId,socketId,type}) => {
+        console.log('new producerer',producerId,socketId,type);
+        signalNewConsumerTransport(producerId,socketId,type);
       })
 
 
 
       socketRef.current?.on(MUTE_UNMUTE,({value,type,socketId}) => {
+        console.log(value,type,socketId,'muteandunmute')
         console.log(value,type,socketId)
         const participant = participantsRef.current.find((participant) => participant.socketId == socketId);
         const participantIndex = participantsRef.current.findIndex((participant) => participant.socketId == socketId);
@@ -544,7 +538,6 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
             if(value){
               setSelected(participantIndex);
               participant.isShareScreen = value;
-              participant.isWebCamMute = true;
             }else{
               participant.isShareScreen = value;
             }
@@ -566,7 +559,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
     
 
     return (
-      { handleJoin, participantsRef,videosElementsRef,audiosElementRef,socketIdRef,videoTrackRef,handleMuteUnmute,remoteVideoTracksRef,handleScreenShare,displayTrackRef}
+      { handleJoin, participantsRef,videosElementsRef,audiosElementRef,socketIdRef,videoTrackRef,handleMuteUnmute,remoteVideoTracksRef,handleScreenShare,displayTrackRef,remoteDisplayTracksRef}
     )
   }
 

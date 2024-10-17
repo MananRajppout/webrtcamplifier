@@ -117,6 +117,7 @@ class createMediasoupListener {
 
 
             socket.on(PRODUCE_TRANSPORT, async ({ kind, rtpParameters, appData }, callback) => {
+                
 
                 const producer = await transportsContainer.getTranport(socket.id)?.produce({
                     kind,
@@ -131,13 +132,13 @@ class createMediasoupListener {
 
                 // add producer to the producers array
                 const room_id = peers.get(socket.id).room_id;
+               
+                this.addProducer(producer, room_id, socket.id,appData?.type);
 
-                this.addProducer(producer, room_id, socket.id)
 
 
-
-                console.log('Producer ID: ', producer.id, producer.kind)
-                socket.to(room_id).emit(NEW_PRODUCER,{producerId: producer.id,socketId: socket.id})
+                console.log('Producer ID: ', producer.id, producer.kind, appData?.type)
+                socket.to(room_id).emit(NEW_PRODUCER,{producerId: producer.id,socketId: socket.id,type: appData?.type})
 
                 producer.on('transportclose', () => {
                     console.log('transport for this producer closed ')
@@ -148,7 +149,8 @@ class createMediasoupListener {
 
                 callback({
                     id: producer.id,
-                    producersExist: producersContainer.getAllProducer(room_id, socket.id).length > 0 ? true : false
+                    producersExist: producersContainer.getAllProducer(room_id, socket.id).length > 0 ? true : false,
+                    
                 })
             });
 
@@ -157,6 +159,7 @@ class createMediasoupListener {
             socket.on(GET_PRODUCERS, (callback) => {
                 const room_id = peers.get(socket.id).room_id;
                 const producerIds = producersContainer.getAllProducer(room_id, socket.id);
+                console.log(producerIds,'producdersss')
                 callback(producerIds);
             })
 
@@ -279,8 +282,9 @@ class createMediasoupListener {
     }
 
 
-    private addProducer(producer: mediasoup.types.Producer, room_id: string, socketId: string) {
-        const newProducer: Producer = new Producer(socketId, producer, room_id);
+    private addProducer(producer: mediasoup.types.Producer, room_id: string, socketId: string,type: 'webcam' | 'mic' | 'display') {
+     
+        const newProducer: Producer = new Producer(socketId, producer, room_id,type);
         producersContainer.addProducer(newProducer);
         console.log(newProducer.producer.id,'producer id')
 

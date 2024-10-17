@@ -9,12 +9,7 @@ const manageAudioProcessor = (type:'mic'|'cam'|'screen',peer:PeerService,value:b
     }else if(type == 'cam'){
         peer.isWebCamMute = value;
     }else{
-        if(value){
-            peer.isShareScreen = value;
-            peer.isWebCamMute = true;
-        }else{
-            peer.isShareScreen = false;
-        }
+        peer.isShareScreen = value;
     }
     peers.set(socketId,peer);
     const room_id = peer.room_id;
