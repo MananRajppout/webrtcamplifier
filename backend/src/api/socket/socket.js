@@ -16,7 +16,6 @@ const setupSocket = (server) => {
     console.log("A user connected");
 
     socket.on("startMeeting", async (data) => {
-      console.log("Received startMeeting event:", data);
       const { meetingId, user } = data;
       const existingMeeting = await Meeting.findById(meetingId);
 
@@ -71,13 +70,10 @@ const setupSocket = (server) => {
         liveMeeting: newLiveMeeting,
       });
 
-      // console.log("existingMeeting", existingMeeting);
     });
 
     socket.on("participantJoinMeeting", async (data) => {
-      console.log("Received participantJoinMeeting event:", data);
       const { meetingId, name, role } = data;
-      console.log("meetingId", meetingId);
 
       let liveMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
 
@@ -126,9 +122,7 @@ const setupSocket = (server) => {
     });
 
     socket.on("observerJoinMeeting", async (data) => {
-      console.log("Received observerJoinMeeting event:", data);
       const { meetingId, name, role, passcode } = data;
-      console.log("meetingId", meetingId);
 
       const meeting = await Meeting.findById(meetingId);
       if (!meeting) {
@@ -148,7 +142,6 @@ const setupSocket = (server) => {
         });
         return;
       }
-      console.log("meeting", meeting);
       let liveMeeting = await LiveMeeting.findOne({ meetingId });
       if (!liveMeeting) {
         socket.emit("observerJoinMeetingResponse", {
@@ -158,7 +151,6 @@ const setupSocket = (server) => {
         });
         return;
       }
-      console.log("liveMeeting", liveMeeting);
       const isInObserverList = liveMeeting.observerList.some(
         (observer) => observer.name === name
       );
@@ -175,7 +167,6 @@ const setupSocket = (server) => {
 
       liveMeeting.observerList.push({ name, role, id: observerId });
       await liveMeeting.save();
-      console.log("liveMeeting", liveMeeting);
 
       socket.emit("observerJoinMeetingResponse", {
         success: true,
@@ -186,7 +177,6 @@ const setupSocket = (server) => {
     });
 
     socket.on("getWaitingList", async (data) => {
-      console.log("Received getWaitingList event:", data);
       const { meetingId } = data;
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -214,7 +204,6 @@ const setupSocket = (server) => {
     });
 
     socket.on("acceptFromWaitingRoom", async (data) => {
-      console.log("Received acceptFromWaitingRoom event:", data);
       const { meetingId, participant } = data;
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -268,7 +257,6 @@ const setupSocket = (server) => {
     });
 
     socket.on("getParticipantList", async (data) => {
-      console.log("Received getParticipantList event:", data);
       const { meetingId } = data;
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -302,7 +290,6 @@ const setupSocket = (server) => {
     });
 
     socket.on("removeParticipantFromMeeting", async (data) => {
-      console.log("Received removeParticipantFromMeeting event:", data);
       const { meetingId, name, role } = data;
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -356,7 +343,6 @@ const setupSocket = (server) => {
     });
 
     socket.on("participantSendMessage", async (data) => {
-      console.log("Received participantSendMessage event:", data);
       const { meetingId, message } = data;
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -400,7 +386,6 @@ const setupSocket = (server) => {
     });
 
     socket.on("getParticipantChat", async (data) => {
-      console.log("Received getParticipantChat event:", data);
       const { meetingId } = data;
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
@@ -437,9 +422,125 @@ const setupSocket = (server) => {
       }
     });
 
+    socket.on("getObserverList", async (data) => {
+      ("Received getObserverList event:", data);
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("getObserverListResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,   
+          });
+          return;
+        }
+
+        const fullObserverList = [
+          liveMeeting.moderator,
+          ...liveMeeting.observerList,
+        ];
+        
+        socket.emit("getObserverListResponse", {
+          success: true,
+          message: "Observer list retrieved successfully",
+          observersList: fullObserverList,
+        });
+      } catch (error) {
+        console.error("Error in getObserverList:", error);
+        socket.emit("getObserverListResponse", {
+          success: false, 
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+    socket.on("sendMessageObserver", async (data) => {
+      const { meetingId, message } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("sendMessageObserverResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        // Create a new ChatMessage document
+        const newChatMessage = new ChatMessage({
+          senderName: message.senderName,
+          receiverName: message.receiverName,
+          message: message.message,
+        });
+
+        // Save the new chat message
+        const savedChatMessage = await newChatMessage.save();
+
+        // Add the saved chat message's ID to the liveMeeting's observerChat array
+        liveMeeting.observerChat.push(savedChatMessage._id);
+        await liveMeeting.save();
+
+        const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
+        // console.log("updatedLiveMeeting in sendMessageObserver", updatedLiveMeeting);
+
+        socket.emit("observerChatResponse", {
+          success: true,
+          message: "Message sent to observer",
+          observerMessages: updatedLiveMeeting.observerChat,
+        });
+      } catch (error) {
+        console.error("Error in sendMessageObserver:", error);
+        socket.emit("observerChatResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+    socket.on("getObserverChat", async (data) => {
+      const { meetingId } = data;
+      console.log("meetingId", meetingId);
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
+        if (!liveMeeting) {
+          socket.emit("observerChatResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        if (!liveMeeting.observerChat || liveMeeting.observerChat.length === 0) {
+          socket.emit("observerChatResponse", {
+            success: false,
+            message: "No chat messages found for this meeting",
+            meetingId: meetingId,
+          });
+          return;
+        }
+        console.log("liveMeeting.observerChat in getObserverChat", liveMeeting.observerChat);
+        socket.emit("observerChatResponse", {
+          success: true,
+          message: "Observer chat retrieved successfully",
+          observerMessages: liveMeeting.observerChat,
+        });
+      } catch (error) {
     
-    
-     
+        console.error("Error in getObserverChat:", error);
+        socket.emit("observerChatResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+      
 
 
 

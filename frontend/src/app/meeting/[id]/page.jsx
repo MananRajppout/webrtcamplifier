@@ -85,12 +85,19 @@ const page = () => {
     let intervalId;
     socket.on("getParticipantListResponse", handleParticipantList);
 
-    socket.on("removeParticipantFromMeetingResponse", handleRemoveParticipantFromMeetingResponse);
+    socket.on(
+      "removeParticipantFromMeetingResponse",
+      handleRemoveParticipantFromMeetingResponse
+    );
     socket.on("participantChatResponse", handleParticipantChatResponse);
+    socket.on("getObserverListResponse", handleObserverListResponse);
+    socket.on("observerChatResponse", handleObserverChatResponse);
 
     // Initial request
     requestParticipantList();
     getParticipantChat(params.id);
+    getObserverList(params.id);
+    getObserverChat(params.id);
     // Set up interval to request participant list every 5 seconds
     const requestParticipantListIntervalId = setInterval(
       requestParticipantList,
@@ -119,11 +126,26 @@ const page = () => {
       }
       clearInterval(requestParticipantListIntervalId);
       socket.off("getParticipantListResponse", handleParticipantList);
-      socket.off("removeParticipantFromMeetingResponse", handleRemoveParticipantFromMeetingResponse);
+      socket.off(
+        "removeParticipantFromMeetingResponse",
+        handleRemoveParticipantFromMeetingResponse
+      );
       socket.off("participantChatResponse", handleParticipantChatResponse);
+      socket.off("getObserverListResponse", handleObserverListResponse);
+      socket.off("getObserverChatResponse", handleObserverChatResponse);
     };
   }, [userRole, params.id]);
 
+  console.log('observers messages ', observersMessages)
+
+  // * get observer list response function
+  const handleObserverListResponse = (response) => {
+    if (response.success) {
+      setObservers(response.observersList);
+    } else {
+      console.error("Failed to get observer list:", response.message);
+    }
+  };
 
   // * get participant chat response function
   const handleParticipantChatResponse = (response) => {
@@ -134,21 +156,32 @@ const page = () => {
     }
   };
 
+  // * get observer chat response function
+  const handleObserverChatResponse = (response) => {
+    if (response.success) {
+      setObserversMessages(response.observerMessages);
+    } else {
+      console.error("Failed to get observer chat:", response.message);
+    }
+  };
+
   // * remove participant from meeting response function
   const handleRemoveParticipantFromMeetingResponse = (response) => {
     if (response.success) {
       setRemovedParticipants(response.removeParticipantList);
-      const participantMatched =
-          response?.removeParticipantList.some(
-            (participant) => participant.name === fullName
-          );
+      const participantMatched = response?.removeParticipantList.some(
+        (participant) => participant.name === fullName
+      );
 
-        if (participantMatched) {
-          // Redirect to the "remove participant" page if the user is removed
-          router.push("/remove-participant");
-        }
+      if (participantMatched) {
+        // Redirect to the "remove participant" page if the user is removed
+        router.push("/remove-participant");
+      }
     } else {
-      console.error("Failed to remove participant from meeting:", response.message);
+      console.error(
+        "Failed to remove participant from meeting:",
+        response.message
+      );
     }
   };
 
@@ -180,62 +213,77 @@ const page = () => {
     socket.emit("getParticipantList", { meetingId: params.id });
   };
 
-   // *accept participant from waiting list
-   const acceptParticipant = async (participant) => {
+  // *accept participant from waiting list
+  const acceptParticipant = async (participant) => {
     socket.emit("acceptFromWaitingRoom", { participant, meetingId: params.id });
   };
 
-// * request function for removing participant  from meeting
-const removeParticipant = async (name, role, meetingId) => {
-  socket.emit("removeParticipantFromMeeting", { name, role, meetingId });
-};
+  // * request function for removing participant  from meeting
+  const removeParticipant = async (name, role, meetingId) => {
+    socket.emit("removeParticipantFromMeeting", { name, role, meetingId });
+  };
 
+  // * participant send message function
+  const sendMessageParticipant = async (message) => {
+    socket.emit("participantSendMessage", { message, meetingId: params.id });
+  };
 
-// * participant send message function
-const sendMessageParticipant = async (message) => {
-  socket.emit("participantSendMessage", { message, meetingId: params.id });
-};
+  // * get participant chat request function
+  const getParticipantChat = async (meetingId) => {
+    socket.emit("getParticipantChat", { meetingId });
+  };
 
-// * get participant chat request function
-const getParticipantChat = async (meetingId) => {
-  socket.emit("getParticipantChat", { meetingId });
-};
+  // *get observer list request function
+  const getObserverList = async (meetingId) => {
+    socket.emit("getObserverList", { meetingId });
+  };
 
-// ! get participant chat
+  // *send message to observer
 
-// const getParticipantChat = async (meetingId) => {
-//   try {
-//     const response = await axios.get(
-//       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-participant-chat/${meetingId}`
-//     );
+  const sendMessageObserver = async (message) => {
+    socket.emit("sendMessageObserver", { message, meetingId: params.id });
+  };
 
-//     if (
-//       response?.data?.message === "Participant chat retrieved successfully"
-//     ) {
-//       setParticipantMessages(response?.data?.participantMessages);
-//     }
-//   } catch (error) {
-//     console.error("Error:", error);
-//   }
-// };
+  // *get observer chat request function
+  const getObserverChat = async (meetingId) => {
+    socket.emit("getObserverChat", { meetingId });
+  };
 
-// ! participant send message
-// const sendMessageParticipant = async (message) => {
-//   try {
-//     const response = await axios.post(
-//       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/send-message-to-participant`,
-//       {
-//         message: message,
-//         meetingId: params.id,
-//       }
-//     );
-//     if (response?.data?.message === "Chat message saved successfully") {
-//       setParticipantMessages(response?.data?.participantMessages);
-//     }
-//   } catch (error) {
-//     console.error("error", error);
-//   }
-// };
+  // ! get participant chat
+
+  // const getParticipantChat = async (meetingId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-participant-chat/${meetingId}`
+  //     );
+
+  //     if (
+  //       response?.data?.message === "Participant chat retrieved successfully"
+  //     ) {
+  //       setParticipantMessages(response?.data?.participantMessages);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
+
+  // ! participant send message
+  // const sendMessageParticipant = async (message) => {
+  //   try {
+  //     const response = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/send-message-to-participant`,
+  //       {
+  //         message: message,
+  //         meetingId: params.id,
+  //       }
+  //     );
+  //     if (response?.data?.message === "Chat message saved successfully") {
+  //       setParticipantMessages(response?.data?.participantMessages);
+  //     }
+  //   } catch (error) {
+  //     console.error("error", error);
+  //   }
+  // };
 
   // ! remove participant from meeting
   // const removeParticipant = async (name, role, meetingId) => {
@@ -460,7 +508,7 @@ const getParticipantChat = async (meetingId) => {
 
   // !get waiting list
 
-   // const getWaitingList = async (meetingId) => {
+  // const getWaitingList = async (meetingId) => {
   //   try {
   //     const response = await axios.get(
   //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/waiting-list/${meetingId}`
@@ -485,18 +533,23 @@ const getParticipantChat = async (meetingId) => {
   //   }
   // };
 
-  const getObserverList = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/observer-list/${meetingId}`
-      );
-      setObservers(response?.data?.observersList);
-    } catch (error) {
-      console.error("Error in getting observer list", error);
-    }
-  };
+  
+  
+  
+  
+  
 
- 
+  // !get observer list
+  // const getObserverList = async (meetingId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/observer-list/${meetingId}`
+  //     );
+  //     setObservers(response?.data?.observersList);
+  //   } catch (error) {
+  //     console.error("Error in getting observer list", error);
+  //   }
+  // };
 
   // !accept participant from waiting list
   // const acceptParticipant = async (participant) => {
@@ -577,39 +630,40 @@ const getParticipantChat = async (meetingId) => {
   //     console.error("error", error);
   //   }
   // };
-  const sendMessageObserver = async (message) => {
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/send-message-to-observer`,
-        {
-          message: message,
-          meetingId: params.id,
-        }
-      );
-      if (response?.data?.message === "Chat message saved successfully") {
-        setObserversMessages(response?.data?.observersMessages);
-      }
-    } catch (error) {
-      console.error("error", error);
-    }
-  };
+  
+  
+  // !send message to observer
+  // const sendMessageObserver = async (message) => {
+  //   try {
+  //     const response = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/send-message-to-observer`,
+  //       {
+  //         message: message,
+  //         meetingId: params.id,
+  //       }
+  //     );
+  //     if (response?.data?.message === "Chat message saved successfully") {
+  //       setObserversMessages(response?.data?.observersMessages);
+  //     }
+  //   } catch (error) {
+  //     console.error("error", error);
+  //   }
+  // };
 
- 
+  // !get observer chat
+  // const getObserverChat = async (meetingId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-observer-chat/${meetingId}`
+  //     );
 
-  const getObserverChat = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-observer-chat/${meetingId}`
-      );
-
-      if (response?.data?.message === "Observers chat retrieved successfully") {
-        setObserversMessages(response?.data?.observersMessages);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
+  //     if (response?.data?.message === "Observers chat retrieved successfully") {
+  //       setObserversMessages(response?.data?.observersMessages);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
 
   const participantLeft = async (name, role, meetingId) => {
     try {
