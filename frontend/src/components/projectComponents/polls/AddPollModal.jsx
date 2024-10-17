@@ -114,7 +114,6 @@ const AddPollModal = ({ onClose, pollToEdit, project, setLocalProjectState, setP
           dataToSend
         );
 
-        console.log('response form addd poll', response.data)
         if (response.status === 201) {
           setPolls(response.data.polls)
           toast.success("Poll created successfully");

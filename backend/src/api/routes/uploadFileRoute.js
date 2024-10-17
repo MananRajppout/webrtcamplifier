@@ -35,7 +35,6 @@ router.post('/upload', upload.single('file'), fileController.uploadFile);
 
 // GET - List All Files
 router.get('/files', (req, res, next) => {
-  console.log("GET /api/files route hit");
   next();
 }, fileController.getFiles);
 

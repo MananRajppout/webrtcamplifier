@@ -62,7 +62,6 @@ const { default: axios } = require('axios');
 
 const startMeeting = async (req, res) => {
   const { user, meetingId } = req.body;
-  console.log('user in startMeeting', user, meetingId)
   let iframeUrl = null;
   try {
     // Check if the meeting exists in the Meeting collection
@@ -79,7 +78,6 @@ const startMeeting = async (req, res) => {
 
       if (response.data.roomId) {
         webRtcRoomId = response.data.roomId;
-        console.log('create-room api response', response.data.roomId)
       } else {
         return res.status(400).json({ message: "Failed to create room" });
       }
@@ -87,7 +85,6 @@ const startMeeting = async (req, res) => {
       console.error("Error creating room:", error);
       return res.status(500).json({ message: "Error creating room", error: error.message });
     }
-    console.log('web rtc room id after initial room creation', webRtcRoomId)
     // Call the API to add the moderator as a user
    
     try {
@@ -95,9 +92,7 @@ const startMeeting = async (req, res) => {
         roomId: webRtcRoomId,
         userName: `${user.firstName} ${user.lastName}`
       });
-      console.log('add user response', addUserResponse.data)
       iframeUrl = addUserResponse.data.iframeUrl.replace(/^"|"$/g, '');
-      console.log("Moderator :", user.firstName, "joined to Room ID:", iframeUrl);
       if (addUserResponse.data.message !== "User added successfully") {
         return res.status(400).json({ message: "Failed to add user" });
       }
@@ -106,7 +101,6 @@ const startMeeting = async (req, res) => {
       console.error("Error adding user:", error);
       return res.status(500).json({ message: "Error adding user", error: error.message });
     }
-    console.log('web rtc room id after adding moderator', webRtcRoomId)
     // Check if a LiveMeeting document already exists for this meeting
     let liveMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
 
@@ -119,17 +113,14 @@ const startMeeting = async (req, res) => {
         liveMeeting.ongoing = true;
         liveMeeting.webRtcRoomId = webRtcRoomId;
         liveMeeting.iframeUrl = iframeUrl;
-        console.log('web rtc room id in the else block', webRtcRoomId)
         await liveMeeting.save();
         return res.status(200).json({ message: "Meeting resumed", liveMeeting });
       }
     }
 
-    console.log('iframeUrl:', iframeUrl);
 
     // Generate a unique ID for the moderator
     const moderatorId = uuidv4();
-    console.log('web rtc room id before save', webRtcRoomId)
     // If no LiveMeeting document exists, create a new one
     const newLiveMeeting = new LiveMeeting({
       meetingId: meetingId,
@@ -159,7 +150,6 @@ const startMeeting = async (req, res) => {
 
 const joinMeetingParticipant = async (req, res) => {
   const { name, role, meetingId } = req.body;
-  console.log(name, role, meetingId);
 
   try {
     const meeting = await Meeting.findById(meetingId);
@@ -201,7 +191,6 @@ const joinMeetingParticipant = async (req, res) => {
 
 const joinMeetingObserver = async (req, res) => {
   const { name, role, passcode, meetingId } = req.body;
-  console.log(name, role, passcode, meetingId);
 
   try {
     // Check if the meeting exists in the Meeting collection
@@ -276,41 +265,7 @@ const getWaitingList = async (req, res) => {
   }
 };
 
-// const acceptFromWaitingRoom = async (req, res) => {
-//   const { participant, meetingId } = req.body;
-//   console.log(participant, meetingId);
 
-//   try {
-//     const liveMeeting = await LiveMeeting.findOne({ meetingId });
-
-//     if (!liveMeeting) {
-//       return res.status(404).json({ message: 'Live meeting not found' });
-//     }
-
-//     const participantIndex = liveMeeting.waitingRoom.findIndex(p => p.name === participant.name);
-
-//     if (participantIndex === -1) {
-//       return res.status(404).json({ message: 'Participant not found in waiting room' });
-//     }
-
-//     const [removedParticipant] = liveMeeting.waitingRoom.splice(participantIndex, 1);
-
-
-//     // Add a unique ID to the participant before adding to participantsList
-//     const participantWithId = {
-//       ...removedParticipant.toObject(),
-//       id: uuidv4()
-//     };
-
-//     liveMeeting.participantsList.push(participantWithId);
-
-//     await liveMeeting.save();
-
-//     res.status(200).json({ message: 'Participant moved to participants list', updatedLiveMeeting: liveMeeting });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error accepting participant from waiting room', error: error.message });
-//   }
-// };
 
 const acceptFromWaitingRoom = async (req, res) => {
   const { participant, meetingId } = req.body;
@@ -344,7 +299,6 @@ const acceptFromWaitingRoom = async (req, res) => {
         roomId: liveMeeting.webRtcRoomId,
         userName: participant.name
       });
-      console.log("Participant :", participant.name, "joined to Room ID:", liveMeeting.webRtcRoomId);
       if (addUserResponse.data.message !== "User added successfully") {
         // If adding the user to the WebRTC room fails, rollback the transaction
         await session.abortTransaction();
@@ -388,7 +342,6 @@ const acceptFromWaitingRoom = async (req, res) => {
 
 const getParticipantList = async (req, res) => {
   const { meetingId } = req.params;
-// console.log('get participant list meeting Id', meetingId);
   try {
     const liveMeeting = await LiveMeeting.findOne({ meetingId });
 
@@ -608,34 +561,6 @@ const observerSendMessage = async (req, res) => {
   }
 }
 
-// const removeParticipantFromMeeting = async(req, res) => {
-//   const { meetingId, name, role } = req.body;
-//   try {
-//     const liveMeeting = await LiveMeeting.findOne({ meetingId });
-
-//     if (!liveMeeting) {
-//       return res.status(404).json({ message: "Live meeting not found" });
-//     }
-
-//     if (role === 'Participant') {
-//       liveMeeting.waitingRoom = liveMeeting.waitingRoom.filter(participant => participant.name !== name);
-//       liveMeeting.participantsList = liveMeeting.participantsList.filter(participant => participant.name !== name);
-//     } else if (role === 'Observer') {
-//       liveMeeting.observerList = liveMeeting.observerList.filter(observer => observer.name !== name);
-//     } else {
-//       return res.status(400).json({ message: "Invalid role provided" });
-//     }
-
-//     await liveMeeting.save();
-
-//     res.status(200).json({ message: "Participant removed successfully" });
-//   } catch (error) {
-//     console.error("Error removing participant:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// }
-
-
 const removeParticipantFromMeeting = async (req, res) => {
   const { meetingId, name, role } = req.body;
   try {
@@ -665,7 +590,6 @@ const removeParticipantFromMeeting = async (req, res) => {
           roomId: liveMeeting.webRtcRoomId,
           userName: name
         });
-        console.log('participant remove response', response.data);
 
        
    
@@ -675,7 +599,6 @@ const removeParticipantFromMeeting = async (req, res) => {
     }
 
 
-    console.log('live meeting before remove participant', liveMeeting.removedParticipants);
 
     await liveMeeting.save();
 
@@ -712,7 +635,6 @@ const participantLeaveFromMeeting = async (req, res) => {
           roomId: liveMeeting.webRtcRoomId,
           userName: name
         });
-        console.log('participant remove response', response.data);
       }
     } else if (role === 'Observer') {
       liveMeeting.observerList = liveMeeting.observerList.filter(observer => observer.name !== name);
@@ -722,7 +644,6 @@ const participantLeaveFromMeeting = async (req, res) => {
       //   userName: name
       // });
 
-      // console.log('observer remove response', response.data);
 
     } else {
       return res.status(400).json({ message: "Invalid role provided" });
@@ -740,7 +661,6 @@ const participantLeaveFromMeeting = async (req, res) => {
 
 const getWebRtcMeetingId = async (req, res) => {
   const { meetingId } = req.params;
-  console.log('meetingId', meetingId);
 
   try {
     const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -761,7 +681,7 @@ const getWebRtcMeetingId = async (req, res) => {
 
 const getIframeLink = async (req, res) => {
   const { meetingId } = req.params;
-  // console.log('meetingId for iframe', meetingId);
+  // ('meetingId for iframe', meetingId);
 
   try {
     const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -795,7 +715,6 @@ const startMeetingStreaming = async (req, res) => {
       return res.status(404).json({ message: 'Meeting not found' });
     }
 
-    console.log('Meeting updated:', updatedMeeting);
 
     res.status(200).json({ message: 'Meeting streaming started successfully', updatedMeeting });
   } catch (error) {
@@ -807,7 +726,6 @@ const startMeetingStreaming = async (req, res) => {
 
 const getStreamingStatus = async (req, res) => {
   const { meetingId } = req.params;
-  console.log('meetingId for streaming status', meetingId);
   try {
     // Find the live meeting by meetingId
     const liveMeeting = await LiveMeeting.findOne({ meetingId: meetingId });

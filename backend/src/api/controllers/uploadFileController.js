@@ -40,7 +40,6 @@ exports.getFiles = (req, res) => {
 
 exports.deleteFile = (req, res) => {
   const fileId = req.params.id;
-  console.log('File ID:', fileId);
 
   File.findByIdAndDelete(fileId)
     .then((deletedFile) => {
@@ -50,7 +49,6 @@ exports.deleteFile = (req, res) => {
 
       // Debugging: Check the path before deleting
       const filePath = path.resolve(__dirname, '..', 'uploads', deletedFile.filename);
-      console.log('Deleting file at:', filePath);
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {

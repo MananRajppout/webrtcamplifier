@@ -4,6 +4,7 @@ import ParticipantLeftSideBar from "@/components/participantWaitingRoom/Particip
 import Button from "@/components/shared/button";
 import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import Logo from "@/components/shared/Logo";
+import { useGlobalContext } from "@/context/GlobalContext";
 import axios from "axios";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,6 +15,7 @@ const page = () => {
   const searchParams = useSearchParams();
   const params = useParams();
   const router = useRouter();
+  const {socket} = useGlobalContext()
   const fullName = searchParams.get("fullName");
   const userRole = searchParams.get("role");
   const [participants, setParticipants] = useState([]);
@@ -30,48 +32,88 @@ const page = () => {
     }
   };
 
-  const getParticipantList = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/participant-list/${meetingId}`
-      );
-      setParticipants(response?.data?.participantsList);
-
-      // Check if any participant matches the fullName and userRole
-      const matchedParticipant = response?.data?.participantsList.some(
-        (participant) =>
-          participant.name === fullName && participant.role === userRole
-      );
-
-      if (matchedParticipant) {
-        router.push(
-          `/meeting/${params.id}?fullName=${encodeURIComponent(
-            fullName
-          )}&role=${encodeURIComponent(userRole)}`
-        );
-      }
-    } catch (error) {
-      console.error("Error in getting participant list", error);
-    }
-  };
-
-  // Use effect for getting meeting details
+  // * transferring participant from waiting room to meeting room
   useEffect(() => {
     getMeetingDetails(params.id);
-  }, [params.id]);
 
-  useEffect(() => {
-    const meetingId = params?.id; // Ensure params id is used correctly
-    if (meetingId) {
-      // Set an interval to fetch participant list every 3 seconds
-      const intervalId = setInterval(() => {
-        getParticipantList(meetingId);
-      }, 3000);
+    // Set up socket listener for participant list
+    socket.on("getParticipantListResponse", (response) => {
+      if (response.success) {
+        setParticipants(response.participantList);
+        console.log('participant list', response.participantList)
+        
+        // Check if the current user is in the participant list
+        const isUserInMeeting = response.participantList.some(
+          (participant) => participant.name === fullName && participant.role === userRole
+        );
 
-      // Cleanup interval when the component is unmounted
-      return () => clearInterval(intervalId);
-    }
-  }, [params?.id]);
+        if (isUserInMeeting) {
+          router.push(
+            `/meeting/${params.id}?fullName=${encodeURIComponent(
+              fullName
+            )}&role=${encodeURIComponent(userRole)}`
+          );
+        }
+      } else {
+        console.error("Failed to get participant list:", response.message);
+      }
+    });
+
+
+    // Function to request participant list
+  const requestParticipantList = () => {
+    socket.emit("getParticipantList", { meetingId: params.id });
+  };
+
+  // Initial request
+  requestParticipantList();
+
+   // Set up interval to request participant list every 5 seconds
+   const intervalId = setInterval(requestParticipantList, 1000);
+
+
+
+
+    // Clean up function
+    return () => {
+      socket.off("getParticipantListResponse");
+      clearInterval(intervalId);
+    };
+  }, [params.id, socket, fullName, userRole, router]);
+
+
+
+  // const getParticipantList = async (meetingId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/participant-list/${meetingId}`
+  //     );
+  //     setParticipants(response?.data?.participantsList);
+
+  //     // Check if any participant matches the fullName and userRole
+  //     const matchedParticipant = response?.data?.participantsList.some(
+  //       (participant) =>
+  //         participant.name === fullName && participant.role === userRole
+  //     );
+
+  //     if (matchedParticipant) {
+  //       router.push(
+  //         `/meeting/${params.id}?fullName=${encodeURIComponent(
+  //           fullName
+  //         )}&role=${encodeURIComponent(userRole)}`
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error in getting participant list", error);
+  //   }
+  // };
+
+  // Use effect for getting meeting details
+  // useEffect(() => {
+  //   getMeetingDetails(params.id);
+  // }, [params.id]);
+
+ 
 
   return (
     <div className="flex justify-between min-h-screen max-h-screen meeting_bg">

@@ -9,14 +9,15 @@ import { FaShareAlt, FaUser } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import ShareMeetingModal from "./ShareMeetingModal";
 import toast from "react-hot-toast";
+import io from "socket.io-client";
 
 const MeetingTab = ({ meetings }) => {
-  const [localMeetingState, setLocalMeetingState]  = useState([])
+  const [localMeetingState, setLocalMeetingState] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const modalRef = useRef();
-  const { user } = useGlobalContext();
+  const { user, socket } = useGlobalContext();
   const [isShareMeetingModalOpen, setIsShareMeetingModalOpen] = useState(false);
 
   const toggleModal = (event, meeting) => {
@@ -48,6 +49,24 @@ const MeetingTab = ({ meetings }) => {
     setIsModalOpen(false);
   };
 
+  // useEffect(() => {
+  //   // Establish socket connection
+  //   const newSocket = io(process.env.NEXT_PUBLIC_BACKEND_BASE_URL);
+  //   setSocket(newSocket);
+
+  //   // Log when connection is established
+  //   newSocket.on('connect', () => {
+  //   });
+
+  //   // Log any connection errors
+  //   newSocket.on('connect_error', (error) => {
+  //     console.error('Socket connection error:', error);
+  //   });
+
+  //   // Clean up the socket connection when the component unmounts
+  //   return () => newSocket.disconnect();
+  // }, []);
+
   useEffect(() => {
     // Update localMeetingState whenever meetings prop changes
     setLocalMeetingState(meetings);
@@ -66,52 +85,98 @@ const MeetingTab = ({ meetings }) => {
   const handleJoinMeeting = async (meeting) => {
     if (meeting.moderator.email === user.email) {
       const fullName = `${user.firstName} ${user.lastName}`;
-      const postingrole = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
-        { name: `${user.firstName} ${user.lastName}`, role: "Moderator" }
-      );
-      localStorage.setItem("RoletoSend", postingrole.data._id);
-      sessionStorage.setItem("room", meeting._id);
-      sessionStorage.setItem("username", meeting.name);
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/start-meeting`,
-        { user, meetingId: meeting._id }
-      );
+      try {
+        if (socket) {
+          socket.emit("startMeeting", {
+            meetingId: meeting._id,
+            user: {
+              fullName,
+              email: user.email,
+              role: "Moderator",
+            },
+          });
 
-      if (response?.data?.liveMeeting?.ongoing) {
-        router.push(
-          `/meeting/${meeting._id}?fullName=${encodeURIComponent(
-            fullName
-          )}&role=Moderator`
-        );
-      } else {
-        console.error("Received error from backend", response?.data?.error);
+          // Listen for a response from the server
+          socket.on("startMeetingResponse", (response) => {
+            console.log("Received joinMeetingResponse:", response);
+
+            if (!response.success) {
+              toast.error(response.message);
+            } else {
+              const liveMeetingData = response.liveMeeting;
+              console.log("Live meeting data:", liveMeetingData);
+
+              router.push(
+                `/meeting/${meeting._id}?fullName=${encodeURIComponent(
+                  fullName
+                )}&role=Moderator`
+              );
+            }
+          });
+        } else {
+          console.error("Socket not initialized");
+        }
+      } catch (error) {
+        console.error("Error joining meeting:", error);
       }
     } else {
-      const fullName = `${user.firstName} ${user.lastName}`;
-      // router.push(`/meeting/${meeting._id}?fullName=${encodeURIComponent(fullName)}&role=Admin`);
+      console.log("Non-moderator joining logic not implemented");
     }
   };
 
+  // const handleJoinMeeting = async (meeting) => {
+  //   if (meeting.moderator.email === user.email) {
+  //     const fullName = `${user.firstName} ${user.lastName}`;
+  //     const postingrole = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
+  //       { name: `${user.firstName} ${user.lastName}`, role: "Moderator" }
+  //     );
+  //     localStorage.setItem("RoletoSend", postingrole.data._id);
+  //     sessionStorage.setItem("room", meeting._id);
+  //     sessionStorage.setItem("username", meeting.name);
+  //     const response = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/start-meeting`,
+  //       { user, meetingId: meeting._id }
+  //     );
+
+  //     if (response?.data?.liveMeeting?.ongoing) {
+  //       router.push(
+  //         `/meeting/${meeting._id}?fullName=${encodeURIComponent(
+  //           fullName
+  //         )}&role=Moderator`
+  //       );
+  //     } else {
+  //       console.error("Received error from backend", response?.data?.error);
+  //     }
+  //   } else {
+  //     const fullName = `${user.firstName} ${user.lastName}`;
+  //     // router.push(`/meeting/${meeting._id}?fullName=${encodeURIComponent(fullName)}&role=Admin`);
+  //   }
+  // };
+
   const handleDeleteMeeting = async (meeting) => {
-    console.log('meeting', meeting)    
-    const isConfirmed = confirm("Are you sure you want to delete this meeting?");
-    
+    console.log("meeting", meeting);
+    const isConfirmed = confirm(
+      "Are you sure you want to delete this meeting?"
+    );
+
     if (!isConfirmed) {
       return; // If the user cancels, exit the function
     }
-  
+
     try {
       const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-meeting/${meeting._id}`
       );
-  
+
       if (response.status === 200) {
         console.log("Meeting deleted successfully");
-        toast.success(`${response.data.message}`)
+        toast.success(`${response.data.message}`);
         // Update the meetings state by filtering out the deleted meeting
-        const updatedMeetings = localMeetingState.filter((m) => m._id !== meeting._id);
-        setIsModalOpen(false)
+        const updatedMeetings = localMeetingState.filter(
+          (m) => m._id !== meeting._id
+        );
+        setIsModalOpen(false);
         setLocalMeetingState(updatedMeetings);
       } else {
         console.error("Failed to delete meeting");
@@ -120,8 +185,6 @@ const MeetingTab = ({ meetings }) => {
       console.error("Error deleting meeting:", error);
     }
   };
-  
-      
 
   return (
     <div className="overflow-x-auto">
@@ -200,7 +263,7 @@ const MeetingTab = ({ meetings }) => {
             </li>
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={()=>handleDeleteMeeting(selectedMeeting)}
+              onClick={() => handleDeleteMeeting(selectedMeeting)}
             >
               <BsFillEnvelopeAtFill />
               <span>Delete</span>

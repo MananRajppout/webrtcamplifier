@@ -9,11 +9,14 @@ import InputField from "@/components/shared/InputField";
 import Button from "@/components/shared/button";
 import joinMeetingImage from "../../../../public/join-meeting.png";
 import Footer from "@/components/shared/Footer";
+import { useGlobalContext } from "@/context/GlobalContext";
+import toast from "react-hot-toast";
 
 const Page = () => {
   const [formData, setFormData] = useState({
     fullName: "Participant 1",
   });
+  const { socket } = useGlobalContext();
 
   const params = useParams();
   const meetingId = params.id;
@@ -41,62 +44,105 @@ const Page = () => {
 
     const role = getRoleFromUrl(); // Extract the role based on URL
 
-    try {
-      // Call the new API with the extracted role and name
-      const userRoleResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
-        {
-          name: formData.fullName,
-          role: "Participant",
-        }
-      );
+    // Emit socket event instead of making an API call
+    socket.emit("participantJoinMeeting", {
+      name: formData.fullName,
+      role: role, // Use the extracted role
+      meetingId: meetingId,
+    });
 
-      // Store the role ID for later use
-      localStorage.setItem("RoletoSend", userRoleResponse.data._id);
-
-      // Call the original API for joining the meeting
-      const meetingResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/join-meeting-participant`,
-        {
-          name: formData.fullName,
-          role: "Participant", // Assuming the role to send here is always "Participant"
-          meetingId: meetingId,
-        }
-      );
-
-      // Determine where to redirect based on the responses
-      if (
-        meetingResponse?.data?.message === "Participant added to waiting room"
-      ) {
+    
+    // Listen for the response from the socket
+    socket.on("participantJoinMeetingResponse", (response) => {
+      if (response.message === "Participant added to waiting room") {
+        console.log('response received from socket', response.message)
         router.push(
           `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName
           )}&role=Participant`
         );
-      } else if (
-        meetingResponse?.data?.message ===
-          "Participant already in the meeting" ||
-        meetingResponse?.data?.message === "Participant already in waiting room"
-      ) {
+      } else if (response.message === "Participant already in waiting room" || response.message === "Participant added to waiting room" ) {
+        console.log('response received from socket', response.message)
+        router.push(
+          `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
+            formData.fullName
+          )}&role=Participant`
+        );
+      } else if (response.message === "Participant already in the meeting") {
         router.push(
           `/meeting/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName
           )}&role=Participant`
         );
-      } else {
-        // Handle unexpected response
-        console.error(
-          "Unexpected response from the meeting API",
-          meetingResponse?.data?.message
-        );
+      } else if (response.message === "Meeting not found") {
+        toast.error("Meeting not found");
+      }else {
+        console.error("Error joining meeting:", response.message);
       }
-    } catch (error) {
-      console.error(
-        "Received error from backend",
-        error?.response?.data?.message
-      );
-    }
-  };
+    });
+};
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   const role = getRoleFromUrl(); // Extract the role based on URL
+
+  //   try {
+  //     // Call the new API with the extracted role and name
+  //     const userRoleResponse = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
+  //       {
+  //         name: formData.fullName,
+  //         role: "Participant",
+  //       }
+  //     );
+
+  //     // Store the role ID for later use
+  //     localStorage.setItem("RoletoSend", userRoleResponse.data._id);
+
+  //     // Call the original API for joining the meeting
+  //     const meetingResponse = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/join-meeting-participant`,
+  //       {
+  //         name: formData.fullName,
+  //         role: "Participant", // Assuming the role to send here is always "Participant"
+  //         meetingId: meetingId,
+  //       }
+  //     );
+
+  //     // Determine where to redirect based on the responses
+  //     if (
+  //       meetingResponse?.data?.message === "Participant added to waiting room"
+  //     ) {
+  //       router.push(
+  //         `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
+  //           formData.fullName
+  //         )}&role=Participant`
+  //       );
+  //     } else if (
+  //       meetingResponse?.data?.message ===
+  //         "Participant already in the meeting" ||
+  //       meetingResponse?.data?.message === "Participant already in waiting room"
+  //     ) {
+  //       router.push(
+  //         `/meeting/${meetingId}?fullName=${encodeURIComponent(
+  //           formData.fullName
+  //         )}&role=Participant`
+  //       );
+  //     } else {
+  //       // Handle unexpected response
+  //       console.error(
+  //         "Unexpected response from the meeting API",
+  //         meetingResponse?.data?.message
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       "Received error from backend",
+  //       error?.response?.data?.message
+  //     );
+  //   }
+  // };
 
  
   return (
