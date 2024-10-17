@@ -44,7 +44,18 @@ const page = () => {
       }
     });
 
-  
+    socket.on("participantsAdmitted", (data) => {
+      const isUserAdmitted = data.admittedParticipants.some(
+        participant => participant.name === fullName && participant.role === userRole
+      );
+      if (isUserAdmitted) {
+        router.push(
+          `/meeting/${params.id}?fullName=${encodeURIComponent(
+            fullName
+          )}&role=${encodeURIComponent(userRole)}`
+        );
+      }
+    });
       
     // Set up socket listener for participant list
     socket.on("getParticipantListResponse", (response) => {
@@ -88,6 +99,7 @@ const page = () => {
     return () => {
       socket.off("getParticipantListResponse");
       socket.off("participantRemovedFromWaiting");
+      socket.off("participantsAdmitted");
       clearInterval(intervalId);
     };
   }, [params.id, socket, fullName, userRole, router]);

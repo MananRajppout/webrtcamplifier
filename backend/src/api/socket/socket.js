@@ -640,11 +640,51 @@ const setupSocket = (server) => {
       }
     });
 
-
-        // Add the saved chat message's ID to the liveMeeting's participantChat array
+    socket.on("admitAllFromWaitingRoom", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("admitAllFromWaitingRoomResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+    
+        // Move all participants from waiting room to participants list
+        const participantsToAdmit = liveMeeting.waitingRoom.map(participant => ({
+          ...participant.toObject(),
+          id: uuidv4()
+        }));
+    
+        liveMeeting.participantsList.push(...participantsToAdmit);
+        liveMeeting.waitingRoom = [];
+        await liveMeeting.save();
+    
+        socket.emit("admitAllFromWaitingRoomResponse", {
+          success: true,
+          message: "All participants admitted",
+          admittedParticipants: participantsToAdmit,
+        });
+    
+        // Notify all admitted participants
+        io.emit("participantsAdmitted", { admittedParticipants: participantsToAdmit });
+    
+      } catch (error) {
+        console.error("Error in admitAllFromWaitingRoom:", error);
+        socket.emit("admitAllFromWaitingRoomResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+  
     
 
-
+// * disconnect
     socket.on("disconnect", () => {
       console.log("User disconnected");
     });

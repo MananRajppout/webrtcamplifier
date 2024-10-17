@@ -253,6 +253,11 @@ const startStreaming = async (meetingId) => {
     socket.emit("removeFromWaitingRoom", { meetingId, participant });
   };
 
+// * admit all from waiting room
+
+const admitAllFromWaitingRoom = (meetingId) => {
+  socket.emit("admitAllFromWaitingRoom", { meetingId });
+};
 
 
   // * get streaming status response function
@@ -813,6 +818,7 @@ const startStreaming = async (meetingId) => {
                 isStreaming={isStreaming}
                 setStartStreaming={startStreaming}
                 removeFromWaitingRoom={removeFromWaitingRoom}
+                admitAllFromWaitingRoom={admitAllFromWaitingRoom}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">

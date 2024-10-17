@@ -49,7 +49,7 @@ const LeftSidebarOpenUi = ({
   removeParticipant,
   isStreaming,
   setStartStreaming,
-  setIsWhiteBoardOpen, removeFromWaitingRoom
+  setIsWhiteBoardOpen, removeFromWaitingRoom, admitAllFromWaitingRoom
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -507,11 +507,7 @@ const LeftSidebarOpenUi = ({
                 type="submit"
                 children="Admit All"
                 className="text-xs px-2 py-1 rounded-lg text-white"
-                onClick={() =>
-                  waitingRoom?.forEach((participant) =>
-                    acceptParticipant(participant)
-                  )
-                }
+                onClick={()=>admitAllFromWaitingRoom(meetingId)}
               />
             </div>
             {/* participant container */}
