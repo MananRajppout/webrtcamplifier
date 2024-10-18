@@ -11,3 +11,4 @@ export const CONSUME = "event:consume";
 export const CONSUME_RESUME = "event:consumer-resume";
 export const NEW_PRODUCER = "event:new_producer";
 export const MUTE_UNMUTE = "event:mute_unmute";
+export const ROOM_SETTING_CHANGE = "event:change_room_setting";

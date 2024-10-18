@@ -9,6 +9,7 @@ import { PiMicrophone, PiMicrophoneSlash, PiVideoCameraSlash, PiVideoCamera, PiA
 import { useSearchParams, useParams } from 'next/navigation';
 import { MdOutlineDeblur } from "react-icons/md"
 import RenderParticipantsAudio from '../RenderParticipantsAudio';
+import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipant';
 
 const OngoingMeeting = () => {
   const searchParams = useSearchParams();
@@ -30,6 +31,10 @@ const OngoingMeeting = () => {
   const [sidebarOpen, setSideBarOpen] = useState(false);
   const [selectedSideBar, setSelectedSide] = useState('chat');
   const [showbtn, setshowbtn] = useState(false);
+  const [settingOpen,setSettingOpen] = useState(false);
+  const [setting,setSetting] = useState({
+    allowScreenShare: false,
+  });
 
 
   const isMobile = false;
@@ -45,7 +50,7 @@ const OngoingMeeting = () => {
 
 
   const { audioPermisson, cameraPermisson } = useCheckPermission();
-  const { handleJoin, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef,remoteDisplayTracksRef } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role);
+  const { handleJoin, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef,handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role,setting,setSetting);
 
 
 
@@ -190,6 +195,22 @@ const OngoingMeeting = () => {
     }
   }, []);
 
+  const handleClickOytside = useCallback(() => {
+    if(setChatOpen){
+      setSettingOpen(false)
+    }
+  },[settingOpen]);
+
+  const handleAllowScreen = useCallback(() => {
+    if(setting.allowScreenShare){
+      setSetting(prev => ({...prev,allowScreenShare: false}))
+      handleChangeSetting({setting,allowScreenShare: false})
+    }else{
+      setSetting(prev => ({...prev,allowScreenShare: true}));
+      handleChangeSetting({setting,allowScreenShare: true});
+    }
+  },[setting])
+
 
 
   return (
@@ -211,20 +232,60 @@ const OngoingMeeting = () => {
                 participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length == 0 &&
                 <>
                   {
-                    participantsRef.current.length > 1 ?
-                      <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-center items-center  w-[100%] bg-[#3C3C3C]`}>
+                    participantsRef.current?.length > 1 ?
+
+                      <>
                         {
-                          participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").map((participant, index) => (
-                            <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]}/>
-                          ))
+                          participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 0 ?
+                            (
+                              //when no one share camera
+                              <div className={`md:h-[65vh] h-[30vh] relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-start items-end p-5  w-[100%] bg-[#3C3C3C]`}>
+                                <div className={`${(participantsRef.current[0]?.isWebCamMute == false || participantsRef.current[0]?.isShareScreen === true) ? 'block' : 'hidden'} w-full h-full absolute top-0 left-0 right-0 bottom-0`}>
+                                  <video autoPlay className='w-full h-full object-cover' ref={localVideoElementRef}> </video>
+                                </div>
+                                <h1 className='text-3xl font-medium text-white z-10 select-none text-center'>{participantsRef.current[0]?.name} one me</h1>
+                              </div>
+                            ) : participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 1 ?
+                              // when one user share camera
+                              (
+                                <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-1  w-[100%] bg-[#3C3C3C]`}>
+                                {
+                                  participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
+                                    <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
+                                  ))
+                                }
+                              </div>
+                              ) : participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 2 ?
+                                (
+                                  // when 2 user share camera 
+                                  <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-2 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                    {
+                                      participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
+                                        <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
+                                      ))
+                                    }
+                                  </div>
+                                ) :
+                                // when more then 2 user share camera 
+                                (
+                                  <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-center items-center  w-[100%] bg-[#3C3C3C]`}>
+                                    {
+                                      participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
+                                        <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
+                                      ))
+                                    }
+                                  </div>
+                                )
                         }
-                      </div>
+                      </>
                       :
-                      <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-center items-center  w-[100%] bg-[#3C3C3C]`}>
+
+                      // when only one user in meet 
+                      <div className={`md:h-[65vh] h-[30vh] relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-start items-end p-5  w-[100%] bg-[#3C3C3C]`}>
                         <div className={`${(participantsRef.current[0]?.isWebCamMute == false || participantsRef.current[0]?.isShareScreen === true) ? 'block' : 'hidden'} w-full h-full absolute top-0 left-0 right-0 bottom-0`}>
                           <video autoPlay className='w-full h-full object-cover' ref={localVideoElementRef}> </video>
                         </div>
-                        <h1 className='text-3xl font-semibold text-white z-10 select-none text-center'>{participantsRef.current[0]?.name}</h1>
+                        <h1 className='text-3xl font-medium text-white z-10 select-none text-center'>{participantsRef.current[0]?.name}</h1>
                       </div>
                   }
                 </>
@@ -236,7 +297,7 @@ const OngoingMeeting = () => {
                 <div className={`md:h-[65vh] h-[30vh] !p-2 relative overflow-y-auto cursor-pointer  flex flex-row justify-end items-end md:!flex-col md:gap-0 w-[100vw] md:w-[16vw] xl:w-[17vw] bg-[#3C3C3C]`}>
                   {
                     participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
-                      <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={false} stream={remoteVideoTracksRef.current[participant.socketId]}/>
+                      <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={false} stream={remoteVideoTracksRef.current[participant.socketId]} />
                     ))
                   }
                 </div>
@@ -262,7 +323,7 @@ const OngoingMeeting = () => {
                   <div className={`w-full flex items-center justify-center ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} bg-[#3C3C3C] text-white`} key={participantsRef.current[selected].socketId}>
 
                     <div className={`${(participantsRef.current[selected].isWebCamMute == false || participantsRef.current[selected].isShareScreen === true) ? 'block' : 'hidden'} w-full h-full`}>
-                      <video ref={selectedVideoRef} autoPlay className='w-full h-full object-cover'> </video>
+                      <video ref={selectedVideoRef} autoPlay className='w-full h-full object-contain'> </video>
                     </div>
                   </div>
                 }
@@ -271,7 +332,7 @@ const OngoingMeeting = () => {
                   participantsRef.current && participantsRef.current.length > 0 && !participantsRef.current[selected] &&
                   <div className={`w-full  flex items-center justify-center ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} bg-[#3C3C3C] text-white`} key={participantsRef.current[0].socketId}>
                     <div className={`${(participantsRef.current[0].isWebCamMute == false || participantsRef.current[0].isShareScreen === true) ? 'block' : 'hidden'} w-full h-full`}>
-                      <video ref={selectedVideoRef} autoPlay className='w-full h-full object-cover'> </video>
+                      <video ref={selectedVideoRef} autoPlay className='w-full h-full object-contain'> </video>
                     </div>
                   </div>
                 }
@@ -310,15 +371,46 @@ const OngoingMeeting = () => {
                       {isWebCamMute ? <PiVideoCameraSlash /> : <PiVideoCamera />}
                     </PermissionButton>
 
-                    <button className={`title-notification-container p-2 text-2xl rounded-full md:block hidden  relative ${isScreenShare ? 'bg-red-600 text-white' : 'bg-gray-200 text-black'}`} onClick={shareScreen}>
-                      <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>{isScreenShare ? 'Stop presenting' : 'Present'}</span>
-                      <PiAirplay />
-                    </button>
+                    {
+                      (setting.allowScreenShare || role == 'Moderator') &&
+                      <button className={`title-notification-container p-2 text-2xl rounded-full md:block hidden  relative ${isScreenShare ? 'bg-red-600 text-white' : 'bg-gray-200 text-black'}`} onClick={shareScreen}>
+                        <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>{isScreenShare ? 'Stop presenting' : 'Present'}</span>
+                        <PiAirplay />
+                      </button>
+                    }
 
                     <button className={`title-notification-container p-2 text-2xl rounded-full  relative ${isBlur ? 'bg-green-600 text-white' : 'bg-gray-200 text-black'}`} onClick={() => setIsBlur(prev => !prev)}>
-                      <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Settings</span>
+                      <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Blur Background</span>
                       <MdOutlineDeblur />
                     </button>
+
+
+
+
+
+                    {
+                        settingOpen && 
+                        <div className='absolute -top-[21rem] left-[60%] bg-gray-800 text-white z-50  rounded-md w-[15rem] h-[20rem] overflow-y-auto'>
+                        <ul className='space-x-4 p-2'>
+                          <li className='flex items-center gap-3'>
+                            <input type='checkbox' checked={setting.allowScreenShare} onClick={handleAllowScreen}/>
+                            <p className='text-white text-xs text-left'>Allow participants to share their screen.</p>
+                          </li>
+                        </ul>
+                      </div>
+                      }
+
+                    {
+                      role == 'Moderator' &&
+                      <button className={`title-notification-container p-2 text-2xl rounded-full  relative bg-gray-200 text-black`} onClick={() => setSettingOpen((p) => !p)}>
+                      <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] py-2 bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Setting</span>
+
+                      
+                     
+
+                      <PiGear />
+                    </button>
+                    }
 
 
 

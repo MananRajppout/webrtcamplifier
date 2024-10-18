@@ -3,13 +3,24 @@ import {  WebRtcTransport } from 'mediasoup/node/lib/types.js';
 import {WebRTCTransportConfig} from '../../config/mediasoupConfig.js'
 
 
+export interface ISetting 
+{
+  allowScreenShare: boolean,
+}
+
 
 class manageRoomProcessor {
     public router: mediasoup.types.Router;
     public participants: string[] = [];
-    constructor(router:mediasoup.types.Router,socketId:string){
+    public settings:ISetting = {
+      allowScreenShare: false,
+    }
+    constructor(router:mediasoup.types.Router,socketId:string,settings:ISetting,role:string){
         this.router = router;
         this.participants = [socketId];
+        if(role == 'Moderator'){
+          this.settings = settings;
+        }
     }
 
 
@@ -61,6 +72,15 @@ class manageRoomProcessor {
             reject(error)
           }
         })
+    }
+
+
+    changeRoomSetting(settings: ISetting,role:string){
+      if(role == 'Moderator'){
+        this.settings = settings;
+      }else{
+        throw new Error('Only Moderator change room setting');
+      }
     }
 }
 

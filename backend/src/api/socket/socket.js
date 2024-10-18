@@ -7,7 +7,7 @@ const ChatMessage = require("../models/chatModel");
 const setupSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: [process.env.FRONTEND_BASE_URL, "http://localhost:3000"],
+      origin: "*",
       methods: ["GET", "POST"],
     },
   });

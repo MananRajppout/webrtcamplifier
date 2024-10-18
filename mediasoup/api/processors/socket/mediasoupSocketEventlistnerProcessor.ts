@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import mediasoupService from "../webrtc/createMediasoupProcessor.js";
-import { CONNECT_TRANSPORT, CONSUME, CONSUME_RESUME, CREATE_WEBRTC_TRANSPORT, DISCONNECT, GET_PRODUCERS, JOIN_ROOM, MUTE_UNMUTE, NEW_PARTCIPANT_JOIN, NEW_PRODUCER, PARTICIPANTS_DISCONNECT, PRODUCE_TRANSPORT, TRANSPORT_RECV_CONNECT } from "../../constants/mediasoupEventConstant.js";
+import { CONNECT_TRANSPORT, CONSUME, CONSUME_RESUME, CREATE_WEBRTC_TRANSPORT, DISCONNECT, GET_PRODUCERS, JOIN_ROOM, MUTE_UNMUTE, NEW_PARTCIPANT_JOIN, NEW_PRODUCER, PARTICIPANTS_DISCONNECT, PRODUCE_TRANSPORT, ROOM_SETTING_CHANGE, TRANSPORT_RECV_CONNECT } from "../../constants/mediasoupEventConstant.js";
 import { consumerContainer, peers, producersContainer, rooms, transportsContainer } from "../../constants/variableConstant.js";
 import * as mediasoup from 'mediasoup';
 
@@ -9,7 +9,7 @@ import { Transport } from "../webrtc/createTransportProcessor.js";
 import { Producer } from "../webrtc/createProducersProcessor.js";
 import { Router, WebRtcTransport } from "mediasoup/node/lib/types.js";
 import { Consumer } from "../webrtc/createConsumerProcessor.js";
-import RoomsService from "../user/manageRoomProcessor.js";
+import RoomsService, { ISetting } from "../user/manageRoomProcessor.js";
 import muteUnmuteProcessor from "../media/manageAudioProcessor.js";
 
 class createMediasoupListener {
@@ -31,9 +31,10 @@ class createMediasoupListener {
         const connection = this._io;
         connection.on('connection', (socket) => {
             console.log('user connect ', socket.id);
-            socket.on(JOIN_ROOM, async ({ room_id, username,isMicMute,isWebCamMute,role = "participant"  }, callback) => {
+            socket.on(JOIN_ROOM, async ({ room_id, username,isMicMute,isWebCamMute,role = "participant",settings={}  }, callback) => {
+                console.log(settings);
                 socket.join(room_id);
-                const router = await this.createRoom(room_id, socket.id);
+                const router = await this.createRoom(room_id, socket.id,settings,role);
                 const isAdmin = rooms.get(room_id) ? false : true;
                 const newPeer: PeerService = new PeerService(socket.id, isAdmin, username, room_id,isWebCamMute,isMicMute,false,role);
 
@@ -50,10 +51,14 @@ class createMediasoupListener {
                 })
 
                 console.log(rtpCapabilities,participants,socket.id)
-                callback(socket.id, rtpCapabilities, participants);
+                const roomSettings:ISetting = rooms.get(room_id)?.settings;
+                callback(socket.id, rtpCapabilities, participants,roomSettings);
                 // connection.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute });
                 socket.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute,role });
             });
+
+
+            
 
 
             socket.on(DISCONNECT, () => {
@@ -251,10 +256,16 @@ class createMediasoupListener {
                 muteUnmuteProcessor(type,peer,value,socketId,socket);
             })
 
+            socket.on(ROOM_SETTING_CHANGE,({room_id,role,settings}) => {
+                const room:RoomsService = rooms.get(room_id);
+                room.changeRoomSetting(settings,role);
+                socket.to(room_id).emit(ROOM_SETTING_CHANGE,settings);
+            })
+
         })
     }
 
-    private async createRoom(room_id: string, socketId: string): Promise<mediasoup.types.Router> {
+    private async createRoom(room_id: string, socketId: string,settings:ISetting,role:string): Promise<mediasoup.types.Router> {
         let router: mediasoup.types.Router;
         if (rooms.get(room_id)) {
             const roomRef: RoomsService = rooms.get(room_id);
@@ -262,7 +273,7 @@ class createMediasoupListener {
             router = roomRef.router;
         } else {
             router = await mediasoupService.getRouter();
-            const newRoom = new RoomsService(router, socketId);
+            const newRoom = new RoomsService(router, socketId,settings,role);
             rooms.set(room_id, newRoom)
         }
         return router;

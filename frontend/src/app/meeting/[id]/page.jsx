@@ -581,6 +581,8 @@ const startStreaming = async (meetingId) => {
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-meeting-status/${meetingId}`
       );
 
+      console.log(response.data,'999999999999999999999999999')
+
       if (response?.data?.meetingStatus === true) {
         setIsMeetingOngoing(true);
       }

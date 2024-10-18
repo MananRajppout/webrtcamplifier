@@ -1,4 +1,4 @@
-import { CONNECT_TRANSPORT, CONSUME, CONSUME_RESUME, CREATE_WEBRTC_TRANSPORT, GET_PRODUCERS, JOIN_ROOM, MUTE_UNMUTE, NEW_PARTCIPANT_JOIN, NEW_PRODUCER, PARTICIPANTS_DISCONNECT, PRODUCE_TRANSPORT, TRANSPORT_RECV_CONNECT } from '@/constant/events';
+import { CONNECT_TRANSPORT, CONSUME, CONSUME_RESUME, CREATE_WEBRTC_TRANSPORT, GET_PRODUCERS, JOIN_ROOM, MUTE_UNMUTE, NEW_PARTCIPANT_JOIN, NEW_PRODUCER, PARTICIPANTS_DISCONNECT, PRODUCE_TRANSPORT, ROOM_SETTING_CHANGE, TRANSPORT_RECV_CONNECT } from '@/constant/events';
 import React, { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
 import { io, Socket } from "socket.io-client";
 import * as mediasoupClient from 'mediasoup-client';
@@ -32,7 +32,7 @@ let params = {
 
 
 
-const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role) => {
+const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role,setting,setSetting) => {
   const [socketId, setSocketId] = useState(null);
   const [, forceRender] = useState(false);
 
@@ -326,10 +326,13 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
       }
 
       handleJoinCallAlreadyExist.current = true;
-      socketRef.current?.emit(JOIN_ROOM, { room_id, username,isMicMute:isMicMuteRef.current,isWebCamMute:isWebCamMuteRef.current,role }, async (socketId, rtpCapabilities, participants) => {
+      socketRef.current?.emit(JOIN_ROOM, { room_id, username,isMicMute:isMicMuteRef.current,isWebCamMute:isWebCamMuteRef.current,role,settings:role == "Moderator" ? setting: {} }, async (socketId, rtpCapabilities, participants,roomSettings) => {
         setSocketId(socketId);
         socketIdRef.current = socketId;
         rtpCapabilitiesRef.current = rtpCapabilities;
+        if(role != 'Moderator'){
+          setSetting(roomSettings)
+        }
 
 
         
@@ -485,6 +488,12 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
     },[socketIdRef.current,usermediaRef.current]);
 
 
+
+    const handleChangeSetting = useCallback((settings) => {
+      socketRef.current?.emit(ROOM_SETTING_CHANGE,{room_id,role,settings});
+    },[socketRef.current])
+
+
     
 
 
@@ -547,6 +556,10 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         setSuperForceRender(Math.random() * 1000);
       })
 
+      socketRef.current.on(ROOM_SETTING_CHANGE,(settings) => {
+        setSetting(settings);
+      })
+
 
       return () => {
         socketRef.current?.off(NEW_PARTCIPANT_JOIN);
@@ -559,7 +572,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
     
 
     return (
-      { handleJoin, participantsRef,videosElementsRef,audiosElementRef,socketIdRef,videoTrackRef,handleMuteUnmute,remoteVideoTracksRef,handleScreenShare,displayTrackRef,remoteDisplayTracksRef}
+      { handleJoin, participantsRef,videosElementsRef,audiosElementRef,socketIdRef,videoTrackRef,handleMuteUnmute,remoteVideoTracksRef,handleScreenShare,displayTrackRef,remoteDisplayTracksRef,handleChangeSetting}
     )
   }
 
