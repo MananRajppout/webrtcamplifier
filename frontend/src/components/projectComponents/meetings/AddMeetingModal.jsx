@@ -19,7 +19,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings }) => {
     duration: "",
     ongoing: false,
     enableBreakoutRoom: false,
-    meetingPasscode: "",
+    // meetingPasscode: "",
     moderator: "",
   });
 
@@ -259,7 +259,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings }) => {
                 </label>
               </div>
             </div>
-            <div className="flex justify-start items-end gap-5 ">
+            {/* <div className="flex justify-start items-end gap-5 ">
               <InputField
                 label="Passcode"
                 name="meetingPasscode"
@@ -275,7 +275,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings }) => {
                 <FaCircle />
                 <p>Refresh</p>
               </div>
-            </div>
+            </div> */}
           </div>
           <div className="flex justify-center items-center gap-5  pb-8">
             <Button
