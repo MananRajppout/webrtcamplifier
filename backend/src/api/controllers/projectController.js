@@ -39,21 +39,21 @@ const createProject = async (req, res) => {
 
     // Step 2: Create the meetings associated with the project
 
-    const newMeeting = new Meeting({
-      projectId: savedProject._id,
-      title: formData.meeting.title,
-      description: formData.meeting.description,
-      startDate: formData.meeting.startDate,
-      startTime: formData.meeting.startTime,
-      timeZone: formData.meeting.timeZone,
-      duration: formData.meeting.duration,
-      ongoing: formData.meeting.ongoing,
-      enableBreakoutRoom: formData.meeting.enableBreakoutRoom,
-      meetingPasscode: formData.meeting.meetingPasscode,
-      moderator: formData.meeting.moderator,
-    });
+    // const newMeeting = new Meeting({
+    //   projectId: savedProject._id,
+    //   title: formData.meeting.title,
+    //   description: formData.meeting.description,
+    //   startDate: formData.meeting.startDate,
+    //   startTime: formData.meeting.startTime,
+    //   timeZone: formData.meeting.timeZone,
+    //   duration: formData.meeting.duration,
+    //   ongoing: formData.meeting.ongoing,
+    //   enableBreakoutRoom: formData.meeting.enableBreakoutRoom,
+    //   meetingPasscode: formData.meeting.meetingPasscode,
+    //   moderator: formData.meeting.moderator,
+    // });
 
-    await newMeeting.save({ session });
+    // await newMeeting.save({ session });
 
     // Commit the transaction
 
