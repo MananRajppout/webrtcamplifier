@@ -39,6 +39,8 @@ const Register = () => {
     if (!formData.lastName) errors.lastName = "Last Name is required";
     if (!formData.email) errors.email = "Email is required";
     if (!formData.password) errors.password = "Password is required";
+    // New validation for password length
+    if (formData.password.length < 9) errors.password = "Password must be at least 9 characters long";
     if (formData.password !== formData.confirmPassword)
       errors.confirmPassword = "Passwords do not match";
     if (!formData.terms)
@@ -151,6 +153,7 @@ const Register = () => {
                 </button>
               }
             />
+            <p className="text-xs pb-2 text-custom-orange-1">Password must contain 9 or more characters</p>
             <InputField
               label="Confirm Password"
               type={showPassword ? "text" : "password"}
