@@ -49,7 +49,7 @@ const LeftSidebarOpenUi = ({
   removeParticipant,
   isStreaming,
   setStartStreaming,
-  setIsWhiteBoardOpen
+  setIsWhiteBoardOpen, removeFromWaitingRoom, admitAllFromWaitingRoom
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -260,16 +260,16 @@ const LeftSidebarOpenUi = ({
              />
             
             {
-              role === "Moderator" && !isStreaming && (
-                <Button
-                  children="Start Streaming"
-                  variant="meeting"
-                  type="submit"
-                  className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-                  onClick={() => setStartStreaming(meetingId)}
-                />
-              )
-            }
+  role === "Moderator" && (
+    <Button
+      children={isStreaming ? "Stop Streaming" : "Start Streaming"}
+      variant="meeting"
+      type="submit"
+      className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+      onClick={()=>setStartStreaming(meetingId)}
+    />
+  )
+}
 
             
 
@@ -507,11 +507,7 @@ const LeftSidebarOpenUi = ({
                 type="submit"
                 children="Admit All"
                 className="text-xs px-2 py-1 rounded-lg text-white"
-                onClick={() =>
-                  waitingRoom?.forEach((participant) =>
-                    acceptParticipant(participant)
-                  )
-                }
+                onClick={()=>admitAllFromWaitingRoom(meetingId)}
               />
             </div>
             {/* participant container */}
@@ -536,6 +532,7 @@ const LeftSidebarOpenUi = ({
                     type="submit"
                     children="Remove"
                     className="text-xs px-2 py-1 rounded-lg text-white"
+                    onClick={() => removeFromWaitingRoom(user, meetingId)}
                   />
                 </div>
               </div>

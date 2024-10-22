@@ -289,33 +289,6 @@ const setupSocket = (server) => {
       }
     });
 
-    socket.on("getRemovedParticipantsList", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("removeParticipantFromMeetingResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        socket.emit("removeParticipantFromMeetingResponse", {
-          success: true,
-          message: "Participant removed from meeting",
-          removeParticipantList: liveMeeting.removedParticipants,
-        });
-      } catch (error) {
-        console.error("Error in getRemovedParticipantsList:", error);
-        socket.emit("removeParticipantFromMeetingResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
     socket.on("removeParticipantFromMeeting", async (data) => {
       const { meetingId, name, role } = data;
       console.log("name in removeParticipantFromMeeting", name, role, meetingId);
@@ -570,56 +543,135 @@ const setupSocket = (server) => {
       }
     });
 
-    socket.on("startStreaming", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("startStreamingResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        liveMeeting.isStreaming = true;
-        await liveMeeting.save();
-        socket.emit("getStreamingStatusResponse", {
-          success: true,
-          message: "Streaming started successfully",
-          isStreaming: liveMeeting.isStreaming,
-        });
-      } catch (error) {
-        console.error("Error in startStreaming:", error);
-        socket.emit("startStreamingResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
+    // socket.on("startStreaming", async (data) => {
+    //   const { meetingId } = data;
+    //   try {
+    //     const liveMeeting = await LiveMeeting.findOne({ meetingId });
+    //     if (!liveMeeting) {
+    //       socket.emit("startStreamingResponse", {
+    //         success: false,
+    //         message: "Live meeting not found",
+    //         meetingId: meetingId,
+    //       });
+    //       return;
+    //     }
+    //     liveMeeting.isStreaming = true;
+    //     await liveMeeting.save();
+    //     socket.emit("getStreamingStatusResponse", {
+    //       success: true,
+    //       message: "Streaming started successfully",
+    //       isStreaming: liveMeeting.isStreaming,
+    //     });
+    //   } catch (error) {
+    //     console.error("Error in startStreaming:", error);
+    //     socket.emit("startStreamingResponse", {
+    //       success: false,
+    //       message: "Server error occurred",
+    //       meetingId: meetingId,
+    //     });
+    //   }
+    // });
 
-    socket.on("getStreamingStatus", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("getStreamingStatusResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        socket.emit("getStreamingStatusResponse", {
-          success: true,
-          message: "Streaming status retrieved successfully",
-          isStreaming: liveMeeting.isStreaming,
+    // socket.on("getStreamingStatus", async (data) => {
+    //   const { meetingId } = data;
+    //   try {
+    //     const liveMeeting = await LiveMeeting.findOne({ meetingId });
+    //     if (!liveMeeting) {
+    //       socket.emit("getStreamingStatusResponse", {
+    //         success: false,
+    //         message: "Live meeting not found",
+    //         meetingId: meetingId,
+    //       });
+    //       return;
+    //     }
+    //     socket.emit("getStreamingStatusResponse", {
+    //       success: true,
+    //       message: "Streaming status retrieved successfully",
+    //       isStreaming: liveMeeting.isStreaming,
           
-        });
-      } catch (error) {
-        console.error("Error in getStreamingStatus:", error);
+    //     });
+    //   } catch (error) {
+    //     console.error("Error in getStreamingStatus:", error);
+    //     socket.emit("getStreamingStatusResponse", {
+    //       success: false,
+    //       message: "Server error occurred",
+    //       meetingId: meetingId,
+    //     });
+    //   }
+    // });
+
+    socket.on("toggleStreaming", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("toggleStreamingResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+    
+        liveMeeting.isStreaming = !liveMeeting.isStreaming;
+        await liveMeeting.save();
+        console.log('livemeeting . isStreaming', liveMeeting.isStreaming);
+    
         socket.emit("getStreamingStatusResponse", {
+          success: true,
+          message: `Streaming ${liveMeeting.isStreaming ? "started" : "stopped"} successfully`,
+          isStreaming: liveMeeting.isStreaming,
+        });
+    
+        // Notify observers based on streaming status
+        if (liveMeeting.isStreaming) {
+          io.emit("navigateToMeeting", { meetingId });
+          console.log('navigateToMeeting emitted');
+        } else {
+          io.emit("navigateToObserverWaitingRoom", { meetingId });
+          console.log('navigateToObserverWaitingRoom emitted');
+        }
+      } catch (error) {
+        console.error("Error in toggleStreaming:", error);
+        socket.emit("toggleStreamingResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+    
+    socket.on("removeFromWaitingRoom", async (data) => {
+      const { meetingId, participant } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("removeFromWaitingRoomResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+    
+        // Remove the participant from the waiting room
+        liveMeeting.waitingRoom = liveMeeting.waitingRoom.filter(
+          (p) => p.name !== participant.name
+        );
+        await liveMeeting.save();
+    
+        socket.emit("removeFromWaitingRoomResponse", {
+          success: true,
+          message: "Participant removed from waiting room",
+          removedParticipant: participant,
+        });
+    
+        // Notify the removed participant
+        io.emit("participantRemovedFromWaiting", { name: participant.name, role: participant.role });
+    
+      } catch (error) {
+        console.error("Error in removeFromWaitingRoom:", error);
+        socket.emit("removeFromWaitingRoomResponse", {
           success: false,
           message: "Server error occurred",
           meetingId: meetingId,
@@ -627,10 +679,78 @@ const setupSocket = (server) => {
       }
     });
 
-        // Add the saved chat message's ID to the liveMeeting's participantChat array
+    socket.on("admitAllFromWaitingRoom", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("admitAllFromWaitingRoomResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+    
+        // Move all participants from waiting room to participants list
+        const participantsToAdmit = liveMeeting.waitingRoom.map(participant => ({
+          ...participant.toObject(),
+          id: uuidv4()
+        }));
+    
+        liveMeeting.participantsList.push(...participantsToAdmit);
+        liveMeeting.waitingRoom = [];
+        await liveMeeting.save();
+    
+        socket.emit("admitAllFromWaitingRoomResponse", {
+          success: true,
+          message: "All participants admitted",
+          admittedParticipants: participantsToAdmit,
+        });
+    
+        // Notify all admitted participants
+        io.emit("participantsAdmitted", { admittedParticipants: participantsToAdmit });
+    
+      } catch (error) {
+        console.error("Error in admitAllFromWaitingRoom:", error);
+        socket.emit("admitAllFromWaitingRoomResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+  
+    socket.on("getMeetingStatus", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("getMeetingStatusResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        socket.emit("getMeetingStatusResponse", {
+          success: true,
+          message: "Meeting status retrieved",
+          meetingStatus: liveMeeting.ongoing,
+        });
+      } catch (error) {
+        console.error("Error in getMeetingStatus:", error);
+        socket.emit("getMeetingStatusResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
     
 
-
+// * disconnect
     socket.on("disconnect", () => {
       console.log("User disconnected");
     });

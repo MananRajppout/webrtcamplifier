@@ -50,7 +50,7 @@ const Step1 = ({ formData, setFormData }) => {
         </div>
 
         <div>
-          <p className="block text-sm font-semibold mb-2">Start Time</p>
+          <p className="block text-sm font-semibold mb-2">Fieldwork Start Date</p>
           <div className="flex items-center">
             <input
               type="date"
@@ -63,7 +63,7 @@ const Step1 = ({ formData, setFormData }) => {
           </div>
         </div>
         <div>
-          <p className="block text-sm font-semibold mb-2">End Time</p>
+          <p className="block text-sm font-semibold mb-2">Fieldwork End Date</p>
           <div className="flex items-center">
             <input
               type="date"

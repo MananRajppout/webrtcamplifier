@@ -52,7 +52,7 @@ const Step2 = ({ formData, setFormData, contacts, setContacts, isLoading }) => {
 
       {/* participant list div */}
       <div className="pt-3">
-        <HeadingLg children="Participant List" />
+        <HeadingLg children="Project Team" />
         <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
           {contacts && contacts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full">

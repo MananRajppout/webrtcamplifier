@@ -174,16 +174,40 @@ const update = async (req, res) => {
     if (req.file) {
       const file = req.file;
       const filePath = `/uploads/${file.filename}`;
-      req.body.profilePicture = filePath; // update profilePicture field with uploaded file path
+      req.body.profilePicture = filePath; 
     }
 
     delete req.body.password;
-    const result = await userModel.findByIdAndUpdate(
+    const updatedContact = await userModel.findByIdAndUpdate(
       { _id: req.body._id || req.body.id },
       req.body,
       { new: true }
     );
-    res.status(200).json({ result });
+console.log('updatedContact', updatedContact);
+    // Generate new token
+const token = jwt.sign(
+  { 
+    id: updatedContact._id, 
+    name: updatedContact.firstName, 
+    role: updatedContact.role 
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: 86400 } 
+);
+
+res.status(200).json({
+  _id: updatedContact._id,
+  firstName: updatedContact.firstName,
+  lastName: updatedContact.lastName,
+  email: updatedContact.email,
+  role: updatedContact.role,
+  companyName: updatedContact.companyName,
+  roles: updatedContact.roles,
+  isEmailVerified: updatedContact.isEmailVerified,
+  createdAt: updatedContact.createdAt,
+  updatedAt: updatedContact.updatedAt,
+  accessToken: token
+});
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }

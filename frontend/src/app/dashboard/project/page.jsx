@@ -20,13 +20,17 @@ const Page = () => {
   const [totalPages, setTotalPages] = useState(1);
   const { user } = useGlobalContext();
 
-  const fetchProjects = async (userId, page = 1) => {
+  const fetchProjects = async (userId, page = 1, searchQuery = "") => {
     setLoading(true);
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/project/${userId}`,
         {
-          params: { page, limit: 10 },
+          params: { 
+            page, 
+            limit: 10,
+            search: searchQuery
+          },
         }
       );
       setProjects(response.data.projects);
@@ -40,12 +44,15 @@ const Page = () => {
   };
 
   useEffect(() => {
-    fetchProjects(user?._id);
-  }, [user]);
+    if (user?._id) {
+      fetchProjects(user._id, page, searchTerm);
+    }
+  }, [user, page]);
 
   const handleSearch = (term) => {
     setSearchTerm(term);
-    // Add your search logic here
+    setPage(1); // Reset to first page when searching
+    fetchProjects(user?._id, 1, term);
   };
 
   const handleStatusSelect = (status) => {
@@ -121,7 +128,10 @@ const Page = () => {
       {/* Search Bar */}
       <div className="w-full bg-white">
         <div className="p-5 flex justify-Start items-center ">
-          <Search placeholder="Search project name" onSearch={handleSearch} />
+          <Search 
+          onSearch={handleSearch} 
+          placeholder="Search project name" 
+          />
         </div>
       </div>
 

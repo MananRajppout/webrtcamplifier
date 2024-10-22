@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 import Image from "next/image";
@@ -45,6 +45,7 @@ const initialNotifications = [
 ];
 
 const Page = () => {
+ 
   const [showModal, setShowModal] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
@@ -103,36 +104,6 @@ const Page = () => {
     }
   };
 
-  // useEffect(() => {
-  //   const checkToken = () => {
-  //     const token = localStorage.getItem("token");
-  //     if (!token) {
-  //       router.push("/logout");
-  //     }
-  //   };
-
-  //   const fetchUserData = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/find-by-id`,
-  //         {
-  //           params: { id: id },
-  //         }
-  //       );
-  //       if (response.data.result) {
-  //         setUserData(response.data.result);
-  //       } else {
-  //         router.push("/register");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching user data:", error);
-  //       router.push("/register");
-  //     }
-  //   };
-
-  //   checkToken();
-  //   fetchUserData();
-  // }, [id, router]);
 
   const unreadCount = notifications.filter(
     (notification) => !notification.read
@@ -209,9 +180,9 @@ const Page = () => {
               />
               <div className="flex-grow">
                 <h1 className="text-3xl font-semibold text-custom-dark-blue-1">
-                  {user ? user.firstName.toUpperCase() : "Loading..."}
+                  {user ? user?.firstName?.toUpperCase() : "Loading..."}
                 </h1>
-                <p>{user ? user.role.toUpperCase() : "Loading..."}</p>
+                <p>{user ? user?.role?.toUpperCase() : "Loading..."}</p>
               </div>
             </div>
             <div>

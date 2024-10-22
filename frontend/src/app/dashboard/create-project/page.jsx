@@ -149,15 +149,15 @@ const Page = () => {
             isLoading={isLoading}
           />
         );
-      case 3:
-        return (
-          <Step3
-            formData={formData}
-            setFormData={setFormData}
-            contacts={contacts}
-            setContacts={setContacts}
-          />
-        );
+      // case 3:
+      //   return (
+      //     <Step3
+      //       formData={formData}
+      //       setFormData={setFormData}
+      //       contacts={contacts}
+      //       setContacts={setContacts}
+      //     />
+      //   );
 
       default:
         return null;
@@ -176,15 +176,15 @@ const Page = () => {
       case 2:
         return true;
 
-      case 3:
-        return (
-          formData.meeting.title !== "" &&
-          formData.meeting.startDate !== "" &&
-          formData.meeting.startTime !== "" &&
-          formData.meeting.timeZone !== "" &&
-          formData.meeting.duration !== "" &&
-          formData.meeting.meetingPasscode !== ""
-        );
+      // case 3:
+      //   return (
+      //     formData.meeting.title !== "" &&
+      //     formData.meeting.startDate !== "" &&
+      //     formData.meeting.startTime !== "" &&
+      //     formData.meeting.timeZone !== "" &&
+      //     formData.meeting.duration !== "" &&
+      //     formData.meeting.meetingPasscode !== ""
+      //   );
       default:
         return true;
     }
@@ -227,10 +227,10 @@ const Page = () => {
         <div className={`text-white ${getIconClass(2)} p-2 rounded-full`}>
           <FaUsers />
         </div>
-        <HiOutlineMinus className={getLineClass(3)} />
+        {/* <HiOutlineMinus className={getLineClass(3)} />
         <div className={`text-white ${getIconClass(3)} p-2 rounded-full`}>
           <FaUserClock />
-        </div>
+        </div> */}
       </div>
       <div className="flex-grow mx-auto pt-5 md:px-10 ">
         {renderStep()}
@@ -246,7 +246,7 @@ const Page = () => {
               Back
             </Button>
           )}
-          {currentStep < 3 && (
+          {currentStep < 2 && (
             <Button
               onClick={nextStep}
               variant="save"
@@ -255,7 +255,7 @@ const Page = () => {
               Next
             </Button>
           )}
-          {currentStep === 3 && (
+          {currentStep === 2 && (
             <Button
               variant="save"
               type="button"

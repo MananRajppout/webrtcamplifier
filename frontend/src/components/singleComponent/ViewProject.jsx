@@ -314,14 +314,14 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           </div>
           <div className="flex justify-start items-center gap-1 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
-              Opened On:
+            Fieldwork Start Date:
             </p>
             {/* <HeadingLg children="Opened On" /> */}
             <ParagraphBlue2 children={localProjectState?.startDate} />
           </div>
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
-              Expires In:
+            Fieldwork End Date:
             </p>
             {/* <HeadingLg children="Expires In" /> */}
             <ParagraphBlue2 children={localProjectState?.endDate} />

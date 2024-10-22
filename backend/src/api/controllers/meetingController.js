@@ -6,42 +6,50 @@ const Contact = require("../models/contactModel");
 const createMeeting = async (req, res) => {
   const meetingData = req.body;
   try {
-    // Create and save the new meeting
+    // Find the project by projectId
+    const project = await Project.findById(meetingData.projectId);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+console.log('project', project)
+// Set the meetingPasscode from the project
+meetingData.meetingPasscode = project.projectPasscode;
+
+// Create and save the new meeting
     const newMeeting = new Meeting(meetingData);
     const savedMeeting = await newMeeting.save();
+    console.log('saved meeting', savedMeeting)
     // Send a success response with the saved meeting details
     res.status(201).json({
-      message: 'Meeting created successfully',
+      message: "Meeting created successfully",
       meeting: savedMeeting,
     });
-
   } catch (error) {
-    console.error('Error creating meeting:', error);
+    console.error("Error creating meeting:", error);
     res.status(500).json({
-      message: 'Failed to create meeting',
+      message: "Failed to create meeting",
       error: error.message,
     });
   }
 };
 
-
-
 const getAllMeetings = async (req, res) => {
   try {
-   
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     // Find all meetings that match the projectId with pagination
     const meetings = await Meeting.find({ projectId: req.params.projectId })
-    .populate('moderator')
+      .populate("moderator")
       .skip(skip)
       .limit(limit);
-      
-   
+
     // Count total documents matching the projectId
-    const totalDocuments = await Meeting.countDocuments({ projectId: req.params.projectId  });
+    const totalDocuments = await Meeting.countDocuments({
+      projectId: req.params.projectId,
+    });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalDocuments / limit);
@@ -49,7 +57,7 @@ const getAllMeetings = async (req, res) => {
     // If no meetings are found, return a 404 error
     if (!meetings || meetings.length === 0) {
       return res.status(404).json({
-        message: 'No meetings found for this project',
+        message: "No meetings found for this project",
       });
     }
 
@@ -58,12 +66,12 @@ const getAllMeetings = async (req, res) => {
       page: parseInt(page),
       totalPages,
       totalDocuments,
-      meetings
+      meetings,
     });
   } catch (error) {
-    console.error('Error retrieving meetings:', error);
+    console.error("Error retrieving meetings:", error);
     res.status(500).json({
-      message: 'Failed to retrieve meetings',
+      message: "Failed to retrieve meetings",
       error: error.message,
     });
   }
@@ -75,7 +83,7 @@ const verifyModeratorMeetingPasscode = async (req, res) => {
 
   try {
     const meeting = await Meeting.findById(meetingId);
-    
+
     if (!meeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }
@@ -90,37 +98,36 @@ const verifyModeratorMeetingPasscode = async (req, res) => {
   }
 };
 
-const getMeetingById = async(req, res) => {
+const getMeetingById = async (req, res) => {
   const { meetingId } = req.params;
   try {
-    const meeting = await Meeting.findById(meetingId).populate('moderator');
+    const meeting = await Meeting.findById(meetingId).populate("moderator");
     if (!meeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }
-    res.status(200).json({message: "Meeting found", meetingDetails: meeting });
+    res.status(200).json({ message: "Meeting found", meetingDetails: meeting });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-  
-}
+};
 
-const deleteMeeting = async(req, res) => {
-  const { meetingId} = req.params;
+const deleteMeeting = async (req, res) => {
+  const { meetingId } = req.params;
   try {
     const meeting = await Meeting.deleteOne({ _id: meetingId });
     if (!meeting) {
-      return res.status(404).json({message: "Meeting Not Found"})
+      return res.status(404).json({ message: "Meeting Not Found" });
     }
-    res.status(200).json({message: "Meeting successfully deleted", meeting });
+    res.status(200).json({ message: "Meeting successfully deleted", meeting });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
-
+};
 
 module.exports = {
   createMeeting,
-  getAllMeetings, verifyModeratorMeetingPasscode,
-  getMeetingById, deleteMeeting
-
+  getAllMeetings,
+  verifyModeratorMeetingPasscode,
+  getMeetingById,
+  deleteMeeting,
 };

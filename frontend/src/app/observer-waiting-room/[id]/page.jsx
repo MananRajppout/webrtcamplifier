@@ -57,7 +57,22 @@ const page = () => {
     socket.emit("getStreamingStatus", { meetingId });
   };
 
-  
+  // Automatically navigate observer to the meeting route if streaming starts
+useEffect(() => {
+  if (userRole === "Observer") {
+    socket.on("navigateToMeeting", ({ meetingId }) => {
+      console.log('navigate to meeting waiting room');
+      if (params.id === meetingId) {
+        router.push(`/meeting/${meetingId}?fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(userRole)}`);
+      }
+    });
+  }
+
+  return () => {
+    socket.off("navigateToMeeting");
+  };
+}, [params.id, userRole, socket]);
+
 
   // * get streaming status response function
   const handleGetStreamingStatusResponse = (response) => {
@@ -75,17 +90,17 @@ const page = () => {
     }
   };
 
-  useEffect(() => {
-    let intervalId;
-    socket.on("getStreamingStatusResponse", handleGetStreamingStatusResponse);
+  // useEffect(() => {
+  //   let intervalId;
+  //   socket.on("getStreamingStatusResponse", handleGetStreamingStatusResponse);
 
-    getStreamingStatus(params.id);
+  //   getStreamingStatus(params.id);
 
-    return () => {
-      socket.off("getStreamingStatusResponse", handleGetStreamingStatusResponse);
-      clearInterval(intervalId);
-    };
-  }, [params.id]);
+  //   return () => {
+  //     socket.off("getStreamingStatusResponse", handleGetStreamingStatusResponse);
+  //     clearInterval(intervalId);
+  //   };
+  // }, [params.id]);
 
    
    useEffect(() => {

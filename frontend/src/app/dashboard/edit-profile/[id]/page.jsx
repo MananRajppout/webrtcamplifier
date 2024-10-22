@@ -7,6 +7,8 @@ import { FaSave } from "react-icons/fa";
 import InputField from "@/components/shared/InputField";
 import userImage from "../../../../../public/placeholder-image.png";
 import Button from "@/components/shared/button";
+import toast from "react-hot-toast";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const Page = () => {
   const { id } = useParams();
@@ -16,6 +18,7 @@ const Page = () => {
     lastName: "",
     email: "",
   });
+  const { setUser:setGlobalUser } = useGlobalContext();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -49,14 +52,25 @@ const Page = () => {
 
   const handleSave = async () => {
     try {
-      await axios.put(
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/update`,
         user
       );
-      alert("Profile updated successfully");
-      // Optionally redirect or refresh the page
+       // Update user in global context
+    setGlobalUser(response.data);
+
+    // Update token in cookies
+    document.cookie = `token=${response.data.accessToken}; path=/; max-age=86400;`;
+
+    // Update user in localStorage
+    localStorage.setItem("user", JSON.stringify(response.data));
+
+    toast.success("Profile updated successfully");
+    router.push(`/dashboard/my-profile/${id}`);
+      
     } catch (error) {
       console.error("Error updating user data:", error);
+      toast.error("Failed to update profile");
     }
   };
 
