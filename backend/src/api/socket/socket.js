@@ -289,8 +289,6 @@ const setupSocket = (server) => {
       }
     });
 
-   
-
     socket.on("removeParticipantFromMeeting", async (data) => {
       const { meetingId, name, role } = data;
       console.log("name in removeParticipantFromMeeting", name, role, meetingId);
@@ -545,63 +543,104 @@ const setupSocket = (server) => {
       }
     });
 
-    socket.on("startStreaming", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("startStreamingResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        liveMeeting.isStreaming = true;
-        await liveMeeting.save();
-        socket.emit("getStreamingStatusResponse", {
-          success: true,
-          message: "Streaming started successfully",
-          isStreaming: liveMeeting.isStreaming,
-        });
-      } catch (error) {
-        console.error("Error in startStreaming:", error);
-        socket.emit("startStreamingResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
+    // socket.on("startStreaming", async (data) => {
+    //   const { meetingId } = data;
+    //   try {
+    //     const liveMeeting = await LiveMeeting.findOne({ meetingId });
+    //     if (!liveMeeting) {
+    //       socket.emit("startStreamingResponse", {
+    //         success: false,
+    //         message: "Live meeting not found",
+    //         meetingId: meetingId,
+    //       });
+    //       return;
+    //     }
+    //     liveMeeting.isStreaming = true;
+    //     await liveMeeting.save();
+    //     socket.emit("getStreamingStatusResponse", {
+    //       success: true,
+    //       message: "Streaming started successfully",
+    //       isStreaming: liveMeeting.isStreaming,
+    //     });
+    //   } catch (error) {
+    //     console.error("Error in startStreaming:", error);
+    //     socket.emit("startStreamingResponse", {
+    //       success: false,
+    //       message: "Server error occurred",
+    //       meetingId: meetingId,
+    //     });
+    //   }
+    // });
 
-    socket.on("getStreamingStatus", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("getStreamingStatusResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        socket.emit("getStreamingStatusResponse", {
-          success: true,
-          message: "Streaming status retrieved successfully",
-          isStreaming: liveMeeting.isStreaming,
+    // socket.on("getStreamingStatus", async (data) => {
+    //   const { meetingId } = data;
+    //   try {
+    //     const liveMeeting = await LiveMeeting.findOne({ meetingId });
+    //     if (!liveMeeting) {
+    //       socket.emit("getStreamingStatusResponse", {
+    //         success: false,
+    //         message: "Live meeting not found",
+    //         meetingId: meetingId,
+    //       });
+    //       return;
+    //     }
+    //     socket.emit("getStreamingStatusResponse", {
+    //       success: true,
+    //       message: "Streaming status retrieved successfully",
+    //       isStreaming: liveMeeting.isStreaming,
           
-        });
-      } catch (error) {
-        console.error("Error in getStreamingStatus:", error);
+    //     });
+    //   } catch (error) {
+    //     console.error("Error in getStreamingStatus:", error);
+    //     socket.emit("getStreamingStatusResponse", {
+    //       success: false,
+    //       message: "Server error occurred",
+    //       meetingId: meetingId,
+    //     });
+    //   }
+    // });
+
+    socket.on("toggleStreaming", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("toggleStreamingResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+    
+        liveMeeting.isStreaming = !liveMeeting.isStreaming;
+        await liveMeeting.save();
+        console.log('livemeeting . isStreaming', liveMeeting.isStreaming);
+    
         socket.emit("getStreamingStatusResponse", {
+          success: true,
+          message: `Streaming ${liveMeeting.isStreaming ? "started" : "stopped"} successfully`,
+          isStreaming: liveMeeting.isStreaming,
+        });
+    
+        // Notify observers based on streaming status
+        if (liveMeeting.isStreaming) {
+          io.emit("navigateToMeeting", { meetingId });
+          console.log('navigateToMeeting emitted');
+        } else {
+          io.emit("navigateToObserverWaitingRoom", { meetingId });
+          console.log('navigateToObserverWaitingRoom emitted');
+        }
+      } catch (error) {
+        console.error("Error in toggleStreaming:", error);
+        socket.emit("toggleStreamingResponse", {
           success: false,
           message: "Server error occurred",
           meetingId: meetingId,
         });
       }
     });
-
+    
     socket.on("removeFromWaitingRoom", async (data) => {
       const { meetingId, participant } = data;
       try {
@@ -682,6 +721,33 @@ const setupSocket = (server) => {
       }
     });
   
+    socket.on("getMeetingStatus", async (data) => {
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          socket.emit("getMeetingStatusResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        socket.emit("getMeetingStatusResponse", {
+          success: true,
+          message: "Meeting status retrieved",
+          meetingStatus: liveMeeting.ongoing,
+        });
+      } catch (error) {
+        console.error("Error in getMeetingStatus:", error);
+        socket.emit("getMeetingStatusResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
     
 
 // * disconnect

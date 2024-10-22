@@ -90,6 +90,7 @@ const page = () => {
     socket.on("observerChatResponse", handleObserverChatResponse);
     socket.on("getStreamingStatusResponse", handleGetStreamingStatusResponse);
     socket.on("participantRemoved", handleParticipantRemoved);
+    socket.on("getMeetingStatusResponse", handleGetMeetingStatusResponse);
 
 
     // Initial request
@@ -97,7 +98,8 @@ const page = () => {
     getParticipantChat(params.id);
     getObserverList(params.id);
     getObserverChat(params.id);
-    getStreamingStatus(params.id);
+    // getStreamingStatus(params.id);
+    getMeetingStatus(params.id);
     // Set up interval to request participant list every 5 seconds
     const requestParticipantListIntervalId = setInterval(
       requestParticipantList,
@@ -126,7 +128,6 @@ const page = () => {
       }
       clearInterval(requestParticipantListIntervalId);
       socket.off("getParticipantListResponse", handleParticipantList);
-      
       socket.off("participantChatResponse", handleParticipantChatResponse);
       socket.off("getObserverListResponse", handleObserverListResponse);
       socket.off("getObserverChatResponse", handleObserverChatResponse);
@@ -134,7 +135,35 @@ const page = () => {
     };
   }, [userRole, params.id, socket]);
 
-  
+
+// * function to request streaming status
+const getMeetingStatus = async (meetingId) => {
+  socket.emit("getMeetingStatus", { meetingId });
+};
+
+  // !Automatically navigate observer to waiting room if streaming stops
+  console.log('is streaming', isStreaming)
+
+
+useEffect(() => {
+  if (userRole === "Observer") {
+    socket.on("navigateToObserverWaitingRoom", ({ meetingId }) => {
+      console.log('navigateToObserverWaitingRoom in the meeting route', meetingId);
+      if (params.id === meetingId) {
+        router.push(`/observer-waiting-room/${meetingId}?fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(userRole)}`);
+      }
+    });
+  }
+
+  return () => {
+    socket.off("navigateToObserverWaitingRoom");
+  };
+}, [params.id, userRole, socket]);
+
+const handleToggleStreaming = (meetingId) => {
+  console.log('inside toggle streaming', meetingId);
+  socket.emit("toggleStreaming", { meetingId });
+};
 
   // * get observer list response function
   const handleObserverListResponse = (response) => {
@@ -179,6 +208,14 @@ const page = () => {
       console.error("Failed to update participant list:", response.message);
     }
   };
+
+  // * get streaming status response function
+  const handleGetMeetingStatusResponse = (response) => {
+    if (response.success) {
+      setIsMeetingOngoing(true);
+    }
+  }
+
 
   // * get waiting list response function
   const handleGetWaitingListResponse = (response) => {
@@ -237,15 +274,11 @@ const page = () => {
     socket.emit("getObserverChat", { meetingId });
   };
 
-  // * start streaming
-const startStreaming = async (meetingId) => {
-  socket.emit("startStreaming", { meetingId });
-};
 
   // * get streaming status
-  const getStreamingStatus = async (meetingId) => {
-    socket.emit("getStreamingStatus", { meetingId });
-  };
+  // const getStreamingStatus = async (meetingId) => {
+  //   socket.emit("getStreamingStatus", { meetingId });
+  // };
 
   // * remove from waiting room
   const removeFromWaitingRoom = (participant, meetingId) => {
@@ -586,19 +619,19 @@ const admitAllFromWaitingRoom = (meetingId) => {
   //   }
   // };
 
-  const getMeetingStatus = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-meeting-status/${meetingId}`
-      );
+  // const getMeetingStatus = async (meetingId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-meeting-status/${meetingId}`
+  //     );
 
-      if (response?.data?.meetingStatus === true) {
-        setIsMeetingOngoing(true);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
+  //     if (response?.data?.meetingStatus === true) {
+  //       setIsMeetingOngoing(true);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
 
   const addToPeersOrStreams = (participant) => {};
 
@@ -816,7 +849,7 @@ const admitAllFromWaitingRoom = (meetingId) => {
                 meetingId={params.id}
                 removeParticipant={removeParticipant}
                 isStreaming={isStreaming}
-                setStartStreaming={startStreaming}
+                setStartStreaming={handleToggleStreaming}
                 removeFromWaitingRoom={removeFromWaitingRoom}
                 admitAllFromWaitingRoom={admitAllFromWaitingRoom}
               />
