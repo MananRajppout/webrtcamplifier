@@ -17,7 +17,7 @@ const Login = () => {
   const router = useRouter();
   const { setUser } = useGlobalContext();
   const [formData, setFormData] = useState({
-    email: "user2@gmail.com",
+    email: "user30@gmail.com",
     password: "Ab123456@",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -35,10 +35,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // if (!router.isReady) return;
-
-    
-    
+      
     try {
       setIsLoading(true);
       const response = await axios.post(
