@@ -74,23 +74,35 @@ const createProject = async (req, res) => {
 
 // Controller to get all projects with pagination
 const getAllProjects = async (req, res) => {
-  const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
-  const { id } = req.params; // Get the user ID from the route parameters
+  const { page = 1, limit = 10, search= '' } = req.query; 
+  const { id } = req.params; 
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
     const userData = await User.findById(id);
     const userEmail = userData.email;
 
-    const projects = await Project.find({
-      $or: [{ createdBy: id }, { "members.email": userEmail }],
-    })
+     // Create search query
+     const searchQuery = search
+     ? {
+         $and: [
+           { $or: [{ createdBy: id }, { "members.email": userEmail }] },
+           {
+             $or: [
+               { name: { $regex: search, $options: 'i' } }, // Case-insensitive search
+               { description: { $regex: search, $options: 'i' } }
+             ]
+           }
+         ]
+       }
+     : { $or: [{ createdBy: id }, { "members.email": userEmail }] };
+
+
+    const projects = await Project.find(searchQuery)
     .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn')
       .skip((page - 1) * limit) 
       .limit(parseInt(limit)); 
 
-    const totalDocuments = await Project.countDocuments({
-      $or: [{ createdBy: id }, { "members.email": userEmail }],
-    }); // Total number of documents matching the criteria
+    const totalDocuments = await Project.countDocuments(searchQuery); // Total number of documents matching the criteria
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
 
     res.status(200).json({

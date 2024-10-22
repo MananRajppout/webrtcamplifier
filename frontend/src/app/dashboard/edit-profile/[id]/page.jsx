@@ -56,7 +56,6 @@ const Page = () => {
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/update`,
         user
       );
-      console.log('response', response);
        // Update user in global context
     setGlobalUser(response.data);
 

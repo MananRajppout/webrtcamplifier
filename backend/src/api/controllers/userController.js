@@ -174,9 +174,8 @@ const update = async (req, res) => {
     if (req.file) {
       const file = req.file;
       const filePath = `/uploads/${file.filename}`;
-      req.body.profilePicture = filePath; // update profilePicture field with uploaded file path
+      req.body.profilePicture = filePath; 
     }
-    console.log('req.body', req.body);
 
     delete req.body.password;
     const updatedContact = await userModel.findByIdAndUpdate(
