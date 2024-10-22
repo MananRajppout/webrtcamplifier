@@ -625,17 +625,6 @@ const admitAllFromWaitingRoom = (meetingId) => {
   //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-meeting-status/${meetingId}`
   //     );
 
-<<<<<<< HEAD
-      console.log(response.data,'999999999999999999999999999')
-
-      if (response?.data?.meetingStatus === true) {
-        setIsMeetingOngoing(true);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-=======
   //     if (response?.data?.meetingStatus === true) {
   //       setIsMeetingOngoing(true);
   //     }
@@ -643,7 +632,6 @@ const admitAllFromWaitingRoom = (meetingId) => {
   //     console.error("Error:", error);
   //   }
   // };
->>>>>>> b38904540d8ae526346d454f097f6ddec3af4925
 
   const addToPeersOrStreams = (participant) => {};
 
