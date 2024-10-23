@@ -30,7 +30,8 @@ const LeftSidebar = ({
   meetingId,
   removeParticipant,
   isStreaming,
-  setStartStreaming,removeFromWaitingRoom, admitAllFromWaitingRoom
+  setStartStreaming,
+  removeFromWaitingRoom, admitAllFromWaitingRoom
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,6 +40,7 @@ const LeftSidebar = ({
   const [isModerator, setIsModerator] = useState(false);
 
   const [selectedChat, setSelectedChat] = useState(null);
+  
   const [isWaiting, setIsWaiting] = useState([
     {
       name: "Brendan Steven",

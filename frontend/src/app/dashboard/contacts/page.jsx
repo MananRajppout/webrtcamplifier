@@ -14,27 +14,35 @@ const page = () => {
   const [contacts, setContacts] = useState([]);
   const [currentContact, setCurrentContact] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { user } = useGlobalContext();
 
-  useEffect(() => {
-    fetchContacts(user?._id);
-  }, [user]);
-
-  const fetchContacts = async (userId) => {
+  const fetchContacts = async (userId, search = '') => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/contact/${userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/contact/${userId}${
+          search ? `?search=${encodeURIComponent(search)}` : ''
+        }`
       );
       const data = await response.json();
       setContacts(data);
     } catch (error) {
-      console.error("Error fetching moderators:", error);
+      console.error("Error fetching contacts:", error);
     }
   };
 
+  useEffect(() => {
+    if (user?._id) {
+      fetchContacts(user._id, searchTerm);
+    }
+  }, [user, searchTerm]);
+
   // Project status related functionality
 
-  const handleSearch = () => {};
+  // Debounced search handler
+  const handleSearch = (searchValue) => {
+    setSearchTerm(searchValue);
+  };
 
   const handleStatusSelect = (status) => {
     setSelectedStatus(status);

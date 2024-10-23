@@ -19,7 +19,7 @@ const MeetingTab = ({ meetings }) => {
   const modalRef = useRef();
   const { user, socket } = useGlobalContext();
   const [isShareMeetingModalOpen, setIsShareMeetingModalOpen] = useState(false);
-
+  const [activeMeetingId, setActiveMeetingId] = useState(null);
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -45,30 +45,13 @@ const MeetingTab = ({ meetings }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isModalOpen]);
+
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  // useEffect(() => {
-  //   // Establish socket connection
-  //   const newSocket = io(process.env.NEXT_PUBLIC_BACKEND_BASE_URL);
-  //   setSocket(newSocket);
-
-  //   // Log when connection is established
-  //   newSocket.on('connect', () => {
-  //   });
-
-  //   // Log any connection errors
-  //   newSocket.on('connect_error', (error) => {
-  //     console.error('Socket connection error:', error);
-  //   });
-
-  //   // Clean up the socket connection when the component unmounts
-  //   return () => newSocket.disconnect();
-  // }, []);
-
   useEffect(() => {
-    // Update localMeetingState whenever meetings prop changes
+    
     setLocalMeetingState(meetings);
   }, [meetings]);
 
@@ -83,6 +66,10 @@ const MeetingTab = ({ meetings }) => {
   };
 
   const handleJoinMeeting = async (meeting) => {
+    
+    if (activeMeetingId === meeting._id) return;
+   
+    setActiveMeetingId(meeting._id);
     if (meeting.moderator.email === user.email) {
       const fullName = `${user.firstName} ${user.lastName}`;
       try {
@@ -98,13 +85,13 @@ const MeetingTab = ({ meetings }) => {
 
           // Listen for a response from the server
           socket.on("startMeetingResponse", (response) => {
-            console.log("Received joinMeetingResponse:", response);
+         
 
             if (!response.success) {
               toast.error(response.message);
             } else {
               const liveMeetingData = response.liveMeeting;
-              console.log("Live meeting data:", liveMeetingData);
+         
 
               router.push(
                 `/meeting/${meeting._id}?fullName=${encodeURIComponent(
@@ -115,47 +102,31 @@ const MeetingTab = ({ meetings }) => {
           });
         } else {
           console.error("Socket not initialized");
+          setActiveMeetingId(null);
         }
       } catch (error) {
         console.error("Error joining meeting:", error);
+        setActiveMeetingId(null);
       }
     } else {
-      console.log("Non-moderator joining logic not implemented");
+      toast.error("You are not the moderator of this meeting.");
+
+      setActiveMeetingId(null);
     }
   };
 
-  // const handleJoinMeeting = async (meeting) => {
-  //   if (meeting.moderator.email === user.email) {
-  //     const fullName = `${user.firstName} ${user.lastName}`;
-  //     const postingrole = await axios.post(
-  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
-  //       { name: `${user.firstName} ${user.lastName}`, role: "Moderator" }
-  //     );
-  //     localStorage.setItem("RoletoSend", postingrole.data._id);
-  //     sessionStorage.setItem("room", meeting._id);
-  //     sessionStorage.setItem("username", meeting.name);
-  //     const response = await axios.post(
-  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/start-meeting`,
-  //       { user, meetingId: meeting._id }
-  //     );
+ 
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        socket.off("startMeetingResponse");
+      }
+    };
+  }, [socket]);
 
-  //     if (response?.data?.liveMeeting?.ongoing) {
-  //       router.push(
-  //         `/meeting/${meeting._id}?fullName=${encodeURIComponent(
-  //           fullName
-  //         )}&role=Moderator`
-  //       );
-  //     } else {
-  //       console.error("Received error from backend", response?.data?.error);
-  //     }
-  //   } else {
-  //     const fullName = `${user.firstName} ${user.lastName}`;
-  //     // router.push(`/meeting/${meeting._id}?fullName=${encodeURIComponent(fullName)}&role=Admin`);
-  //   }
-  // };
 
   const handleDeleteMeeting = async (meeting) => {
-    console.log("meeting", meeting);
+
     const isConfirmed = confirm(
       "Are you sure you want to delete this meeting?"
     );
@@ -170,7 +141,7 @@ const MeetingTab = ({ meetings }) => {
       );
 
       if (response.status === 200) {
-        console.log("Meeting deleted successfully");
+      
         toast.success(`${response.data.message}`);
         // Update the meetings state by filtering out the deleted meeting
         const updatedMeetings = localMeetingState.filter(
@@ -214,10 +185,11 @@ const MeetingTab = ({ meetings }) => {
               <TableData>
                 <div className="flex justify-start items-center gap-2">
                   <button
-                    className="text-blue-500 hover:text-blue-700"
+                    className={`${activeMeetingId === meeting._id ? "bg-gray-300 cursor-not-allowed" : "text-blue-500 hover:text-blue-700"} `}
                     onClick={() => handleJoinMeeting(meeting)}
+                    disabled={activeMeetingId === meeting._id}
                   >
-                    Join
+                  {activeMeetingId === meeting._id ? "Joining..." : "Join"}
                   </button>
 
                   <BsThreeDotsVertical

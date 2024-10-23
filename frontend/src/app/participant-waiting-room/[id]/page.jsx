@@ -38,7 +38,7 @@ const page = () => {
 
     // Add listener for participant removal
     socket.on("participantRemovedFromWaiting", (data) => {
-      console.log('participant removed from waiting', data)
+     
       if (data.name === fullName && data.role === userRole) {
         router.push("/remove-participant");
       }
@@ -61,7 +61,7 @@ const page = () => {
     socket.on("getParticipantListResponse", (response) => {
       if (response.success) {
         setParticipants(response.participantList);
-        console.log('participant list', response.participantList)
+      
         
         // Check if the current user is in the participant list
         const isUserInMeeting = response.participantList.some(

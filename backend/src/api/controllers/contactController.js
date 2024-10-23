@@ -130,14 +130,39 @@ const deleteContact = async (req, res) => {
 const getContactsByUserId = async (req, res) => {
   try {
     const { id } = req.params;
+    const { search = '' } = req.query;
     if (!id) {
       return res.status(400).json({ message: 'createdBy ID is required' });
     }
 
-    const contacts = await Contact.find({ createdBy: id });
+    let query = { createdBy: id };
+
+    if (search) {
+      // Create a case-insensitive search across multiple fields
+      query = {
+        $and: [
+          { createdBy: id },
+          {
+            $or: [
+              // Search in first name and last name
+              { firstName: { $regex: search, $options: 'i' } },
+              { lastName: { $regex: search, $options: 'i' } },
+              // Search in email
+              { email: { $regex: search, $options: 'i' } },
+              // Search in company name
+              { companyName: { $regex: search, $options: 'i' } },
+              // Search in roles array
+              { roles: { $regex: search, $options: 'i' } }
+            ]
+          }
+        ]
+      };
+    }
+
+    const contacts = await Contact.find(query).sort({ addedDate: -1 });
 
     if (contacts.length === 0) {
-      return res.status(404).json({ message: 'No contacts found for this user' });
+      return res.status(200).json([]); 
     }
 
     res.status(200).json(contacts);

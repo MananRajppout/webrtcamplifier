@@ -55,14 +55,14 @@ const Page = () => {
     // Listen for the response from the socket
     socket.on("participantJoinMeetingResponse", (response) => {
       if (response.message === "Participant added to waiting room") {
-        console.log('response received from socket', response.message)
+        
         router.push(
           `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName
           )}&role=Participant`
         );
       } else if (response.message === "Participant already in waiting room" || response.message === "Participant added to waiting room" ) {
-        console.log('response received from socket', response.message)
+        
         router.push(
           `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName

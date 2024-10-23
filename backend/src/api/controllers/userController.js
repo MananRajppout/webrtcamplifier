@@ -183,7 +183,7 @@ const update = async (req, res) => {
       req.body,
       { new: true }
     );
-console.log('updatedContact', updatedContact);
+
     // Generate new token
 const token = jwt.sign(
   { 

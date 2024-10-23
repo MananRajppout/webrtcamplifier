@@ -61,7 +61,7 @@ const page = () => {
 useEffect(() => {
   if (userRole === "Observer") {
     socket.on("navigateToMeeting", ({ meetingId }) => {
-      console.log('navigate to meeting waiting room');
+      
       if (params.id === meetingId) {
         router.push(`/meeting/${meetingId}?fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(userRole)}`);
       }
