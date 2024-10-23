@@ -186,7 +186,7 @@ const WhiteBoard = ({ role, users }) => {
             canvas.requestRenderAll();
             break;
           case "image":
-            console.log(width, height)
+           
             fabric.Image.fromURL(src, function (img) {
               img.set({ left, top, width, height, angle, scaleX, scaleY, skewX, skewY })
               canvas.add(img);

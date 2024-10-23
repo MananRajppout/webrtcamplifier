@@ -75,10 +75,7 @@ const LeftSidebarOpenUi = ({
       setInputMessage("");
     }
   };
-  // console.log("selected chat", selectedChat);
-  // console.log("Current User Name:", userName);
-  // console.log('Selected Chat Name:', selectedChat.name);
-  // console.log("messages inside open ui", messages);
+ 
 
   const modalRef = useRef();
 
@@ -169,7 +166,7 @@ const LeftSidebarOpenUi = ({
       (message.senderName === selectedChat?.name && message.receiverName === userName) ||
       (message.senderName === userName && message.receiverName === selectedChat?.name)
   );
-  // console.log("Filtered messages:", filteredMessages);
+ 
 
   return (
     <>

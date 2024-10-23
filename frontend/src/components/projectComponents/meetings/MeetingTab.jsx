@@ -68,7 +68,7 @@ const MeetingTab = ({ meetings }) => {
   const handleJoinMeeting = async (meeting) => {
     
     if (activeMeetingId === meeting._id) return;
-    console.log('join button clicked')
+   
     setActiveMeetingId(meeting._id);
     if (meeting.moderator.email === user.email) {
       const fullName = `${user.firstName} ${user.lastName}`;
@@ -85,13 +85,13 @@ const MeetingTab = ({ meetings }) => {
 
           // Listen for a response from the server
           socket.on("startMeetingResponse", (response) => {
-            console.log("Received joinMeetingResponse:", response);
+         
 
             if (!response.success) {
               toast.error(response.message);
             } else {
               const liveMeetingData = response.liveMeeting;
-              console.log("Live meeting data:", liveMeetingData);
+         
 
               router.push(
                 `/meeting/${meeting._id}?fullName=${encodeURIComponent(
@@ -110,7 +110,7 @@ const MeetingTab = ({ meetings }) => {
       }
     } else {
       toast.error("You are not the moderator of this meeting.");
-      console.log("Non-moderator joining logic not implemented");
+
       setActiveMeetingId(null);
     }
   };
@@ -126,7 +126,7 @@ const MeetingTab = ({ meetings }) => {
 
 
   const handleDeleteMeeting = async (meeting) => {
-    console.log("meeting", meeting);
+
     const isConfirmed = confirm(
       "Are you sure you want to delete this meeting?"
     );
@@ -141,7 +141,7 @@ const MeetingTab = ({ meetings }) => {
       );
 
       if (response.status === 200) {
-        console.log("Meeting deleted successfully");
+      
         toast.success(`${response.data.message}`);
         // Update the meetings state by filtering out the deleted meeting
         const updatedMeetings = localMeetingState.filter(

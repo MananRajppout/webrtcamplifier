@@ -40,7 +40,7 @@ const LeftSidebar = ({
   const [isModerator, setIsModerator] = useState(false);
 
   const [selectedChat, setSelectedChat] = useState(null);
-  // console.log('left side bar messages', messages)
+  
   const [isWaiting, setIsWaiting] = useState([
     {
       name: "Brendan Steven",

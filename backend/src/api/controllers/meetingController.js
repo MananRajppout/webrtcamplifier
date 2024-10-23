@@ -12,14 +12,13 @@ const createMeeting = async (req, res) => {
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
-console.log('project', project)
+
 // Set the meetingPasscode from the project
 meetingData.meetingPasscode = project.projectPasscode;
 
 // Create and save the new meeting
     const newMeeting = new Meeting(meetingData);
     const savedMeeting = await newMeeting.save();
-    console.log('saved meeting', savedMeeting)
     // Send a success response with the saved meeting details
     res.status(201).json({
       message: "Meeting created successfully",

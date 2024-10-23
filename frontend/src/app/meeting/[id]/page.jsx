@@ -132,7 +132,7 @@ const page = () => {
   }, [userRole, params.id, socket]);
 
 
-// console.log('participant chat', participantMessages)
+
 
 // * function to request streaming status
 const getMeetingStatus = async (meetingId) => {
@@ -145,7 +145,7 @@ const getMeetingStatus = async (meetingId) => {
 useEffect(() => {
   if (userRole === "Observer") {
     socket.on("navigateToObserverWaitingRoom", ({ meetingId }) => {
-      console.log('navigateToObserverWaitingRoom in the meeting route', meetingId);
+     
       if (params.id === meetingId) {
         router.push(`/observer-waiting-room/${meetingId}?fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(userRole)}`);
       }
@@ -158,7 +158,7 @@ useEffect(() => {
 }, [params.id, userRole, socket]);
 
 const handleToggleStreaming = (meetingId) => {
-  console.log('inside toggle streaming', meetingId);
+
   socket.emit("toggleStreaming", { meetingId });
 };
 
@@ -281,7 +281,7 @@ const getParticipantChat = async (meetingId) => {
 
   // * remove from waiting room
   const removeFromWaitingRoom = (participant, meetingId) => {
-    console.log('remove from waiting room', participant)
+   
     socket.emit("removeFromWaitingRoom", { meetingId, participant });
   };
 
@@ -360,42 +360,6 @@ const admitAllFromWaitingRoom = (meetingId) => {
     }
   };
 
-
-
-
-  
-
-  const addToPeersOrStreams = (participant) => {};
-
-  const getWebRtcMeetingId = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-webrtc-meeting-id/${meetingId}`
-      );
-      // https://serverzoom-mpbv.onrender.com/room/
-      // https://testing--inspiring-cendol-60afd6.netlify.app
-      const iframeLink = `https://testing--inspiring-cendol-60afd6.netlify.app/room/${response?.data?.webRtcRoomId}`;
-
-      setIframeLink(iframeLink);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
-  const getIframeLinkMeetingId = async (meetingId) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/get-iframe-link/${meetingId}`
-      );
-      // https://serverzoom-mpbv.onrender.com/room/
-      // https://testing--inspiring-cendol-60afd6.netlify.app
-      // const iframeLink = `https://testing--inspiring-cendol-60afd6.netlify.app/room/${response?.data?.webRtcRoomId}`;
-
-      setIframeLink(response?.data?.iframeLink);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
 
   const startMeeting = () => {};
 
