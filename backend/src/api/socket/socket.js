@@ -369,10 +369,12 @@ const setupSocket = (server) => {
         // Save the new chat message
         const savedChatMessage = await newChatMessage.save(); 
 
+
         liveMeeting.participantChat.push(savedChatMessage._id);
         await liveMeeting.save();
 
         const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
+
 
         socket.emit("participantChatResponse", {
           success: true,
@@ -410,6 +412,7 @@ const setupSocket = (server) => {
           });
           return;
         }
+
 
         socket.emit("participantChatResponse", {
           success: true,

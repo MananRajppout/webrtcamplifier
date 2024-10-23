@@ -49,7 +49,9 @@ const LeftSidebarOpenUi = ({
   removeParticipant,
   isStreaming,
   setStartStreaming,
-  setIsWhiteBoardOpen, removeFromWaitingRoom, admitAllFromWaitingRoom
+  setIsWhiteBoardOpen,
+  removeFromWaitingRoom,
+  admitAllFromWaitingRoom,
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -59,7 +61,7 @@ const LeftSidebarOpenUi = ({
   const [userToMove, setUserToMove] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [inputMessage, setInputMessage] = useState("");
-// this for handling the message input
+  // this for handling the message input
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
       const newMessage = {
@@ -73,6 +75,10 @@ const LeftSidebarOpenUi = ({
       setInputMessage("");
     }
   };
+  // console.log("selected chat", selectedChat);
+  // console.log("Current User Name:", userName);
+  // console.log('Selected Chat Name:', selectedChat.name);
+  // console.log("messages inside open ui", messages);
 
   const modalRef = useRef();
 
@@ -157,6 +163,13 @@ const LeftSidebarOpenUi = ({
     setSelectedRoom(option);
     setIsDropdownOpen(false);
   };
+
+  const filteredMessages = messages.filter(
+    (message) =>
+      (message.senderName === selectedChat?.name && message.receiverName === userName) ||
+      (message.senderName === userName && message.receiverName === selectedChat?.name)
+  );
+  // console.log("Filtered messages:", filteredMessages);
 
   return (
     <>
@@ -250,29 +263,24 @@ const LeftSidebarOpenUi = ({
               }
               onClick={toggleRecordingButton}
             /> */}
-            
+
+            <Button
+              children="Whiteboard"
+              variant="meeting"
+              type="submit"
+              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+              onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
+            />
+
+            {role === "Moderator" && (
               <Button
-               children="Whiteboard"
-               variant="meeting"
-               type="submit"
-               className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-               onClick={() => setIsWhiteBoardOpen(prev => !prev)}
-             />
-            
-            {
-  role === "Moderator" && (
-    <Button
-      children={isStreaming ? "Stop Streaming" : "Start Streaming"}
-      variant="meeting"
-      type="submit"
-      className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-      onClick={()=>setStartStreaming(meetingId)}
-    />
-  )
-}
-
-            
-
+                children={isStreaming ? "Stop Streaming" : "Start Streaming"}
+                variant="meeting"
+                type="submit"
+                className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+                onClick={() => setStartStreaming(meetingId)}
+              />
+            )}
           </div>
 
           {/* Backroom chat and icon */}
@@ -327,32 +335,30 @@ const LeftSidebarOpenUi = ({
               users
                 ?.filter((user) => user.name !== userName)
                 .map((user) */}
-                {users?.filter((user) => user.name !== userName)               
-                .map((user) => (
-                  <div
-                    className="flex justify-center items-center gap-2 py-1"
-                    key={user?.name}
-                  >
-                  
-                    <p className="text-[#1a1a1a] text-[10px] flex-grow">
-                      {user?.name}
-                    </p>
-                    <IoMdMic />
-                    <BsChatSquareDotsFill
-                      onClick={() => handleUserClick(user?.id)}
-                    />
-                    {
-                      role === "Moderator" && (
+                {users
+                  ?.filter((user) => user.name !== userName)
+                  .map((user) => (
+                    <div
+                      className="flex justify-center items-center gap-2 py-1"
+                      key={user?.name}
+                    >
+                      <p className="text-[#1a1a1a] text-[10px] flex-grow">
+                        {user?.name}
+                      </p>
+                      <IoMdMic />
+                      <BsChatSquareDotsFill
+                        onClick={() => handleUserClick(user?.id)}
+                      />
+                      {role === "Moderator" && (
                         <BsThreeDotsVertical
-                      onClick={(event) =>
-                        toggleRemoveAndWaitingOptionModal(event, user)
-                      }
-                      className="cursor-pointer"
-                    />
-                      )
-                    }
-                  </div>
-                ))}
+                          onClick={(event) =>
+                            toggleRemoveAndWaitingOptionModal(event, user)
+                          }
+                          className="cursor-pointer"
+                        />
+                      )}
+                    </div>
+                  ))}
                 {isModeratorPopupModalOpen && currentUser && (
                   <div
                     ref={modalRef}
@@ -387,7 +393,15 @@ const LeftSidebarOpenUi = ({
             {activeTab === "participantChat" &&
               !selectedChat &&
               users
-                ?.filter((user) => user.name !== userName)
+                ?.filter((user) => {
+                  if (role === "Moderator") {
+                    // Show all users for the moderator
+                    return user.name !== userName;
+                  } else if (role === "Participant") {
+                    // Show only moderators to participants
+                    return user.role === "Moderator";
+                  }
+                })
                 .map((user) => (
                   <div
                     key={user.name}
@@ -434,15 +448,15 @@ const LeftSidebarOpenUi = ({
                         key={index}
                         className={`flex items-center gap-2 ${
                           message.senderName === userName
-                            ? "justify-start"
-                            : "justify-end"
+                            ? "justify-end"
+                            : "justify-start"
                         }`}
                       >
                         <div
                           className={`flex flex-col ${
                             message.senderName === userName
-                              ? "items-start"
-                              : "items-end"
+                              ? "items-end"
+                              : "items-start"
                           }`}
                         >
                           <p
@@ -507,7 +521,7 @@ const LeftSidebarOpenUi = ({
                 type="submit"
                 children="Admit All"
                 className="text-xs px-2 py-1 rounded-lg text-white"
-                onClick={()=>admitAllFromWaitingRoom(meetingId)}
+                onClick={() => admitAllFromWaitingRoom(meetingId)}
               />
             </div>
             {/* participant container */}
@@ -516,7 +530,6 @@ const LeftSidebarOpenUi = ({
                 className="flex justify-center items-center gap-2 py-1"
                 key={user?.name}
               >
-            
                 <p className="text-[#1a1a1a] text-[10px] flex-grow">
                   {user?.name}
                 </p>
