@@ -243,7 +243,7 @@ const OngoingMeeting = () => {
                                 <div className={`${(participantsRef.current[0]?.isWebCamMute == false || participantsRef.current[0]?.isShareScreen === true) ? 'block' : 'hidden'} w-full h-full absolute top-0 left-0 right-0 bottom-0`}>
                                   <video autoPlay className='w-full h-full object-cover' ref={localVideoElementRef}> </video>
                                 </div>
-                                <h1 className='text-3xl font-medium text-white z-10 select-none text-center'>{participantsRef.current[0]?.name} one me</h1>
+                                <h1 className='text-3xl font-medium text-white z-10 select-none text-center mb-3'>{participantsRef.current[0]?.name}</h1>
                               </div>
                             ) : participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 1 ?
                               // when one user share camera
@@ -402,7 +402,7 @@ const OngoingMeeting = () => {
                         <div className={`${(participantsRef.current[0]?.isWebCamMute == false || participantsRef.current[0]?.isShareScreen === true) ? 'block' : 'hidden'} w-full h-full absolute top-0 left-0 right-0 bottom-0`}>
                           <video autoPlay className='w-full h-full object-cover' ref={localVideoElementRef}> </video>
                         </div>
-                        <h1 className='text-3xl font-medium text-white z-10 select-none text-center'>{participantsRef.current[0]?.name}</h1>
+                        <h1 className='text-3xl font-medium text-white z-10 select-none text-center mb-3'>{participantsRef.current[0]?.name}</h1>
                       </div>
                   }
                 </>

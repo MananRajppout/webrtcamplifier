@@ -498,6 +498,7 @@ const admitAllFromWaitingRoom = (meetingId) => {
             </div>
             <div className="h-full">
               <RightSidebar
+                role={userRole}
                 observers={observers}
                 setObservers={setObservers}
                 isBreakoutRoom={isBreakoutRoom}
@@ -508,6 +509,9 @@ const admitAllFromWaitingRoom = (meetingId) => {
                 userName={fullName}
                 meetingId={params.id}
                 sendMessageObserver={sendMessageObserver}
+                messages={participantMessages}
+                users={participants}
+                setUsers={setUsers}
               />
             </div>
           </>
@@ -533,6 +537,7 @@ const admitAllFromWaitingRoom = (meetingId) => {
             </div>
             <div className="h-full">
               <RightSidebar
+              role={userRole}
                 observers={observers}
                 setObservers={setObservers}
                 isBreakoutRoom={isBreakoutRoom}
@@ -543,6 +548,9 @@ const admitAllFromWaitingRoom = (meetingId) => {
                 userName={fullName}
                 meetingId={params.id}
                 sendMessageObserver={sendMessageObserver}
+                messages={participantMessages}
+                users={participants}
+                setUsers={setUsers}
               />
             </div>
           </>

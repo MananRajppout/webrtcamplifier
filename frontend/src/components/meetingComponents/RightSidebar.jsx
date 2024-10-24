@@ -16,12 +16,17 @@ const RightSidebar = ({
   userName,
   meetingId,
   sendMessageObserver,
+  role,
+  messages,
+  users,
+  setUsers,
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("observersList");
   const [currentObserver, setCurrentObserver] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [selectedPartcipantChat, setSelectedParticipantChat] = useState(null);
   const [isWaiting, setIsWaiting] = useState([
     {
       name: "Brendan Steven",
@@ -202,6 +207,11 @@ const RightSidebar = ({
             userName={userName}
             meetingId={meetingId}
             sendMessageObserver={sendMessageObserver}
+            role={role}
+            messages={messages}
+            users={users}
+            setSelectedParticipantChat={setSelectedParticipantChat}
+            selectedPartcipantChat={selectedPartcipantChat}
           />
         ) : (
           <RightSidebarCloseUi
@@ -218,6 +228,7 @@ const RightSidebar = ({
             handleTabClick={handleTabClick}
             chatParticipants={chatParticipants}
             files={files}
+            role={role}
           />
         )}
       </div>

@@ -9,6 +9,7 @@ import { IoClose, IoSend } from "react-icons/io5";
 import { MdInsertEmoticon } from "react-icons/md";
 import axios from "axios";
 import Button from "../shared/button";
+import { useSearchParams } from "next/navigation";
 
 const RightSidebarOpenUi = ({
   observers,
@@ -29,9 +30,17 @@ const RightSidebarOpenUi = ({
   userName,
   meetingId,
   sendMessageObserver,
+  searchParams,
+  role,
+  messages,
+  users,
+  setSelectedParticipantChat,
+  selectedPartcipantChat,
+  
 }) => {
   const [fileList, setFileList] = useState(files);
   const [inputMessage, setInputMessage] = useState("");
+
 
   const fetchFiles = async () => {
     try {
@@ -122,11 +131,10 @@ const RightSidebarOpenUi = ({
             children="Observers List"
             variant="default"
             type="submit"
-            className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${
-              activeTab === "observersList"
+            className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersList"
                 ? "shadow-[0px_4px_6px_#1E656D4D]"
                 : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
-            } `}
+              } `}
             onClick={() => handleTabClick("observersList")}
           />
           <div className="w-full relative">
@@ -134,15 +142,31 @@ const RightSidebarOpenUi = ({
               children="Observers Chat"
               variant="default"
               type="submit"
-              className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${
-                activeTab === "observersChat"
+              className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersChat"
                   ? "shadow-[0px_4px_6px_#1E656D4D]"
                   : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
-              } `}
+                } `}
               onClick={() => handleTabClick("observersChat")}
             />
             <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
           </div>
+          {
+            role == "Observer" &&
+            <div className="w-full relative">
+              <Button
+                children="Chats"
+                variant="default"
+                type="submit"
+                className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "participantChat"
+                    ? "shadow-[0px_4px_6px_#1E656D4D]"
+                    : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
+                  } `}
+                onClick={() => handleTabClick("participantChat")}
+              />
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
+            </div>
+          }
+
         </div>
 
         {/* observers container */}
@@ -179,6 +203,7 @@ const RightSidebarOpenUi = ({
           !selectedChat &&
           observers
             .filter((observer) => observer.name !== userName)
+            .filter((observer) => (role == "Moderator" ? true : observer.role == "Moderator"))
             .map((observer) => (
               <div
                 key={observer.id}
@@ -227,25 +252,22 @@ const RightSidebarOpenUi = ({
                 .map((message, index) => (
                   <div
                     key={index}
-                    className={`flex items-center gap-2 ${
-                      message.senderName === userName
+                    className={`flex items-center gap-2 ${message.senderName === userName
                         ? "justify-start"
                         : "justify-end"
-                    }`}
+                      }`}
                   >
                     <div
-                      className={`flex flex-col ${
-                        message.senderName === userName
+                      className={`flex flex-col ${message.senderName === userName
                           ? "items-start"
                           : "items-end"
-                      }`}
+                        }`}
                     >
                       <p
-                        className={`text-[12px] ${
-                          message.senderName === userName
+                        className={`text-[12px] ${message.senderName === userName
                             ? "text-blue-600"
                             : "text-green-600"
-                        }`}
+                          }`}
                       >
                         <span className="font-bold">{message.senderName}:</span>{" "}
                         {message.message}
@@ -291,6 +313,83 @@ const RightSidebarOpenUi = ({
             </div>
           </div>
         )}
+
+
+
+
+
+        {/* particpants chat */}
+        {activeTab === "participantChat" &&
+          !selectedPartcipantChat &&
+          users.
+          filter(user => user.role !== "Moderator")
+            .map((participant) => (
+              <div
+                key={participant.id}
+                className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer"
+                onClick={() => setSelectedParticipantChat(participant)}
+              >
+                <div className="flex-grow-1 text-xs ">
+                  <p className="pb-1 font-bold">{participant.name}</p>
+                </div>
+              </div>
+            ))}
+
+        {activeTab === "participantChat" && selectedPartcipantChat && (
+          <div className="flex-grow pt-2 rounded-xl flex flex-col justify-center items-center">
+            {/* chat name and image */}
+            <div className="flex w-full items-center justify-center gap-2 mb-4 bg-custom-gray-4 p-2">
+              <p className="text-[#1a1a1a] text-[12px] font-bold flex-1">
+                {selectedPartcipantChat.name}
+              </p>
+              <IoClose
+                className="text-custom-black cursor-pointer"
+                onClick={() => setSelectedParticipantChat(null)}
+              />
+            </div>
+            {/* chat message */}
+            <div className="flex flex-col gap-2 flex-grow">
+              {messages
+                .filter(
+                  (message) =>
+                    (message.senderName === selectedPartcipantChat.name) ||
+                  ( message.receiverName === selectedPartcipantChat.name)
+                )
+                .map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex items-center gap-2 ${message.senderName === userName
+                        ? "justify-start"
+                        : "justify-end"
+                      }`}
+                  >
+                    <div
+                      className={`flex flex-col ${message.senderName === userName
+                          ? "items-start"
+                          : "items-end"
+                        }`}
+                    >
+                      <p
+                        className={`text-[12px] ${message.senderName === userName
+                            ? "text-blue-600"
+                            : "text-green-600"
+                          }`}
+                      >
+                        <span className="font-bold">{message.senderName}:</span>{" "}
+                        {message.message}
+                      </p>
+                      <p className="text-[#1a1a1a] text-[10px]">
+                        {new Date(message.createdAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+
+        
       </div>
 
       {/* document hub */}
