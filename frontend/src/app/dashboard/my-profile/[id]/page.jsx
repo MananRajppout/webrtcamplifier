@@ -95,10 +95,10 @@ const Page = () => {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/delete-by-id`,
         {
-          params: { id: id }, // replace with actual user ID
+          params: { id: id }, 
         }
       );
-      router.push("/register"); // Redirect to registration page
+      router.push("/register"); 
     } catch (error) {
       console.error("Error deleting user:", error);
     }

@@ -282,7 +282,7 @@ const reset_password = async (req, res) => {
 
 const sendResetPasswordMail = async (name, email, token) => {
   try {
-    const html = `<p> Hi ${name}, please copy the link <a href="https://abc.com/reset-password?token=${token}"> reset your password </a>.</p>`;
+    const html = `<p> Hi ${name}, please copy the link <a href="${process.env.FRONTEND_BASE_URL}/reset-password?token=${token}"> reset your password </a>.</p>`;
     await sendEmail(email, "For Reset password", html);
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
