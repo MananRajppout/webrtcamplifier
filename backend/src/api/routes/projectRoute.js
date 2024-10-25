@@ -16,6 +16,7 @@ module.exports = function (app) {
   app.put("/api/edit-member-role/:projectId", controller.editMemberRole);
   app.delete("/api/delete-member-from-project/:projectId/:memberId", controller.deleteMemberFromProject);
   app.put("/api/project/updateBulkMembers", controller.updateBulkMembers);
+  app.put("/api/project/assignTagsToProject", controller.assignTagsToProject);
 };
 
 // for usage of this search Api

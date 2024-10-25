@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const Meeting = require("../models/meetingModel");
 const User = require("../models/userModel");
+const Tag = require("../models/tagModel");
 
 // Controller to create a new project
 const createProject = async (req, res) => {
@@ -380,7 +381,28 @@ const updateBulkMembers = async (req, res) => {
   }
 }
 
+const assignTagsToProject = async (req, res) => {
+  try {
+    const { tagIds, projectId } = req.body;
+    const tags = await Tag.distinct("name", { _id: { $in: tagIds } });
+    const project = await Project.findById(projectId).select("tags");
 
+    if (project?.tags) {
+      const uniqueTags = [...new Set([...project.tags, ...tags])];
+      project.tags = uniqueTags;
+    } else {
+      project.tags = tags;
+    }
+    const result = await Project.findByIdAndUpdate(
+      projectId,
+      { tags: project.tags },
+      { new: true }
+    );
+    return res.status(200).json({ result, message: "Tag assigned successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 
 
 
@@ -400,6 +422,7 @@ module.exports = {
   addPeopleIntoProject,
   editMemberRole,
   deleteMemberFromProject,
-  updateBulkMembers
+  updateBulkMembers,
+  assignTagsToProject
 };
 
