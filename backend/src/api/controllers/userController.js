@@ -7,6 +7,8 @@ var jwt = require("jsonwebtoken");
 const { sendEmail, sendVerifyEmail } = require("../../config/email.config");
 const Contact = require("../models/contactModel");
 const { default: mongoose } = require("mongoose");
+const Meeting = require("../models/meetingModel");
+const Project = require("../models/projectModel");
 
 
 const validatePassword = (password) => {
@@ -222,10 +224,13 @@ const deleteById = async (req, res) => {
     if (!exist) {
       return res.status(404).json({ message: "User not found" });
     }
-    const result = await userModel.findByIdAndDelete({
+    await userModel.findByIdAndDelete({
       _id: req.query._id || req.query.id,
     });
-    res.status(200).json({ message:"User deleted successfully." });
+    await Meeting.findOneAndDelete({ moderator: req.query.id });
+    await Project.findOneAndDelete({ createdBy: req.query.id });
+    await Contact.findOneAndDelete({ createdBy: req.query.id });
+    res.status(200).json({ message: "User deleted successfully." });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
