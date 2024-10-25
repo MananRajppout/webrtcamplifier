@@ -16,6 +16,7 @@ import HeadingParagaraph from "@/components/shared/HeadingParagaraph";
 import Link from "next/link";
 import Button from "@/components/shared/button";
 import { useGlobalContext } from "@/context/GlobalContext";
+import toast from "react-hot-toast";
 
 const initialNotifications = [
   {
@@ -53,10 +54,11 @@ const Page = () => {
   const [userData, setUserData] = useState(null);
   const router = useRouter();
   const { id } = useParams();
+ 
   const handlePasswordChangeClick = () => {
     setShowModal(true);
   };
-  const {user}= useGlobalContext()
+  const {user, setUser}= useGlobalContext()
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -92,13 +94,25 @@ const Page = () => {
 
   const deleteUser = async () => {
     try {
-      await axios.delete(
+      const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/delete-by-id`,
         {
-          params: { id: id }, // replace with actual user ID
+          params: { id: id }, 
         }
       );
-      router.push("/register"); // Redirect to registration page
+      console.log('response.data.message:', response.data);
+      console.log('response.user', response.status)
+      if (response.status === 200) {
+        toast.success("User deleted successfully");
+        setIsDeleteModalOpen(false);
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        localStorage.clear();
+        setUser(null)
+        router.push("/register");
+      } else {
+        toast.error("Error deleting user");
+        console.error("Error deleting user:", response.data.message);
+      }
     } catch (error) {
       console.error("Error deleting user:", error);
     }
