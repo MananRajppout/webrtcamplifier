@@ -74,7 +74,7 @@ const createProject = async (req, res) => {
 
 // Controller to get all projects with pagination
 const getAllProjects = async (req, res) => {
-  const { page = 1, limit = 10, search = '' } = req.query;
+  const { page = 1, limit = 10, search = '', startDate, endDate, status, tag } = req.query;
   const { id } = req.params;
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
@@ -95,7 +95,18 @@ const getAllProjects = async (req, res) => {
         ]
       }
       : { $or: [{ createdBy: id }, { "members.email": userEmail }] };
-
+    if (startDate) {
+      searchQuery.startDate = { $gte: new Date(startDate) }
+    }
+    if (endDate) {
+      searchQuery.endDate = { $lte: new Date(endDate) }
+    }
+    if (status) {
+      searchQuery.status = status
+    }
+    if (tag) {
+      searchQuery.tags = tag
+    }
 
     const projects = await Project.find(searchQuery)
       .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn')
