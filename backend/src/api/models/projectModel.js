@@ -12,14 +12,12 @@ const projectSchema = new Schema({
     {
       userId: { type: Schema.Types.ObjectId, ref: 'Contact' },
       roles: { type: [String], enum: ['Admin', 'Moderator', 'Observer'] },
-      email: {type: String}
+      email: { type: String }
     }
   ],
-  tags: {type: [String], default: []},
+  tags: { type: [String], default: [] },
   projectPasscode: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 // Middleware to update the updatedAt field on save
 projectSchema.pre('save', function (next) {

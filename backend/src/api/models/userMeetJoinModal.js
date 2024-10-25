@@ -8,6 +8,6 @@ const userRoleSchema = new mongoose.Schema({
     CanManagerCameraForAll: { type: Boolean, default: false },
     ShowToAll: { type: Boolean, default: false },
     CanTalk: { type: Boolean, default: false }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('UserRoleMeet', userRoleSchema);

@@ -23,7 +23,7 @@ const AdminActionLogSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true });
 
 const AdminActionLog = mongoose.model("AdminActionLog", AdminActionLogSchema);
 

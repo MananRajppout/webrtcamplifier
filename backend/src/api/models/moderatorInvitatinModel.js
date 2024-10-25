@@ -24,7 +24,7 @@ const ModeratorInvitation = new Schema({
     type: Date,
     default: Date.now, // Automatically sets the current date and time when a new document is created
   },
-});
+}, { timestamps: true });
 
 const Moderator = mongoose.model("Moderator", ModeratorInvitation);
 
