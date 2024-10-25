@@ -227,8 +227,8 @@ const deleteById = async (req, res) => {
     await userModel.findByIdAndDelete({
       _id: req.query._id || req.query.id,
     });
-    const contact = await Contact.findOne({ createdBy: req.query.id }).select("_id")
-    await Meeting.deleteMany({ moderator: contact?._id || req.query.id });
+    const ids = await Project.distinct("_id", { createdBy: req.query.id })
+    await Meeting.deleteMany({ projectId: { $in: ids } });
     await Project.deleteMany({ createdBy: req.query.id });
     await Contact.deleteMany({ createdBy: req.query.id });
     res.status(200).json({ message: "User deleted successfully." });
