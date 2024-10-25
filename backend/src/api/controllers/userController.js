@@ -295,7 +295,7 @@ const resetPassword = async (req, res) => {
 
 const sendResetPasswordMail = async (name, email, token) => {
   try {
-    const html = `<p> Hi ${name}, please copy the link <a href="https://amplifier.hgsingalong.com/resetPassword?token=${token}"> reset your password </a>.</p>`;
+    const html = `<p> Hi ${name}, please copy the link <a href="${process.env.FRONTEND_BASE_URL}/resetPassword?token=${token}"> reset your password </a>.</p>`;
     await sendEmail(email, "For Reset password", html);
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
@@ -305,6 +305,7 @@ const sendResetPasswordMail = async (name, email, token) => {
 const forgotPassword = async (req, res) => {
   try {
     const email = req.body.email;
+    console.log('email at forgot password', email)
     const userData = await userModel.findOne({ email: email });
     if (userData) {
       const randomString = randomstring.generate();
