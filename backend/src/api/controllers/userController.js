@@ -476,6 +476,38 @@ const downloadUserExcel = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const { userId, oldPassword, newPassword } = req.body;
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    const isPasswordSame = await bcrypt.compare(newPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: " Old Password is incorrect" });
+    }
+    else if (isPasswordSame) {
+      return res.status(400).json({ status: 400, message: "New Password should be different from the Old Password" });
+    }
+    else {
+      const passwordErrors = validatePassword(newPassword);
+      if (passwordErrors) {
+        return res
+          .status(400)
+          .json({ message: passwordErrors.join(" "), status: 400 });
+      }
+
+      const hashedPassword = bcrypt.hashSync(newPassword, 8);
+      await userModel.findByIdAndUpdate(user._id, { password: hashedPassword });
+      return res.status(200).json({ status: 200, message: "Password changed successfully" });
+    }
+  } catch (error) {
+
+  }
+}
+
 module.exports = {
   signup,
   signin,
@@ -488,4 +520,5 @@ module.exports = {
   verifymail,
   uploadUserExcel,
   downloadUserExcel,
+  changePassword
 };
