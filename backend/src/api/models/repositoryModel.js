@@ -40,7 +40,7 @@ const RepositorySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true });
 
 const Repository = mongoose.model('Repository', RepositorySchema);
 

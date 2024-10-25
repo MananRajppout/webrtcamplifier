@@ -10,8 +10,8 @@ const contactSchema = new mongoose.Schema({
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   addedDate: { type: Date, default: Date.now },
   lastUpdatedOn: { type: Date, default: Date.now },
-  isUser: {type: Boolean, default: false}
-});
+  isUser: { type: Boolean, default: false }
+}, { timestamps: true });
 
 contactSchema.pre('save', function (next) {
   this.lastUpdatedOn = Date.now();
