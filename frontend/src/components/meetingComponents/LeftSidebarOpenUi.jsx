@@ -342,7 +342,7 @@ const LeftSidebarOpenUi = ({
                 .map((user) */}
               {users
                 ?.filter((user) => user.name !== userName)
-                ?.filter(user => (role == "Moderator" ? true : user.roomName?.toLowerCase() == roomname?.toLowerCase()))
+                ?.filter(user => (role == "Moderator" ? true : (user.roomName?.toLowerCase() == roomname?.toLowerCase() || user.role == "Moderator") ))
                 .map((user) => (
                   <div
                     className="flex justify-center items-center gap-2 py-1"
