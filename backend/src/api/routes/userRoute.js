@@ -29,7 +29,8 @@ module.exports = function (app) {
     controller.downloadUserExcel
   );
   app.get("/api/get-users", controller.findAll);
-  app.post("/api/users/reset_password", controller.reset_password);
-  app.post("/api/users/forgotPassword", controller.forgotPassword);
+  app.post("/api/users/reset-password", controller.resetPassword);
+  app.post("/api/users/forgot-password", controller.forgotPassword);
   app.get("/api/verify", controller.verifymail);
+  app.post("/api/users/changePassword", controller.changePassword);
 };

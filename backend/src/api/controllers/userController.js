@@ -7,6 +7,8 @@ var jwt = require("jsonwebtoken");
 const { sendEmail, sendVerifyEmail } = require("../../config/email.config");
 const Contact = require("../models/contactModel");
 const { default: mongoose } = require("mongoose");
+const Meeting = require("../models/meetingModel");
+const Project = require("../models/projectModel");
 
 
 const validatePassword = (password) => {
@@ -93,7 +95,7 @@ const signup = async (req, res) => {
     // Save the new user
     const userSavedData = await newUser.save();
 
-   
+
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
 
@@ -174,7 +176,7 @@ const update = async (req, res) => {
     if (req.file) {
       const file = req.file;
       const filePath = `/uploads/${file.filename}`;
-      req.body.profilePicture = filePath; 
+      req.body.profilePicture = filePath;
     }
 
     delete req.body.password;
@@ -185,29 +187,29 @@ const update = async (req, res) => {
     );
 
     // Generate new token
-const token = jwt.sign(
-  { 
-    id: updatedContact._id, 
-    name: updatedContact.firstName, 
-    role: updatedContact.role 
-  },
-  process.env.JWT_SECRET,
-  { expiresIn: 86400 } 
-);
+    const token = jwt.sign(
+      {
+        id: updatedContact._id,
+        name: updatedContact.firstName,
+        role: updatedContact.role
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: 86400 }
+    );
 
-res.status(200).json({
-  _id: updatedContact._id,
-  firstName: updatedContact.firstName,
-  lastName: updatedContact.lastName,
-  email: updatedContact.email,
-  role: updatedContact.role,
-  companyName: updatedContact.companyName,
-  roles: updatedContact.roles,
-  isEmailVerified: updatedContact.isEmailVerified,
-  createdAt: updatedContact.createdAt,
-  updatedAt: updatedContact.updatedAt,
-  accessToken: token
-});
+    res.status(200).json({
+      _id: updatedContact._id,
+      firstName: updatedContact.firstName,
+      lastName: updatedContact.lastName,
+      email: updatedContact.email,
+      role: updatedContact.role,
+      companyName: updatedContact.companyName,
+      roles: updatedContact.roles,
+      isEmailVerified: updatedContact.isEmailVerified,
+      createdAt: updatedContact.createdAt,
+      updatedAt: updatedContact.updatedAt,
+      accessToken: token
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
@@ -215,10 +217,21 @@ res.status(200).json({
 
 const deleteById = async (req, res) => {
   try {
-    const result = await userModel.findByIdAndDelete({
+    if (!req.query.id) {
+      return res.status(400).json({ message: "id is required" })
+    }
+    const exist = await userModel.findById(req.query.id).select("name");
+    if (!exist) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    await userModel.findByIdAndDelete({
       _id: req.query._id || req.query.id,
     });
-    res.status(200).json({ result });
+    const ids = await Project.distinct("_id", { createdBy: req.query.id })
+    await Meeting.deleteMany({ projectId: { $in: ids } });
+    await Project.deleteMany({ createdBy: req.query.id });
+    await Contact.deleteMany({ createdBy: req.query.id });
+    res.status(200).json({ message: "User deleted successfully." });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
@@ -253,7 +266,7 @@ const findAll = async (req, res) => {
   }
 };
 
-const reset_password = async (req, res) => {
+const resetPassword = async (req, res) => {
   try {
     const token = req.body.token;
     const tokenData = await userModel.findOne({ token: token });
@@ -282,7 +295,7 @@ const reset_password = async (req, res) => {
 
 const sendResetPasswordMail = async (name, email, token) => {
   try {
-    const html = `<p> Hi ${name}, please copy the link <a href="https://abc.com/reset-password?token=${token}"> reset your password </a>.</p>`;
+    const html = `<p> Hi ${name}, please copy the link <a href="${process.env.FRONTEND_BASE_URL}/resetPassword?token=${token}"> reset your password </a>.</p>`;
     await sendEmail(email, "For Reset password", html);
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
@@ -292,6 +305,7 @@ const sendResetPasswordMail = async (name, email, token) => {
 const forgotPassword = async (req, res) => {
   try {
     const email = req.body.email;
+    console.log('email at forgot password', email)
     const userData = await userModel.findOne({ email: email });
     if (userData) {
       const randomString = randomstring.generate();
@@ -317,7 +331,7 @@ const forgotPassword = async (req, res) => {
 
 const verifymail = async (req, res) => {
   const id = req.query.id;
-  
+
   try {
 
     const user = await userModel.findOne({ _id: id });
@@ -334,7 +348,7 @@ const verifymail = async (req, res) => {
     const verifiedMail = await userModel.updateOne(
       { _id: id }, // Correct query object
       { $set: { isEmailVerified: true } },
-      
+
     );
     return res.status(200).json({ message: 'Email successfully verified', status: 200 });
   } catch (error) {
@@ -462,6 +476,38 @@ const downloadUserExcel = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const { userId, oldPassword, newPassword } = req.body;
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    const isPasswordSame = await bcrypt.compare(newPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: " Old Password is incorrect" });
+    }
+    else if (isPasswordSame) {
+      return res.status(400).json({ status: 400, message: "New Password should be different from the Old Password" });
+    }
+    else {
+      const passwordErrors = validatePassword(newPassword);
+      if (passwordErrors) {
+        return res
+          .status(400)
+          .json({ message: passwordErrors.join(" "), status: 400 });
+      }
+
+      const hashedPassword = bcrypt.hashSync(newPassword, 8);
+      await userModel.findByIdAndUpdate(user._id, { password: hashedPassword });
+      return res.status(200).json({ status: 200, message: "Password changed successfully" });
+    }
+  } catch (error) {
+
+  }
+}
+
 module.exports = {
   signup,
   signin,
@@ -469,9 +515,10 @@ module.exports = {
   deleteById,
   findById,
   findAll,
-  reset_password,
+  resetPassword,
   forgotPassword,
   verifymail,
   uploadUserExcel,
   downloadUserExcel,
+  changePassword
 };

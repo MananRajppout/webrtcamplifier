@@ -11,13 +11,18 @@ import { MdOutlineDeblur } from "react-icons/md"
 import RenderParticipantsAudio from '../RenderParticipantsAudio';
 import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipant';
 
+
+
 const OngoingMeeting = () => {
   const searchParams = useSearchParams();
   const params = useParams();
   const role = searchParams.get("role");
+  const type = searchParams.get('type') || 'main';
+  const roomname = searchParams.get('roomname') || null;
   const [breakRoomID, setRoomBreakID] = useState(null);
   const [fullName, setFullName] = useState(searchParams.get("fullName") || "Guest");
-  const [roomId, setRoomId] = useState(params.id);
+  const [roomId, setRoomId] = useState(type == 'breackout' ? `${params.id}-${roomname}` : params.id);
+ 
   const videoCanvasRef = useRef(null);
   const canvasRef = useRef(null);
   const [isMicMute, setIsMicMute] = useState(true);

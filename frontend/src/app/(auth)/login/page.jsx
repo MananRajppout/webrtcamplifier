@@ -55,12 +55,11 @@ const Login = () => {
       const redirectUrl = router.query?.redirect || `/dashboard/my-profile/${response.data._id}`;
         router.replace(redirectUrl);
 
+        // setIsLoading(false);
 
-      // Handle successful sign-in (e.g., redirect to dashboard, store token, etc.)
     } catch (error) {
       toast.error(`${error.response.data.message}`);
       setError(`${error.response.data.message}`);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -126,9 +125,9 @@ const Login = () => {
                 />
                 <span className="ml-2">Remember me</span>
               </label>
-              <p className="text-custom-light-blue-1 text-base">
-                Forgot Password
-              </p>
+              <Link href="/forgotPassword" className="text-custom-light-blue-1">
+              Forgot Password?
+              </Link>
             </div>
             <button
               type="submit"
