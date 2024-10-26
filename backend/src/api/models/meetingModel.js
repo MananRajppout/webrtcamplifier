@@ -25,7 +25,7 @@ const meetingSchema = new Schema({
     type: Boolean,
     default: false
   },
-  
+
   enableBreakoutRoom: {
     type: Boolean,
     default: false
@@ -33,7 +33,7 @@ const meetingSchema = new Schema({
 
   meetingPasscode: { type: String, required: true },
 
-});
+}, { timestamps: true });
 
 const Meeting = mongoose.model('Meeting', meetingSchema);
 

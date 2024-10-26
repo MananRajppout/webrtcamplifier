@@ -14,7 +14,7 @@ const MeetingLink = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Project",
   },
-});
+}, { timestamps: true });
 
 const SendLink = mongoose.model("MeetingLink", MeetingLink);
 

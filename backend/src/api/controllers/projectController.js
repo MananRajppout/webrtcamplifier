@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const Meeting = require("../models/meetingModel");
 const User = require("../models/userModel");
+const Tag = require("../models/tagModel");
 
 // Controller to create a new project
 const createProject = async (req, res) => {
@@ -74,33 +75,44 @@ const createProject = async (req, res) => {
 
 // Controller to get all projects with pagination
 const getAllProjects = async (req, res) => {
-  const { page = 1, limit = 10, search= '' } = req.query; 
-  const { id } = req.params; 
+  const { page = 1, limit = 10, search = '', startDate, endDate, status, tag } = req.query;
+  const { id } = req.params;
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
     const userData = await User.findById(id);
     const userEmail = userData.email;
 
-     // Create search query
-     const searchQuery = search
-     ? {
-         $and: [
-           { $or: [{ createdBy: id }, { "members.email": userEmail }] },
-           {
-             $or: [
-               { name: { $regex: search, $options: 'i' } }, // Case-insensitive search
-               { description: { $regex: search, $options: 'i' } }
-             ]
-           }
-         ]
-       }
-     : { $or: [{ createdBy: id }, { "members.email": userEmail }] };
-
+    // Create search query
+    const searchQuery = search
+      ? {
+        $and: [
+          { $or: [{ createdBy: id }, { "members.email": userEmail }] },
+          {
+            $or: [
+              { name: { $regex: search, $options: 'i' } }, // Case-insensitive search
+              { description: { $regex: search, $options: 'i' } }
+            ]
+          }
+        ]
+      }
+      : { $or: [{ createdBy: id }, { "members.email": userEmail }] };
+    if (startDate) {
+      searchQuery.startDate = { $gte: new Date(startDate) }
+    }
+    if (endDate) {
+      searchQuery.endDate = { $lte: new Date(endDate) }
+    }
+    if (status) {
+      searchQuery.status = status
+    }
+    if (tag) {
+      searchQuery.tags = tag
+    }
 
     const projects = await Project.find(searchQuery)
-    .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn')
-      .skip((page - 1) * limit) 
-      .limit(parseInt(limit)); 
+      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn')
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
 
     const totalDocuments = await Project.countDocuments(searchQuery); // Total number of documents matching the criteria
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
@@ -132,49 +144,16 @@ const getProjectById = async (req, res) => {
 
 // Controller to update a project
 const updateProject = async (req, res) => {
-  const { id } = req.params;
-  const {
-    name,
-    description,
-    startDate,
-    status,
-    startTime,
-    timeZone,
-    participants,
-    observers,
-    breakoutRooms,
-    polls,
-    interpreters,
-    passcode,
-    endDate,
-  } = req.body;
+  const { id } = req.body;
 
   try {
     // Hash the passcode using bcryptjs if provided
-    let hashedPasscode = passcode;
-    if (passcode) {
-      hashedPasscode = await bcrypt.hash(passcode, 8); // Adjust saltRounds as per your security requirements
+    if (req.body.passcode) {
+      req.body.passcode = await bcrypt.hash(passcode, 8); // Adjust saltRounds as per your security requirements
     }
 
     const updatedProject = await Project.findByIdAndUpdate(
-      id,
-      {
-        name,
-        description,
-        startDate,
-        status,
-        startTime,
-        timeZone,
-        participants: participants || [],
-        observers: observers || [],
-        breakoutRooms: breakoutRooms || [],
-        polls: polls || [],
-        interpreters: interpreters || [],
-        passcode: hashedPasscode,
-        endDate,
-        updatedAt: Date.now(),
-      },
-      { new: true }
+      id, req.body, { new: true }
     );
 
     if (!updatedProject) {
@@ -220,7 +199,7 @@ const searchProjectsByFirstName = async (req, res) => {
       name: { $regex: name, $options: "i" },
     });
 
-   
+
 
     if (Projects.length === 0) {
       return res.status(404).json({
@@ -250,33 +229,33 @@ const projectStatusChange = async (req, res) => {
   }
 
   try {
-// Find the project by ID and update the status
-const updatedProject = await Project.findByIdAndUpdate(
-  projectId,
-  { status, updatedAt: Date.now() },
-  { new: true } // Return the updated document
-);
-if (!updatedProject) {
-  return res.status(404).json({ message: 'Project not found' });
-}
-// test
-res.status(200).json({
-  message: 'Project status updated successfully',
-  project: updatedProject,
-});
-} catch (error) {
-console.error('Error updating project status:', error);
-res.status(500).json({
-  message: 'Failed to update project status',
-  error: error.message,
-});
-}
+    // Find the project by ID and update the status
+    const updatedProject = await Project.findByIdAndUpdate(
+      projectId,
+      { status, updatedAt: Date.now() },
+      { new: true } // Return the updated document
+    );
+    if (!updatedProject) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    // test
+    res.status(200).json({
+      message: 'Project status updated successfully',
+      project: updatedProject,
+    });
+  } catch (error) {
+    console.error('Error updating project status:', error);
+    res.status(500).json({
+      message: 'Failed to update project status',
+      error: error.message,
+    });
+  }
 };
 // Edit project general info
 
 const updateGeneralProjectInfo = async (req, res) => {
-  const { projectId } = req.params; 
-  const { name, description, startDate, endDate, projectPasscode } = req.body; 
+  const { projectId } = req.params;
+  const { name, description, startDate, endDate, projectPasscode } = req.body;
   try {
     // Validate the input
     if (!name || !startDate || !projectPasscode) {
@@ -319,28 +298,28 @@ const addPeopleIntoProject = async (req, res) => {
     const updatedProject = await project.save();
     const populatedProject = await Project.findById(updatedProject._id).populate('members.userId');
 
-    res.status(200).json({ message: 'People added successfully', updatedProject: populatedProject  });
+    res.status(200).json({ message: 'People added successfully', updatedProject: populatedProject });
   } catch (error) {
     res.status(500).json({ message: 'Error adding people', error });
   }
 }
 
 
-const editMemberRole = async(req, res) => {
+const editMemberRole = async (req, res) => {
   try {
     const { projectId } = req.params;
     const { updatedMember } = req.body;
-   
+
     // Find the project by ID and update the specific member's roles
     const updatedProject = await Project.findOneAndUpdate(
-      { _id: projectId, 'members._id': updatedMember._id }, 
+      { _id: projectId, 'members._id': updatedMember._id },
       {
-        $set: { 'members.$.roles': updatedMember.roles } 
+        $set: { 'members.$.roles': updatedMember.roles }
       },
-      { new: true } 
+      { new: true }
     );
 
- 
+
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project or member not found' });
     }
@@ -358,12 +337,12 @@ const editMemberRole = async(req, res) => {
 const deleteMemberFromProject = async (req, res) => {
   try {
     const { projectId, memberId } = req.params;
-   
+
     // Find the project and remove the member from the members array
     const updatedProject = await Project.findOneAndUpdate(
-      { _id: projectId }, 
+      { _id: projectId },
       { $pull: { members: { _id: memberId } } },
-      { new: true } 
+      { new: true }
     );
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project or member not found' });
@@ -379,13 +358,13 @@ const deleteMemberFromProject = async (req, res) => {
   }
 };
 
-const updateBulkMembers = async (req,res) => {
+const updateBulkMembers = async (req, res) => {
   try {
     const { projectId, members } = req.body;
 
     const updatedProject = await Project.updateOne(
       { _id: projectId },
-      { $set: {members: members} }, 
+      { $set: { members: members } },
     );
 
     if (!updatedProject) {
@@ -394,15 +373,36 @@ const updateBulkMembers = async (req,res) => {
 
     const populatedProject = await Project.findById(projectId).populate('members.userId');
 
-    return res.status(200).json({ message: 'Members updated successfully',  updatedProject: populatedProject });
+    return res.status(200).json({ message: 'Members updated successfully', updatedProject: populatedProject });
   } catch (error) {
     console.error('Error updating bulk members:', error);
     return res.status(500).json({ message: 'Internal server error' });
-    
+
   }
 }
 
+const assignTagsToProject = async (req, res) => {
+  try {
+    const { tagIds, projectId } = req.body;
+    const tags = await Tag.distinct("name", { _id: { $in: tagIds } });
+    const project = await Project.findById(projectId).select("tags");
 
+    if (project?.tags) {
+      const uniqueTags = [...new Set([...project.tags, ...tags])];
+      project.tags = uniqueTags;
+    } else {
+      project.tags = tags;
+    }
+    const result = await Project.findByIdAndUpdate(
+      projectId,
+      { tags: project.tags },
+      { new: true }
+    );
+    return res.status(200).json({ result, message: "Tag assigned successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 
 
 
@@ -422,6 +422,7 @@ module.exports = {
   addPeopleIntoProject,
   editMemberRole,
   deleteMemberFromProject,
-  updateBulkMembers
+  updateBulkMembers,
+  assignTagsToProject
 };
 

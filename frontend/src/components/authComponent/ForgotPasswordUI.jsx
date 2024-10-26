@@ -20,13 +20,15 @@ const ForgotPasswordUI = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('email', email)
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/forgotPassword`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/forgot-password`,
         {
           email: email,
         }
       );
+      console.log(response.data);
       setMessage("Reset link sent to your email");
       setError("");
     } catch (error) {
@@ -61,6 +63,7 @@ const ForgotPasswordUI = () => {
             children="Send Reset Link"
             variant="primary"
             className="py-2 rounded-2xl w-full font-bold text-xl"
+            type="submit"
           />
         </form>
         {message && (

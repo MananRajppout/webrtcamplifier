@@ -1,7 +1,13 @@
+'use client'
 import PasswordResetUI from '@/components/authComponent/PasswordResetUI'
 import Logo from '@/components/shared/Logo'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 
 const page = () => {
+  
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+  console.log('token', token)
   return (
     <div>
     <div className="flex justify-center items-center pt-5 lg:hidden">

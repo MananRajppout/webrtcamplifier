@@ -32,7 +32,7 @@ const io = setupSocket(server);
 dotenv.config();
 app.use(
   cors({
-    origin: [process.env.FRONTEND_BASE_URL,"https://new-amplify-fe-kj4c.vercel.app", "http://localhost:3000", "http://localhost:3001","http://localhost:5173" ],
+    origin: [process.env.FRONTEND_BASE_URL, "https://new-amplify-fe-kj4c.vercel.app", "http://localhost:3000", "http://localhost:3001", "http://localhost:5173"],
   })
 );
 app.use(express.json());
@@ -63,6 +63,7 @@ require("./src/api/routes/breakoutroomRoutes.js")(app);
 require("./src/api/routes/videoRoute.js")(app);
 require("./src/api/routes/companyRoute.js")(app);
 require("./src/api/routes/repositoryRoute.js")(app);
+require("./src/api/routes/tagRoute.js")(app);
 
 mongoose.set("strictQuery", false);
 
