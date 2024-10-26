@@ -10,6 +10,7 @@ import OngoingMeeting from "./OngoingMeeting";
 import EndOFMeeting from "./EndOFMeeting";
 import Button from "../shared/button";
 import toast from "react-hot-toast";
+import { useSearchParams } from "next/navigation";
 
 const MeetingView = ({
   role,
@@ -26,10 +27,16 @@ const MeetingView = ({
   projectStatus,
   iframeLink, meetingDetails,
 }) => {
+
+  const searchParams = useSearchParams();
+  const roomname = searchParams.get('roomname');
+  const type = searchParams.get('type');
+  
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
 
     const textToCopy = `Meeting Link- ${meetingLink}`;
+  
 
     navigator.clipboard.writeText(textToCopy)
       .then(() => {
@@ -45,6 +52,7 @@ const MeetingView = ({
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meetingDetails._id}`;
     const meetingPassword = `${meetingDetails.meetingPasscode}`;
     const textToCopy = `Meeting Link- ${meetingLink}\nMeeting Password - ${meetingPassword}`;
+   
 
     navigator.clipboard.writeText(textToCopy)
       .then(() => {
@@ -98,7 +106,7 @@ const MeetingView = ({
 
         {/* Second ---------- name bar */}
         <div className="flex justify-between items-center pb-4 ">
-          <HeadingBlue25px children={meetingDetails?.title} />
+          <HeadingBlue25px children={`${meetingDetails?.title} ${type == 'breackout' && roomname ? `- ${roomname}` : ''}`} />
 
           {
             role === "Moderator" &&

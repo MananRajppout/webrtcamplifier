@@ -52,15 +52,15 @@ const page = () => {
     setSelectedRoom(room);
   };
 
-  
+
 
   //! Use effect for getting waiting list
   useEffect(() => {
     let intervalId;
-    socket.emit('join-room',params.id,(socketId) => {
+    socket.emit('join-room', { roomid: params.id, name: fullName }, (socketId) => {
       socketIdRef.current = socketId;
     });
-    socket.on('change-room',handleChangeRoom)
+    socket.on('change-room', handleChangeRoom)
     socket.on("getParticipantListResponse", handleParticipantList);
     socket.on("participantChatResponse", handleParticipantChatResponse);
     socket.on("getObserverListResponse", handleObserverListResponse);
@@ -72,16 +72,16 @@ const page = () => {
 
     // Initial request
     requestParticipantList();
-    
+
     // getStreamingStatus(params.id);
     getMeetingStatus(params.id);
     // getParticipantChat(params.id);
-    
+
     const requestParticipantListIntervalId = setInterval(() => {
       requestParticipantList(); // Request participant list
       getParticipantChat(params.id);
       getObserverList(params.id);
-    getObserverChat(params.id);
+      getObserverChat(params.id);
     }, 1000)
 
     if (userRole === "Moderator") {
@@ -116,74 +116,74 @@ const page = () => {
 
 
 
-// * function to request streaming status
-const getMeetingStatus = async (meetingId) => {
-  socket.emit("getMeetingStatus", { meetingId });
-};
+  // * function to request streaming status
+  const getMeetingStatus = async (meetingId) => {
+    socket.emit("getMeetingStatus", { meetingId });
+  };
 
   // !Automatically navigate observer to waiting room if streaming stops
 
 
-useEffect(() => {
-  if (userRole === "Observer") {
-    socket.on("navigateToObserverWaitingRoom", ({ meetingId }) => {
-     
-      if (params.id === meetingId) {
-        router.push(`/observer-waiting-room/${meetingId}?fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(userRole)}`);
-      }
-    });
-  }
+  useEffect(() => {
+    if (userRole === "Observer") {
+      socket.on("navigateToObserverWaitingRoom", ({ meetingId }) => {
 
-  return () => {
-    socket.off("navigateToObserverWaitingRoom");
+        if (params.id === meetingId) {
+          router.push(`/observer-waiting-room/${meetingId}?fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(userRole)}`);
+        }
+      });
+    }
+
+    return () => {
+      socket.off("navigateToObserverWaitingRoom");
+    };
+  }, [params.id, userRole, socket]);
+
+  const handleToggleStreaming = (meetingId) => {
+
+    socket.emit("toggleStreaming", { meetingId });
   };
-}, [params.id, userRole, socket]);
-
-const handleToggleStreaming = (meetingId) => {
-
-  socket.emit("toggleStreaming", { meetingId });
-};
 
 
-  const handleBreakoutRoom = useCallback((breakroomname,participants) => {
-    socket.emit("create-breakout-room", { meetingId:params.id,breakroomname,participants},({fullParticipantList,breakroomname},err) => {
-      if(err) return console.log(err);
+  const handleBreakoutRoom = useCallback((breakroomname, participants) => {
+    socket.emit("create-breakout-room", { meetingId: params.id, breakroomname, participants }, ({ fullParticipantList, breakroomname }, err) => {
+      if (err) return console.log(err);
       setBreakoutRooms(prev => [...prev, breakroomname]);
       setParticipants(fullParticipantList);
-      if(!selectedRoom){
+      if (!selectedRoom) {
         setSelectedRoom(breakroomname);
       }
     });
-  },[params.id,selectedRoom]);
+  }, [params.id, selectedRoom]);
 
 
-  const handleMoveParticipant = useCallback((breakroomname,participant) => {
-    
-    socket.emit("user-move", { meetingId:params.id,breakroomname,participants:[participant]},({fullParticipantList,breakroomname},err) => {
-      if(err) return console.log(err);
+  const handleMoveParticipant = useCallback((breakroomname, participant) => {
+
+    socket.emit("user-move", { meetingId: params.id, breakroomname, participants: [participant] }, ({ fullParticipantList, breakroomname }, err) => {
+      if (err) return console.log(err);
       setParticipants(fullParticipantList);
     });
-  },[params.id,selectedRoom]);
+  }, [params.id, selectedRoom]);
 
 
 
 
 
-  const handleChangeRoom = useCallback(({participantList,roomName}) => {
- 
+  const handleChangeRoom = useCallback(({ participantList, roomName }) => {
+
     const find = participantList.some(p => p.name == fullName);
-    
-    if(find){
+
+    if (find) {
       let url = '';
-      if(roomName?.toLowerCase() == "main"){
+      if (roomName?.toLowerCase() == "main") {
         url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}`
-      }else{
+      } else {
 
         url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}&type=breackout&roomname=${roomName}`
       }
-      window.open(url,'_self');
+      window.open(url, '_self');
     }
-  },[]);
+  }, []);
 
   // * get observer list response function
   const handleObserverListResponse = (response) => {
@@ -203,15 +203,15 @@ const handleToggleStreaming = (meetingId) => {
     }
   };
 
-// * participant send message function
-const sendMessageParticipant = async (message) => {
-  socket.emit("participantSendMessage", { message, meetingId: params.id });
-};
+  // * participant send message function
+  const sendMessageParticipant = async (message) => {
+    socket.emit("participantSendMessage", { message, meetingId: params.id });
+  };
 
-// * get participant chat request function
-const getParticipantChat = async (meetingId) => {
-  socket.emit("getParticipantChat", { meetingId });
-};
+  // * get participant chat request function
+  const getParticipantChat = async (meetingId) => {
+    socket.emit("getParticipantChat", { meetingId });
+  };
 
   // * get observer chat response function
   const handleObserverChatResponse = (response) => {
@@ -222,7 +222,7 @@ const getParticipantChat = async (meetingId) => {
     }
   };
 
- 
+
   // * handle participant removed
   const handleParticipantRemoved = (data) => {
     if (data.name === fullName && data.role === userRole) {
@@ -232,18 +232,18 @@ const getParticipantChat = async (meetingId) => {
 
   // * get participant list
   const handleParticipantList = (response) => {
-    console.log(response.participantList,'response.participantList')
+    console.log(response.participantList, 'response.participantList')
     if (response.success) {
       setParticipants(response.participantList);
       setBreakoutRooms(response.breakoutRooms);
-      if(!selectedRoom){
-        if(roomname && type == 'breackout'){
+      if (!selectedRoom) {
+        if (roomname && type == 'breackout') {
           setSelectedRoom(roomname);
-        }else{
+        } else {
           setSelectedRoom(response.breakoutRooms[0]);
         }
       }
-   
+
     } else {
       console.error("Failed to update participant list:", response.message);
     }
@@ -276,7 +276,7 @@ const getParticipantChat = async (meetingId) => {
     socket.emit("getParticipantList", { meetingId: params.id });
   };
 
- 
+
 
   // *accept participant from waiting list
   const acceptParticipant = async (participant) => {
@@ -288,7 +288,7 @@ const getParticipantChat = async (meetingId) => {
     socket.emit("removeParticipantFromMeeting", { name, role, meetingId });
   };
 
-  
+
 
   // *get observer list request function
   const getObserverList = async (meetingId) => {
@@ -314,15 +314,15 @@ const getParticipantChat = async (meetingId) => {
 
   // * remove from waiting room
   const removeFromWaitingRoom = (participant, meetingId) => {
-   
+
     socket.emit("removeFromWaitingRoom", { meetingId, participant });
   };
 
-// * admit all from waiting room
+  // * admit all from waiting room
 
-const admitAllFromWaitingRoom = (meetingId) => {
-  socket.emit("admitAllFromWaitingRoom", { meetingId });
-};
+  const admitAllFromWaitingRoom = (meetingId) => {
+    socket.emit("admitAllFromWaitingRoom", { meetingId });
+  };
 
 
   // * get streaming status response function
@@ -336,8 +336,8 @@ const admitAllFromWaitingRoom = (meetingId) => {
 
 
 
- 
-  
+
+
 
   //* Use effect for admitting participant into meeting after acceptance
   useEffect(() => {
@@ -374,7 +374,7 @@ const admitAllFromWaitingRoom = (meetingId) => {
     }
   }, [participants, fullName, isAdmitted]);
 
-  
+
 
 
   // *Use effect for getting meeting details
@@ -394,7 +394,7 @@ const admitAllFromWaitingRoom = (meetingId) => {
   };
 
 
-  const startMeeting = () => {};
+  const startMeeting = () => { };
 
 
 
@@ -576,7 +576,7 @@ const admitAllFromWaitingRoom = (meetingId) => {
             </div>
             <div className="h-full">
               <RightSidebar
-              role={userRole}
+                role={userRole}
                 observers={observers}
                 setObservers={setObservers}
                 isBreakoutRoom={isBreakoutRoom}

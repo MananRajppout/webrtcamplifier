@@ -4,6 +4,9 @@ const LiveMeeting = require("../models/liveMeetingModel");
 const { v4: uuidv4 } = require("uuid");
 const ChatMessage = require("../models/chatModel");
 
+const usernames = {};
+const userchangeroom = {};
+
 const setupSocket = (server) => {
   const io = new Server(server, {
     cors: {
@@ -15,8 +18,15 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    socket.on("join-room",(roomid,callback) => {
+    socket.on("join-room",({roomid,name},callback) => {
       socket.join(roomid);
+      usernames[socket.id] = {
+        name,
+        roomid
+      };
+
+      const newname = name?.replaceAll(' ','')?.toLowerCase() + roomid;
+      delete userchangeroom[newname];
       callback(socket.id);
     })
     socket.on("startMeeting", async (data) => {
@@ -719,6 +729,13 @@ const setupSocket = (server) => {
         return
       }
 
+
+      for (let index = 0; index < participants.length; index++) {
+        const element = participants[index];
+        const name = element.name?.replaceAll(' ','')?.toLowerCase() + meetingId;
+        userchangeroom[name] = true;
+      }
+
       const newRoom = {roomName: breakroomname}
       liveMeeting.breakRooms = [...liveMeeting.breakRooms,newRoom];
       liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
@@ -755,6 +772,12 @@ const setupSocket = (server) => {
         return
       }
 
+      for (let index = 0; index < participants.length; index++) {
+        const element = participants[index];
+        const name = element.name?.replaceAll(' ','')?.toLowerCase() + meetingId;
+        userchangeroom[name] = true;
+      }
+
      
       liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
         const participant = participants.find(part => part.name == p.name);
@@ -779,8 +802,22 @@ const setupSocket = (server) => {
     
 
 // * disconnect
-    socket.on("disconnect", () => {
-      console.log("User disconnected");
+    socket.on("disconnect", async () => {
+      console.log("User disconnected", usernames[socket.id]);
+      const userDetails = usernames[socket.id] || {};
+      const newname = userDetails?.name?.replaceAll(' ','')?.toLowerCase() + userDetails?.roomid;
+      const isMoveByModerator = userchangeroom[newname];
+      if(isMoveByModerator){
+        console.log('is move by moderator')
+        return
+      }
+      const liveMeeting = await LiveMeeting.findOne({ meetingId:userDetails?.roomid });
+      if(!liveMeeting){
+        return
+      }
+
+      liveMeeting.participantsList = liveMeeting.participantsList.filter(p => p.name != userDetails?.name);
+      await liveMeeting.save();
     });
   });
 
