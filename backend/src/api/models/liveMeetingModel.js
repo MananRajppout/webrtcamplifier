@@ -20,7 +20,8 @@ const liveMeetingSchema = new Schema({
     name: { type: String, required: true },
     id: { type: String, required: true },
     role: { type: String, required: true },
-  }],
+    roomName: {type: String, required: false, default: "main"}
+    }],
   observerList: [{
     name: { type: String, required: true },
     id: { type: String, required: true },
@@ -42,9 +43,12 @@ const liveMeetingSchema = new Schema({
     type: String,
     default: null
   },
-  participantChat: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage' }],
-  observerChat: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage' }],
-}, { timestamps: true });
+  participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
+  observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
+  breakRooms: [{
+    roomName: {type: String}
+  }]
+});
 
 const LiveMeeting = mongoose.model('LiveMeeting', liveMeetingSchema);
 

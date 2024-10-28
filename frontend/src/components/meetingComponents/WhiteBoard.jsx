@@ -46,8 +46,11 @@ let userId = null;
 const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
   const params = useParams();
   const searchParams = useSearchParams();
-  const roomId = params.id;
+
   const role = searchParams.get("role");
+  const type = searchParams.get('type') || 'main';
+  const roomname = searchParams.get('roomname') || null;
+  const roomId = type == 'breackout' ? `${params.id}-${roomname}` : params.id
 
 
   const [navActive, setNavActive] = useState(false);

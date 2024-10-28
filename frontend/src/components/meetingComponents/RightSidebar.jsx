@@ -20,6 +20,8 @@ const RightSidebar = ({
   messages,
   users,
   setUsers,
+  selectedRoom,
+  setSelectedRoom
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -212,6 +214,9 @@ const RightSidebar = ({
             users={users}
             setSelectedParticipantChat={setSelectedParticipantChat}
             selectedPartcipantChat={selectedPartcipantChat}
+            breakoutRooms={breakoutRooms}
+            selectedRoom={selectedRoom}
+            setSelectedRoom={setSelectedRoom}
           />
         ) : (
           <RightSidebarCloseUi
@@ -229,6 +234,7 @@ const RightSidebar = ({
             chatParticipants={chatParticipants}
             files={files}
             role={role}
+            breakoutRooms={breakoutRooms}
           />
         )}
       </div>

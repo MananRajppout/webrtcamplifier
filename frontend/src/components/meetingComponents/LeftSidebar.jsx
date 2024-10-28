@@ -31,13 +31,16 @@ const LeftSidebar = ({
   removeParticipant,
   isStreaming,
   setStartStreaming,
-  removeFromWaitingRoom, admitAllFromWaitingRoom
+  removeFromWaitingRoom, admitAllFromWaitingRoom,
+  handleBreakoutRoom,
+  handleMoveParticipant
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("participantList");
   const [currentUser, setCurrentUser] = useState(null);
   const [isModerator, setIsModerator] = useState(false);
+  const [brealRoomModelOpen, setBreakoutRoomModelOpen] = useState(false);
 
   const [selectedChat, setSelectedChat] = useState(null);
   
@@ -241,6 +244,10 @@ const LeftSidebar = ({
               setIsWhiteBoardOpen={setIsWhiteBoardOpen}
               removeFromWaitingRoom={removeFromWaitingRoom}
               admitAllFromWaitingRoom={admitAllFromWaitingRoom}
+              handleBreakoutRoom={handleBreakoutRoom}
+              brealRoomModelOpen={brealRoomModelOpen}
+              setBreakoutRoomModelOpen={setBreakoutRoomModelOpen}
+              handleMoveParticipant={handleMoveParticipant}
             />
           ) : (
             <LeftSidebarCloseUi

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { LuClipboardSignature } from "react-icons/lu";
 import { FaAngleDown, FaVideo } from "react-icons/fa";
 import {
@@ -16,6 +16,10 @@ import MoveToWaitingRoomModal from "../singleComponent/MoveToWaitingRoomModal";
 import notify from "@/utils/notify";
 import { PiCirclesFourFill } from "react-icons/pi";
 import Button from "../shared/button";
+import BreakoutRoomModal from "../singleComponent/BreakoutRoomModal";
+import { useParams, useSearchParams } from "next/navigation";
+import { GoMoveToEnd } from "react-icons/go";
+import MoveToBreakModal from "../singleComponent/MoveToBreakModal";
 
 const LeftSidebarOpenUi = ({
   users,
@@ -52,6 +56,10 @@ const LeftSidebarOpenUi = ({
   setIsWhiteBoardOpen,
   removeFromWaitingRoom,
   admitAllFromWaitingRoom,
+  handleBreakoutRoom,
+  brealRoomModelOpen,
+  setBreakoutRoomModelOpen,
+  handleMoveParticipant
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -59,8 +67,18 @@ const LeftSidebarOpenUi = ({
     useState(false);
   const [userToRemove, setUserToRemove] = useState(null);
   const [userToMove, setUserToMove] = useState(null);
+  const [userToMoveBreak, setUserToMoveBreak] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [inputMessage, setInputMessage] = useState("");
+  const [openMoveToBreakModelOpen,setMoveToOpenBreakModelOpen] = useState(false);
+
+  const params = useParams();
+  const searchParams = useSearchParams();
+
+  const userrole = searchParams.get('role');
+  const fullName = searchParams.get('fullName');
+  const roomname = searchParams.get('roomname') || 'main'
+  const id = params.id;
   // this for handling the message input
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
@@ -75,7 +93,7 @@ const LeftSidebarOpenUi = ({
       setInputMessage("");
     }
   };
- 
+
 
   const modalRef = useRef();
 
@@ -107,6 +125,12 @@ const LeftSidebarOpenUi = ({
     setUserToMove(user);
     setIsMoveModalOpen(true);
   };
+
+  const openUserMoveToBreakModal = (event, user) => {
+    setUserToMoveBreak(user);
+    setMoveToOpenBreakModelOpen(true);
+  };
+
   const closeMoveUserModal = () => {
     setIsMoveModalOpen(false);
   };
@@ -166,341 +190,332 @@ const LeftSidebarOpenUi = ({
       (message.senderName === selectedChat?.name && message.receiverName === userName) ||
       (message.senderName === userName && message.receiverName === selectedChat?.name)
   );
- 
+
+
+  const handleRoomSwitch = useCallback((roomName) => {
+    let url;
+    if (roomName.toLowerCase() == "main") {
+      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}`
+    } else {
+      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
+    }
+    window.open(url, '_self')
+  }, [fullName, userrole, id])
+
 
   return (
     <>
-      {isBreakoutRoom && role !== "Participant" ? (
-        <div className=" flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4 mt-16 hidden md:flex">
-          {/* top heading */}
+      <div className=" md:pt-0 pt-16">
+        {/* break rooms  */}
+        {role === "Moderator" && breakoutRooms.length > 1 &&
+          <div className=" flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4 mt-16 hidden md:flex">
+            {/* top heading */}
 
-          <div className="flex items-center justify-between">
-            <div className="flex justify-start items-center gap-1">
-              <PiCirclesFourFill className="text-custom-orange-1 text-xs" />
-              <h1 className="text-xs font-bold">{selectedRoom.roomName}</h1>
-            </div>
-            <div className="flex justify-end items-center gap-1">
-              <PiCirclesFourFill className="text-custom-orange-1 text-xs" />
-              <h1 className="text-xs font-bold">
-                {selectedRoom.participants.length}
-              </h1>
-            </div>
-          </div>
-
-          {/* Dropdown */}
-          <div className={`relative w-full py-5`}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={`px-4 py-1 sm:py-2 rounded-xl flex items-center justify-between  text-white bg-[#2976a5] font-semibold w-full`}
-            >
-              {selectedRoom?.roomName}
-              <FaAngleDown
-                className={`ml-2 transform transition-transform duration-200 ${
-                  isDropdownOpen ? "rotate-180" : "rotate-0"
-                }`}
-              />
-            </button>
-            {isDropdownOpen && (
-              <ul
-                className={`absolute left-0 text-xs bg-white rounded-lg shadow-[0px_3px_6px_#00000029] text-custom-dark-blue-1 font-semibold w-full`}
-              >
-                {breakoutRooms.map((option, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleSelect(option)}
-                    className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                  >
-                    {option.roomName}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="flex-grow overflow-y-auto">
-            <h1 className="font-bold pb-3 text">Participants List</h1>
-            {users?.map((user) => (
-              <div
-                className="flex justify-start items-center gap-2 py-1"
-                key={user?.name}
-              >
-                {/* <Image
-                  src={user.image}
-                  alt="user image"
-                  height={40}
-                  width={40}
-                  className="rounded-2xl border-[3px] border-white border-solid"
-                /> */}
-                <p className="text-[#1a1a1a] text-sm flex-grow">{user?.name}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex justify-start items-center gap-1">
+                <PiCirclesFourFill className="text-custom-orange-1 text-xs" />
+                <h1 className="text-xs font-bold">{selectedRoom}</h1>
               </div>
-            ))}
+              <div className="flex justify-end items-center gap-1">
+                <PiCirclesFourFill className="text-custom-orange-1 text-xs" />
+                <h1 className="text-xs font-bold">
+                  {users.filter(u => u.roomName?.toLowerCase() == selectedRoom.toLowerCase())?.length || 0}
+                </h1>
+              </div>
+            </div>
+
+            {/* Dropdown */}
+            <div className={`relative w-full py-5`}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className={`px-4 py-1 sm:py-2 rounded-xl flex items-center justify-between  text-white bg-[#2976a5] font-semibold w-full`}
+              >
+                {selectedRoom}
+                <FaAngleDown
+                  className={`ml-2 transform transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                />
+              </button>
+              {isDropdownOpen && (
+                <ul
+                  className={`absolute left-0 text-xs bg-white rounded-lg shadow-[0px_3px_6px_#00000029] text-custom-dark-blue-1 font-semibold w-full`}
+                >
+
+                  {
+                    breakoutRooms.map((name) => (
+                      <li
+                        className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        index={name}
+                        onClick={() => handleRoomSwitch(name)}
+                      >
+                        {name}
+                      </li>
+                    ))
+                  }
+
+                </ul>
+              )}
+            </div>
           </div>
+        }
+
+
+        {/* Whiteboard and local recording */}
+        <div className=" lg:pt-10 px-4">
+          {role === "Moderator" && (
+            <Button
+              children={"Create Breakoup Room"}
+              variant="meeting"
+              type="submit"
+              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+              onClick={() => setBreakoutRoomModelOpen(true)}
+            />
+          )}
+          <Button
+            children="Whiteboard"
+            variant="meeting"
+            type="submit"
+            className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+            onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
+          />
+
+          {role === "Moderator" && (
+            <Button
+              children={isStreaming ? "Stop Streaming" : "Start Streaming"}
+              variant="meeting"
+              type="submit"
+              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+              onClick={() => setStartStreaming(meetingId)}
+            />
+          )}
         </div>
-      ) : (
-        <div className=" md:pt-0 pt-16">
-          {/* Whiteboard and local recording */}
-          <div className=" lg:pt-10 px-4">
-            {/* <Button
-              children="Whiteboard"
-              variant="meeting"
-              type="submit"
-              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-              icon={
-                <LuClipboardSignature className="bg-[#fcd860] p-1 text-white text-2xl rounded-md font-bold" />
-              }
-              onClick={toggleWhiteBoard}
-            />
+
+        {/* Backroom chat and icon */}
+        <div className="flex justify-start items-center gap-2 lg:py-4 mx-4 pt-10 sm:pt-20">
+          <BsChatSquareFill className="text-custom-dark-blue-1" />
+          <HeadingLg children="BACKROOM CHAT" />
+        </div>
+
+        {/* chat container */}
+        <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto max-h-[300px] mx-4">
+          <div className="flex justify-center items-center gap-2 pb-2 ">
             <Button
-              children="Local Recording"
-              variant="meeting"
+              children="Participants List"
+              variant="default"
               type="submit"
-              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-              icon={
-                <FaVideo className="bg-custom-orange-1 p-1 text-white text-2xl rounded-md font-bold" />
-              }
-              onClick={toggleRecordingButton}
-            /> */}
-
-            <Button
-              children="Whiteboard"
-              variant="meeting"
-              type="submit"
-              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-              onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
+              className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "participantList"
+                ? "shadow-[0px_4px_6px_#1E656D4D]"
+                : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
+                }  `}
+              onClick={() => handleTabClick("participantList")}
             />
-
-            {role === "Moderator" && (
+            <div className="w-full relative">
               <Button
-                children={isStreaming ? "Stop Streaming" : "Start Streaming"}
-                variant="meeting"
-                type="submit"
-                className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-                onClick={() => setStartStreaming(meetingId)}
-              />
-            )}
-          </div>
-
-          {/* Backroom chat and icon */}
-          <div className="flex justify-start items-center gap-2 lg:py-4 mx-4 pt-10 sm:pt-20">
-            <BsChatSquareFill className="text-custom-dark-blue-1" />
-            <HeadingLg children="BACKROOM CHAT" />
-          </div>
-
-          {/* chat container */}
-          <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto max-h-[300px] mx-4">
-            <div className="flex justify-center items-center gap-2 pb-2 ">
-              <Button
-                children="Participants List"
+                children="Participants Chat"
                 variant="default"
                 type="submit"
-                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${
-                  activeTab === "participantList"
-                    ? "shadow-[0px_4px_6px_#1E656D4D]"
-                    : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
-                }  `}
-                onClick={() => handleTabClick("participantList")}
-              />
-              <div className="w-full relative">
-                <Button
-                  children="Participants Chat"
-                  variant="default"
-                  type="submit"
-                  className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${
-                    activeTab === "participantChat"
-                      ? "shadow-[0px_4px_6px_#1E656D4D]"
-                      : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
+                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "participantChat"
+                  ? "shadow-[0px_4px_6px_#1E656D4D]"
+                  : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
                   }  `}
-                  onClick={() => handleTabClick("participantChat")}
-                />
-                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
-              </div>
+                onClick={() => handleTabClick("participantChat")}
+              />
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
             </div>
+          </div>
 
-            {/* participants container */}
+          {/* participants container */}
 
-            {/* participants list */}
-            {activeTab === "participantList" && (
-              <div className="flex-grow pt-2">
-                <Search
-                  placeholder="Search Name"
-                  onSearch={handleSearch}
-                  inputClassName="!bg-[#F3F4F5] !rounded-xl "
-                  iconClassName="!bg-[#EBEBEB]"
-                />
-                {/* participant container */}
-                {/* !selectedChat &&
+          {/* participants list */}
+          {activeTab === "participantList" && (
+            <div className="flex-grow pt-2">
+              <Search
+                placeholder="Search Name"
+                onSearch={handleSearch}
+                inputClassName="!bg-[#F3F4F5] !rounded-xl "
+                iconClassName="!bg-[#EBEBEB]"
+              />
+              {/* participant container */}
+              {/* !selectedChat &&
               users
                 ?.filter((user) => user.name !== userName)
                 .map((user) */}
-                {users
-                  ?.filter((user) => user.name !== userName)
-                  .map((user) => (
-                    <div
-                      className="flex justify-center items-center gap-2 py-1"
-                      key={user?.name}
-                    >
-                      <p className="text-[#1a1a1a] text-[10px] flex-grow">
-                        {user?.name}
-                      </p>
-                      <IoMdMic />
-                      <BsChatSquareDotsFill
-                        onClick={() => handleUserClick(user?.id)}
-                      />
-                      {role === "Moderator" && (
-                        <BsThreeDotsVertical
-                          onClick={(event) =>
-                            toggleRemoveAndWaitingOptionModal(event, user)
-                          }
-                          className="cursor-pointer"
-                        />
-                      )}
-                    </div>
-                  ))}
-                {isModeratorPopupModalOpen && currentUser && (
-                  <div
-                    ref={modalRef}
-                    className="absolute bg-white shadow-[0px_3px_6px_#0000004A] rounded-lg w-44 z-20"
-                    style={{
-                      top: modalPosition.top + 20,
-                      left: modalPosition.left - 30,
-                    }}
-                  >
-                    <ul className="text-[12px]">
-                      <li
-                        className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-                        onClick={(e) => openRemoveUserModal(e, userToRemove)}
-                      >
-                        <IoRemoveCircle />
-                        <span>Remove</span>
-                      </li>
-                      <li
-                        className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-                        onClick={(e) => openMoveUserModal(e, currentUser)}
-                      >
-                        <MdMoveDown />
-                        <span>Move to Waiting Room</span>
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Participant chat */}
-            {activeTab === "participantChat" &&
-              !selectedChat &&
-              users
-                ?.filter((user) => {
-                  if (role === "Moderator") {
-                    // Show all users for the moderator
-                    return user.name !== userName;
-                  } else if (role === "Participant") {
-                    // Show only moderators to participants
-                    return user.role === "Moderator";
-                  }
-                })
+              {users
+                ?.filter((user) => user.name !== userName)
+                ?.filter(user => (role == "Moderator" ? true : (user.roomName?.toLowerCase() == roomname?.toLowerCase() || user.role == "Moderator") ))
                 .map((user) => (
                   <div
-                    key={user.name}
-                    className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer"
-                    onClick={() => setSelectedChat(user)}
+                    className="flex justify-center items-center gap-2 py-1"
+                    key={user?.name}
                   >
-                    <div className="flex-grow-1 text-xs ">
-                      <p className="pb-1 font-bold">{user.name}</p>
-                    </div>
+                    <p className="text-[#1a1a1a] text-[10px] flex-grow">
+                      {user?.name}
+                    </p>
+                    <IoMdMic />
+                    <BsChatSquareDotsFill
+                      onClick={() => handleUserClick(user?.id)}
+                    />
+                    {role === "Moderator" && (
+                      <BsThreeDotsVertical
+                        onClick={(event) =>
+                          toggleRemoveAndWaitingOptionModal(event, user)
+                        }
+                        className="cursor-pointer"
+                      />
+                    )}
                   </div>
                 ))}
+              {isModeratorPopupModalOpen && currentUser && (
+                <div
+                  ref={modalRef}
+                  className="absolute bg-white shadow-[0px_3px_6px_#0000004A] rounded-lg w-44 z-20"
+                  style={{
+                    top: modalPosition.top + 20,
+                    left: modalPosition.left - 30,
+                  }}
+                >
+                  <ul className="text-[12px]">
+                    <li
+                      className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                      onClick={(e) => openRemoveUserModal(e, userToRemove)}
+                    >
+                      <IoRemoveCircle />
+                      <span>Remove</span>
+                    </li>
+                    <li
+                      className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                      onClick={(e) => openMoveUserModal(e, currentUser)}
+                    >
+                      <MdMoveDown />
+                      <span>Move to Waiting Room</span>
+                    </li>
 
-            {activeTab === "participantChat" && selectedChat && (
-              <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center">
-                {/* chat name and image */}
-                <div className="flex w-full items-center justify-center gap-2 mb-4 bg-custom-gray-4 p-2">
-                  {/* <Image
+                    <li
+                      className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2 relative"
+                      onClick={(e) => openUserMoveToBreakModal(e, currentUser)}
+                    >
+                      <GoMoveToEnd />
+                      <span>Move to</span>
+                    </li>
+
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Participant chat */}
+          {activeTab === "participantChat" &&
+            !selectedChat &&
+            users
+              ?.filter((user) => {
+                if (role === "Moderator") {
+                  // Show all users for the moderator
+                  return user.name !== userName;
+                } else if (role === "Participant") {
+                  // Show only moderators to participants
+                  return user.role === "Moderator";
+                }
+              })
+              .map((user) => (
+                <div
+                  key={user.name}
+                  className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer"
+                  onClick={() => setSelectedChat(user)}
+                >
+                  <div className="flex-grow-1 text-xs ">
+                    <p className="pb-1 font-bold">{user.name}</p>
+                  </div>
+                </div>
+              ))}
+
+          {activeTab === "participantChat" && selectedChat && (
+            <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center">
+              {/* chat name and image */}
+              <div className="flex w-full items-center justify-center gap-2 mb-4 bg-custom-gray-4 p-2">
+                {/* <Image
                     src={selectedChat.image}
                     alt="chat-user-image"
                     height={30}
                     width={30}
                     className="rounded-[50%]"
                   /> */}
-                  <p className="text-[#1a1a1a] text-[12px] font-bold flex-1">
-                    {selectedChat.name}
-                  </p>
-                  <IoClose
-                    className="text-custom-black cursor-pointer"
-                    onClick={() => setSelectedChat(null)}
-                  />
-                </div>
-                {/* chat message */}
-                <div className="flex flex-col gap-2 flex-grow">
-                  {messages
-                    .filter(
-                      (message) =>
-                        (message.senderName === selectedChat.name &&
-                          message.receiverName === userName) ||
-                        (message.senderName === userName &&
-                          message.receiverName === selectedChat.name)
-                    )
-                    .map((message, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center gap-2 ${
-                          message.senderName === userName
-                            ? "justify-end"
-                            : "justify-start"
+                <p className="text-[#1a1a1a] text-[12px] font-bold flex-1">
+                  {selectedChat.name}
+                </p>
+                <IoClose
+                  className="text-custom-black cursor-pointer"
+                  onClick={() => setSelectedChat(null)}
+                />
+              </div>
+              {/* chat message */}
+              <div className="flex flex-col gap-2 flex-grow">
+                {messages
+                  .filter(
+                    (message) =>
+                      (message.senderName === selectedChat.name &&
+                        message.receiverName === userName) ||
+                      (message.senderName === userName &&
+                        message.receiverName === selectedChat.name)
+                  )
+                  .map((message, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 ${message.senderName === userName
+                        ? "justify-end"
+                        : "justify-start"
                         }`}
-                      >
-                        <div
-                          className={`flex flex-col ${
-                            message.senderName === userName
-                              ? "items-end"
-                              : "items-start"
+                    >
+                      <div
+                        className={`flex flex-col ${message.senderName === userName
+                          ? "items-end"
+                          : "items-start"
                           }`}
-                        >
-                          <p
-                            className={`text-[12px] ${
-                              message.senderName === userName
-                                ? "text-blue-600"
-                                : "text-green-600"
+                      >
+                        <p
+                          className={`text-[12px] ${message.senderName === userName
+                            ? "text-blue-600"
+                            : "text-green-600"
                             }`}
-                          >
-                            <span className="font-bold">
-                              {message.senderName}:
-                            </span>{" "}
-                            {message.message}
-                          </p>
-                          <p className="text-[#1a1a1a] text-[10px]">
-                            {new Date(message.createdAt).toLocaleTimeString()}
-                          </p>
-                        </div>
+                        >
+                          <span className="font-bold">
+                            {message.senderName}:
+                          </span>{" "}
+                          {message.message}
+                        </p>
+                        <p className="text-[#1a1a1a] text-[10px]">
+                          {new Date(message.createdAt).toLocaleTimeString()}
+                        </p>
                       </div>
-                    ))}
-                </div>
+                    </div>
+                  ))}
+              </div>
 
-                {/* send message */}
-                <div className="flex justify-between items-center gap-2 relative">
-                  <input
-                    type="text"
-                    placeholder="Type Message"
-                    className="rounded-lg py-1 px-2 placeholder:text-[10px]"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                  />
-                  <div className="absolute right-11 cursor-pointer">
-                    <MdInsertEmoticon />
-                  </div>
-                  <div
-                    className="py-1.5 px-1.5 bg-custom-orange-2 rounded-[50%] text-white cursor-pointer text-sm"
-                    onClick={handleSendMessage}
-                  >
-                    <IoSend />
-                  </div>
+              {/* send message */}
+              <div className="flex justify-between items-center gap-2 relative">
+                <input
+                  type="text"
+                  placeholder="Type Message"
+                  className="rounded-lg py-1 px-2 placeholder:text-[10px]"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                />
+                <div className="absolute right-11 cursor-pointer">
+                  <MdInsertEmoticon />
+                </div>
+                <div
+                  className="py-1.5 px-1.5 bg-custom-orange-2 rounded-[50%] text-white cursor-pointer text-sm"
+                  onClick={handleSendMessage}
+                >
+                  <IoSend />
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
       {/* waiting list */}
       {waitingRoom?.length > 0 &&
         activeTab === "participantList" &&
@@ -566,6 +581,29 @@ const LeftSidebarOpenUi = ({
           userToMove={userToMove}
         />
       )}
+
+      {
+        openMoveToBreakModelOpen &&
+        <MoveToBreakModal
+          onClose={() => setMoveToOpenBreakModelOpen(false)}
+          breakoutRooms={breakoutRooms}
+          userToMoveBreak={userToMoveBreak}
+          handleMoveParticipant={handleMoveParticipant}
+        />
+      }
+
+
+      {
+        brealRoomModelOpen &&
+        <BreakoutRoomModal
+          onClose={() => setBreakoutRoomModelOpen(false)}
+          handleMoveUser={() => handleMoveUser(userToMove.id)}
+          userToMove={userToMove}
+          users={users}
+          handleBreakoutRoom={handleBreakoutRoom}
+        />
+      }
+
     </>
   );
 };

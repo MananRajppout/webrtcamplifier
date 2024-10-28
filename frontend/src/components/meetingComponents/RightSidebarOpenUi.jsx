@@ -1,6 +1,6 @@
 // RightSidebarOpenUi.js
-import React, { useEffect, useState } from "react";
-import { FaFolder, FaTrash } from "react-icons/fa";
+import React, { useEffect, useState,useCallback } from "react";
+import { FaAngleDown, FaFolder, FaTrash } from "react-icons/fa";
 import { BsChatSquareDotsFill, BsChatSquareFill } from "react-icons/bs";
 import Search from "../singleComponent/Search";
 import { IoIosDocument } from "react-icons/io";
@@ -9,7 +9,8 @@ import { IoClose, IoSend } from "react-icons/io5";
 import { MdInsertEmoticon } from "react-icons/md";
 import axios from "axios";
 import Button from "../shared/button";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { PiCirclesFourFill } from "react-icons/pi";
 
 const RightSidebarOpenUi = ({
   observers,
@@ -30,16 +31,27 @@ const RightSidebarOpenUi = ({
   userName,
   meetingId,
   sendMessageObserver,
-  searchParams,
   role,
   messages,
   users,
   setSelectedParticipantChat,
   selectedPartcipantChat,
-  
+  breakoutRooms,
+  selectedRoom,
+  setSelectedRoom
+
 }) => {
   const [fileList, setFileList] = useState(files);
   const [inputMessage, setInputMessage] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const params = useParams();
+  const searchParams = useSearchParams();
+
+  const userrole = searchParams.get('role');
+  const fullName = searchParams.get('fullName');
+  const roomname = searchParams.get('roomname') || 'main'
+  const id = params.id;
 
 
   const fetchFiles = async () => {
@@ -110,8 +122,71 @@ const RightSidebarOpenUi = ({
       setInputMessage("");
     }
   };
+
+  const handleRoomSwitch = useCallback((roomName) => {
+    let url;
+    if (roomName.toLowerCase() == "main") {
+      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}`
+    } else {
+      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
+    }
+    window.open(url, '_self')
+  }, [fullName, userrole, id])
   return (
     <>
+
+      {role === "Observer" && breakoutRooms.length > 1 &&
+        <div className=" flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4 mt-16 hidden md:flex">
+          {/* top heading */}
+
+          <div className="flex items-center justify-between">
+            <div className="flex justify-start items-center gap-1">
+              <PiCirclesFourFill className="text-custom-orange-1 text-xs" />
+              <h1 className="text-xs font-bold">{selectedRoom}</h1>
+            </div>
+            <div className="flex justify-end items-center gap-1">
+              <PiCirclesFourFill className="text-custom-orange-1 text-xs" />
+              <h1 className="text-xs font-bold">
+                {users.filter(u => u.roomName?.toLowerCase() == selectedRoom.toLowerCase())?.length || 0}
+              </h1>
+            </div>
+          </div>
+
+          {/* Dropdown */}
+          <div className={`relative w-full py-5`}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className={`px-4 py-1 sm:py-2 rounded-xl flex items-center justify-between  text-white bg-[#2976a5] font-semibold w-full`}
+            >
+              {selectedRoom}
+              <FaAngleDown
+                className={`ml-2 transform transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : "rotate-0"
+                  }`}
+              />
+            </button>
+            {isDropdownOpen && (
+              <ul
+                className={`absolute left-0 text-xs bg-white rounded-lg shadow-[0px_3px_6px_#00000029] text-custom-dark-blue-1 font-semibold w-full`}
+              >
+
+                {
+                  breakoutRooms.map((name) => (
+                    <li
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                      index={name}
+                      onClick={() => handleRoomSwitch(name)}
+                    >
+                      {name}
+                    </li>
+                  ))
+                }
+
+              </ul>
+            )}
+          </div>
+        </div>
+      }
+
       {/* Backroom chat and icon */}
       <div className="flex justify-center items-center gap-2 pt-10 lg:pb-4 mx-4 py-5 mt-5 sm:mt-3">
         <BsChatSquareFill className="text-custom-dark-blue-1" />
@@ -132,8 +207,8 @@ const RightSidebarOpenUi = ({
             variant="default"
             type="submit"
             className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersList"
-                ? "shadow-[0px_4px_6px_#1E656D4D]"
-                : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
+              ? "shadow-[0px_4px_6px_#1E656D4D]"
+              : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
               } `}
             onClick={() => handleTabClick("observersList")}
           />
@@ -143,8 +218,8 @@ const RightSidebarOpenUi = ({
               variant="default"
               type="submit"
               className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersChat"
-                  ? "shadow-[0px_4px_6px_#1E656D4D]"
-                  : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
+                ? "shadow-[0px_4px_6px_#1E656D4D]"
+                : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
                 } `}
               onClick={() => handleTabClick("observersChat")}
             />
@@ -158,8 +233,8 @@ const RightSidebarOpenUi = ({
                 variant="default"
                 type="submit"
                 className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "participantChat"
-                    ? "shadow-[0px_4px_6px_#1E656D4D]"
-                    : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
+                  ? "shadow-[0px_4px_6px_#1E656D4D]"
+                  : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
                   } `}
                 onClick={() => handleTabClick("participantChat")}
               />
@@ -253,20 +328,20 @@ const RightSidebarOpenUi = ({
                   <div
                     key={index}
                     className={`flex items-center gap-2 ${message.senderName === userName
-                        ? "justify-start"
-                        : "justify-end"
+                      ? "justify-start"
+                      : "justify-end"
                       }`}
                   >
                     <div
                       className={`flex flex-col ${message.senderName === userName
-                          ? "items-start"
-                          : "items-end"
+                        ? "items-start"
+                        : "items-end"
                         }`}
                     >
                       <p
                         className={`text-[12px] ${message.senderName === userName
-                            ? "text-blue-600"
-                            : "text-green-600"
+                          ? "text-blue-600"
+                          : "text-green-600"
                           }`}
                       >
                         <span className="font-bold">{message.senderName}:</span>{" "}
@@ -322,7 +397,7 @@ const RightSidebarOpenUi = ({
         {activeTab === "participantChat" &&
           !selectedPartcipantChat &&
           users.
-          filter(user => user.role !== "Moderator")
+            filter(user => user.role !== "Moderator")
             .map((participant) => (
               <div
                 key={participant.id}
@@ -353,26 +428,26 @@ const RightSidebarOpenUi = ({
                 .filter(
                   (message) =>
                     (message.senderName === selectedPartcipantChat.name) ||
-                  ( message.receiverName === selectedPartcipantChat.name)
+                    (message.receiverName === selectedPartcipantChat.name)
                 )
                 .map((message, index) => (
                   <div
                     key={index}
                     className={`flex items-center gap-2 ${message.senderName === userName
-                        ? "justify-start"
-                        : "justify-end"
+                      ? "justify-start"
+                      : "justify-end"
                       }`}
                   >
                     <div
                       className={`flex flex-col ${message.senderName === userName
-                          ? "items-start"
-                          : "items-end"
+                        ? "items-start"
+                        : "items-end"
                         }`}
                     >
                       <p
                         className={`text-[12px] ${message.senderName === userName
-                            ? "text-blue-600"
-                            : "text-green-600"
+                          ? "text-blue-600"
+                          : "text-green-600"
                           }`}
                       >
                         <span className="font-bold">{message.senderName}:</span>{" "}
@@ -389,7 +464,7 @@ const RightSidebarOpenUi = ({
         )}
 
 
-        
+
       </div>
 
       {/* document hub */}

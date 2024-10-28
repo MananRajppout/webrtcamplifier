@@ -4,6 +4,9 @@ const LiveMeeting = require("../models/liveMeetingModel");
 const { v4: uuidv4 } = require("uuid");
 const ChatMessage = require("../models/chatModel");
 
+const usernames = {};
+const userchangeroom = {};
+
 const setupSocket = (server) => {
   const io = new Server(server, {
     cors: {
@@ -15,6 +18,17 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
+    socket.on("join-room",({roomid,name},callback) => {
+      socket.join(roomid);
+      usernames[socket.id] = {
+        name,
+        roomid
+      };
+
+      const newname = name?.replaceAll(' ','')?.toLowerCase() + roomid;
+      delete userchangeroom[newname];
+      callback(socket.id);
+    })
     socket.on("startMeeting", async (data) => {
       const { meetingId, user } = data;
       const existingMeeting = await Meeting.findById(meetingId);
@@ -274,10 +288,16 @@ const setupSocket = (server) => {
           ...liveMeeting.participantsList,
         ];
 
+        let breakoutRooms = liveMeeting.breakRooms?.map((r) => r.roomName) || [];
+        breakoutRooms = ["Main",...breakoutRooms];
+
         socket.emit("getParticipantListResponse", {
           success: true,
           message: "Participant list retrieved",
           participantList: fullParticipantList,
+          breakoutRooms
+
+          
         });
       } catch (error) {
         console.error("Error in getParticipantList:", error);
@@ -510,7 +530,6 @@ const setupSocket = (server) => {
 
     socket.on("getObserverChat", async (data) => {
       const { meetingId } = data;
-      console.log("meetingId", meetingId);
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
         if (!liveMeeting) {
@@ -546,63 +565,7 @@ const setupSocket = (server) => {
       }
     });
 
-    // socket.on("startStreaming", async (data) => {
-    //   const { meetingId } = data;
-    //   try {
-    //     const liveMeeting = await LiveMeeting.findOne({ meetingId });
-    //     if (!liveMeeting) {
-    //       socket.emit("startStreamingResponse", {
-    //         success: false,
-    //         message: "Live meeting not found",
-    //         meetingId: meetingId,
-    //       });
-    //       return;
-    //     }
-    //     liveMeeting.isStreaming = true;
-    //     await liveMeeting.save();
-    //     socket.emit("getStreamingStatusResponse", {
-    //       success: true,
-    //       message: "Streaming started successfully",
-    //       isStreaming: liveMeeting.isStreaming,
-    //     });
-    //   } catch (error) {
-    //     console.error("Error in startStreaming:", error);
-    //     socket.emit("startStreamingResponse", {
-    //       success: false,
-    //       message: "Server error occurred",
-    //       meetingId: meetingId,
-    //     });
-    //   }
-    // });
-
-    // socket.on("getStreamingStatus", async (data) => {
-    //   const { meetingId } = data;
-    //   try {
-    //     const liveMeeting = await LiveMeeting.findOne({ meetingId });
-    //     if (!liveMeeting) {
-    //       socket.emit("getStreamingStatusResponse", {
-    //         success: false,
-    //         message: "Live meeting not found",
-    //         meetingId: meetingId,
-    //       });
-    //       return;
-    //     }
-    //     socket.emit("getStreamingStatusResponse", {
-    //       success: true,
-    //       message: "Streaming status retrieved successfully",
-    //       isStreaming: liveMeeting.isStreaming,
-          
-    //     });
-    //   } catch (error) {
-    //     console.error("Error in getStreamingStatus:", error);
-    //     socket.emit("getStreamingStatusResponse", {
-    //       success: false,
-    //       message: "Server error occurred",
-    //       meetingId: meetingId,
-    //     });
-    //   }
-    // });
-
+   
     socket.on("toggleStreaming", async (data) => {
       const { meetingId } = data;
       try {
@@ -751,11 +714,110 @@ const setupSocket = (server) => {
         });
       }
     });
+
+
+    socket.on("create-breakout-room", async ({ meetingId,breakroomname,participants},callback) => {
+      const existingMeeting = await Meeting.findById(meetingId);
+      if(!existingMeeting){
+        callback(null,"Meeting Not Exist.");
+        return
+      }
+
+      const liveMeeting = await LiveMeeting.findOne({ meetingId });
+      if(!liveMeeting){
+        callback(null,"Live Meeting Not Exist.");
+        return
+      }
+
+
+      for (let index = 0; index < participants.length; index++) {
+        const element = participants[index];
+        const name = element.name?.replaceAll(' ','')?.toLowerCase() + meetingId;
+        userchangeroom[name] = true;
+      }
+
+      const newRoom = {roomName: breakroomname}
+      liveMeeting.breakRooms = [...liveMeeting.breakRooms,newRoom];
+      liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
+
+        const participant = participants.find(part => part.name == p.name);
+        if(participant){  
+          p.roomName = breakroomname;
+        }
+        return p;
+      });
+
+
+      await liveMeeting.save();
+      const fullParticipantList = [
+        liveMeeting.moderator,
+        ...liveMeeting.participantsList,
+      ];
+
+      callback({fullParticipantList,breakroomname},null);
+      socket.to(meetingId).emit('change-room',{participantList:participants,roomName: breakroomname});
+    });
+
+
+    socket.on("user-move", async ({ meetingId,breakroomname,participants},callback) => {
+      const existingMeeting = await Meeting.findById(meetingId);
+      if(!existingMeeting){
+        callback(null,"Meeting Not Exist.");
+        return
+      }
+
+      const liveMeeting = await LiveMeeting.findOne({ meetingId });
+      if(!liveMeeting){
+        callback(null,"Live Meeting Not Exist.");
+        return
+      }
+
+      for (let index = 0; index < participants.length; index++) {
+        const element = participants[index];
+        const name = element.name?.replaceAll(' ','')?.toLowerCase() + meetingId;
+        userchangeroom[name] = true;
+      }
+
+     
+      liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
+        const participant = participants.find(part => part.name == p.name);
+        if(participant){  
+          p.roomName = breakroomname;
+        }
+        return p;
+      });
+
+
+      await liveMeeting.save();
+      const fullParticipantList = [
+        liveMeeting.moderator,
+        ...liveMeeting.participantsList,
+      ];
+
+      callback({fullParticipantList,breakroomname},null);
+      socket.to(meetingId).emit('change-room',{participantList:participants,roomName: breakroomname});
+    });
+
+    
     
 
 // * disconnect
-    socket.on("disconnect", () => {
-      console.log("User disconnected");
+    socket.on("disconnect", async () => {
+      console.log("User disconnected", usernames[socket.id]);
+      const userDetails = usernames[socket.id] || {};
+      const newname = userDetails?.name?.replaceAll(' ','')?.toLowerCase() + userDetails?.roomid;
+      const isMoveByModerator = userchangeroom[newname];
+      if(isMoveByModerator){
+        console.log('is move by moderator')
+        return
+      }
+      const liveMeeting = await LiveMeeting.findOne({ meetingId:userDetails?.roomid });
+      if(!liveMeeting){
+        return
+      }
+
+      liveMeeting.participantsList = liveMeeting.participantsList.filter(p => p.name != userDetails?.name);
+      await liveMeeting.save();
     });
   });
 
