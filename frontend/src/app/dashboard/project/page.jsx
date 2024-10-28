@@ -9,6 +9,7 @@ import ProjectTable from "@/components/singleComponent/ProjectTable";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/context/GlobalContext";
 import Button from "@/components/shared/button";
+import ProjectFilter from "@/components/singleComponent/ProjectFilter";
 
 const Page = () => {
   const router = useRouter();
@@ -20,7 +21,7 @@ const Page = () => {
   const [totalPages, setTotalPages] = useState(1);
   const { user } = useGlobalContext();
 
-  const fetchProjects = async (userId, page = 1, searchQuery = "") => {
+  const fetchProjects = async (userId, page = 1, searchQuery = "",  filters = {}) => {
     setLoading(true);
     try {
       const response = await axios.get(
@@ -29,7 +30,8 @@ const Page = () => {
           params: { 
             page, 
             limit: 10,
-            search: searchQuery
+            search: searchQuery, 
+            ...filters,
           },
         }
       );
@@ -68,6 +70,12 @@ const Page = () => {
     setPage(newPage);
     fetchProjects(newPage);
   };
+
+  // Add handleFilter function
+const handleFilter = (filters) => {
+  setPage(1);
+  fetchProjects(user?._id, 1, searchTerm, filters);
+};
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
@@ -133,6 +141,7 @@ const Page = () => {
           placeholder="Search project name" 
           />
         </div>
+           <ProjectFilter onFilter={handleFilter} />
       </div>
 
       <div className="flex-grow mx-auto w-full">
