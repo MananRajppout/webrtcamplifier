@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        "custum-meet-bg": "#fde2d0",
+        "custom-meet-bg": "#fde2d0",
         "custom-gray-1": "#E8E8E8",
         "custom-white": "#FFFFFF",
         "custom-gray-2": "#F7F8F9",
@@ -16,7 +16,7 @@ module.exports = {
         "custom-orange-1": "#FF6600",
         "custom-dark-blue-1": "#00293C",
         "custom-dark-blue-2": "#031F3A",
-        "custom-ligt-blue-1": "#2976a5",
+        "custom-light-blue-1": "#2976a5",
         "custom-pink": "#FF7E296E",
         "custom-light-blue-1": "#369CFF",
         "custom-light-blue-2": "#559FFB",
