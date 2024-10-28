@@ -66,7 +66,7 @@ const MeetingView = ({
 
   return (
     <div className="px-5 sm:py-5  flex-col justify-between items-between h-full  meeting_bg">
-      <div className="md:h-1/5 h-auto py-2">
+      <div className="md:h-1/7 h-auto py-2">
         {/* First ------ nav bar */}
         <div className="flex justify-between items-center pb-2">
           {/* participant name */}
@@ -154,7 +154,7 @@ const MeetingView = ({
 
 
           
-            <div className={`flex-1 h-full ${isRecordingOpen ? 'block' : 'hidden'}`}>
+            <div className={`flex-1  ${isRecordingOpen ? 'block' : 'hidden'}`}>
               <EndOFMeeting role={role} />
             </div>
          
@@ -162,7 +162,7 @@ const MeetingView = ({
               <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen}/>
             </div>
 
-            <div className={`flex-1 h-full ${!isRecordingOpen && !isWhiteBoardOpen ? 'block' : 'hidden'}`}>
+            <div className={`flex-1  ${!isRecordingOpen && !isWhiteBoardOpen ? 'block' : 'hidden'}`}>
               <OngoingMeeting users={users} iframeLink={iframeLink} role={role} />
             </div>
 
