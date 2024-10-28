@@ -76,6 +76,7 @@ const createProject = async (req, res) => {
 // Controller to get all projects with pagination
 const getAllProjects = async (req, res) => {
   const { page = 1, limit = 10, search = '', startDate, endDate, status, tag } = req.query;
+  console.log('req.query:', req.query);
   const { id } = req.params;
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
