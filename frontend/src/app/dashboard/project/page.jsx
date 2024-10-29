@@ -80,30 +80,7 @@ const handleFilter = (filters) => {
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
       <div className="bg-white h-20 w-full border-b">
-        {/* Nav bar */}
-        {/* <div className="px-10 flex justify-between items-center pt-5">
-          <div>
-            <p className="text-2xl font-bold text-custom-teal">Projects</p>
-          </div>
-          <div className="flex justify-center items-center gap-4">
-            <Button
-              children="Add New Project"
-              type="submit"
-              variant="default"
-              icon={<MdAdd />}
-              onClick={() => router.push(`/dashboard/create-project`)}
-              className="rounded-xl w-[200px] text-center py-3 shadow-[0px_3px_6px_#2976a54d] hidden md:block"
-            />
-            <Button
-              children=""
-              type="submit"
-              variant="default"
-              icon={<MdAdd size={26} />}
-              onClick={() => router.push(`/dashboard/create-project`)}
-              className="rounded-xl w-[40px] h-[40px] flex justify-center items-center text-center py-2 shadow-[0px_3px_6px_#2976a54d] md:hidden"
-            />
-          </div>
-        </div> */}
+       
         <div className="bg-white py-5 border-b border-solid border-gray-400 w-full">
           <div className="md:px-10 flex justify-between items-center">
             {/* left div */}
@@ -150,7 +127,6 @@ const handleFilter = (filters) => {
         ) : projects && projects.length > 0 ? (
           <ProjectTable
             projects={projects}
-          
             fetchProjects={fetchProjects}
             user={user}
           />
