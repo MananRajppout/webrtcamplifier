@@ -219,19 +219,19 @@ const OngoingMeeting = () => {
 
 
   return (
-    <div className="md:block mt-5">
+    <div className="md:block mt-1">
       <div
         className="rounded-md pb-10 h-[75vh] overflow-y-hidden"
         style={{ width: "100%", position: "relative" }}
       >
-        <div className='section w-[100%] h-[70vh] overflow-hidden relative' onClick={handleClick}>
+        <div className='section w-[100%] h-[74vh] overflow-hidden relative' onClick={handleClick}>
 
           <video ref={videoCanvasRef} style={{ display: "none" }}></video>
           <canvas ref={canvasRef} width={640} height={480} style={{ display: "none" }}></canvas>
 
 
-          <div className={`flex flex-row h-[65vh] relative`}>
-            <div className='flex flex-1 flex-col md:flex-row relative h-[65vh] '>
+          <div className={`flex flex-row h-[68vh] relative`}>
+            <div className='flex flex-1 flex-col md:flex-row relative h-[68vh] '>
               {/* cards center  */}
               {
                 participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length == 0 &&
@@ -244,7 +244,7 @@ const OngoingMeeting = () => {
                           participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 0 ?
                             (
                               //when no one share camera
-                              <div className={`md:h-[65vh] h-[30vh] relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-start items-end p-5  w-[100%] bg-[#3C3C3C]`}>
+                              <div className={`md:h-[68vh] h-[30vh] relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-start items-end p-5  w-[100%] bg-[#3C3C3C]`}>
                                 <div className={`${(participantsRef.current[0]?.isWebCamMute == false || participantsRef.current[0]?.isShareScreen === true) ? 'block' : 'hidden'} w-full h-full absolute top-0 left-0 right-0 bottom-0`}>
                                   <video autoPlay className='w-full h-full object-cover' ref={localVideoElementRef}> </video>
                                 </div>
@@ -253,7 +253,7 @@ const OngoingMeeting = () => {
                             ) : participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 1 ?
                               // when one user share camera
                               (
-                                <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-1  w-[100%] bg-[#3C3C3C]`}>
+                                <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-1  w-[100%] bg-[#3C3C3C]`}>
                                   {
                                     participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                       <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -264,7 +264,7 @@ const OngoingMeeting = () => {
                                 participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 4) ?
                                 (
                                   // when 2 and 3 user share camera
-                                  <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-2 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                  <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-2 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                     {
                                       participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                         <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -276,7 +276,7 @@ const OngoingMeeting = () => {
                                   participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 6) ?
 
                                   (
-                                    <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-3 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                    <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-3 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                       {
                                         participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                           <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -286,7 +286,7 @@ const OngoingMeeting = () => {
                                   ) : (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 7 ||
                                     participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 8) ?
                                     (
-                                      <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-4 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                      <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-4 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                         {
                                           participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                             <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -297,7 +297,7 @@ const OngoingMeeting = () => {
                                     (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 9 ||
                                       participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 10) ?
                                       (
-                                        <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-5 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                        <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-5 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                           {
                                             participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                               <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -308,7 +308,7 @@ const OngoingMeeting = () => {
                                       (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 11 ||
                                         participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 12) ?
                                         (
-                                          <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-6 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                          <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-6 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                             {
                                               participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                                 <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -320,7 +320,7 @@ const OngoingMeeting = () => {
                                         (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 13 ||
                                           participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 14) ?
                                           (
-                                            <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-7 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                            <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-7 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                               {
                                                 participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                                   <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -332,7 +332,7 @@ const OngoingMeeting = () => {
                                           (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 15 ||
                                             participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 16) ?
                                             (
-                                              <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-8 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                              <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-8 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                                 {
                                                   participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                                     <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -344,7 +344,7 @@ const OngoingMeeting = () => {
                                             (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 17 ||
                                               participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 18) ?
                                               (
-                                                <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-9 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                                <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-9 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                                   {
                                                     participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                                       <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -356,7 +356,7 @@ const OngoingMeeting = () => {
                                               (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 19 ||
                                                 participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 20) ?
                                                 (
-                                                  <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-10 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                                  <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-10 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                                     {
                                                       participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                                         <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -368,7 +368,7 @@ const OngoingMeeting = () => {
                                                 (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 21 ||
                                                   participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 22) ?
                                                   (
-                                                    <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-11 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                                    <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-11 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                                       {
                                                         participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                                           <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -380,7 +380,7 @@ const OngoingMeeting = () => {
                                                   (participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 23 ||
                                                     participantsRef.current?.filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).length == 24) ?
                                                     (
-                                                      <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-12 gap-4  w-[100%] bg-[#3C3C3C]`}>
+                                                      <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto grid grid-cols-12 gap-4  w-[100%] bg-[#3C3C3C]`}>
                                                         {
                                                           participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                                             <RenderSingleAndDoubleParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -390,7 +390,7 @@ const OngoingMeeting = () => {
                                                     ) :
 
                                                     (
-                                                      <div className={`md:h-[65vh] h-[30vh] p-2 relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-center items-center  w-[100%] bg-[#3C3C3C]`}>
+                                                      <div className={`md:h-[68vh] h-[30vh] p-2 relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-center items-center  w-[100%] bg-[#3C3C3C]`}>
                                                         {
                                                           participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                                                             <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={true} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -403,7 +403,7 @@ const OngoingMeeting = () => {
                       :
 
                       // when only one user in meet 
-                      <div className={`md:h-[65vh] h-[30vh] relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-start items-end p-5  w-[100%] bg-[#3C3C3C]`}>
+                      <div className={`md:h-[68vh] h-[30vh] relative overflow-auto flex-wrap cursor-pointer  flex flex-row justify-start items-end p-5  w-[100%] bg-[#3C3C3C]`}>
                         <div className={`${(participantsRef.current[0]?.isWebCamMute == false || participantsRef.current[0]?.isShareScreen === true) ? 'block' : 'hidden'} w-full h-full absolute top-0 left-0 right-0 bottom-0`}>
                           <video autoPlay className='w-full h-full object-cover' ref={localVideoElementRef}> </video>
                         </div>
@@ -416,7 +416,7 @@ const OngoingMeeting = () => {
               {/* card left  */}
               {
                 participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length > 0 &&
-                <div className={`md:h-[65vh] h-[30vh] !p-2 relative overflow-y-auto cursor-pointer  flex flex-row justify-end items-end md:!flex-col md:gap-0 w-[100vw] md:w-[16vw] xl:w-[17vw] bg-[#3C3C3C]`}>
+                <div className={`md:h-[68vh] h-[30vh] !p-2 relative overflow-y-auto cursor-pointer  flex flex-row justify-end items-end md:!flex-col md:gap-0 w-[100vw] md:w-[16vw] xl:w-[17vw] bg-[#3C3C3C]`}>
                   {
                     participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
                       <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={false} stream={remoteVideoTracksRef.current[participant.socketId]} />
@@ -438,11 +438,11 @@ const OngoingMeeting = () => {
                 </>
               }
 
-              <div className={`flex-1 w-full md:w-auto mx-auto my-auto ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} `}>
+              <div className={`flex-1 w-full md:w-auto mx-auto my-auto ${isMobile && !showbtn ? 'h-[68vh]' : 'h-[68vh]'} `}>
                 {
 
                   participantsRef.current && participantsRef.current.length > 0 && participantsRef.current[selected] &&
-                  <div className={`w-full flex items-center justify-center ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} bg-[#3C3C3C] text-white`} key={participantsRef.current[selected].socketId}>
+                  <div className={`w-full flex items-center justify-center ${isMobile && !showbtn ? 'h-[68vh]' : 'h-[68vh]'} bg-[#3C3C3C] text-white`} key={participantsRef.current[selected].socketId}>
 
                     <div className={`${(participantsRef.current[selected].isWebCamMute == false || participantsRef.current[selected].isShareScreen === true) ? 'block' : 'hidden'} w-full h-full`}>
                       <video ref={selectedVideoRef} autoPlay className='w-full h-full object-contain'> </video>
@@ -452,7 +452,7 @@ const OngoingMeeting = () => {
 
                 {
                   participantsRef.current && participantsRef.current.length > 0 && !participantsRef.current[selected] &&
-                  <div className={`w-full  flex items-center justify-center ${isMobile && !showbtn ? 'h-[65vh]' : 'h-[65vh]'} bg-[#3C3C3C] text-white`} key={participantsRef.current[0].socketId}>
+                  <div className={`w-full  flex items-center justify-center ${isMobile && !showbtn ? 'h-[68vh]' : 'h-[68vh]'} bg-[#3C3C3C] text-white`} key={participantsRef.current[0].socketId}>
                     <div className={`${(participantsRef.current[0].isWebCamMute == false || participantsRef.current[0].isShareScreen === true) ? 'block' : 'hidden'} w-full h-full`}>
                       <video ref={selectedVideoRef} autoPlay className='w-full h-full object-contain'> </video>
                     </div>

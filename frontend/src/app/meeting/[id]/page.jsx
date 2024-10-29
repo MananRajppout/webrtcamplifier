@@ -8,6 +8,7 @@ import axios from "axios";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import io from "socket.io-client";
 import { useGlobalContext } from "@/context/GlobalContext";
+import toast from "react-hot-toast";
 
 const page = () => {
   const searchParams = useSearchParams();
@@ -146,6 +147,7 @@ const page = () => {
 
 
   const handleBreakoutRoom = useCallback((breakroomname, participants) => {
+    if(breakoutRooms.includes(breakroomname)) return toast.error("This room name is already exist.")
     socket.emit("create-breakout-room", { meetingId: params.id, breakroomname, participants }, ({ fullParticipantList, breakroomname }, err) => {
       if (err) return console.log(err);
       setBreakoutRooms(prev => [...prev, breakroomname]);

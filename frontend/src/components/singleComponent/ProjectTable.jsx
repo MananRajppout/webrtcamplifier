@@ -10,16 +10,17 @@ import ViewProject from "./ViewProject";
 import ShareProjectModal from "../projectComponents/ShareProjectModal";
 import Button from "../shared/button";
 import { useDashboardContext } from "@/context/DashboardContext";
+import AssignTagModal from "./AssignTagModal";
 
 const ProjectTable = ({ projects,  fetchProjects, user }) => {
   const { viewProject, setViewProject } = useDashboardContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [selectedProject, setSelectedProject] = useState(null);
- 
   const [isShareProjectModalOpen, setIsShareProjectModalOpen] = useState(false);
+  const [isAssignTagModalOpen, setIsAssignTagModalOpen] = useState(false);
   const modalRef = useRef();
-
+  console.log('user in project table', projects)
 
   const getRole = (project) => {
     if (project.createdBy === user?._id) {
@@ -88,6 +89,11 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
     setIsShareProjectModalOpen(true);
     closeModal();
   };
+  const handleAssignTag = (project) => {
+    setSelectedProject(project);
+    setIsAssignTagModalOpen(true);
+    closeModal();
+  };
 
   const handleView = (project) => {
     setSelectedProject(project);
@@ -96,7 +102,7 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
   };
 
   const closeViewProject = () => {
-    setViewProject(false); // Hide ViewProject component
+    setViewProject(false); 
     setSelectedProject(null);
   };
 
@@ -128,6 +134,8 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isModalOpen]);
+
+
 
   return (
     <div className="overflow-hidden">
@@ -232,23 +240,17 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
               <FaUser />
               <span>View</span>
             </li>
-            <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={closeModal}
-            >
-              <RiPencilFill />
-              <span>Edit</span>
-            </li>
+           
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={() => handleShareProject(selectedProject)}
-            >
+              >
               <FaShareAlt />
               <span>Share</span>
             </li>
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={closeModal}
+              onClick={() => handleAssignTag(selectedProject)}
             >
               <BsFillEnvelopeAtFill />
               <span>Assign Tag</span>
@@ -256,6 +258,17 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
           </ul>
         </div>
       )}
+
+      {
+        isAssignTagModalOpen && (
+          <AssignTagModal
+          userId={user._id}
+          project={selectedProject}
+          onClose={() => setIsAssignTagModalOpen(false)}
+          />
+
+        )
+      }
 
       {isShareProjectModalOpen && (
         <ShareProjectModal
