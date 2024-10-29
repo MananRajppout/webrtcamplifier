@@ -3,15 +3,30 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaFilter } from "react-icons/fa";
 
-const ContactFilter = ({ onFilter }) => {
+const ContactFilter = ({ onFilter, userId }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
+  const [companyOptions, setCompanyOptions] = useState([]);
 
 
-  const companyOptions = ["ABC Corp.", "DEF Corp.", "GHI Corp.", "JKL Corp.", "MNOCorp."];
   const roleOptions = ["All", "Admin", "Moderator", "Observer"];
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/contacts/get-companies?userId=${userId}`);
+        const data = await response.json();
+        console.log('companies', data);
+        setCompanyOptions(data.data);
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+      }
+    };
+
+    fetchCompanies();
+  }, [userId]);
 
   useEffect(() => {
     const filters = {
@@ -62,7 +77,7 @@ const ContactFilter = ({ onFilter }) => {
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-custom-teal focus:ring-custom-teal text-sm p-1 bg-[#eaeaea]"
             >
               <option value="">All</option>
-              {companyOptions.map((option) => (
+              {companyOptions?.map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>

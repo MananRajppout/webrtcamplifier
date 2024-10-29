@@ -124,7 +124,7 @@ const page = () => {
         <div className="p-5 flex justify-Start items-center ">
             <Search placeholder="Search contact name" onSearch={handleSearch} />
           </div>
-          <ContactFilter onFilter={handleFilter} />
+          <ContactFilter onFilter={handleFilter} userId={user?._id} />
         </div>
       </div>
 
