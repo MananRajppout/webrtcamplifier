@@ -393,7 +393,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                 />
               </div>
               <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
-                <MeetingTab meetings={meetings} />
+                <MeetingTab meetings={meetings} fetchMeetings={fetchMeetings} />
               </div>
             </div>
           )}
