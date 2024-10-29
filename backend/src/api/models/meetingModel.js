@@ -32,7 +32,11 @@ const meetingSchema = new Schema({
   },
 
   meetingPasscode: { type: String, required: true },
-
+  status: {
+    type: String,
+    enum: ['Draft', 'Active', 'Complete', 'Inactive', 'Closed'],
+    default: 'Draft'
+  }
 }, { timestamps: true });
 
 const Meeting = mongoose.model('Meeting', meetingSchema);
