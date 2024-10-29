@@ -234,9 +234,14 @@ const MeetingTab = ({ meetings }) => {
                 <option value="Scheduled">Scheduled</option>
               </select>
             </div>
-            <div>
-              <h3 className="font-medium">Meeting Title</h3>
-              <p>{selectedMeeting?.title}</p>
+            <div className="flex justify-between items-center mb-4">
+              <div><h3 className="font-medium">Meeting Title</h3>
+              <p>{selectedMeeting?.title}</p></div>
+              <button
+                className="font-bold text-custom-teal"
+              >
+                Edit
+              </button>
             </div>
             <div>
               <h3 className="font-medium">Description</h3>
