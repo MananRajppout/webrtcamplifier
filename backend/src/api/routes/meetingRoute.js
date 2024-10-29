@@ -7,4 +7,5 @@ module.exports = function (app) {
   app.post("/api/verify-meeting-passcode", controller.verifyModeratorMeetingPasscode);
   app.delete("/api/delete-meeting/:meetingId", controller.deleteMeeting);
   app.put("/api/change-meeting-status", controller.meetingStatusChange);
+  app.put("/api/edit-meeting", controller.editMeeting);
 };

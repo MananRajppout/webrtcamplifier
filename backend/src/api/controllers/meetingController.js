@@ -158,13 +158,29 @@ const meetingStatusChange = async (req, res) => {
       data,
     });
   } catch (error) {
-    console.error('Error updating project status:', error);
-    res.status(500).json({
+    console.error('Error updating meeting status:', error);
+    return res.status(500).json({
       message: 'Failed to update meeting status',
       error: error.message,
     });
   }
 };
+
+const editMeeting = async (req, res) => {
+  try {
+    const data = await Meeting.findByIdAndUpdate({ _id: req.body?.id }, req.body, { new: true, runValidators: true });
+    if (!data) {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+    return res.status(200).json({ data, message: "Meeting updated successfully" });
+  } catch (error) {
+    console.error('Error updating meeting:', error);
+    return res.status(500).json({
+      message: 'Failed to update meeting',
+      error: error.message,
+    });
+  }
+}
 
 module.exports = {
   createMeeting,
@@ -173,4 +189,5 @@ module.exports = {
   getMeetingById,
   deleteMeeting,
   meetingStatusChange,
+  editMeeting
 };
