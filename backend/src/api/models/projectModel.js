@@ -15,7 +15,7 @@ const projectSchema = new Schema({
       email: { type: String }
     }
   ],
-  tags: { type: [String], default: [] },
+  tags: { type: [Schema.Types.ObjectId], default: [], ref: 'Tag' },
   projectPasscode: { type: String, required: true },
 }, { timestamps: true });
 
