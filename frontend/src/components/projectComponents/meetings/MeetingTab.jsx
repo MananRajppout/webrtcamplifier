@@ -10,8 +10,9 @@ import { RiPencilFill } from "react-icons/ri";
 import ShareMeetingModal from "./ShareMeetingModal";
 import toast from "react-hot-toast";
 import io from "socket.io-client";
+import AddMeetingModal from "./AddMeetingModal";
 
-const MeetingTab = ({ meetings }) => {
+const MeetingTab = ({ meetings, fetchMeetings }) => {
   const [localMeetingState, setLocalMeetingState] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -21,6 +22,8 @@ const MeetingTab = ({ meetings }) => {
   const [isShareMeetingModalOpen, setIsShareMeetingModalOpen] = useState(false);
   const [activeMeetingId, setActiveMeetingId] = useState(null);
   const [showMeetingDetails, setShowMeetingDetails] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+const [meetingToEdit, setMeetingToEdit] = useState(null);
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -158,6 +161,13 @@ const MeetingTab = ({ meetings }) => {
     setSelectedMeeting(null);
   };
 
+  // Add handler for edit button click
+const handleEditMeeting = (meeting) => {
+  setMeetingToEdit(meeting);
+  setIsEditModalOpen(true);
+  closeModal();
+};
+
   return (
     <div className="overflow-x-auto">
       {!showMeetingDetails ? (
@@ -239,6 +249,7 @@ const MeetingTab = ({ meetings }) => {
               <p>{selectedMeeting?.title}</p></div>
               <button
                 className="font-bold text-custom-teal"
+                onClick={() => handleEditMeeting(selectedMeeting)}
               >
                 Edit
               </button>
@@ -318,6 +329,17 @@ const MeetingTab = ({ meetings }) => {
           onClose={() => setIsShareMeetingModalOpen(false)}
         />
       )}
+      
+{isEditModalOpen && (
+  <AddMeetingModal
+    onClose={() => setIsEditModalOpen(false)}
+    project={selectedMeeting}
+    user={user}
+    refetchMeetings={fetchMeetings}
+    meetingToEdit={meetingToEdit}
+    isEditing={true}
+  />
+)}
     </div>
   );
 };

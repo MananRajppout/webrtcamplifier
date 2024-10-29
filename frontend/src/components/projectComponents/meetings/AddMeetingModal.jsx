@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaCircle } from "react-icons/fa";
 
-const AddMeetingModal = ({ onClose, project, user, refetchMeetings }) => {
+const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdit = null, isEditing = false }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -19,7 +19,6 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings }) => {
     duration: "",
     ongoing: false,
     enableBreakoutRoom: false,
-    // meetingPasscode: "",
     moderator: "",
   });
 
@@ -28,6 +27,25 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings }) => {
   );
   const [contacts, setContacts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Populate form data if editing
+  useEffect(() => {
+    if (isEditing && meetingToEdit) {
+      setFormData({
+        title: meetingToEdit.title || "",
+        description: meetingToEdit.description || "",
+        startDate: meetingToEdit.startDate?.split('T')[0] || "",
+        startTime: meetingToEdit.startTime || "",
+        timeZone: meetingToEdit.timeZone || "UTC-12:00 International Date Line West",
+        duration: meetingToEdit.duration || "",
+        ongoing: meetingToEdit.ongoing || false,
+        enableBreakoutRoom: meetingToEdit.enableBreakoutRoom || false,
+        moderator: meetingToEdit.moderator?._id || "",
+      });
+      setSelectedTimeZone(meetingToEdit.timeZone);
+    }
+  }, [isEditing, meetingToEdit]);
+
 
   useEffect(() => {
     fetchContacts();
@@ -94,21 +112,24 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings }) => {
       ...formData,
       projectId: project._id,
     };
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/meeting`,
-        updatedFormData
-      );
 
-      if (response.status === 201) {
+    try {
+      const url = isEditing 
+        ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update/meeting/${meetingToEdit._id}`
+        : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/meeting`;
+
+      const method = isEditing ? 'put' : 'post';
+
+      const response = await axios[method](url, updatedFormData);
+
+      if (response.status === (isEditing ? 200 : 201)) {
         refetchMeetings();
-        // Refetch meetings after successful creation
+        toast.success(`Meeting ${isEditing ? 'updated' : 'created'} successfully`);
+        onClose();
       }
-      onClose();
     } catch (error) {
-      console.error("Error creating meeting:", error);
-      console.error("Error creating meeting data:", error.response.data.error);
-      toast.error(`${error.response.data.error}`);
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} meeting:`, error);
+      toast.error(`${error.response?.data?.error || 'An error occurred'}`);
     }
   };
 
@@ -116,7 +137,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings }) => {
     <div className="fixed top-0 inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 ">
       <div className="bg-white rounded-lg w-[600px] max-w-2xl  ">
         <h3 className="text-2xl text-custom-dark-blue-2 font-semibold mx-10 py-5 leading-[3.75rem] md:leading-8">
-          Add New Meeting
+        {isEditing ? 'Edit Meeting' : 'Add New Meeting'}
         </h3>
 
         <div className="px-5 space-y-2 ">
