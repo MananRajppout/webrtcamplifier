@@ -264,7 +264,7 @@ const LeftSidebarOpenUi = ({
         <div className=" lg:pt-10 px-4">
           {role === "Moderator" && (
             <Button
-              children={"Create Breakoup Room"}
+              children={"Create Breakout Room"}
               variant="meeting"
               type="submit"
               className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
