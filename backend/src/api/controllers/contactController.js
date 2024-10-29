@@ -8,7 +8,7 @@ const { default: mongoose } = require("mongoose");
 // Controller to create a new project
 const createContact = async (req, res) => {
   const { firstName, lastName, email, companyName, roles, createdBy } = req.body;
- 
+
   // Validation to check if all required fields are present
   if (!firstName || !lastName || !email || !companyName || !roles || !createdBy) {
     return res.status(400).json({
@@ -18,32 +18,32 @@ const createContact = async (req, res) => {
 
   try {
     const user = await User.findById(createdBy);
-   
+
     if (!user || !user.isEmailVerified) {
       return res.status(400).json({
         message: 'Email needs to be verified before creating a contact.',
       });
     }
 
-       // Search the user collection to match the email field
-       const matchingUser = await User.findOne({ email });
-    
-       let isUserFlag = false;
-       if (matchingUser) {
-         isUserFlag = true; // Set isUser to true if email matches a user
-       }
+    // Search the user collection to match the email field
+    const matchingUser = await User.findOne({ email });
+
+    let isUserFlag = false;
+    if (matchingUser) {
+      isUserFlag = true; // Set isUser to true if email matches a user
+    }
 
     const newContact = new Contact({
       firstName, lastName, email, companyName, roles, createdBy, isUser: isUserFlag,
     });
-    
-   
+
+
 
     const savedContact = await newContact.save();
-   
+
     res.status(201).json(savedContact);
   } catch (error) {
-    
+
     res.status(500).json({ message: error.message });
   }
 };
@@ -51,13 +51,37 @@ const createContact = async (req, res) => {
 // Controller to get all projects with pagination
 const getAllContacts = async (req, res) => {
 
-  const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
+  const { page = 1, limit = 10, search = '', startDate, endDate, role, company } = req.query;
+  const searchQuery = search
+    ?
+    {
+      $or: [
+        { firstName: { $regex: search, $options: 'i' } }, // Case-insensitive search
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { companyName: { $regex: search, $options: 'i' } },
+        { roles: { $regex: search, $options: 'i' } },
+      ]
+    } : {};
+
+  if (startDate) {
+    searchQuery.addedDate = { $gte: new Date(startDate) }
+  }
+  if (endDate) {
+    searchQuery.addedDate = { $lte: new Date(endDate) }
+  }
+  if (company) {
+    searchQuery.companyName = company
+  }
+  if (role) {
+    searchQuery["roles"] = role;
+  }
 
   try {
-    const contacts = await Contact.find()
-     .skip((page - 1) * limit) 
-      .limit(parseInt(limit)); 
-    const totalDocuments = await Contact.countDocuments(); 
+    const contacts = await Contact.find(searchQuery)
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+    const totalDocuments = await Contact.countDocuments(searchQuery);
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
 
     res.status(200).json({
@@ -162,7 +186,7 @@ const getContactsByUserId = async (req, res) => {
     const contacts = await Contact.find(query).sort({ addedDate: -1 });
 
     if (contacts.length === 0) {
-      return res.status(200).json([]); 
+      return res.status(200).json([]);
     }
 
     res.status(200).json(contacts);
@@ -176,7 +200,7 @@ const getContactsByUserId = async (req, res) => {
 //search API
 const searchContactsByFirstName = async (req, res) => {
   const { firstName } = req.query;  // Get the firstName from query parameters
-  
+
   // Check if firstName query parameter is provided
   if (!firstName) {
     return res.status(400).json({
@@ -185,19 +209,19 @@ const searchContactsByFirstName = async (req, res) => {
   }
 
   try {
-    
+
     // Search for contacts by matching the first name (case-insensitive)
     const contacts = await Contact.find({ firstName: { $regex: firstName, $options: 'i' } });
-    
+
     // Log the number of contacts found
     (`${contacts.length} contact(s) found for the search term: ${firstName}`);
-    
+
     if (contacts.length === 0) {
       return res.status(404).json({
         message: `No contacts found with the first name: ${firstName}`
       });
     }
-    
+
     res.status(200).json(contacts);
   } catch (error) {
     console.error(`Error during search: ${error.message}`);
@@ -234,7 +258,7 @@ const createContactForMemberTab = async (req, res) => {
 
 
 module.exports = {
-  
+
   createContact,
   getAllContacts,
   getContactById,
