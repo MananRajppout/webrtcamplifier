@@ -20,7 +20,7 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
   const [isShareProjectModalOpen, setIsShareProjectModalOpen] = useState(false);
   const [isAssignTagModalOpen, setIsAssignTagModalOpen] = useState(false);
   const modalRef = useRef();
-  console.log('user in project table', user)
+  console.log('user in project table', projects)
 
   const getRole = (project) => {
     if (project.createdBy === user?._id) {
