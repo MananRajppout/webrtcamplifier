@@ -10,6 +10,7 @@ module.exports = function (app) {
   app.delete("/api/delete/contact/:id", controller.deleteContact);
   // New search API for contacts by first name
   app.get("/api/search/contact", controller.searchContactsByFirstName);
+  app.get("/api/contacts/get-companies", controller.getUniqueCompanies);
 };
 
 // for usage of this search Api

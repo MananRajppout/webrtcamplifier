@@ -51,18 +51,21 @@ const createContact = async (req, res) => {
 // Controller to get all projects with pagination
 const getAllContacts = async (req, res) => {
 
-  const { page = 1, limit = 10, search = '', startDate, endDate, role, company } = req.query;
-  const searchQuery = search
-    ?
-    {
-      $or: [
-        { firstName: { $regex: search, $options: 'i' } }, // Case-insensitive search
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { companyName: { $regex: search, $options: 'i' } },
-        { roles: { $regex: search, $options: 'i' } },
-      ]
-    } : {};
+  const { page = 1, limit = 10, search = '', startDate, endDate, role, company, userId } = req.query;
+  if (!userId) {
+    return res.status(400).json({ message: "UserId is required" });
+  }
+  const searchQuery = { createdBy: userId };
+
+  if (search) {
+    searchQuery.$or = [
+      { firstName: { $regex: search, $options: 'i' } }, // Case-insensitive search
+      { lastName: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+      { companyName: { $regex: search, $options: 'i' } },
+      { roles: { $regex: search, $options: 'i' } },
+    ]
+  }
 
   if (startDate) {
     searchQuery.addedDate = { $gte: new Date(startDate) }
@@ -254,11 +257,21 @@ const createContactForMemberTab = async (req, res) => {
   }
 };
 
-
+const getUniqueCompanies = async (req, res) => {
+  try {
+    if (!req?.query?.userId) {
+      return res.status(400).json({ message: "UserId is required" });
+    }
+    const data = await Contact.distinct("companyName", { createdBy: req?.query?.userId });
+    return res.status(200).json({ data });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+}
 
 
 module.exports = {
-
   createContact,
   getAllContacts,
   getContactById,
@@ -267,5 +280,6 @@ module.exports = {
   getContactsByUserId,
   searchContactsByFirstName,
   getContactsByUserId,
-  createContactForMemberTab
+  createContactForMemberTab,
+  getUniqueCompanies
 };
