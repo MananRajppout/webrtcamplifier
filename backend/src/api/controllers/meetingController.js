@@ -13,10 +13,10 @@ const createMeeting = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-// Set the meetingPasscode from the project
-meetingData.meetingPasscode = project.projectPasscode;
+    // Set the meetingPasscode from the project
+    meetingData.meetingPasscode = project.projectPasscode;
 
-// Create and save the new meeting
+    // Create and save the new meeting
     const newMeeting = new Meeting(meetingData);
     const savedMeeting = await newMeeting.save();
     // Send a success response with the saved meeting details
@@ -38,17 +38,36 @@ const getAllMeetings = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const { startDate, status, timeZone, moderator, search } = req.query;
 
+    const query = { projectId: req.params.projectId };
+    if (startDate) {
+      query.startDate = { $eq: new Date(startDate) };
+    }
+    if (status) {
+      query.status = status;
+    }
+    if (timeZone) {
+      query.timeZone = timeZone;
+    }
+    if (moderator) {
+      query.moderator = moderator;
+    }
+    if (search) {
+      query.$or = [
+        { status: { $regex: search, $options: 'i' } }, // Case-insensitive search
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ]
+    }
     // Find all meetings that match the projectId with pagination
-    const meetings = await Meeting.find({ projectId: req.params.projectId })
+    const meetings = await Meeting.find(query)
       .populate("moderator")
       .skip(skip)
       .limit(limit);
 
     // Count total documents matching the projectId
-    const totalDocuments = await Meeting.countDocuments({
-      projectId: req.params.projectId,
-    });
+    const totalDocuments = await Meeting.countDocuments(query);
 
     // Calculate total pages
     const totalPages = Math.ceil(totalDocuments / limit);
@@ -123,10 +142,35 @@ const deleteMeeting = async (req, res) => {
   }
 };
 
+const meetingStatusChange = async (req, res) => {
+  const { status, meetingId } = req.body;
+  try {
+    const data = await Meeting.findByIdAndUpdate(
+      meetingId,
+      { status },
+      { new: true, runValidators: true }
+    );
+    if (!data) {
+      return res.status(404).json({ message: 'Meeting not found' });
+    }
+    return res.status(200).json({
+      message: 'Meeting status updated successfully',
+      data,
+    });
+  } catch (error) {
+    console.error('Error updating project status:', error);
+    res.status(500).json({
+      message: 'Failed to update meeting status',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createMeeting,
   getAllMeetings,
   verifyModeratorMeetingPasscode,
   getMeetingById,
   deleteMeeting,
+  meetingStatusChange,
 };
