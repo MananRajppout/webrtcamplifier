@@ -113,7 +113,7 @@ const getAllProjects = async (req, res) => {
     }
 
     const projects = await Project.find(searchQuery)
-      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn')
+      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color')
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -135,7 +135,7 @@ const getAllProjects = async (req, res) => {
 const getProjectById = async (req, res) => {
   const { id } = req.params;
   try {
-    const project = await Project.findById(id).populate('members.userId', 'firstName lastName addedDate lastUpdatedOn');
+    const project = await Project.findById(id).populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color');
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -200,7 +200,7 @@ const searchProjectsByFirstName = async (req, res) => {
     // Search for Projects by matching the first name (case-insensitive)
     const Projects = await Project.find({
       name: { $regex: name, $options: "i" },
-    });
+    }).populate('tags', 'name description color');
 
 
 
@@ -387,7 +387,7 @@ const updateBulkMembers = async (req, res) => {
 const assignTagsToProject = async (req, res) => {
   try {
     const { tagIds, projectId } = req.body;
-    const tags = await Tag.distinct("name", { _id: { $in: tagIds } });
+    const tags = await Tag.distinct("_id", { _id: { $in: tagIds } });
     const project = await Project.findById(projectId).select("tags");
 
     if (project?.tags) {
