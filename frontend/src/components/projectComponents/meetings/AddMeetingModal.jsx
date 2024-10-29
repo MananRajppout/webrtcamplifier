@@ -20,8 +20,8 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
     ongoing: false,
     enableBreakoutRoom: false,
     moderator: "",
+    status: "Draft",
   });
-
   const [selectedTimeZone, setSelectedTimeZone] = useState(
     formData.timeZone || "UTC-12:00 International Date Line West"
   );
@@ -32,6 +32,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
   useEffect(() => {
     if (isEditing && meetingToEdit) {
       setFormData({
+        id: meetingToEdit._id || "",
         title: meetingToEdit.title || "",
         description: meetingToEdit.description || "",
         startDate: meetingToEdit.startDate?.split('T')[0] || "",
@@ -41,6 +42,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
         ongoing: meetingToEdit.ongoing || false,
         enableBreakoutRoom: meetingToEdit.enableBreakoutRoom || false,
         moderator: meetingToEdit.moderator?._id || "",
+        status: meetingToEdit.status || "Draft",
       });
       setSelectedTimeZone(meetingToEdit.timeZone);
     }
@@ -107,7 +109,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    console.log('project id', project._id);
     const updatedFormData = {
       ...formData,
       projectId: project._id,
@@ -115,12 +117,13 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
 
     try {
       const url = isEditing 
-        ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update/meeting/${meetingToEdit._id}`
+        ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/edit-meeting`
         : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/meeting`;
 
       const method = isEditing ? 'put' : 'post';
 
       const response = await axios[method](url, updatedFormData);
+      console.log('response .statatus', response.status);
 
       if (response.status === (isEditing ? 200 : 201)) {
         refetchMeetings();

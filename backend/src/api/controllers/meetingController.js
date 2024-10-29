@@ -167,6 +167,8 @@ const meetingStatusChange = async (req, res) => {
 };
 
 const editMeeting = async (req, res) => {
+  console.log(req.body.id);
+  console.log(req.body);
   try {
     const data = await Meeting.findByIdAndUpdate({ _id: req.body?.id }, req.body, { new: true, runValidators: true });
     if (!data) {

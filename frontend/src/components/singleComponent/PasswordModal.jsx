@@ -5,6 +5,7 @@ import InputField from "../shared/InputField";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import ErrorModal from "./ErrorModal";
 import Button from "../shared/button";
+import toast from "react-hot-toast";
 
 const PasswordModal = ({ onClose, id }) => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -16,6 +17,7 @@ const PasswordModal = ({ onClose, id }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   // for showing error message modal
   const [showErrorModal, setShowErrorModal] = useState(false);
+  console.log('user id', id)
 
   const validateForm = () => {
     let formErrors = {};
@@ -32,17 +34,18 @@ const PasswordModal = ({ onClose, id }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      let token = localStorage.getItem("Token");
+     
       try {
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/reset_password'`,
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/changePassword`,
           {
-            token: token,
+            userId: id,
+            oldPassword: currentPassword,
             newPassword: newPassword,
           }
         );
-        alert("Password Updated");
         if (response.status === 200) {
+          toast.success("Password Updated");
           onClose();
         } else {
           setShowErrorModal(true);
@@ -75,6 +78,7 @@ const PasswordModal = ({ onClose, id }) => {
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             error={errors.currentPassword}
+            id="currentPassword"
             icon={
               <button
                 type="button"
@@ -92,6 +96,7 @@ const PasswordModal = ({ onClose, id }) => {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             error={errors.newPassword}
+            id="newPassword"
             icon={
               <button
                 type="button"
@@ -109,6 +114,7 @@ const PasswordModal = ({ onClose, id }) => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             error={errors.confirmPassword}
+            id="confirmPassword"
             icon={
               <button
                 type="button"

@@ -220,7 +220,7 @@ const Page = () => {
             </div>
           </div>
         </div>
-        {showModal && <PasswordModal onClose={handleCloseModal} />}
+        {showModal && <PasswordModal onClose={handleCloseModal} id={id} />}
         {isDeleteModalOpen && (
           <DeleteModal onClose={handleCloseDeleteModal} onDelete={deleteUser} />
         )}
@@ -307,7 +307,7 @@ const Page = () => {
             </div>
           </div>
         </div>
-        {showModal && <PasswordModal onClose={handleCloseModal} />}
+        {showModal && <PasswordModal onClose={handleCloseModal} id={id} />}
         {isDeleteModalOpen && (
           <DeleteModal onClose={handleCloseDeleteModal} onDelete={deleteUser} />
         )}

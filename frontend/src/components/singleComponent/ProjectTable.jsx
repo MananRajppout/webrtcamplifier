@@ -12,7 +12,7 @@ import Button from "../shared/button";
 import { useDashboardContext } from "@/context/DashboardContext";
 import AssignTagModal from "./AssignTagModal";
 
-const ProjectTable = ({ projects,  fetchProjects, user }) => {
+const ProjectTable = ({ projects, fetchProjects, user }) => {
   const { viewProject, setViewProject } = useDashboardContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
@@ -20,7 +20,6 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
   const [isShareProjectModalOpen, setIsShareProjectModalOpen] = useState(false);
   const [isAssignTagModalOpen, setIsAssignTagModalOpen] = useState(false);
   const modalRef = useRef();
-  console.log('user in project table', projects)
 
   const getRole = (project) => {
     if (project.createdBy === user?._id) {
@@ -66,19 +65,14 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
   const handleAction = (status, project) => {
     switch (status) {
       case "Draft":
-        
         break;
       case "Active":
-        
         break;
       case "Complete":
-        
         break;
       case "Inactive":
-        
         break;
       case "Closed":
-        
         break;
       default:
     }
@@ -102,7 +96,7 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
   };
 
   const closeViewProject = () => {
-    setViewProject(false); 
+    setViewProject(false);
     setSelectedProject(null);
   };
 
@@ -135,8 +129,6 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
     };
   }, [isModalOpen]);
 
-
-
   return (
     <div className="overflow-hidden">
       {!viewProject ? (
@@ -165,12 +157,13 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
                   <TableData>
                     {project.tags.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
-                        {project.tags.map((tag, index) => (
+                        {project.tags.map((tag) => (
                           <span
-                            key={index}
-                            className="bg-custom-gray-2 text-[10px] px-2 py-1 rounded"
+                            key={tag._id}
+                            style={{ backgroundColor: tag.color }}
+                            className="text-[10px] px-2 py-1 rounded"
                           >
-                            {tag}
+                            {tag.name}
                           </span>
                         ))}
                       </div>
@@ -240,11 +233,11 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
               <FaUser />
               <span>View</span>
             </li>
-           
+
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={() => handleShareProject(selectedProject)}
-              >
+            >
               <FaShareAlt />
               <span>Share</span>
             </li>
@@ -259,16 +252,13 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
         </div>
       )}
 
-      {
-        isAssignTagModalOpen && (
-          <AssignTagModal
+      {isAssignTagModalOpen && (
+        <AssignTagModal
           userId={user._id}
           project={selectedProject}
           onClose={() => setIsAssignTagModalOpen(false)}
-          />
-
-        )
-      }
+        />
+      )}
 
       {isShareProjectModalOpen && (
         <ShareProjectModal
