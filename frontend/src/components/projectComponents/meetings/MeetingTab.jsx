@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import io from "socket.io-client";
 import AddMeetingModal from "./AddMeetingModal";
 
-const MeetingTab = ({ meetings, fetchMeetings }) => {
+const MeetingTab = ({ meetings, fetchMeetings, project }) => {
   const [localMeetingState, setLocalMeetingState] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -24,7 +24,7 @@ const MeetingTab = ({ meetings, fetchMeetings }) => {
   const [showMeetingDetails, setShowMeetingDetails] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState(null);
-  console.log("selected meeting", selectedMeeting);
+  console.log('is edit modal open', showMeetingDetails)
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -369,8 +369,11 @@ const MeetingTab = ({ meetings, fetchMeetings }) => {
 
       {isEditModalOpen && (
         <AddMeetingModal
-          onClose={() => setIsEditModalOpen(false)}
-          project={selectedMeeting}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setShowMeetingDetails(false);
+        }}
+          project={project}
           user={user}
           refetchMeetings={fetchMeetings}
           meetingToEdit={meetingToEdit}
