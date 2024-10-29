@@ -254,11 +254,18 @@ const createContactForMemberTab = async (req, res) => {
   }
 };
 
-
+const getUniqueCompanies = async (req, res) => {
+  try {
+    const data = await Contact.distinct("companyName");
+    return res.status(200).json({ data });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+}
 
 
 module.exports = {
-
   createContact,
   getAllContacts,
   getContactById,
@@ -267,5 +274,6 @@ module.exports = {
   getContactsByUserId,
   searchContactsByFirstName,
   getContactsByUserId,
-  createContactForMemberTab
+  createContactForMemberTab,
+  getUniqueCompanies
 };
