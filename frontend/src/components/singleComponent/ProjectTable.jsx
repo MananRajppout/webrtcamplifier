@@ -165,12 +165,13 @@ const ProjectTable = ({ projects,  fetchProjects, user }) => {
                   <TableData>
                     {project.tags.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
-                        {project.tags.map((tag, index) => (
+                        {project.tags.map((tag) => (
                           <span
-                            key={index}
-                            className="bg-custom-gray-2 text-[10px] px-2 py-1 rounded"
+                            key={tag._id}
+                            style={{ backgroundColor: tag.color }} 
+        className="text-[10px] px-2 py-1 rounded"
                           >
-                            {tag}
+                            {tag.name}
                           </span>
                         ))}
                       </div>
