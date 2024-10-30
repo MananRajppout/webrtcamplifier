@@ -51,7 +51,11 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
   const [meetingPage, setMeetingPage] = useState(1);
   const [totalMeetingPages, setTotalMeetingPages] = useState(1);
+  const [memberPage, setMemberPage] = useState(1);
+  const [totalMemberPages, setTotalMemberPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+
+  
   const handleRepositoryMeetingTabChange = (meeting) => {
     setSelectedRepositoryMeetingTab(meeting);
     setSelectedDocAndMediaTab("");

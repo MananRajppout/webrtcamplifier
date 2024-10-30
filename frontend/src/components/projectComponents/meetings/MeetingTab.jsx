@@ -32,6 +32,7 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
     setIsModalOpen(!isModalOpen);
   };
   const router = useRouter();
+  console.log('meetings', meetings)
 
   const handleClickOutside = (event) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -380,13 +381,17 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
           isEditing={true}
         />
       )}
-        <div className="flex justify-end py-3">
+        {
+          meetings.length >= 10 && (
+            <div className="flex justify-end py-3">
             <Pagination
               currentPage={meetingPage}
               totalPages={totalMeetingPages}
               onPageChange={onPageChange}
             />
           </div>
+          )
+        }
     </div>
   );
 };
