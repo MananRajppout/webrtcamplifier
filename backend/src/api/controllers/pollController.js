@@ -1,154 +1,144 @@
-const Poll = require("../models/pollModel");
-const Project = require("../models/projectModel");
-const { validationResult } = require("express-validator");
+const Poll = require('../models/pollModel');
 
-// Controller to create a new poll
+// Create a new poll
 const createPoll = async (req, res) => {
-  // Check for validation errors
-
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { project, pollName, isActive, questions, createdBy} = req.body;
-  
-
   try {
-    // Check if the project exists
-    const existingProject = await Project.findById(project);
-    if (!existingProject) {
-      return res.status(404).json({ message: "Project not found" });
-    }
-
-
-    // Create a new poll instance
-    const newPoll = new Poll({
-      project,
-      pollName,
-      isActive,
-      questions,
-      createdBy
-    });
-
-    // Save the poll to the database
-    const savedPoll = await newPoll.save();
-    const polls = await Poll.find({project})
-      .populate('createdBy', 'firstName lastName email')
-    res.status(201).json({ message: "Poll Saved Successfully", polls }); // Respond with the saved poll
-   
+    const poll = await Poll.create(req.body)
+    return res.status(201).json(poll);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(400).json({ message: error.message });
   }
 };
 
-
-// Controller to get all polls with pagination
+// Get all polls
 const getAllPolls = async (req, res) => {
-  const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
-
   try {
-    const polls = await Poll.find({project: req.params.projectId})
-      .skip((page - 1) * limit) 
-      .limit(parseInt(limit))
-      .populate('createdBy', 'firstName lastName email')
-
-    const totalDocuments = await Poll.countDocuments(); // Total number of documents in collection
-    const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
-
-    res.status(200).json({
-      page: parseInt(page),
-      totalPages,
-      totalDocuments,
-      polls,
-    });
+    const polls = await Poll.find({ projectId: req.params.projectId });
+    return res.status(200).json(polls);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// Controller to get a poll by ID
+// Get a specific poll by ID
 const getPollById = async (req, res) => {
-  const { id } = req.params;
   try {
-    const poll = await Poll.findById(id);
-    if (!poll) {
-      return res.status(404).json({ message: "Poll not found" });
-    }
-    res.status(200).json(poll);
+    const poll = await Poll.findById(req.params.id);
+    if (!poll) return res.status(404).json({ message: 'Poll not found.' });
+    return res.status(200).json(poll);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-const changePollStatus = async(req, res) => {
-  const { id } = req.params; 
-  const { isActive } = req.body; 
-
-  try {
-    const poll = await Poll.findByIdAndUpdate(
-      id,
-      { isActive: isActive }, 
-      { new: true } 
-    );
-
-    if (!poll) {
-      return res.status(404).json({ message: "Poll not found" });
-    }
-    const polls = await Poll.find({project: poll.project})
-      .populate('createdBy', 'firstName lastName email')
-    return res.status(200).json({
-      message: `Poll status changed to ${isActive ? "Active" : "Inactive"}`,
-      polls,
-    });
-  } catch (error) {
-    console.error("Error updating poll status:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-}
-
-
-// Controller to update a poll
+// Update an existing poll
 const updatePoll = async (req, res) => {
-  const { id } = req.params;
-  const { pollName, isActive, questions } = req.body;
-
   try {
-    const updatedPoll = await Poll.findByIdAndUpdate(
-      id,
-      { pollName, isActive, questions },
-      { new: true }
-    );
-
-    if (!updatedPoll) {
-      return res.status(404).json({ message: "Poll not found" });
-    }
-
-    const polls = await Poll.find({project: updatedPoll.project})
-    .populate('createdBy', 'firstName lastName email')
-    res.status(200).json({
-      message: "Poll updated successfully",
-      polls,
-    });
+    const poll = await Poll.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!poll) return res.status(404).json({ message: 'Poll not found.' });
+    return res.status(200).json(poll);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(400).json({ message: error.message });
   }
 };
 
-
-// Controller to delete a poll
+// Delete a poll
 const deletePoll = async (req, res) => {
-  const { id } = req.params;
   try {
-    const deletedPoll = await Poll.findByIdAndDelete(id);
-    if (!deletedPoll) {
-      return res.status(404).json({ message: "Poll not found" });
-    }
-    const polls = await Poll.find({project: deletedPoll.project})
-      .populate('createdBy', 'firstName lastName email')
-    res.status(200).json({ message: "Poll deleted successfully", polls });
+    const poll = await Poll.findByIdAndDelete(req.params.id);
+    if (!poll) return res.status(404).json({ message: 'Poll not found.' });
+    return res.status(200).json({ message: 'Poll deleted successfully.' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// Submit a response to a poll
+const submitPollResponse = async (req, res) => {
+  try {
+    const { pollId, userId, answer } = req.body;
+
+    const poll = await Poll.findById(pollId);
+    if (!poll) return res.status(404).json({ message: 'Poll not found.' });
+
+    const existingResponse = poll.responses.find(r => r.userId.toString() === userId);
+    if (existingResponse) {
+      return res.status(400).json({ message: 'You have already submitted a response.' });
+    }
+
+    // Handle response based on poll type
+    switch (poll.type) {
+      case 'Single Choice':
+        if (typeof answer !== 'number' || answer < 0 || answer >= poll.choices.length) {
+          return res.status(400).json({ message: 'Invalid choice.' });
+        }
+        poll.choices[answer].votes += 1;
+        poll.responses.push({ userId, answer });
+        break;
+
+      case 'Multiple Choice':
+        if (!Array.isArray(answer) || answer.some(i => i < 0 || i >= poll.choices.length)) {
+          return res.status(400).json({ message: 'Invalid multiple choices.' });
+        }
+        answer.forEach(i => poll.choices[i].votes += 1);
+        break;
+
+      case 'Matching':
+        if (!Array.isArray(answer) || answer.length !== poll.matching.length) {
+          return res.status(400).json({ message: 'Invalid matching answer.' });
+        }
+        poll.responses.push({ userId, answer });
+        break;
+
+      case 'Rank Order':
+        if (!Array.isArray(answer) || answer.length !== poll.choices.length) {
+          return res.status(400).json({ message: 'Invalid rank order.' });
+        }
+        poll.responses.push({ userId, answer });
+        break;
+
+      case 'Short Answer':
+      case 'Long Answer':
+        if (typeof answer !== 'string' || answer.length < poll.minLength || answer.length > poll.maxLength) {
+          return res.status(400).json({ message: 'Invalid text answer.' });
+        }
+        poll.responses.push({ userId, answer });
+        break;
+
+      case 'Fill in the Blank':
+        if (!Array.isArray(answer) || answer.length !== poll.blanks.length) {
+          return res.status(400).json({ message: 'Invalid blank answers.' });
+        }
+        poll.responses.push({ userId, answer });
+        break;
+
+      case 'Rating Scale':
+        if (typeof answer !== 'number' || answer < poll.ratingRange.min || answer > poll.ratingRange.max) {
+          return res.status(400).json({ message: 'Invalid rating.' });
+        }
+        poll.responses.push({ userId, answer });
+        break;
+
+      default:
+        return res.status(400).json({ message: 'Invalid poll type.' });
+    }
+
+    await poll.save();
+    return res.status(200).json({ message: 'Response submitted successfully.' });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// Get poll results
+const getPollResults = async (req, res) => {
+  try {
+    const poll = await Poll.findById(req.params.id);
+    if (!poll) return res.status(404).json({ message: 'Poll not found.' });
+
+    return res.status(200).json(poll.responses);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -158,5 +148,6 @@ module.exports = {
   getPollById,
   updatePoll,
   deletePoll,
-  changePollStatus
+  submitPollResponse,
+  getPollResults,
 };
