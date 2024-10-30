@@ -7,6 +7,8 @@ import AddContactModal from "@/components/singleComponent/AddContactModal";
 import { useGlobalContext } from "@/context/GlobalContext";
 import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import Button from "@/components/shared/button";
+import axios from "axios";
+import ContactFilter from "@/components/singleComponent/ContactFilter";
 
 const page = () => {
   const [selectedStatus, setSelectedStatus] = useState("Active");
@@ -15,33 +17,49 @@ const page = () => {
   const [currentContact, setCurrentContact] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
   const { user } = useGlobalContext();
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  const fetchContacts = async (userId, search = '') => {
+
+  const fetchContacts = async (userId, page = 1,  searchQuery = '', filters = {}) => {
+    setLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/contact/${userId}${
-          search ? `?search=${encodeURIComponent(search)}` : ''
-        }`
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/contact`, {
+          params:{
+            page,
+            limit:10,
+            search: searchQuery,
+            ...filters,
+            userId: userId,
+          }
+        }
       );
-      const data = await response.json();
-      setContacts(data);
+      
+      setContacts(response.data.contacts);
+      setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching contacts:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     if (user?._id) {
-      fetchContacts(user._id, searchTerm);
+      fetchContacts(user._id, page, searchTerm);
     }
-  }, [user, searchTerm]);
+  }, [user, page, searchTerm]);
 
   // Project status related functionality
 
   // Debounced search handler
-  const handleSearch = (searchValue) => {
-    setSearchTerm(searchValue);
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    setPage(1); 
+    fetchContacts(user?._id, 1, term);
   };
 
   const handleStatusSelect = (status) => {
@@ -57,6 +75,16 @@ const page = () => {
 
   const handleModalClose = () => {
     setShowAddContactModal(false);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    fetchContacts(user?._id, newPage, searchTerm);
+  };
+
+  const handleFilter = (filters) => {
+    setPage(1);
+    fetchContacts(user?._id, 1, searchTerm, filters);
   };
 
   return (
@@ -92,16 +120,17 @@ const page = () => {
 
       {/* search bar */}
       <div className="border-b border-solid border-gray-400 py-4 w-full bg-white">
-        <div className="px-10 flex justify-start items-center">
-          <div className="flex justify-start items-center gap-5">
+      <div className="w-full bg-white">
+        <div className="p-5 flex justify-Start items-center ">
             <Search placeholder="Search contact name" onSearch={handleSearch} />
           </div>
+          <ContactFilter onFilter={handleFilter} userId={user?._id} />
         </div>
       </div>
 
       {/* Body */}
       <div className="flex-grow w-full">
-        {contacts.length > 0 ? (
+        {contacts?.length > 0 ? (
           <ContactTable
             contacts={contacts}
             setContacts={setContacts}
@@ -109,6 +138,10 @@ const page = () => {
             setCurrentContact={setCurrentContact}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
+            page={page}
+            totalPages={totalPages}
+            handlePageChange={handlePageChange}
+
           />
         ) : (
           <div className="flex-grow w-full h-full flex justify-center items-center pt-20">

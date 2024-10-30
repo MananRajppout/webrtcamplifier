@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/context/GlobalContext";
 import Button from "@/components/shared/button";
 import ProjectFilter from "@/components/singleComponent/ProjectFilter";
+import Pagination from "@/components/shared/Pagination";
 
 const Page = () => {
   const router = useRouter();
@@ -134,7 +135,14 @@ const handleFilter = (filters) => {
           <NoSearchResult />
         )}
         {/* Pagination Controls */}
-        <div className="flex justify-center mt-4">
+         <div className="flex justify-end py-3">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        {/* <div className="flex justify-center mt-4">
           <Button
             onClick={() => handlePageChange(page - 1)}
             disabled={page <= 1}
@@ -152,7 +160,7 @@ const handleFilter = (filters) => {
           >
             Next
           </Button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

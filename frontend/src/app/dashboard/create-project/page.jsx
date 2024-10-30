@@ -10,6 +10,7 @@ import { HiOutlineMinus } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/context/GlobalContext";
 import Button from "@/components/shared/button";
+import toast from "react-hot-toast";
 
 const Page = () => {
   const router = useRouter();
@@ -114,7 +115,7 @@ const Page = () => {
 
       // Handle success response
       if (response.status === 201) {
-        alert("Project created successfully!");
+        toast.success("Project created successfully!");
         router.push("/dashboard/project");
       }
     } catch (error) {
