@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import io from "socket.io-client";
 import AddMeetingModal from "./AddMeetingModal";
 import Pagination from "@/components/shared/Pagination";
+import Button from "@/components/shared/button";
 
 const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetingPages, onPageChange }) => {
   const [localMeetingState, setLocalMeetingState] = useState([]);
@@ -32,7 +33,6 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
     setIsModalOpen(!isModalOpen);
   };
   const router = useRouter();
-  console.log('meetings', meetings)
 
   const handleClickOutside = (event) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -310,6 +310,16 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
             <div>
               <h3 className="font-medium">Status</h3>
               <p>{selectedMeeting?.status}</p>
+            </div>
+            {/* Share meeting button */}
+            <div className="flex flex-col lg:flex-row gap-3 justify-between items-center">
+              <Button
+              children="Share Meeting"
+              variant="secondary"
+              type="button"
+              onClick={() => setIsShareMeetingModalOpen(true)}
+              className="px-5 py-2 rounded-lg text-white"
+              />
             </div>
           </div>
         </div>
