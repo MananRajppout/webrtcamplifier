@@ -1,56 +1,52 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const mongoose = require('mongoose');
 
-// New Poll Schema
-const PollSchema = new Schema({
-  project: {
-    type: Schema.Types.ObjectId,
-    ref: "Project",
-    required: true,
-  },
-  pollName: {
+// Schema for individual choices (used in choice-based questions)
+const choiceSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  votes: { type: Number, default: 0 },
+});
+
+// Schema for matching questions (pairing options with answers)
+const matchingSchema = new mongoose.Schema({
+  option: { type: String, required: true },
+  answer: { type: String, required: true },
+});
+
+// Schema for storing user responses
+const responseSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  answer: mongoose.Schema.Types.Mixed, // Flexible structure to store different answers
+  timestamp: { type: Date, default: Date.now },
+});
+
+const pollSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  question: { type: String, required: true },
+  type: {
     type: String,
+    enum: [
+      'Single Choice',
+      'Multiple Choice',
+      'Matching',
+      'Rank Order',
+      'Short Answer',
+      'Long Answer',
+      'Fill in the Blank',
+      'Rating Scale',
+    ],
     required: true,
   },
-  isActive: {
-    type: Boolean,
-  },
-  questions: [
-    {
-      question: {
-        type: String,
-        required: true,
-      },
-      type: {
-        type: String,
-        enum: ['single', 'multiple'],
-        default: 'single',
-      },
-      answers: [
-        {
-          answer: {
-            type: String,
-            required: true,
-          },
-        },
-      ],
-    },
-  ],
-  createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-  },
-  responses: [
-    {
-      user: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-      answers: [String],
-    },
-  ],
+  choices: [choiceSchema], // For single/multiple choice and ranking
+  matching: [matchingSchema], // For matching type
+  ratingRange: { min: Number, max: Number }, // For rating scale questions
+  blanks: { type: [String] }, // For "Fill in the Blank" questions
+  minLength: Number, // For text answers (short/long answer)
+  maxLength: Number, // For text answers (short/long answer)
+  responses: [responseSchema], // Store user responses
+  createdById: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
 }, { timestamps: true });
 
-const Poll = mongoose.model("Poll", PollSchema);
+const Poll = mongoose.model('Poll', pollSchema);
 
 module.exports = Poll;
