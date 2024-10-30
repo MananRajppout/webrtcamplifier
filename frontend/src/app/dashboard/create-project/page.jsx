@@ -148,6 +148,7 @@ const Page = () => {
             contacts={contacts}
             setContacts={setContacts}
             isLoading={isLoading}
+            fetchContacts={fetchContacts}
           />
         );
       // case 3:
