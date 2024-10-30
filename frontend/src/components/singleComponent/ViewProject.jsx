@@ -377,11 +377,11 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             </button>
             <button
               className={`py-2 border-custom-dark-blue-1 ${
-                activeTab === "Members" ? "border-b-2 " : "opacity-25"
+                activeTab === "Project Team" ? "border-b-2 " : "opacity-25"
               }`}
-              onClick={() => handleTabChange("Members")}
+              onClick={() => handleTabChange("Project Team")}
             >
-              Members
+              Project Team
             </button>
             <button
               className={`py-2 border-custom-dark-blue-1 ${
@@ -393,11 +393,11 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             </button>
             <button
               className={`py-2 border-custom-dark-blue-1 ${
-                activeTab === "Repository" ? "border-b-2 " : "opacity-25"
+                activeTab === "Files" ? "border-b-2 " : "opacity-25"
               }`}
-              onClick={() => handleTabChange("Repository")}
+              onClick={() => handleTabChange("Files")}
             >
-              Repository
+              Files
             </button>
           </div>
 
@@ -432,7 +432,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             </div>
           )}
 
-          {activeTab === "Members" && (
+          {activeTab === "Project Team" && (
             <div className="pt-5">
               <div className="flex justify-between items-center">
                 <HeadingLg children="Project Members" />
@@ -492,10 +492,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             </div>
           )}
 
-          {activeTab === "Repository" && (
+          {activeTab === "Files" && (
             <div className="pt-2">
               <div className="flex justify-between items-center">
-                <HeadingLg children="Repository List" />
+                <HeadingLg children="Files List" />
                 <div
                   className="flex justify-end items-center
              gap-5"
