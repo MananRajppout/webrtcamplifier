@@ -199,7 +199,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
           <div>
             <div className="flex justify-start items-start gap-5 flex-col md:flex-row">
               <div>
-                <p className="block text-sm font-semibold mb-2">Start Time</p>
+                <p className="block text-sm font-semibold mb-2">Start Date/Time</p>
                 <div className="flex items-center">
                   <input
                     type="date"
