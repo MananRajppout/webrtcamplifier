@@ -20,6 +20,7 @@ import AddPollModal from "../projectComponents/polls/AddPollModal";
 import Button from "../shared/button";
 import AddRepositoryModal from "../projectComponents/repository/AddRepositoryModal";
 import RepositoryTab from "../projectComponents/repository/RepositoryTab";
+import Search from "./Search";
 
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [localProjectState, setLocalProjectState] = useState(project);
@@ -46,7 +47,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     useState(null);
   const [showDocAndMediaTab, setShowDocAndMediaTab] = useState(false);
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
-
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [searchTerm, setSearchTerm] = useState("");
   const handleRepositoryMeetingTabChange = (meeting) => {
     setSelectedRepositoryMeetingTab(meeting);
     setSelectedDocAndMediaTab("");
@@ -129,15 +132,23 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   };
 
   // Fetching project meetings
-  const fetchMeetings = async (page = 1) => {
+  const fetchMeetings = async (page = 1, searchQuery="", filters={}) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/meeting/${localProjectState._id}`
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/meeting/${localProjectState._id}`,{
+          params:{
+            page,
+            limit:10,
+            search: searchQuery,
+            ...filters
+          }
+        }
         
       );
+      console.log('meeting search response', response.data)
       setMeetings(response.data.meetings);
-      // setTotalPages(response.data.totalPages);
+      setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
@@ -264,6 +275,13 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setShowAddContactModal(true);
   };
 
+  const handleMeetingSearch = (term) => {
+    setSearchTerm(term)
+    setPage(1)
+    fetchMeetings(1, term)
+  }
+  
+
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center w-full">
       {/* navbar */}
@@ -385,6 +403,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             <div className="pt-5">
               <div className="flex justify-between items-center">
                 <HeadingLg children="Meetings" />
+                {/* !Search button */}
+                <Search onSearch={handleMeetingSearch}
+                placeholder="Search Meeting Name"
+                />
                 <Button
                   children="Add Meeting"
                   className="px-4 py-2 rounded-xl"
