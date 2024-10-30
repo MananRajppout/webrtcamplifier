@@ -138,6 +138,10 @@ const page = () => {
             setCurrentContact={setCurrentContact}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
+            page={page}
+            totalPages={totalPages}
+            handlePageChange={handlePageChange}
+
           />
         ) : (
           <div className="flex-grow w-full h-full flex justify-center items-center pt-20">

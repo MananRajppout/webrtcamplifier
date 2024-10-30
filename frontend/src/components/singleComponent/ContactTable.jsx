@@ -9,6 +9,7 @@ import ViewContactModal from "./ViewContactModal";
 import AddContactModal from "./AddContactModal";
 import { IoTrashBin } from "react-icons/io5";
 import Button from "../shared/button";
+import Pagination from "../shared/Pagination";
 
 const ContactTable = ({
   contacts,
@@ -17,10 +18,10 @@ const ContactTable = ({
   setCurrentContact,
   isEditing,
   setIsEditing,
+  page,
+  totalPages,
+  handlePageChange
 }) => {
-  // const [filteredModerators, setFilteredModerators] = useState([]);
-  // const [searchQuery, setSearchQuery] = useState('');
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items per page
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -135,9 +136,9 @@ const ContactTable = ({
 
   // const totalPages = Math.ceil(filteredModerators.length / itemsPerPage);
 
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-  };
+  // const handlePageChange = (newPage) => {
+  //   setCurrentPage(newPage);
+  // };
 
   const formatDate = (dateInput) => {
     const date = new Date(dateInput);
@@ -222,34 +223,13 @@ const ContactTable = ({
           </tbody>
         </table>
       </div>
-      {/* <div className="pagination flex justify-center mt-4">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-3 py-1 border border-gray-300 rounded-md mr-2"
-        >
-          Previous
-        </button>
-        {[...Array(totalPages)].map((_, index) => (
-          <button
-            key={index}
-            onClick={() => handlePageChange(index + 1)}
-            className={`px-3 py-1 border border-gray-300 rounded-md ${
-              index + 1 === currentPage ? 'bg-gray-300' : ''
-            }`}
-          >
-            {index + 1}
-          </button>
-        ))}
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 border border-gray-300 rounded-md ml-2"
-        >
-          Next
-        </button>
-      </div> */}
-
+      <div className="flex justify-end py-3">
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>
       {/* View Contact Modal */}
       {isViewContactModalOpen && (
         <ViewContactModal
