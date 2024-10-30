@@ -77,6 +77,7 @@ const createProject = async (req, res) => {
 const getAllProjects = async (req, res) => {
   const { page = 1, limit = 10, search = '', startDate, endDate, status, tag, role } = req.query;
   const { id } = req.params;
+  
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
     const userData = await User.findById(id);

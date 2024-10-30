@@ -11,8 +11,9 @@ import ShareProjectModal from "../projectComponents/ShareProjectModal";
 import Button from "../shared/button";
 import { useDashboardContext } from "@/context/DashboardContext";
 import AssignTagModal from "./AssignTagModal";
+import Pagination from "../shared/Pagination";
 
-const ProjectTable = ({ projects, fetchProjects, user }) => {
+const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageChange }) => {
   const { viewProject, setViewProject } = useDashboardContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
@@ -206,6 +207,18 @@ const ProjectTable = ({ projects, fetchProjects, user }) => {
               ))}
             </tbody>
           </table>
+          {/* Pagination Controls */}
+        {
+          projects.length !== 0 && (
+            <div className="flex justify-end py-3">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+            />
+          </div>
+          )
+         }
         </div>
       ) : (
         <ViewProject

@@ -69,7 +69,7 @@ const Page = () => {
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
-    fetchProjects(newPage);
+    fetchProjects(user?._id, newPage);
   };
 
   // Add handleFilter function
@@ -130,18 +130,14 @@ const handleFilter = (filters) => {
             projects={projects}
             fetchProjects={fetchProjects}
             user={user}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
           />
         ) : (
           <NoSearchResult />
         )}
-        {/* Pagination Controls */}
-         <div className="flex justify-end py-3">
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
+        
         {/* <div className="flex justify-center mt-4">
           <Button
             onClick={() => handlePageChange(page - 1)}
