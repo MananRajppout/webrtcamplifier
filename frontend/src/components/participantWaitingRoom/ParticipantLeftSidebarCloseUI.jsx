@@ -44,7 +44,7 @@ const ParticipantLeftSidebarCloseUI = () => {
           {/* participants container */}
 
           {/* Participant chat */}
-          {participant.map((chat) => (
+          {/* {participant.map((chat) => (
               <div
                 key={chat.id}
                 className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer relative"
@@ -52,7 +52,7 @@ const ParticipantLeftSidebarCloseUI = () => {
               >
                <p className="text-[#1a1a1a] text-sm" >{chat.name}</p>
               </div>
-            ))}
+            ))} */}
         </div>
       </div>
     </>
