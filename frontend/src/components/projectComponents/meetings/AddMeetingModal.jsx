@@ -19,7 +19,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
     duration: "",
     ongoing: false,
     enableBreakoutRoom: false,
-    moderator: "",
+    moderator: [],
     status: "Draft",
   });
   const [selectedTimeZone, setSelectedTimeZone] = useState(
@@ -41,7 +41,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
         duration: meetingToEdit.duration || "",
         ongoing: meetingToEdit.ongoing || false,
         enableBreakoutRoom: meetingToEdit.enableBreakoutRoom || false,
-        moderator: meetingToEdit.moderator?._id || "",
+        moderator: meetingToEdit.moderator || [],
         status: meetingToEdit.status || "Draft",
       });
       setSelectedTimeZone(meetingToEdit.timeZone);
@@ -98,24 +98,34 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
     }));
   };
 
+  console.log('project moderator', formData.moderator)
   // Update formData for other input fields
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    // Validate duration input to ensure it's a positive number
+    // Handle moderator multi-select
+    if (name === "moderator") {
+      const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        moderator: [...prevFormData.moderator, ...selectedOptions.filter(id => !prevFormData.moderator.includes(id))]
+    }));
+      return;
+    }
+
+    // Rest of your existing handleInputChange logic...
     if (name === "duration") {
-        // Allow empty value (for clearing the input) or check if the value is a positive number
-        if (value === "" || /^[1-9]\d*$/.test(value)) {
-            setFormData((prevFormData) => ({
-                ...prevFormData,
-                [name]: value,
-            }));
-        }
-    } else {
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            [name]: type === "checkbox" ? checked : value,
+      if (value === "" || /^[1-9]\d*$/.test(value)) {
+        setFormData(prevFormData => ({
+          ...prevFormData,
+          [name]: value,
         }));
+      }
+    } else {
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        [name]: type === "checkbox" ? checked : value,
+      }));
     }
   };
 
@@ -169,11 +179,12 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
                 htmlFor="moderator"
                 className="block sm:text-sm font-semibold mb-2 text-sm text-black"
               >
-                Moderator
+                Moderators
               </label>
               <select
                 name="moderator"
                 id="moderator"
+                multiple
                 value={formData.moderator}
                 onChange={handleInputChange}
                 className="px-4 py-2 sm:py-2 border border-[#000000] rounded-lg flex items-center justify-between w-full text-custom-dark-blue-1 z-50"
