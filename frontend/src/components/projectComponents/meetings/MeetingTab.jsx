@@ -24,7 +24,6 @@ const MeetingTab = ({ meetings, fetchMeetings, project }) => {
   const [showMeetingDetails, setShowMeetingDetails] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState(null);
-  console.log('is edit modal open', showMeetingDetails)
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });

@@ -101,10 +101,22 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
   // Update formData for other input fields
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+
+    // Validate duration input to ensure it's a positive number
+    if (name === "duration") {
+        // Allow empty value (for clearing the input) or check if the value is a positive number
+        if (value === "" || /^[1-9]\d*$/.test(value)) {
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                [name]: value,
+            }));
+        }
+    } else {
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [name]: type === "checkbox" ? checked : value,
+        }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -219,12 +231,13 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
             </div>
             <div className="flex justify-start items-end gap-5 mt-1">
               <InputField
-                label="Duration"
-                type="text"
+                label="Duration (in minutes)"
+                type="number"
                 name="duration"
                 value={formData.duration}
                 onChange={handleInputChange}
                 className="w-full"
+                min="1"
               />
               <div className="hidden justify-start items-center gap-2 md:flex">
                 <input

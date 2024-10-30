@@ -146,7 +146,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
         }
         
       );
-      console.log('meeting search response', response.data)
       setMeetings(response.data.meetings);
       setTotalPages(response.data.totalPages);
     } catch (error) {
