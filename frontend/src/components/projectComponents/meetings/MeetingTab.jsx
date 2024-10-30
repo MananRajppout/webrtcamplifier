@@ -11,8 +11,9 @@ import ShareMeetingModal from "./ShareMeetingModal";
 import toast from "react-hot-toast";
 import io from "socket.io-client";
 import AddMeetingModal from "./AddMeetingModal";
+import Pagination from "@/components/shared/Pagination";
 
-const MeetingTab = ({ meetings, fetchMeetings, project }) => {
+const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetingPages, onPageChange }) => {
   const [localMeetingState, setLocalMeetingState] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -379,6 +380,13 @@ const MeetingTab = ({ meetings, fetchMeetings, project }) => {
           isEditing={true}
         />
       )}
+        <div className="flex justify-end py-3">
+            <Pagination
+              currentPage={meetingPage}
+              totalPages={totalMeetingPages}
+              onPageChange={onPageChange}
+            />
+          </div>
     </div>
   );
 };

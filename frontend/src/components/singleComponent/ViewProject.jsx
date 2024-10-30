@@ -31,7 +31,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [meetings, setMeetings] = useState([]);
   const [polls, setPolls] = useState([]);
   const [isAddMeetingModalOpen, setIsAddMeetingModalOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(localProjectState?.status || "");
+  const [selectedStatus, setSelectedStatus] = useState(
+    localProjectState?.status || ""
+  );
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
@@ -47,8 +49,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     useState(null);
   const [showDocAndMediaTab, setShowDocAndMediaTab] = useState(false);
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [meetingPage, setMeetingPage] = useState(1);
+  const [totalMeetingPages, setTotalMeetingPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const handleRepositoryMeetingTabChange = (meeting) => {
     setSelectedRepositoryMeetingTab(meeting);
@@ -127,27 +129,28 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setActiveTab(tab);
   };
 
-  const handlePageChange = () => {
-    //Add logic here
+  const handleMeetingPageChange = (page) => {
+    setMeetingPage(page);
+    fetchMeetings(page, searchTerm);
   };
 
   // Fetching project meetings
-  const fetchMeetings = async (page = 1, searchQuery="", filters={}) => {
+  const fetchMeetings = async (page = 1, searchQuery = "", filters = {}) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/meeting/${localProjectState._id}`,{
-          params:{
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/meeting/${localProjectState._id}`,
+        {
+          params: {
             page,
-            limit:10,
+            limit: 10,
             search: searchQuery,
-            ...filters
-          }
+            ...filters,
+          },
         }
-        
       );
       setMeetings(response.data.meetings);
-      setTotalPages(response.data.totalPages);
+      setTotalMeetingPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
@@ -177,11 +180,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`,
-       
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`
       );
       setRepositories(response.data.repositories);
-     
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
@@ -190,10 +191,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   };
 
   useEffect(() => {
-    fetchMeetings();
+    fetchMeetings(meetingPage);
     fetchPolls();
-    fetchRepositories(localProjectState?._id)
-  }, [localProjectState]);
+    fetchRepositories(localProjectState?._id);
+  }, [localProjectState, meetingPage]);
 
   const handleAddMeetingModal = () => {
     setIsAddMeetingModalOpen(true);
@@ -275,11 +276,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   };
 
   const handleMeetingSearch = (term) => {
-    setSearchTerm(term)
-    setPage(1)
-    fetchMeetings(1, term)
-  }
-  
+    setSearchTerm(term);
+    setMeetingPage(1);
+    fetchMeetings(1, term);
+  };
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center w-full">
@@ -331,14 +331,14 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           </div>
           <div className="flex justify-start items-center gap-1 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
-            Fieldwork Start Date:
+              Fieldwork Start Date:
             </p>
             {/* <HeadingLg children="Opened On" /> */}
             <ParagraphBlue2 children={localProjectState?.startDate} />
           </div>
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
-            Fieldwork End Date:
+              Fieldwork End Date:
             </p>
             {/* <HeadingLg children="Expires In" /> */}
             <ParagraphBlue2 children={localProjectState?.endDate} />
@@ -403,8 +403,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               <div className="flex justify-between items-center">
                 <HeadingLg children="Meetings" />
                 {/* !Search button */}
-                <Search onSearch={handleMeetingSearch}
-                placeholder="Search Meeting Name"
+                <Search
+                  onSearch={handleMeetingSearch}
+                  placeholder="Search Meeting Name"
                 />
                 <Button
                   children="Add Meeting"
@@ -414,7 +415,15 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                 />
               </div>
               <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
-                <MeetingTab meetings={meetings} fetchMeetings={fetchMeetings} project={project}/>
+                <MeetingTab
+                  meetings={meetings}
+                  fetchMeetings={fetchMeetings}
+                  project={project}
+                  meetingPage={meetingPage}
+                  totalMeetingPages={totalMeetingPages}
+                  onPageChange={handleMeetingPageChange}
+                  
+                />
               </div>
             </div>
           )}
@@ -446,7 +455,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
                 <MembersTab
                   project={localProjectState}
-                setLocalProjectState={setLocalProjectState}
+                  setLocalProjectState={setLocalProjectState}
                 />
               </div>
             </div>
@@ -539,15 +548,14 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                 </div>
               )}
 
-           
-                 <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
-               <RepositoryTab
-               repositories={repositories}
-               selectedRepositoryMeetingTab={selectedRepositoryMeetingTab}
-               selectedDocAndMediaTab={selectedDocAndMediaTab}
-               fetchRepositories={fetchRepositories}
-               projectId={localProjectState?._id}
-               />
+              <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
+                <RepositoryTab
+                  repositories={repositories}
+                  selectedRepositoryMeetingTab={selectedRepositoryMeetingTab}
+                  selectedDocAndMediaTab={selectedDocAndMediaTab}
+                  fetchRepositories={fetchRepositories}
+                  projectId={localProjectState?._id}
+                />
               </div>
             </div>
           )}
@@ -575,7 +583,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             <MemberTabAddMember
               onClose={handleModalClose}
               project={localProjectState}
-              
               userId={user._id}
               setLocalProjectState={setLocalProjectState}
             />
@@ -608,13 +615,13 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               fetchRepositories={fetchRepositories}
             />
           )}
-          <div className="flex justify-end py-3">
+          {/* <div className="flex justify-end py-3">
             <Pagination
               currentPage={2}
               totalPages={5}
               onPageChange={handlePageChange}
             />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
