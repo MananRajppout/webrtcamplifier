@@ -7,7 +7,7 @@ const meetingSchema = new Schema({
   description: { type: String },
   startDate: { type: Date, required: true },
 
-  moderator: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact', default: null },
+  moderator: { type: [mongoose.Schema.Types.ObjectId], ref: 'Contact', default: [] },
   startTime: {
     type: String,
     required: true,
