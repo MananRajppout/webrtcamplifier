@@ -352,7 +352,7 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
             </li>
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={closeModal}
+              onClick={()=>handleEditMeeting(selectedMeeting)}
             >
               <RiPencilFill />
               <span>Edit</span>
