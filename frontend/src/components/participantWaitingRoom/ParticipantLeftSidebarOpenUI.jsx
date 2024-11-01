@@ -32,7 +32,7 @@ const ParticipantLeftSidebarOpenUI = () => {
         {/* Backroom chat and icon */}
         <div className="flex justify-start items-center gap-2 pb-4 pt-14 mx-4">
           <BsChatSquareFill className="text-custom-dark-blue-1" />
-          <HeadingLg children="BACKROOM CHAT" />
+          <HeadingLg children="MEETING CHAT" />
         </div>
 
         {/* chat container */}

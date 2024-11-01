@@ -123,7 +123,13 @@ const getMeetingById = async (req, res) => {
     if (!meeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }
-    res.status(200).json({ message: "Meeting found", meetingDetails: meeting });
+    const project = await Project.findById(meeting.projectId);
+   
+    const meetingWithProjectTitle = {
+      ...meeting.toObject(), 
+      projectTitle: project ? project.name : null,
+    };
+    res.status(200).json({ message: "Meeting found", meetingDetails: meetingWithProjectTitle });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -167,8 +173,7 @@ const meetingStatusChange = async (req, res) => {
 };
 
 const editMeeting = async (req, res) => {
-  console.log(req.body.id);
-  console.log(req.body);
+  
   try {
     const data = await Meeting.findByIdAndUpdate({ _id: req.body?.id }, req.body, { new: true, runValidators: true });
     if (!data) {

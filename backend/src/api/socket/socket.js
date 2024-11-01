@@ -311,7 +311,7 @@ const setupSocket = (server) => {
 
     socket.on("removeParticipantFromMeeting", async (data) => {
       const { meetingId, name, role } = data;
-      console.log("name in removeParticipantFromMeeting", name, role, meetingId);
+      
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
         if (!liveMeeting) {
@@ -511,7 +511,7 @@ const setupSocket = (server) => {
         await liveMeeting.save();
 
         const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
-        // console.log("updatedLiveMeeting in sendMessageObserver", updatedLiveMeeting);
+      
 
         socket.emit("observerChatResponse", {
           success: true,
@@ -581,7 +581,6 @@ const setupSocket = (server) => {
     
         liveMeeting.isStreaming = !liveMeeting.isStreaming;
         await liveMeeting.save();
-        console.log('livemeeting . isStreaming', liveMeeting.isStreaming);
     
         socket.emit("getStreamingStatusResponse", {
           success: true,
@@ -592,10 +591,8 @@ const setupSocket = (server) => {
         // Notify observers based on streaming status
         if (liveMeeting.isStreaming) {
           io.emit("navigateToMeeting", { meetingId });
-          console.log('navigateToMeeting emitted');
         } else {
           io.emit("navigateToObserverWaitingRoom", { meetingId });
-          console.log('navigateToObserverWaitingRoom emitted');
         }
       } catch (error) {
         console.error("Error in toggleStreaming:", error);
@@ -808,7 +805,6 @@ const setupSocket = (server) => {
       const newname = userDetails?.name?.replaceAll(' ','')?.toLowerCase() + userDetails?.roomid;
       const isMoveByModerator = userchangeroom[newname];
       if(isMoveByModerator){
-        console.log('is move by moderator')
         return
       }
       const liveMeeting = await LiveMeeting.findOne({ meetingId:userDetails?.roomid });

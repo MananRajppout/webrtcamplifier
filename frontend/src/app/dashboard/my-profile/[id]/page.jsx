@@ -100,8 +100,7 @@ const Page = () => {
           params: { id: id }, 
         }
       );
-      console.log('response.data.message:', response.data);
-      console.log('response.user', response.status)
+      
       if (response.status === 200) {
         toast.success("User deleted successfully");
         setIsDeleteModalOpen(false);

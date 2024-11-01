@@ -96,7 +96,6 @@ const saveChat = async (req, res) => {
   }
 };
 const getUsers = async (req, res) => {
-  console.log("Fetching users");
   try {
     const users = await User.find();
     res.status(200).json(users);

@@ -293,7 +293,7 @@ const LeftSidebarOpenUi = ({
         {/* Backroom chat and icon */}
         <div className="flex justify-start items-center gap-2 lg:py-4 mx-4 pt-10 sm:pt-20">
           <BsChatSquareFill className="text-custom-dark-blue-1" />
-          <HeadingLg children="BACKROOM CHAT" />
+          <HeadingLg children="MEETING CHAT" />
         </div>
 
         {/* chat container */}

@@ -7,7 +7,6 @@ const AssignTagModal = ({ userId, project, onClose }) => {
   const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  console.log('tags', tags)
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -48,7 +47,6 @@ const AssignTagModal = ({ userId, project, onClose }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Tags assigned successfully:', data);
         onClose();
       } else {
         console.error('Failed to assign tags');

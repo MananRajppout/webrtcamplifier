@@ -98,7 +98,6 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
     }));
   };
 
-  console.log('project moderator', formData.moderator)
   // Update formData for other input fields
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -131,7 +130,6 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('project id', project._id);
     const updatedFormData = {
       ...formData,
       projectId: project._id,
@@ -145,7 +143,6 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
       const method = isEditing ? 'put' : 'post';
 
       const response = await axios[method](url, updatedFormData);
-      console.log('response .statatus', response.status);
 
       if (response.status === (isEditing ? 200 : 201)) {
         refetchMeetings();

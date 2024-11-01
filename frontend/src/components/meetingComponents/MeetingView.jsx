@@ -64,6 +64,7 @@ const MeetingView = ({
       });
   };
 
+
   return (
     <div className="px-5 sm:py-5  flex-col justify-between items-between h-full  meeting_bg">
       <div className="md:h-1/7 h-auto py-2">
@@ -106,7 +107,7 @@ const MeetingView = ({
 
         {/* Second ---------- name bar */}
         <div className="flex justify-between items-center pb-4 ">
-          <HeadingBlue25px children={`${meetingDetails?.title} ${type == 'breackout' && roomname ? `- ${roomname}` : ''}`} />
+          <HeadingBlue25px children={`${meetingDetails?.projectTitle} ${type == 'breackout' && roomname ? `- ${roomname}` : ''}`} />
 
           {
             role === "Moderator" &&

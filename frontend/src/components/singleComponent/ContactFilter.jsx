@@ -18,7 +18,6 @@ const ContactFilter = ({ onFilter, userId }) => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/contacts/get-companies?userId=${userId}`);
         const data = await response.json();
-        console.log('companies', data);
         setCompanyOptions(data.data);
       } catch (error) {
         console.error('Error fetching companies:', error);

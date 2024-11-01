@@ -7,7 +7,6 @@ const page = () => {
   
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  console.log('token', token)
   return (
     <div>
     <div className="flex justify-center items-center pt-5 lg:hidden">

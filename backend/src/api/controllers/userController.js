@@ -305,7 +305,6 @@ const sendResetPasswordMail = async (name, email, token) => {
 const forgotPassword = async (req, res) => {
   try {
     const email = req.body.email;
-    console.log('email at forgot password', email)
     const userData = await userModel.findOne({ email: email });
     if (userData) {
       const randomString = randomstring.generate();

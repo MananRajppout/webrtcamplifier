@@ -190,7 +190,7 @@ const RightSidebarOpenUi = ({
       {/* Backroom chat and icon */}
       <div className="flex justify-center items-center gap-2 pt-10 lg:pb-4 mx-4 py-5 mt-5 sm:mt-3">
         <BsChatSquareFill className="text-custom-dark-blue-1" />
-        <h2 className="uppercase font-bold ">backroom chat</h2>
+        <h2 className="uppercase font-bold ">meeting chat</h2>
         <div className="bg-custom-black flex justify-center items-center gap-1 px-2 py-1 rounded-xl">
           <FaEye className="text-custom-orange-1" />
           <p className="text-xs text-white">Viewers</p>

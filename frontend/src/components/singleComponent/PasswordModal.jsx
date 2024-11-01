@@ -17,7 +17,6 @@ const PasswordModal = ({ onClose, id }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   // for showing error message modal
   const [showErrorModal, setShowErrorModal] = useState(false);
-  console.log('user id', id)
 
   const validateForm = () => {
     let formErrors = {};

@@ -70,7 +70,8 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
     if (activeMeetingId === meeting._id) return;
 
     setActiveMeetingId(meeting._id);
-    if (meeting.moderator.email === user.email) {
+    const isModerator = meeting.moderator.some(mod => mod.email === user.email);
+    if (isModerator) {
       const fullName = `${user.firstName} ${user.lastName}`;
       try {
         if (socket) {
@@ -151,7 +152,6 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
   };
 
   const handleView = (meeting) => {
-    console.log("handle view clicked", meeting);
     setShowMeetingDetails(true);
     setSelectedMeeting(meeting);
     // closeModal();
@@ -200,6 +200,7 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
     }
   };
 
+
   return (
     <div className="overflow-x-auto">
       {!showMeetingDetails ? (
@@ -225,7 +226,10 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
                   {meeting?.startTime}
                 </TableData>
                 <TableData>{meeting?.timeZone}</TableData>
-                <TableData>{meeting?.moderator?.firstName}</TableData>
+                <td className="px-3 py-1 text-left text-[12px]  font-medium text-custom-dark-blue-1">{meeting?.moderator.map(mod => mod.firstName).join(', ')}</td>
+                
+
+               
                 <TableData>
                   <div className="flex justify-start items-center gap-2">
                     <button

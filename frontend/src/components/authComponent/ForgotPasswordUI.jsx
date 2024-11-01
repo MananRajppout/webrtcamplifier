@@ -20,7 +20,6 @@ const ForgotPasswordUI = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('email', email)
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/forgot-password`,
@@ -28,7 +27,6 @@ const ForgotPasswordUI = () => {
           email: email,
         }
       );
-      console.log(response.data);
       setMessage("Reset link sent to your email");
       setError("");
     } catch (error) {

@@ -234,7 +234,6 @@ const page = () => {
 
   // * get participant list
   const handleParticipantList = (response) => {
-    console.log(response.participantList, 'response.participantList')
     if (response.success) {
       setParticipants(response.participantList);
       setBreakoutRooms(response.breakoutRooms);
