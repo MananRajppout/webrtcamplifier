@@ -5,7 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { BsFillEnvelopeAtFill, BsThreeDotsVertical } from "react-icons/bs";
-import { FaShareAlt, FaUser } from "react-icons/fa";
+import { FaCopy, FaShareAlt, FaUser } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import ShareMeetingModal from "./ShareMeetingModal";
 import toast from "react-hot-toast";
@@ -26,12 +26,14 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
   const [showMeetingDetails, setShowMeetingDetails] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState(null);
+
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
     setSelectedMeeting(meeting);
     setIsModalOpen(!isModalOpen);
   };
+
   const router = useRouter();
 
   const handleClickOutside = (event) => {
@@ -200,6 +202,29 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
     }
   };
 
+  const handleDuplicateMeeting = async (meeting) => {
+    try {
+      const newMeetingData = {
+        ...meeting,
+        _id: undefined, // Clear the ID to create a new meeting
+        status: "Draft", // Optionally reset the status
+      };
+  
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/meeting`,
+        newMeetingData
+      );
+  
+      if (response.status === 201) {
+        toast.success("Meeting duplicated successfully");
+        fetchMeetings(); // Refresh the meetings list
+      }
+    } catch (error) {
+      console.error("Error duplicating meeting:", error);
+      toast.error("Failed to duplicate meeting");
+    }
+  };
+
 
   return (
     <div className="overflow-x-auto">
@@ -356,6 +381,13 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
             >
               <RiPencilFill />
               <span>Edit</span>
+            </li>
+            <li
+              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+              onClick={() => handleDuplicateMeeting(selectedMeeting)} 
+>
+              <FaCopy />
+              <span>Duplicate</span>
             </li>
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
