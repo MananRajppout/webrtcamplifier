@@ -1,8 +1,7 @@
 "use client";
 import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import HeadingLg from "@/components/shared/HeadingLg";
-import Pagination from "@/components/shared/Pagination";
-import ParagraphLg from "@/components/shared/ParagraphLg";
+import { TbArrowsShuffle } from "react-icons/tb";
 import React, { useEffect, useState } from "react";
 import ParagraphBlue2 from "../shared/ParagraphBlue2";
 import axios from "axios";
@@ -21,6 +20,11 @@ import Button from "../shared/button";
 import AddRepositoryModal from "../projectComponents/repository/AddRepositoryModal";
 import RepositoryTab from "../projectComponents/repository/RepositoryTab";
 import Search from "./Search";
+import { FaRadio } from "react-icons/fa6";
+import { MdBarChart, MdOutlineRadioButtonChecked } from "react-icons/md";
+import { FaCheckSquare, FaStarHalfAlt } from "react-icons/fa";
+import { HiMiniBars2, HiMiniBars4 } from "react-icons/hi2";
+import { IoRemoveOutline } from "react-icons/io5";
 
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [localProjectState, setLocalProjectState] = useState(project);
@@ -51,10 +55,12 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
   const [meetingPage, setMeetingPage] = useState(1);
   const [totalMeetingPages, setTotalMeetingPages] = useState(1);
-  const [memberPage, setMemberPage] = useState(1);
-  const [totalMemberPages, setTotalMemberPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false); 
 
+  const handleOpenPollDropdown = () => {
+    setIsPollDropdownOpen((prev) => !prev); 
+  };
   
   const handleRepositoryMeetingTabChange = (meeting) => {
     setSelectedRepositoryMeetingTab(meeting);
@@ -471,14 +477,50 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                 <HeadingLg children="Polls List" />
                 <div
                   className="flex justify-end items-center
-             gap-5"
+             gap-5 relative"
                 >
                   <Button
                     children={"Add Poll"}
                     className="px-5 py-1.5 rounded-xl"
                     variant="secondary"
-                    onClick={handleOpenAddPollModal}
+                    onClick={handleOpenPollDropdown}
                   />
+                  {isPollDropdownOpen && ( 
+        <div className="absolute top-9 -left-20 bg-white border rounded shadow-lg p-2">
+          <div className="flex items-center p-2 cursor-pointer">
+            <MdOutlineRadioButtonChecked />
+            <span className="ml-2">Single choice</span>
+          </div>
+          <div className="flex items-center p-2 cursor-pointer">
+          <FaCheckSquare />
+            <span className="ml-2">Multiple choice</span>
+          </div>
+          <div className="flex items-center p-2 cursor-pointer">
+          <TbArrowsShuffle />
+            <span className="ml-2">Matching</span>
+          </div>
+          <div className="flex items-center p-2 cursor-pointer">
+          <MdBarChart />
+            <span className="ml-2">Rank order</span>
+          </div>
+          <div className="flex items-center p-2 cursor-pointer">
+          <HiMiniBars2/>
+            <span className="ml-2">Short answer</span>
+          </div>
+          <div className="flex items-center p-2 cursor-pointer">
+          <HiMiniBars4 />
+            <span className="ml-2">Long answer</span>
+          </div>
+          <div className="flex items-center p-2 cursor-pointer">
+          <IoRemoveOutline />
+            <span className="ml-2">Fill in the blank</span>
+          </div>
+          <div className="flex items-center p-2 cursor-pointer">
+          <FaStarHalfAlt />
+            <span className="ml-2">Rating scale</span>
+          </div>
+        </div>
+      )}
                 </div>
               </div>
               <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
