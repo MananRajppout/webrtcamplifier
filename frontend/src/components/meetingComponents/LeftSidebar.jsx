@@ -45,22 +45,14 @@ const LeftSidebar = ({
 
   const [selectedChat, setSelectedChat] = useState(null);
 
-  const [isWaiting, setIsWaiting] = useState([
-    {
-      name: "Brendan Steven",
-      image: userImage,
-    },
-    {
-      name: "Mark Berg",
-      image: userImage,
-    },
-  ]);
+  
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     setSelectedChat(null);
+    setIsSidebarOpen(!isSidebarOpen)
   };
 
   const chatParticipants = [
@@ -136,6 +128,7 @@ const LeftSidebar = ({
       ],
     },
   ];
+
   const toggleModal = (event, user) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -219,10 +212,7 @@ const LeftSidebar = ({
               setCurrentUser={setCurrentUser}
               selectedChat={selectedChat}
               setSelectedChat={setSelectedChat}
-              isWaiting={isWaiting}
-              setIsWaiting={setIsWaiting}
               handleTabClick={handleTabClick}
-              chatParticipants={chatParticipants}
               role={role}
               toggleWhiteBoard={toggleWhiteBoard}
               toggleRecordingButton={toggleRecordingButton}
@@ -253,15 +243,10 @@ const LeftSidebar = ({
           ) : (
             <LeftSidebarCloseUi
               users={users}
-              setUsers={setUsers}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              currentUser={currentUser}
-              setCurrentUser={setCurrentUser}
               selectedChat={selectedChat}
               setSelectedChat={setSelectedChat}
-              isWaiting={isWaiting}
-              setIsWaiting={setIsWaiting}
               handleTabClick={handleTabClick}
               chatParticipants={chatParticipants}
               role={role}
@@ -274,8 +259,8 @@ const LeftSidebar = ({
               handleBreakoutRoomChange={handleBreakoutRoomChange}
               selectedRoom={selectedRoom}
               setSelectedRoom={setSelectedRoom}
-              waitingRoom={waitingRoom}
-              acceptParticipant={acceptParticipant}
+              setIsSidebarOpen={setIsSidebarOpen}
+             
             />
           )}
         </div>

@@ -45,6 +45,7 @@ const RightSidebar = ({
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     setSelectedChat(null);
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const chatParticipants = [

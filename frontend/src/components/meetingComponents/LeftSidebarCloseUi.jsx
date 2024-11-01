@@ -9,15 +9,10 @@ import Button from "../shared/button";
 
 const LeftSidebarCloseUi = ({
   users,
-  setUsers,
   activeTab,
   setActiveTab,
-  currentUser,
-  setCurrentUser,
   selectedChat,
   setSelectedChat,
-  isWaiting,
-  setIsWaiting,
   handleTabClick,
   chatParticipants,
   role,
@@ -30,8 +25,8 @@ const LeftSidebarCloseUi = ({
   handleBreakoutRoomChange,
   selectedRoom,
   setSelectedRoom,
-  waitingRoom,
-  acceptParticipant,
+
+ 
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -153,7 +148,7 @@ const LeftSidebarCloseUi = ({
                     ? "shadow-[0px_4px_6px_#1E656D4D]"
                     : "bg-custom-gray-8 border  border-custom-teal !text-custom-teal "
                 }  `}
-                onClick={() => handleTabClick("participantList")}
+                onClick={() =>  handleTabClick("participantList")}
               />
               <div className="w-full relative">
                 <Button
@@ -222,31 +217,7 @@ const LeftSidebarCloseUi = ({
         </div>
       )}
 
-      {/* waiting list */}
-      {isWaiting && activeTab === "participantList" && role === "Moderator" && (
-        <div className="pt-2 bg-custom-gray-8 py-4 rounded-xl mb-2 overflow-y-scroll mx-1 hidden md:flex">
-          {/* <div className="flex justify-center items-center py-2">
-            <h1 className="font-bold text-[9px] ">
-              Waiting ({isWaiting.length})
-            </h1>
-          </div> */}
-          {/* participant continer */}
-          {/* {isWaiting?.map((user) => (
-            <div
-              className="flex justify-center items-center gap-2 py-1"
-              key={user.name}
-            >
-              <Image
-                src={user.image}
-                alt="user image"
-                height={40}
-                width={40}
-                className="rounded-2xl border-[3px] border-white border-solid"
-              />
-            </div>
-          ))} */}
-        </div>
-      )}
+      
     </div>
     <div className="hidden md:block">
     {/* Whiteboard and local recording */}
@@ -427,31 +398,7 @@ const LeftSidebarCloseUi = ({
       </div>
     )}
 
-    {/* waiting list */}
-    {/* {isWaiting && activeTab === "participantList" && role === "Moderator" && ( */}
-      {/*  <div className="pt-2 bg-custom-gray-8 py-4 rounded-xl mb-2 overflow-y-scroll mx-1"> */}
-        {/* <div className="flex justify-center items-center py-2">
-          <h1 className="font-bold text-[9px] ">
-            Waiting ({isWaiting.length})
-          </h1>
-        </div> */}
-        {/* participant continer */}
-        {/* {isWaiting?.map((user) => (
-          <div
-            className="flex justify-center items-center gap-2 py-1"
-            key={user.name}
-          >
-            <Image
-              src={user.image}
-              alt="user image"
-              height={40}
-              width={40}
-              className="rounded-2xl border-[3px] border-white border-solid"
-            />
-          </div>
-        ))} */}
-       {/* </div> */}
-    {/* // )} */}
+  
   </div>
   </div>
   );
