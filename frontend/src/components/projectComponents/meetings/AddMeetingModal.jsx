@@ -130,6 +130,22 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+// Validation logic
+
+    // Validation logic
+    if (!formData.ongoing) { // Check if ongoing is not selected
+      if (!formData.startDate || !formData.startTime) {
+          toast.error("Start Date and Start Time are required unless 'Ongoing/TBD' is checked.");
+          return;
+      }
+  }
+
+if (!formData.duration) {
+  toast.error("Duration is required.");
+  return;
+}
+
     const updatedFormData = {
       ...formData,
       projectId: project._id,

@@ -5,6 +5,7 @@ const Contact = require("../models/contactModel");
 // Controller to create a new project
 const createMeeting = async (req, res) => {
   const meetingData = req.body;
+  console.log('meeting data',meetingData)
   try {
     // Find the project by projectId
     const project = await Project.findById(meetingData.projectId);
