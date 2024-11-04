@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const projectSchema = new Schema({
   name: { type: String, required: true },
   description: { type: String },
-  startDate: { type: Date, required: true },
+  startDate: { type: Date },
   endDate: { type: Date },
   status: { type: String, enum: ['Draft', 'Active', 'Complete', 'Inactive', 'Closed'], default: 'Draft' },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -17,6 +17,7 @@ const projectSchema = new Schema({
   ],
   tags: { type: [Schema.Types.ObjectId], default: [], ref: 'Tag' },
   projectPasscode: { type: String, required: true },
+  startTime: { type: String },
 }, { timestamps: true });
 
 // Middleware to update the updatedAt field on save
