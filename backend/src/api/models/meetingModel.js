@@ -5,21 +5,38 @@ const meetingSchema = new Schema({
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
   title: { type: String, required: true },
   description: { type: String },
-  startDate: { type: Date, required: true },
-
-  moderator: { type: [mongoose.Schema.Types.ObjectId], ref: 'Contact', default: [] },
+  startDate: { 
+    type: Date,
+    validate: {
+      validator: function(value) {
+        // If ongoing is true, startDate is optional
+        return this.ongoing || value != null;
+      },
+      message: 'Start Date is required unless Ongoing/TBD is checked.'
+    }
+  },
   startTime: {
     type: String,
-    required: true,
+    validate: {
+      validator: function(value) {
+        // If ongoing is true, startTime is optional
+        return this.ongoing || value != null;
+      },
+      message: 'Start Time is required unless Ongoing/TBD is checked.'
+    },
     trim: true
   },
+
+  moderator: { type: [mongoose.Schema.Types.ObjectId], ref: 'Contact', default: [] },
+  
   timeZone: {
     type: String,
     required: true,
     trim: true
   },
   duration: {
-    type: String
+    type: String,
+    required:true
   },
   ongoing: {
     type: Boolean,
