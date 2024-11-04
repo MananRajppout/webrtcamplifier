@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const Meeting = require("../models/meetingModel");
 const User = require("../models/userModel");
 const Tag = require("../models/tagModel");
+const { sendEmail } = require("../../config/email.config");
 
 // Controller to create a new project
 const createProject = async (req, res) => {
@@ -37,7 +38,16 @@ const createProject = async (req, res) => {
       status: formData.status,
     });
     const savedProject = await newProject.save({ session });
-
+    if (savedProject && savedProject?.members) {
+      const emails = savedProject?.members?.map((e) => {
+        return e.email;
+      })
+      let html = `<p>Hello,</p>
+        <p>You have been added to the project <strong>${savedProject?.name}</strong>.</p>
+        <p>Please click the link below to accept the invitation:</p>
+        <a href="https://abc.com/invite?project=${savedProject?.name}">Accept Invitation</a>`;
+      sendEmail(emails, "Invitation to join project", html)
+    }
     // Step 2: Create the meetings associated with the project
 
     // const newMeeting = new Meeting({
@@ -77,7 +87,7 @@ const createProject = async (req, res) => {
 const getAllProjects = async (req, res) => {
   const { page = 1, limit = 10, search = '', startDate, endDate, status, tag, role } = req.query;
   const { id } = req.params;
-  
+
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
     const userData = await User.findById(id);

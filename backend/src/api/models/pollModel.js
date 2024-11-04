@@ -19,8 +19,7 @@ const responseSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 });
 
-const pollSchema = new mongoose.Schema({
-  title: { type: String, required: true },
+const questionSchema = new mongoose.Schema({
   question: { type: String, required: true },
   type: {
     type: String,
@@ -43,6 +42,19 @@ const pollSchema = new mongoose.Schema({
   minLength: Number, // For text answers (short/long answer)
   maxLength: Number, // For text answers (short/long answer)
   responses: [responseSchema], // Store user responses
+  lowScoreLable: {
+    type: String,
+    default: ""
+  },
+  highScoreLable: {
+    type: String,
+    default: ""
+  }
+}, { timestamps: true });
+
+const pollSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  questions: [questionSchema], // Array of questions within a poll
   createdById: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
 }, { timestamps: true });
