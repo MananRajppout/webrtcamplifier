@@ -208,7 +208,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           params: { page, limit: 10 },
         }
       );
-      setPolls(response.data.polls);
+      setPolls(response.data);
       // setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -735,6 +735,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               user={user}
             />
           )}
+
           {isMultipleChoiceModalOpen && (
             <MultipleChoicePollModal
               onClose={() => setIsMultipleChoiceModalOpen(false)}
@@ -743,6 +744,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               user={user}
             />
           )}
+
           {isMatchingModalOpen && (
             <MatchingPollModal
               onClose={() => setIsMatchingModalOpen(false)}
@@ -751,6 +753,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               user={user}
             />
           )}
+
           {isRankOrderModalOpen && (
             <RankOrderPollModal
               onClose={() => setIsRankOrderModalOpen(false)}
@@ -767,6 +770,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               user={user}
             />
           )}
+
           {isLongAnswerModalOpen && (
             <LongAnswerPollModal
               onClose={() => setIsLongAnswerModalOpen(false)}
@@ -775,6 +779,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               user={user}
             />
           )}
+
           {isBlankModalOpen && (
             <FillBlankModal
               onClose={() => setIsBlankModalOpen(false)}
@@ -783,6 +788,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               user={user}
             />
           )}
+
           {isRatingModalOpen && (
             <RatingScaleModal
               onClose={() => setIsRatingModalOpen(false)}
@@ -791,6 +797,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               user={user}
             />
           )}
+
           {/* <div className="flex justify-end py-3">
             <Pagination
               currentPage={2}

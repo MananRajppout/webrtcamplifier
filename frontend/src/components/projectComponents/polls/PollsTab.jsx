@@ -76,6 +76,8 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState }) => {
     }
   };
 
+  console.log('polls', polls)
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white shadow-md rounded-lg ">
@@ -94,12 +96,12 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState }) => {
         <tbody>
           {polls?.map((poll) => (
             <tr key={poll._id}>
-              <TableData>{poll.pollName}</TableData>
+              <TableData>{poll.title}</TableData>
               <TableData>{poll.questions.length}</TableData>
               <TableData>{poll?.createdBy?.firstName}</TableData>
               <TableData>
                 {new Intl.DateTimeFormat("en-US", {
-                  month: "long", // Full month name
+                  month: "short", 
                   day: "2-digit",
                   year: "numeric",
                 }).format(new Date(poll.createdAt))}
