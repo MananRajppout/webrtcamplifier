@@ -4,7 +4,7 @@ import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import InputField from "@/components/shared/InputField";
 import toast from "react-hot-toast";
 
-const ShortAnswerPollModal = ({ onClose, onSave, project, user }) => {
+const LongAnswerPollModal = ({ onClose, onSave, project, user }) => {
   const [title, setTitle] = useState("");
   const [question, setQuestion] = useState("");
   const [minLength, setMinLength] = useState(1);
@@ -23,7 +23,7 @@ const ShortAnswerPollModal = ({ onClose, onSave, project, user }) => {
       questions: [
         {
           question,
-          type: "Short Answer",
+          type: "Long Answer",
           minLength,
           maxLength,
         },
@@ -36,7 +36,7 @@ const ShortAnswerPollModal = ({ onClose, onSave, project, user }) => {
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
-        <HeadingBlue25px children="Add Short Answer Poll" />
+        <HeadingBlue25px children="Add Long Answer Poll" />
         <InputField
           label="Poll Title"
           type="text"
@@ -86,4 +86,4 @@ const ShortAnswerPollModal = ({ onClose, onSave, project, user }) => {
   );
 };
 
-export default ShortAnswerPollModal;
+export default LongAnswerPollModal;
