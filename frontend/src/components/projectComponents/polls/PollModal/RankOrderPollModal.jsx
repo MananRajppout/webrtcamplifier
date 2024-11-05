@@ -8,28 +8,54 @@ import { GoPlus } from "react-icons/go";
 
 const RankOrderPollModal = ({ onClose, onSave, project, user }) => {
   const [title, setTitle] = useState("");
-  const [question, setQuestion] = useState("");
-  const [choices, setChoices] = useState([{ text: "" }]); // Start with one empty choice
+  const [questions, setQuestions] = useState([
+    { question: "", type: "Rank Order", choices: [{ text: "" }] },
+  ]);
+
+  const addChoice = (qIndex) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[qIndex].choices.push({ text: "" });
+    setQuestions(updatedQuestions);
+  };
+
+  const updateQuestion = (index, value) => {
+    const updatedQuestions = questions.map((q, i) =>
+      i === index ? { ...q, question: value } : q
+    );
+    setQuestions(updatedQuestions);
+  };
+
+  const updateChoice = (qIndex, cIndex, value) => {
+    const updatedQuestions = questions.map((q, i) =>
+      i === qIndex
+        ? {
+            ...q,
+            choices: q.choices.map((c, j) =>
+              j === cIndex ? { text: value } : c
+            ),
+          }
+        : q
+    );
+    setQuestions(updatedQuestions);
+  };
 
   const handleSave = () => {
-    if (!title || !question || choices.some((c) => !c.text)) {
-      toast.error("Please fill in all fields.");
+    if (!title || questions.some((q) => !q.question || q.choices.some((c) => !c.text))) {
+      toast.error("Please fill in all questions, answers, and the title.");
       return;
     }
     const dataToSend = {
       title,
-      question,
-      type: "Rank Order",
-      choices,
       createdById: user._id,
       projectId: project._id,
+      questions: questions.map(q => ({
+        question: q.question,
+        type: q.type,
+        choices: q.choices.map(c => ({ text: c.text })),
+      })),
     };
-    onSave(dataToSend); // Call the provided save function
-    onClose(); // Close the modal
-  };
-
-  const addChoice = () => {
-    setChoices([...choices, { text: "" }]); // Add a new empty choice
+    onSave(dataToSend);
+    onClose();
   };
 
   return (
@@ -42,34 +68,36 @@ const RankOrderPollModal = ({ onClose, onSave, project, user }) => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <InputField
-          label="Question"
-          type="text"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-        {choices.map((c, index) => (
-          <div key={index} className="mt-4">
+        {questions.map((q, qIndex) => (
+          <div key={qIndex} className="mt-4">
             <InputField
-              label={`Choice ${index + 1}`}
+              label={`Question ${qIndex + 1}`}
               type="text"
-              value={c.text}
-              onChange={(e) => {
-                const updatedChoices = [...choices];
-                updatedChoices[index].text = e.target.value;
-                setChoices(updatedChoices);
-              }}
+              value={q.question}
+              onChange={(e) => updateQuestion(qIndex, e.target.value)}
             />
+            <div className="bg-[#f3f3f3] p-4 mt-2">
+              {q.choices.map((choice, cIndex) => (
+                <div key={cIndex} className="flex justify-between items-center mt-2">
+                  <InputField
+                    label={`Choice ${cIndex + 1}`}
+                    type="text"
+                    value={choice.text}
+                    onChange={(e) => updateChoice(qIndex, cIndex, e.target.value)}
+                  />
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="save"
+                children="Add Choice"
+                className="py-1 px-5 shadow-[0px_3px_6px_#09828F69] rounded-xl"
+                icon={<GoPlus />}
+                onClick={() => addChoice(qIndex)}
+              />
+            </div>
           </div>
         ))}
-        <Button
-          type="button"
-          variant="save"
-          children="Add Choice"
-          className="py-1 px-5 shadow-[0px_3px_6px_#09828F69] rounded-xl mt-4"
-          icon={<GoPlus />}
-          onClick={addChoice} // Add new choice on click
-        />
         <div className="flex justify-end gap-5 mt-5">
           <Button
             type="button"
@@ -83,7 +111,7 @@ const RankOrderPollModal = ({ onClose, onSave, project, user }) => {
             variant="save"
             children="Save"
             className="px-5 py-1 rounded-xl"
-            onClick={handleSave} // Save the poll data
+            onClick={handleSave}
           />
         </div>
       </div>
