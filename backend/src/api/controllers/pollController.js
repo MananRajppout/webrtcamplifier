@@ -13,7 +13,7 @@ const createPoll = async (req, res) => {
 // Get all polls
 const getAllPolls = async (req, res) => {
   try {
-    const polls = await Poll.find({ projectId: req.params.projectId }).populate("createdById",'name email').populate("projectId","name description");
+    const polls = await Poll.find({ projectId: req.params.projectId }).populate("createdById","firstName lastName email").populate("projectId","name description");
     return res.status(200).json(polls);
   } catch (error) {
     return res.status(500).json({ message: error.message });
