@@ -32,6 +32,7 @@ import RankOrderPollModal from "../projectComponents/polls/PollModal/RankOrderPo
 import ShortAnswerPollModal from "../projectComponents/polls/PollModal/ShortAnswerPollModal";
 import LongAnswerPollModal from "../projectComponents/polls/PollModal/LongAnswerPollModal";
 import FillBlankModal from "../projectComponents/polls/PollModal/FillBlankModal";
+import RatingScaleModal from "../projectComponents/polls/PollModal/RatingScaleModal";
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [localProjectState, setLocalProjectState] = useState(project);
   const [isLoading, setIsLoading] = useState(false);
@@ -71,6 +72,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isShortAnswerModalOpen, setIsShortAnswerModalOpen] = useState(false);
   const [isLongAnswerModalOpen, setIsLongAnswerModalOpen] = useState(false);
   const [isBlankModalOpen, setIsBlankModalOpen] = useState(false);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const handleSingleChoiceSave = async (singleChoiceData) => {
     try {
@@ -562,7 +564,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                         <IoRemoveOutline />
                         <span className="ml-2">Fill in the blank</span>
                       </div>
-                      <div className="flex items-center p-2 cursor-pointer">
+                      <div className="flex items-center p-2 cursor-pointer"
+                      onClick={()=>setIsRatingModalOpen(true)}
+                      >
                         <FaStarHalfAlt />
                         <span className="ml-2">Rating scale</span>
                       </div>
@@ -760,6 +764,14 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           {isBlankModalOpen && (
             <FillBlankModal
               onClose={() => setIsBlankModalOpen(false)}
+              onSave={handleSingleChoiceSave}
+              project={project}
+              user={user}
+            />
+          )}
+          {isRatingModalOpen && (
+            <RatingScaleModal
+              onClose={() => setIsRatingModalOpen(false)}
               onSave={handleSingleChoiceSave}
               project={project}
               user={user}
