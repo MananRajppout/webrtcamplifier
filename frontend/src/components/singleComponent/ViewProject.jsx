@@ -31,6 +31,7 @@ import MatchingPollModal from "../projectComponents/polls/PollModal/MatchingPoll
 import RankOrderPollModal from "../projectComponents/polls/PollModal/RankOrderPollModal";
 import ShortAnswerPollModal from "../projectComponents/polls/PollModal/ShortAnswerPollModal";
 import LongAnswerPollModal from "../projectComponents/polls/PollModal/LongAnswerPollModal";
+import FillBlankModal from "../projectComponents/polls/PollModal/FillBlankModal";
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [localProjectState, setLocalProjectState] = useState(project);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +70,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isRankOrderModalOpen, setIsRankOrderModalOpen] = useState(false);
   const [isShortAnswerModalOpen, setIsShortAnswerModalOpen] = useState(false);
   const [isLongAnswerModalOpen, setIsLongAnswerModalOpen] = useState(false);
+  const [isBlankModalOpen, setIsBlankModalOpen] = useState(false);
 
   const handleSingleChoiceSave = async (singleChoiceData) => {
     try {
@@ -554,7 +556,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                         <HiMiniBars4 />
                         <span className="ml-2">Long answer</span>
                       </div>
-                      <div className="flex items-center p-2 cursor-pointer">
+                      <div className="flex items-center p-2 cursor-pointer"
+                      onClick={()=>setIsBlankModalOpen(true)}
+                      >
                         <IoRemoveOutline />
                         <span className="ml-2">Fill in the blank</span>
                       </div>
@@ -748,6 +752,14 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           {isLongAnswerModalOpen && (
             <LongAnswerPollModal
               onClose={() => setIsLongAnswerModalOpen(false)}
+              onSave={handleSingleChoiceSave}
+              project={project}
+              user={user}
+            />
+          )}
+          {isBlankModalOpen && (
+            <FillBlankModal
+              onClose={() => setIsBlankModalOpen(false)}
               onSave={handleSingleChoiceSave}
               project={project}
               user={user}
