@@ -13,8 +13,17 @@ const createPoll = async (req, res) => {
 // Get all polls
 const getAllPolls = async (req, res) => {
   try {
-    const polls = await Poll.find({ projectId: req.params.projectId }).populate("createdById",'name email').populate("projectId","name description");
-    return res.status(200).json(polls);
+    const limit = parseInt(req.query?.limit) || 10;
+    const page = parseInt(req.query?.page) || 0;
+    const polls = await Poll.find({ projectId: req.params.projectId, status: true }).populate("createdById", "firstName lastName email").populate("projectId", "name description").skip((page - 1) * limit).limit(limit);;
+    const totalDocuments = await Poll.countDocuments({ projectId: req.params.projectId, status: true });
+    const totalPages = Math.ceil(totalDocuments / limit);
+    return res.status(200).json({
+      page,
+      totalPages,
+      totalDocuments,
+      polls,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

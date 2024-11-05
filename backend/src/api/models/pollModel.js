@@ -49,6 +49,10 @@ const questionSchema = new mongoose.Schema({
   highScoreLable: {
     type: String,
     default: ""
+  },
+  status: {
+    type: Boolean,
+    default: true
   }
 }, { timestamps: true });
 
