@@ -28,6 +28,7 @@ import { IoRemoveOutline } from "react-icons/io5";
 import AddSingleChoicePollModal from "../projectComponents/polls/PollModal/AddSingleChoicePollModal";
 import MultipleChoicePollModal from "../projectComponents/polls/PollModal/MultipleChoicePollModal";
 import MatchingPollModal from "../projectComponents/polls/PollModal/MatchingPollModal";
+import RankOrderPollModal from "../projectComponents/polls/PollModal/RankOrderPollModal";
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [localProjectState, setLocalProjectState] = useState(project);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,11 +63,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isSingleChoiceModalOpen, setIsSingleChoiceModalOpen] = useState(false);
   const [isMultipleChoiceModalOpen, setIsMultipleChoiceModalOpen] =
     useState(false);
-  const [isMatchingModalOpen, setIsMatchingModalOpen] =
-    useState(false);
+  const [isMatchingModalOpen, setIsMatchingModalOpen] = useState(false);
+  const [isRankOrderModalOpen, setIsRankOrderModalOpen] = useState(false); 
 
   const handleSingleChoiceSave = async (singleChoiceData) => {
-  
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
@@ -523,13 +523,16 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                         <FaCheckSquare />
                         <span className="ml-2">Multiple choice</span>
                       </div>
-                      <div className="flex items-center p-2 cursor-pointer"
-                      onClick={()=>setIsMatchingModalOpen(true)}
+                      <div
+                        className="flex items-center p-2 cursor-pointer"
+                        onClick={() => setIsMatchingModalOpen(true)}
                       >
                         <TbArrowsShuffle />
                         <span className="ml-2">Matching</span>
                       </div>
-                      <div className="flex items-center p-2 cursor-pointer">
+                      <div className="flex items-center p-2 cursor-pointer"
+                      onClick={()=>setIsRankOrderModalOpen(true)}
+                      >
                         <MdBarChart />
                         <span className="ml-2">Rank order</span>
                       </div>
@@ -716,6 +719,14 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               user={user}
             />
           )}
+          {isRankOrderModalOpen && (
+        <RankOrderPollModal
+          onClose={() => setIsRankOrderModalOpen(false)}
+          onSave={handleSingleChoiceSave}
+          project={project}
+          user={user}
+        />
+      )}
           {/* <div className="flex justify-end py-3">
             <Pagination
               currentPage={2}
