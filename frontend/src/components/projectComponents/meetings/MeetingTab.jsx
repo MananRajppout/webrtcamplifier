@@ -92,11 +92,11 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
               toast.error(response.message);
             } else {
               const liveMeetingData = response.liveMeeting;
-
-              router.push(
+              window.open(
                 `/meeting/${meeting._id}?fullName=${encodeURIComponent(
                   fullName
-                )}&role=Moderator`
+                )}&role=Moderator`,
+                '_blank' 
               );
             }
           });
@@ -225,7 +225,13 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
     }
   };
 
-
+  const convertTo12HourFormat = (time) => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const adjustedHours = hours % 12 || 12; // Convert 0 to 12 for midnight
+    return `${adjustedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
   return (
     <div className="overflow-x-auto">
       {!showMeetingDetails ? (
@@ -246,10 +252,13 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
                 <TableData>{meeting?.title}</TableData>
                 {/*  {new Date(meeting.startDate).toLocaleDateString()}{" "}
                   {meeting.startTime} */}
-                <TableData>
-                  {new Date(meeting?.startDate).toLocaleDateString()}{" "}
-                  {meeting?.startTime}
-                </TableData>
+                  <td className="px-3 py-1 text-left text-[12px] whitespace-nowrap font-medium text-custom-dark-blue-1">{`${new Date(meeting?.startDate).toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric', 
+   
+  })} ${convertTo12HourFormat(meeting?.startTime)}`}</td>
+                
                 <TableData>{meeting?.timeZone}</TableData>
                 <td className="px-3 py-1 text-left text-[12px]  font-medium text-custom-dark-blue-1">{meeting?.moderator.map(mod => mod.firstName).join(', ')}</td>
                 
