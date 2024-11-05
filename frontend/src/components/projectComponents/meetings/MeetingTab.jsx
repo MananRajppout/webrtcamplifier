@@ -92,11 +92,11 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
               toast.error(response.message);
             } else {
               const liveMeetingData = response.liveMeeting;
-
-              router.push(
+              window.open(
                 `/meeting/${meeting._id}?fullName=${encodeURIComponent(
                   fullName
-                )}&role=Moderator`
+                )}&role=Moderator`,
+                '_blank' 
               );
             }
           });
