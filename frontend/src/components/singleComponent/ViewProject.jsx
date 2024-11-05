@@ -374,15 +374,29 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
               Fieldwork Start Date:
             </p>
-            {/* <HeadingLg children="Opened On" /> */}
-            <ParagraphBlue2 children={localProjectState?.startDate} />
+            {/* Format the start date to include both date and 12-hour time */}
+            <ParagraphBlue2 children={new Date(localProjectState?.startDate).toLocaleString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric', 
+              hour: 'numeric', 
+              minute: 'numeric', 
+              hour12: true 
+            })} />
           </div>
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
               Fieldwork End Date:
             </p>
-            {/* <HeadingLg children="Expires In" /> */}
-            <ParagraphBlue2 children={localProjectState?.endDate} />
+            {/* Format the end date to include both date and 12-hour time */}
+            <ParagraphBlue2 children={new Date(localProjectState?.endDate).toLocaleString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric', 
+              hour: 'numeric', 
+              minute: 'numeric', 
+              hour12: true 
+            })} />
           </div>
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
