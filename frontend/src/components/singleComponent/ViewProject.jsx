@@ -25,7 +25,8 @@ import { MdBarChart, MdOutlineRadioButtonChecked } from "react-icons/md";
 import { FaCheckSquare, FaStarHalfAlt } from "react-icons/fa";
 import { HiMiniBars2, HiMiniBars4 } from "react-icons/hi2";
 import { IoRemoveOutline } from "react-icons/io5";
-
+import AddSingleChoicePollModal from "../projectComponents/polls/PollModal/AddSingleChoicePollModal";
+import MultipleChoicePollModal from "../projectComponents/polls/PollModal/MultipleChoicePollModal";
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [localProjectState, setLocalProjectState] = useState(project);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,12 +57,41 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [meetingPage, setMeetingPage] = useState(1);
   const [totalMeetingPages, setTotalMeetingPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false); 
+  const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false);
+  const [isSingleChoiceModalOpen, setIsSingleChoiceModalOpen] = useState(false);
+  const [isMultipleChoiceModalOpen, setIsMultipleChoiceModalOpen] =
+    useState(false);
+
+  const handleSingleChoiceSave = async (singleChoiceData) => {
+    if (
+      !singleChoiceData.title ||
+      singleChoiceData.questions.some(
+        (q) => !q.question || q.choices.some((c) => !c.text)
+      )
+    ) {
+      toast.error("Please fill in all questions, answers, and the title.");
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
+        singleChoiceData
+      );
+
+      toast.success("Poll created successfully!");
+      setIsSingleChoiceModalOpen(false);
+      setIsMultipleChoiceModalOpen(false);
+      fetchPolls();
+    } catch (error) {
+      toast.error("Failed to create poll: " + error.message);
+    }
+  };
 
   const handleOpenPollDropdown = () => {
-    setIsPollDropdownOpen((prev) => !prev); 
+    setIsPollDropdownOpen((prev) => !prev);
   };
-  
+
   const handleRepositoryMeetingTabChange = (meeting) => {
     setSelectedRepositoryMeetingTab(meeting);
     setSelectedDocAndMediaTab("");
@@ -92,7 +122,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
         updatedProjectData
       );
       if (response.status === 200) {
-        // fetchProjects(user?._id);
         setLocalProjectState(response.data.project);
         closeEditModal();
         toast.success(`${response.data.message}`);
@@ -432,7 +461,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                   meetingPage={meetingPage}
                   totalMeetingPages={totalMeetingPages}
                   onPageChange={handleMeetingPageChange}
-                  
                 />
               </div>
             </div>
@@ -485,42 +513,48 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                     variant="secondary"
                     onClick={handleOpenPollDropdown}
                   />
-                  {isPollDropdownOpen && ( 
-        <div className="absolute top-9 -left-20 bg-white border rounded shadow-lg p-2">
-          <div className="flex items-center p-2 cursor-pointer">
-            <MdOutlineRadioButtonChecked />
-            <span className="ml-2">Single choice</span>
-          </div>
-          <div className="flex items-center p-2 cursor-pointer">
-          <FaCheckSquare />
-            <span className="ml-2">Multiple choice</span>
-          </div>
-          <div className="flex items-center p-2 cursor-pointer">
-          <TbArrowsShuffle />
-            <span className="ml-2">Matching</span>
-          </div>
-          <div className="flex items-center p-2 cursor-pointer">
-          <MdBarChart />
-            <span className="ml-2">Rank order</span>
-          </div>
-          <div className="flex items-center p-2 cursor-pointer">
-          <HiMiniBars2/>
-            <span className="ml-2">Short answer</span>
-          </div>
-          <div className="flex items-center p-2 cursor-pointer">
-          <HiMiniBars4 />
-            <span className="ml-2">Long answer</span>
-          </div>
-          <div className="flex items-center p-2 cursor-pointer">
-          <IoRemoveOutline />
-            <span className="ml-2">Fill in the blank</span>
-          </div>
-          <div className="flex items-center p-2 cursor-pointer">
-          <FaStarHalfAlt />
-            <span className="ml-2">Rating scale</span>
-          </div>
-        </div>
-      )}
+                  {isPollDropdownOpen && (
+                    <div className="absolute top-9 -left-20 bg-white border rounded shadow-lg p-2">
+                      <div
+                        className="flex items-center p-2 cursor-pointer"
+                        onClick={() => setIsSingleChoiceModalOpen(true)}
+                      >
+                        <MdOutlineRadioButtonChecked />
+                        <span className="ml-2">Single choice</span>
+                      </div>
+                      <div
+                        className="flex items-center p-2 cursor-pointer"
+                        onClick={() => setIsMultipleChoiceModalOpen(true)}
+                      >
+                        <FaCheckSquare />
+                        <span className="ml-2">Multiple choice</span>
+                      </div>
+                      <div className="flex items-center p-2 cursor-pointer">
+                        <TbArrowsShuffle />
+                        <span className="ml-2">Matching</span>
+                      </div>
+                      <div className="flex items-center p-2 cursor-pointer">
+                        <MdBarChart />
+                        <span className="ml-2">Rank order</span>
+                      </div>
+                      <div className="flex items-center p-2 cursor-pointer">
+                        <HiMiniBars2 />
+                        <span className="ml-2">Short answer</span>
+                      </div>
+                      <div className="flex items-center p-2 cursor-pointer">
+                        <HiMiniBars4 />
+                        <span className="ml-2">Long answer</span>
+                      </div>
+                      <div className="flex items-center p-2 cursor-pointer">
+                        <IoRemoveOutline />
+                        <span className="ml-2">Fill in the blank</span>
+                      </div>
+                      <div className="flex items-center p-2 cursor-pointer">
+                        <FaStarHalfAlt />
+                        <span className="ml-2">Rating scale</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
@@ -659,6 +693,23 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               meetings={meetings}
               setLocalProjectState={setLocalProjectState}
               fetchRepositories={fetchRepositories}
+            />
+          )}
+
+          {isSingleChoiceModalOpen && (
+            <AddSingleChoicePollModal
+              onClose={() => setIsSingleChoiceModalOpen(false)}
+              onSave={handleSingleChoiceSave}
+              project={project}
+              user={user}
+            />
+          )}
+          {isMultipleChoiceModalOpen && (
+            <MultipleChoicePollModal
+              onClose={() => setIsMultipleChoiceModalOpen(false)}
+              onSave={handleSingleChoiceSave}
+              project={localProjectState}
+              user={user}
             />
           )}
           {/* <div className="flex justify-end py-3">
