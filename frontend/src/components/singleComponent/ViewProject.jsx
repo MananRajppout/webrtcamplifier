@@ -617,6 +617,20 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               </div>
               <div className="overflow-x-auto border-b">
                 <div className="flex space-x-5 whitespace-nowrap">
+                <button
+                    className={`py-2 border-custom-dark-blue-1 text-sm ${
+                      selectedRepositoryMeetingTab === "All"
+                        ? "border-b-2"
+                        : "opacity-25"
+                    }`}
+                    onClick={() => {
+                      setSelectedRepositoryMeetingTab("All");
+                      setSelectedDocAndMediaTab(""); // Reset selected tab
+                      setShowDocAndMediaTab(true); // Show documents and media
+                    }}
+                  >
+                    All
+                  </button>
                   {meetings?.map((meeting) => (
                     <button
                       key={meeting?._id}

@@ -76,11 +76,13 @@ const RepositoryTab = ({
   };
   
 
-  const filteredRepositories = selectedRepositoryMeetingTab
-    ? repositories.filter(
-        (repo) => repo.meetingId === selectedRepositoryMeetingTab._id
-      )
-    : [];
+  const filteredRepositories = selectedRepositoryMeetingTab === "All"
+  ? repositories // Show all repositories if "All" is selected
+  : selectedRepositoryMeetingTab
+  ? repositories.filter(
+      (repo) => repo.meetingId === selectedRepositoryMeetingTab._id
+    )
+  : [];
 
   const displayRepositories = filteredRepositories.filter((repo) => {
     if (selectedDocAndMediaTab === "Documents") {
