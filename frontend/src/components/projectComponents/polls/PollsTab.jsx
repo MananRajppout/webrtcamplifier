@@ -98,7 +98,7 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState }) => {
             <tr key={poll._id}>
               <TableData>{poll.title}</TableData>
               <TableData>{poll.questions.length}</TableData>
-              <TableData>{poll?.createdBy?.firstName}</TableData>
+              <TableData>{poll?.createdById?.firstName}</TableData>
               <TableData>
                 {new Intl.DateTimeFormat("en-US", {
                   month: "short", 
@@ -108,7 +108,7 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState }) => {
               </TableData>
               <TableData>
                 {new Intl.DateTimeFormat("en-US", {
-                  month: "long", // Full month name
+                  month: "long", 
                   day: "2-digit",
                   year: "numeric",
                 }).format(new Date(poll.updatedAt))}
