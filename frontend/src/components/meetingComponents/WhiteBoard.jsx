@@ -4,7 +4,7 @@ import { SketchPicker } from 'react-color';
 import io from 'socket.io-client';
 import './style.css';
 import './whiteboard.css';
-import { BsSquare, BsCircle, BsPencil } from 'react-icons/bs';
+import { BsSquare, BsCircle, BsPencil, BsEraser } from 'react-icons/bs';
 import { AiOutlineSelect} from 'react-icons/ai';
 import { HiOutlineMinus } from 'react-icons/hi';
 import { RiGalleryFill } from 'react-icons/ri';
@@ -320,6 +320,7 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
   const handleMouseUp = event => {
     drawing = false;
     const pointer = canvas.getPointer(event.e);
+    handlerSelect();
   };
 
   const handleColor = useCallback((c) => {
@@ -414,6 +415,31 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
   }, []);
 
 
+  function deleteSelectedObject(event) {
+    console.log(event.key,'event')
+    if (event.key === 'Delete') {
+      const activeObjects = canvas.getActiveObjects(); // Get all selected objects
+
+      if (activeObjects.length > 0) {
+        activeObjects.forEach(object => {
+            canvas.remove(object);  // Remove each selected object
+        });
+        canvas.discardActiveObject();  // Deselect all objects
+        canvas.renderAll();            // Render the updated canvas
+      }
+    }
+    
+}
+
+  useEffect(() => {
+    document.addEventListener('keydown',deleteSelectedObject)
+
+    return () => {
+      document.removeEventListener('keydown',deleteSelectedObject);
+    }
+  },[])
+
+
   return (
     <div className="bg-white board-container flex justify-start items-center  w-full h-full rounded-xl relative">
       <div id="sketch" className="sketch absolute border-2 border-black overflow-auto" ref={canvasContainerRef}>
@@ -438,12 +464,20 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
             <button
               id="line" onClick={() => toolHandler('line')}
             ><HiOutlineMinus /></button>
+           
+
             <button
               id="pencil"
               onClick={handelPencil}
             ><BsPencil />
             </button>
-            {
+
+            <button
+              id="pencil"
+              onClick={handelPencil}
+            ><BsEraser />
+            </button>
+            {/* {
               strokeActive &&
               <div className='stroke_box flex_d_col'>
                 <label >
@@ -456,7 +490,7 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
                   }
                 </datalist>
               </div>
-            }
+            } */}
             <button onClick={() => setColorBoxOpen(!colorBoxOpen)}><CgColorPicker /></button>
             {
               colorBoxOpen &&
