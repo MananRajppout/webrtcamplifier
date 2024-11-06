@@ -14,7 +14,14 @@ import AddMeetingModal from "./AddMeetingModal";
 import Pagination from "@/components/shared/Pagination";
 import Button from "@/components/shared/button";
 
-const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetingPages, onPageChange }) => {
+const MeetingTab = ({
+  meetings,
+  fetchMeetings,
+  project,
+  meetingPage,
+  totalMeetingPages,
+  onPageChange,
+}) => {
   const [localMeetingState, setLocalMeetingState] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -72,7 +79,9 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
     if (activeMeetingId === meeting._id) return;
 
     setActiveMeetingId(meeting._id);
-    const isModerator = meeting.moderator.some(mod => mod.email === user.email);
+    const isModerator = meeting.moderator.some(
+      (mod) => mod.email === user.email
+    );
     if (isModerator) {
       const fullName = `${user.firstName} ${user.lastName}`;
       try {
@@ -96,7 +105,7 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
                 `/meeting/${meeting._id}?fullName=${encodeURIComponent(
                   fullName
                 )}&role=Moderator`,
-                '_blank' 
+                "_blank"
               );
             }
           });
@@ -209,12 +218,12 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
         _id: undefined, // Clear the ID to create a new meeting
         status: "Draft", // Optionally reset the status
       };
-  
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/meeting`,
         newMeetingData
       );
-  
+
       if (response.status === 201) {
         toast.success("Meeting duplicated successfully");
         fetchMeetings(); // Refresh the meetings list
@@ -226,12 +235,13 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
   };
 
   const convertTo12HourFormat = (time) => {
-    if (!time) return '';
-    const [hours, minutes] = time.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
+    if (!time) return "";
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
     const adjustedHours = hours % 12 || 12; // Convert 0 to 12 for midnight
-    return `${adjustedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
   };
+
   return (
     <div className="overflow-x-auto">
       {!showMeetingDetails ? (
@@ -250,20 +260,20 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
             {localMeetingState?.map((meeting, index) => (
               <tr key={index} className="hover:bg-gray-100">
                 <TableData>{meeting?.title}</TableData>
-                {/*  {new Date(meeting.startDate).toLocaleDateString()}{" "}
-                  {meeting.startTime} */}
-                  <td className="px-3 py-1 text-left text-[12px] whitespace-nowrap font-medium text-custom-dark-blue-1">{`${new Date(meeting?.startDate).toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric', 
-   
-  })} ${convertTo12HourFormat(meeting?.startTime)}`}</td>
-                
-                <TableData>{meeting?.timeZone}</TableData>
-                <td className="px-3 py-1 text-left text-[12px]  font-medium text-custom-dark-blue-1">{meeting?.moderator.map(mod => mod.firstName).join(', ')}</td>
-                
 
-               
+                <td className="px-3 py-1 text-left text-[12px] whitespace-nowrap font-medium text-custom-dark-blue-1">{`${new Date(
+                  meeting?.startDate
+                ).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })} ${convertTo12HourFormat(meeting?.startTime)}`}</td>
+
+                <TableData>{meeting?.timeZone}</TableData>
+                <td className="px-3 py-1 text-left text-[12px]  font-medium text-custom-dark-blue-1">
+                  {meeting?.moderator.map((mod) => mod.firstName).join(", ")}
+                </td>
+
                 <TableData>
                   <div className="flex justify-start items-center gap-2">
                     <button
@@ -352,11 +362,11 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
             {/* Share meeting button */}
             <div className="flex flex-col lg:flex-row gap-3 justify-between items-center">
               <Button
-              children="Share Meeting"
-              variant="secondary"
-              type="button"
-              onClick={() => setIsShareMeetingModalOpen(true)}
-              className="px-5 py-2 rounded-lg text-white"
+                children="Share Meeting"
+                variant="secondary"
+                type="button"
+                onClick={() => setIsShareMeetingModalOpen(true)}
+                className="px-5 py-2 rounded-lg text-white"
               />
             </div>
           </div>
@@ -386,15 +396,15 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
             </li>
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={()=>handleEditMeeting(selectedMeeting)}
+              onClick={() => handleEditMeeting(selectedMeeting)}
             >
               <RiPencilFill />
               <span>Edit</span>
             </li>
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleDuplicateMeeting(selectedMeeting)} 
->
+              onClick={() => handleDuplicateMeeting(selectedMeeting)}
+            >
               <FaCopy />
               <span>Duplicate</span>
             </li>
@@ -425,10 +435,10 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
 
       {isEditModalOpen && (
         <AddMeetingModal
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setShowMeetingDetails(false);
-        }}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setShowMeetingDetails(false);
+          }}
           project={project}
           user={user}
           refetchMeetings={fetchMeetings}
@@ -436,17 +446,15 @@ const MeetingTab = ({ meetings, fetchMeetings, project, meetingPage, totalMeetin
           isEditing={true}
         />
       )}
-        {
-          meetings.length >= 10 && (
-            <div className="flex justify-end py-3">
-            <Pagination
-              currentPage={meetingPage}
-              totalPages={totalMeetingPages}
-              onPageChange={onPageChange}
-            />
-          </div>
-          )
-        }
+      {meetings.length >= 10 && (
+        <div className="flex justify-end py-3">
+          <Pagination
+            currentPage={meetingPage}
+            totalPages={totalMeetingPages}
+            onPageChange={onPageChange}
+          />
+        </div>
+      )}
     </div>
   );
 };

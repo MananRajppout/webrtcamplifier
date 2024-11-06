@@ -59,6 +59,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
   const [meetingPage, setMeetingPage] = useState(1);
   const [totalMeetingPages, setTotalMeetingPages] = useState(1);
+  const [pollPage, setPollPage] = useState(1);
+  const [totalPollPages, setTotalPollPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false);
   const [isSingleChoiceModalOpen, setIsSingleChoiceModalOpen] = useState(false);
@@ -81,6 +83,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
       toast.success("Poll created successfully!");
       setIsSingleChoiceModalOpen(false);
       setIsMultipleChoiceModalOpen(false);
+      setIsPollDropdownOpen(false)
       fetchPolls();
     } catch (error) {
       toast.error("Failed to create poll: " + error.message);
@@ -172,6 +175,11 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     fetchMeetings(page, searchTerm);
   };
 
+  const handlePollPageChange =(page)=>{
+    setPollPage(page);
+    fetchPolls(page)
+  }
+
   // Fetching project meetings
   const fetchMeetings = async (page = 1, searchQuery = "", filters = {}) => {
     setIsLoading(true);
@@ -205,8 +213,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           params: { page, limit: 10 },
         }
       );
-      console.log('view project polls', response.data.polls)
+      console.log('view project polls', response.data)
       setPolls(response.data.polls);
+      setTotalPollPages(response.data.totalPages)
       // setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -592,6 +601,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                   polls={polls}
                   setPolls={setPolls}
                   setLocalProjectState={setLocalProjectState}
+                  pollPage={pollPage}
+                  totalPollPages={totalPollPages}
+                  onPageChange={handlePollPageChange}
                 />
               </div>
             </div>

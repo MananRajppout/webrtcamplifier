@@ -8,12 +8,18 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import AddPollModal from "./AddPollModal";
 import Button from "@/components/shared/button";
+import Pagination from "@/components/shared/Pagination";
 
-const PollsTab = ({ project,  polls, setPolls, setLocalProjectState }) => {
+const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
+  totalPollPages,
+  onPageChange  }) => {
   const [selectedPoll, setSelectedPoll] = useState(null);
   const [isViewPollModalOpen, setIsViewPollModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false); // Add modal state
+  const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false); 
+
+ 
+
 
   const handleViewPoll = (poll) => {
     setSelectedPoll(poll);
@@ -178,6 +184,17 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState }) => {
            setPolls={setPolls}
         />
       )}
+      {
+        totalPollPages > 1 && (
+          <div className="flex justify-end py-3">
+          <Pagination
+            currentPage={pollPage}
+            totalPages={totalPollPages}
+            onPageChange={onPageChange}
+          />
+        </div>
+        )
+      }
     </div>
   );
 };
