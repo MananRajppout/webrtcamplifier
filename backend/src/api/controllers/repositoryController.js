@@ -75,9 +75,18 @@ const createRepository = async (req,res) => {
 
 const getRepositoryByProjectId = async(req, res) => {
   try {
+    const limit = parseInt(req.query?.limit) || 10;
+    const page = parseInt(req.query?.page) || 0;
     const projectId = req.params.projectId;
-    const repositories = await Repository.find({ projectId });
-    res.status(200).json({message: 'Repositories fetched successfully', repositories});
+    const repositories = await Repository.find({ projectId }).skip((page -1) * limit).limit(limit)
+    const totalDocuments = await Repository.countDocuments({projectId})
+    const totalPages = Math.ceil(totalDocuments/limit)
+    res.status(200).json({
+      page,
+      totalPages,
+      totalDocuments,
+      repositories
+    });
     
   } catch (error) {
     res.status(500).json({ message: 'Error fetching repository by project ID', error: error.message });
@@ -119,11 +128,30 @@ const deleteFile = async (req, res) => {
   }
 };
 
-
+const getRepositoryByMeetingId = async (req, res) => {
+  const { meetingId } = req.params;
+  const limit = parseInt(req.query?.limit) || 10;
+    const page = parseInt(req.query?.page) || 0;
+  try {
+    const repositories = await Repository.find({ meetingId }).skip((page -1) *limit).limit(limit);
+    const totalDocuments = await Repository.countDocuments({meetingId})
+    const totalPages = Math.ceil(totalDocuments/limit)
+    res.status(200).json({
+      page, 
+      totalPages, 
+      totalDocuments,
+      repositories
+    });
+  } catch (error) {
+    console.error('Error fetching repositories by meeting ID:', error);
+    res.status(500).json({ message: 'Error fetching repositories', error: error.message });
+  }
+};
 
 module.exports = {
   createRepository,
   getRepositoryByProjectId,
+  getRepositoryByMeetingId,
   renameFile,
   deleteFile,
 };

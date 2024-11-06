@@ -61,6 +61,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [totalMeetingPages, setTotalMeetingPages] = useState(1);
   const [pollPage, setPollPage] = useState(1);
   const [totalPollPages, setTotalPollPages] = useState(1);
+  const [allRepoPage, setAllRepoPage] = useState(1);
+  const [totalAllRepoPages, setTotalAllRepoPages] = useState(1);
+  const [meetingRepoPage, setMeetingRepoPage] = useState(1);
+  const [totalMeetingRepoPages, setTotalMeetingRepoPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false);
   const [isSingleChoiceModalOpen, setIsSingleChoiceModalOpen] = useState(false);
@@ -94,10 +98,30 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsPollDropdownOpen((prev) => !prev);
   };
 
+  const fetchRepositoriesByMeetingId = async (meetingId, page =1) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository-by-meeting/${meetingId}`,
+        {
+          params: {page, limit: 10}
+        }
+      );
+      setRepositories(response.data.repositories);
+      setTotalMeetingRepoPages(response.data.totalPages)
+    } catch (error) {
+      console.error("Error fetching repositories by meeting ID:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // console.log('total meeting pages', totalMeetingPages)
+
   const handleRepositoryMeetingTabChange = (meeting) => {
     setSelectedRepositoryMeetingTab(meeting);
     setSelectedDocAndMediaTab("");
     setShowDocAndMediaTab(true);
+    fetchRepositoriesByMeetingId(meeting._id);
   };
 
   const handleDocAndMediaTabChange = (tab) => {
@@ -174,6 +198,14 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setMeetingPage(page);
     fetchMeetings(page, searchTerm);
   };
+  const handleAllRepoPageChange = (projectId, page) => {
+    setAllRepoPage(page);
+    fetchRepositories(projectId, page);
+  };
+  const handleMeetingRepoPageChange = (meetingId, page) => {
+    setMeetingPage(page);
+    fetchRepositoriesByMeetingId(meetingId, page);
+  };
 
   const handlePollPageChange =(page)=>{
     setPollPage(page);
@@ -213,10 +245,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           params: { page, limit: 10 },
         }
       );
-      console.log('view project polls', response.data)
       setPolls(response.data.polls);
       setTotalPollPages(response.data.totalPages)
-      // setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
@@ -224,13 +254,16 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     }
   };
   // Fetching project meetings
-  const fetchRepositories = async (projectId) => {
+  const fetchRepositories = async (projectId, page=1) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`,{
+          params :{page, limit:10}
+        }
       );
       setRepositories(response.data.repositories);
+      setTotalAllRepoPages(response.data.totalPages)
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
@@ -241,7 +274,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   useEffect(() => {
     fetchMeetings(meetingPage);
     fetchPolls();
-    fetchRepositories(localProjectState?._id);
+    fetchRepositories(localProjectState?._id, 1);
   }, [localProjectState, meetingPage]);
 
   const handleAddMeetingModal = () => {
@@ -690,6 +723,13 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                   selectedDocAndMediaTab={selectedDocAndMediaTab}
                   fetchRepositories={fetchRepositories}
                   projectId={localProjectState?._id}
+                  allRepoPage={allRepoPage}
+                  totalAllRepoPages={totalAllRepoPages}
+                  meetingRepoPage={meetingRepoPage}
+                  totalMeetingRepoPages={totalMeetingRepoPages}
+                  handleAllRepoPageChange={handleAllRepoPageChange}
+                  handleMeetingRepoPageChange={handleMeetingRepoPageChange}
+                  fetchRepositoriesByMeetingId={fetchRepositoriesByMeetingId}
                 />
               </div>
             </div>

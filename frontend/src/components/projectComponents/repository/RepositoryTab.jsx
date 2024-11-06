@@ -3,39 +3,68 @@ import TableData from "@/components/shared/TableData";
 import TableHead from "@/components/shared/TableHead";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Pagination from "@/components/shared/Pagination";
+import { useEffect, useState } from "react";
 
 const RepositoryTab = ({
   repositories,
   selectedRepositoryMeetingTab,
-  selectedDocAndMediaTab,fetchRepositories, projectId
+  selectedDocAndMediaTab,
+  fetchRepositories,
+  projectId,
+  totalAllRepoPages,
+  totalMeetingRepoPages,
+  fetchRepositoriesByMeetingId,
 }) => {
- 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(totalAllRepoPages);
+
+  const fetchRepositoriesData = async (page) => {
+    if (selectedRepositoryMeetingTab === "All") {
+      const response = await fetchRepositories(projectId, page);
+      setTotalPages(totalAllRepoPages);
+    } else if (selectedRepositoryMeetingTab) {
+      const response = await fetchRepositoriesByMeetingId(selectedRepositoryMeetingTab._id, page);
+      setTotalPages(totalMeetingRepoPages);
+    }
+  };
+
+  useEffect(() => {
+    fetchRepositoriesData(currentPage);
+  }, [currentPage, selectedRepositoryMeetingTab]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const renameFile = async (id) => {
     try {
       const newFileName = prompt("Enter the new file name:");
       if (!newFileName) return;
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/rename-file/${id}`, {
-        fileName: newFileName,
-      });
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/rename-file/${id}`,
+        {
+          fileName: newFileName,
+        }
+      );
 
-    if (response.status === 200) {
+      if (response.status === 200) {
         toast.success(`${response.data.message}`);
         fetchRepositories(projectId);
       } else {
         toast.error(`${response.data.message}`);
       }
-
-   
     } catch (error) {
-      toast.error(`${error.response.data.message}`)
+      toast.error(`${error.response.data.message}`);
       console.error("Error renaming file:", error);
     }
   };
 
   const deleteFile = async (id) => {
     try {
-      const response = await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-file/${id}`);
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-file/${id}`
+      );
 
       if (response.status === 200) {
         fetchRepositories(projectId);
@@ -43,10 +72,9 @@ const RepositoryTab = ({
       } else {
         toast.error(`${response.data.message}`);
       }
-
     } catch (error) {
       console.error("Error deleting file:", error);
-      toast.error(`${error.response.data.message}`)
+      toast.error(`${error.response.data.message}`);
     }
   };
 
@@ -54,35 +82,35 @@ const RepositoryTab = ({
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('Failed to fetch the file');
+        throw new Error("Failed to fetch the file");
       }
-  
+
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
-  
-      const link = document.createElement('a');
+
+      const link = document.createElement("a");
       link.href = objectUrl;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
-  
+
       // Clean up
       document.body.removeChild(link);
       URL.revokeObjectURL(objectUrl);
     } catch (error) {
-      console.error('Error downloading file:', error);
-      toast.error('Failed to download the file.');
+      console.error("Error downloading file:", error);
+      toast.error("Failed to download the file.");
     }
   };
-  
 
-  const filteredRepositories = selectedRepositoryMeetingTab === "All"
-  ? repositories // Show all repositories if "All" is selected
-  : selectedRepositoryMeetingTab
-  ? repositories.filter(
-      (repo) => repo.meetingId === selectedRepositoryMeetingTab._id
-    )
-  : [];
+  const filteredRepositories =
+    selectedRepositoryMeetingTab === "All"
+      ? repositories
+      : selectedRepositoryMeetingTab
+      ? repositories.filter(
+          (repo) => repo.meetingId === selectedRepositoryMeetingTab._id
+        )
+      : [];
 
   const displayRepositories = filteredRepositories.filter((repo) => {
     if (selectedDocAndMediaTab === "Documents") {
@@ -140,7 +168,9 @@ const RepositoryTab = ({
                       onClick={() => deleteFile(repo._id)}
                     ></Button>
                     <Button
-                    onClick={() => downloadFile(repo.cloudinaryLink, repo.fileName)}
+                      onClick={() =>
+                        downloadFile(repo.cloudinaryLink, repo.fileName)
+                      }
                       children={"Download"}
                       type="button"
                       variant="plain"
@@ -152,6 +182,13 @@ const RepositoryTab = ({
             ))}
           </tbody>
         </table>
+        <div className="flex justify-end py-3">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </div>
     );
   };

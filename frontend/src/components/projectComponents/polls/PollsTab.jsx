@@ -82,7 +82,6 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
     }
   };
 
-  console.log('polls', polls)
 
   return (
     <div className="overflow-x-auto">
