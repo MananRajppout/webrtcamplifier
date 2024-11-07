@@ -83,6 +83,8 @@ const MeetingTab = ({
       (mod) => mod.email === user.email
     );
     if (isModerator) {
+      const confirmStart = window.confirm("Are you sure you want to start this session?");
+                        if (!confirmStart) return;
       const fullName = `${user.firstName} ${user.lastName}`;
       try {
         if (socket) {
@@ -165,7 +167,6 @@ const MeetingTab = ({
   const handleView = (meeting) => {
     setShowMeetingDetails(true);
     setSelectedMeeting(meeting);
-    // closeModal();
   };
 
   // Add this function to handle going back to table view
@@ -242,6 +243,59 @@ const MeetingTab = ({
     return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
   };
 
+  const handleJoinBackroom = async (meeting) => {
+    const fullName = `${user.firstName} ${user.lastName}`;
+    const meetingId = meeting?._id;
+    console.log('meeting', meeting, 'user', user)
+    try {
+      if (socket) {
+        socket.emit("observerJoinMeeting", {
+          meetingId,
+          name: fullName,
+          role: "Observer",
+          passcode: meeting.meetingPasscode,
+          email: user.email
+        });
+  
+        socket.on("observerJoinMeetingResponse", (response) => {
+     
+          if(response.message === "Meeting not found") {
+            toast.error("Meeting not found");
+          } else if (response.message === "Invalid passcode") {
+            toast.error("Invalid passcode");
+          } else if(response.message === "Live meeting not found") {
+            toast.error("Live meeting not found");
+          } else  if(response.message === "Observer already added to the meeting") {
+            router.push(
+              `/meeting/${meetingId}?fullName=${encodeURIComponent(
+                fullName
+              )}&role=Observer`
+            );
+          } else if (response.message === "Observer added to the meeting") {
+            
+            if (response.isStreaming) {
+              router.push(
+                `/meeting/${meetingId}?fullName=${encodeURIComponent(
+                 fullName
+                )}&role=Observer`
+              );
+            } else {
+              router.push(
+                `/observer-waiting-room/${meetingId}?fullName=${encodeURIComponent(
+                  fullName
+                )}&role=Observer`
+              );
+            }
+          }
+        });
+      } else {
+        console.error("Socket not initialized");
+      }
+    } catch (error) {
+      console.error("Error joining backroom:", error);
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       {!showMeetingDetails ? (
@@ -249,7 +303,6 @@ const MeetingTab = ({
           <thead className="border-b-[0.5px] border-solid border-custom-dark-blue-1">
             <tr>
               <TableHead>Meeting Title</TableHead>
-
               <TableHead>Start Date & Time</TableHead>
               <TableHead>Time Zone</TableHead>
               <TableHead>Moderator</TableHead>
@@ -260,7 +313,6 @@ const MeetingTab = ({
             {localMeetingState?.map((meeting, index) => (
               <tr key={index} className="hover:bg-gray-100">
                 <TableData>{meeting?.title}</TableData>
-
                 <td className="px-3 py-1 text-left text-[12px] whitespace-nowrap font-medium text-custom-dark-blue-1">{`${new Date(
                   meeting?.startDate
                 ).toLocaleDateString("en-US", {
@@ -268,14 +320,12 @@ const MeetingTab = ({
                   month: "short",
                   day: "numeric",
                 })} ${convertTo12HourFormat(meeting?.startTime)}`}</td>
-
                 <TableData>{meeting?.timeZone}</TableData>
                 <td className="px-3 py-1 text-left text-[12px]  font-medium text-custom-dark-blue-1">
                   {meeting?.moderator.map((mod) => mod.firstName).join(", ")}
                 </td>
-
                 <TableData>
-                  <div className="flex justify-start items-center gap-2">
+                  <div className="flex flex-col justify-center items-center gap-2">
                     <button
                       className={`${
                         activeMeetingId === meeting._id
@@ -285,8 +335,13 @@ const MeetingTab = ({
                       onClick={() => handleJoinMeeting(meeting)}
                       disabled={activeMeetingId === meeting._id}
                     >
-                      {activeMeetingId === meeting._id ? "Joining..." : "Join"}
+                      {activeMeetingId === meeting._id ? "Starting Meeting" : "Start Meeting"}
                     </button>
+                    <button onClick={() => handleJoinBackroom(meeting)}
+                      className="text-blue-500 hover:text-blue-700"
+                      >
+      Join Backroom
+    </button>
 
                     <BsThreeDotsVertical
                       onClick={(e) => toggleModal(e, meeting)}
@@ -446,6 +501,8 @@ const MeetingTab = ({
           isEditing={true}
         />
       )}
+
+      {/* Pagination */}
       {meetings.length >= 10 && (
         <div className="flex justify-end py-3">
           <Pagination

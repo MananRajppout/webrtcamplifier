@@ -37,13 +37,7 @@ const page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('emitted observer', {
-      name: formData.fullName,
-      email: formData.email,
-      role: "Observer",
-      passcode: formData.passcode,
-      meetingId: meetingId,
-    })
+    
     socket.emit("observerJoinMeeting", {
       name: formData.fullName,
       email: formData.email,
