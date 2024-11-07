@@ -15,6 +15,7 @@ import { useGlobalContext } from "@/context/GlobalContext";
 const page = () => {
   const [formData, setFormData] = useState({
     fullName: "",
+    email: "",
     passcode: "",
   });
   const [showPasscode, setShowPasscode] = useState(false);
@@ -36,8 +37,16 @@ const page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log('emitted observer', {
+      name: formData.fullName,
+      email: formData.email,
+      role: "Observer",
+      passcode: formData.passcode,
+      meetingId: meetingId,
+    })
     socket.emit("observerJoinMeeting", {
       name: formData.fullName,
+      email: formData.email,
       role: "Observer",
       passcode: formData.passcode,
       meetingId: meetingId,
@@ -158,6 +167,15 @@ const page = () => {
               name="fullName"
               type="text"
               value={formData.fullName}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="lg:flex lg:justify-between lg:items-center gap-5 w-full 2xl:px-28">
+            <InputField
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
               onChange={handleChange}
             />
           </div>
