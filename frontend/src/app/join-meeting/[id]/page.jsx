@@ -14,7 +14,8 @@ import toast from "react-hot-toast";
 
 const Page = () => {
   const [formData, setFormData] = useState({
-    fullName: "Participant 1",
+    fullName: "",
+    email: ""
   });
   const { socket } = useGlobalContext();
 
@@ -42,12 +43,19 @@ const Page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const role = getRoleFromUrl(); // Extract the role based on URL
+    const role = getRoleFromUrl(); 
 
+    console.log('participant', {
+      name: formData.fullName,
+      email: formData.email,
+      role: role, 
+      meetingId: meetingId,
+    })
     // Emit socket event instead of making an API call
     socket.emit("participantJoinMeeting", {
       name: formData.fullName,
-      role: role, // Use the extracted role
+      email: formData.email,
+      role: role, 
       meetingId: meetingId,
     });
 
@@ -82,68 +90,7 @@ const Page = () => {
     });
 };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   const role = getRoleFromUrl(); // Extract the role based on URL
-
-  //   try {
-  //     // Call the new API with the extracted role and name
-  //     const userRoleResponse = await axios.post(
-  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
-  //       {
-  //         name: formData.fullName,
-  //         role: "Participant",
-  //       }
-  //     );
-
-  //     // Store the role ID for later use
-  //     localStorage.setItem("RoletoSend", userRoleResponse.data._id);
-
-  //     // Call the original API for joining the meeting
-  //     const meetingResponse = await axios.post(
-  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/join-meeting-participant`,
-  //       {
-  //         name: formData.fullName,
-  //         role: "Participant", // Assuming the role to send here is always "Participant"
-  //         meetingId: meetingId,
-  //       }
-  //     );
-
-  //     // Determine where to redirect based on the responses
-  //     if (
-  //       meetingResponse?.data?.message === "Participant added to waiting room"
-  //     ) {
-  //       router.push(
-  //         `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
-  //           formData.fullName
-  //         )}&role=Participant`
-  //       );
-  //     } else if (
-  //       meetingResponse?.data?.message ===
-  //         "Participant already in the meeting" ||
-  //       meetingResponse?.data?.message === "Participant already in waiting room"
-  //     ) {
-  //       router.push(
-  //         `/meeting/${meetingId}?fullName=${encodeURIComponent(
-  //           formData.fullName
-  //         )}&role=Participant`
-  //       );
-  //     } else {
-  //       // Handle unexpected response
-  //       console.error(
-  //         "Unexpected response from the meeting API",
-  //         meetingResponse?.data?.message
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error(
-  //       "Received error from backend",
-  //       error?.response?.data?.message
-  //     );
-  //   }
-  // };
-
+ 
  
   return (
     <div>
@@ -158,14 +105,23 @@ const Page = () => {
           </h1>
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col justify-center items-center gap-5 w-full"
+            className="flex flex-col justify-center items-center gap-2 w-full"
           >
-            <div className="lg:flex lg:justify-start lg:items-center lg:gap-5 w/full">
+            <div className="lg:flex lg:justify-start lg:items-center lg:gap-5 w-full">
               <InputField
                 label="Full Name"
                 name="fullName"
                 type="text"
                 value={formData.fullName}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="lg:flex lg:justify-start lg:items-center lg:gap-5 w-full">
+              <InputField
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
                 onChange={handleChange}
               />
             </div>
