@@ -22,7 +22,6 @@ const OngoingMeeting = () => {
   const [breakRoomID, setRoomBreakID] = useState(null);
   const [fullName, setFullName] = useState(searchParams.get("fullName") || "Guest");
   const [roomId, setRoomId] = useState(type == 'breackout' ? `${params.id}-${roomname}` : params.id);
- 
   const videoCanvasRef = useRef(null);
   const canvasRef = useRef(null);
   const [isMicMute, setIsMicMute] = useState(true);

@@ -87,7 +87,8 @@ const setupSocket = (server) => {
     });
 
     socket.on("participantJoinMeeting", async (data) => {
-      const { meetingId, name, role } = data;
+      const { meetingId, name, role, email } = data;
+      console.log('participant join meeting', data)
 
       let liveMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
 
@@ -101,7 +102,7 @@ const setupSocket = (server) => {
       }
 
       const isInWaitingRoom = liveMeeting.waitingRoom.some(
-        (participant) => participant.name === name
+        (participant) => participant.email === email
       );
 
       if (isInWaitingRoom) {
@@ -114,7 +115,7 @@ const setupSocket = (server) => {
       }
 
       const isInParticipantsList = liveMeeting.participantsList.some(
-        (participant) => participant.name === name
+        (participant) => participant.email === email
       );
       if (isInParticipantsList) {
         socket.emit("participantJoinMeetingResponse", {
@@ -125,13 +126,13 @@ const setupSocket = (server) => {
         return;
       }
 
-      liveMeeting.waitingRoom.push({ name, role });
+      liveMeeting.waitingRoom.push({ name, role, email });
       await liveMeeting.save();
 
       socket.emit("participantJoinMeetingResponse", {
         success: true,
         message: "Participant added to waiting room",
-        participant: { name, role },
+        participant: { name, role, email },
       });
     });
 
@@ -230,7 +231,7 @@ const setupSocket = (server) => {
           return;
         }
         const participantIndex = liveMeeting.waitingRoom.findIndex(
-          (p) => p.name === participant.name
+          (p) => p.email === participant.email
         );
 
         if (participantIndex === -1) {
@@ -310,7 +311,7 @@ const setupSocket = (server) => {
     });
 
     socket.on("removeParticipantFromMeeting", async (data) => {
-      const { meetingId, name, role } = data;
+      const { meetingId, name, role, email } = data;
       
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -328,21 +329,22 @@ const setupSocket = (server) => {
 
           // Remove the participant from participantsList
           const participantToRemove = liveMeeting.participantsList.find(
-            (participant) => participant.name === name
+            (participant) => participant.email === email
           );
 
           liveMeeting.participantsList = liveMeeting.participantsList.filter(
-            (participant) => participant.name !== name
+            (participant) => participant.email !== email
           );
 
           // Add the removed participant to removedParticipants list
           liveMeeting.removedParticipants.push({
             name: name,
             role: role,
+            email: email
           });
           await liveMeeting.save();
 
-          io.emit("participantRemoved", { name, role });
+          io.emit("participantRemoved", { name, role, email });
 
           socket.emit("removeParticipantFromMeetingResponse", {
             success: true,

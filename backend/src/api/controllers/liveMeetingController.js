@@ -150,6 +150,7 @@ const startMeeting = async (req, res) => {
 
 const joinMeetingParticipant = async (req, res) => {
   const { name, role, meetingId } = req.body;
+  console.log('join meeting participant req.body', req.body)
 
   try {
     const meeting = await Meeting.findById(meetingId);

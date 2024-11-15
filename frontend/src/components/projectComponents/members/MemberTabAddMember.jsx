@@ -76,6 +76,11 @@ const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState })
     alert("Link copied to clipboard!");
   };
 
+  const handleSendEmail = () => {
+    
+  }
+  
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
       <div className="bg-white p-8 rounded-lg w-[50%]">
@@ -139,7 +144,8 @@ const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState })
                   </td>
                   <td className="px-4 py-2 border border-gray-300 text-center">
                     {!person.isUser && (
-                      <Button
+                      <div className="flex flex-col gap-2 justify-center items-center">
+                        <Button
                         className=" text-white px-3 py-1 rounded-lg text-xs"
                         variant="secondary"
                         type="button"
@@ -147,6 +153,15 @@ const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState })
                       >
                         Copy Link
                       </Button>
+                        <Button
+                        className=" text-white px-3 py-1 rounded-lg text-xs"
+                        variant="secondary"
+                        type="button"
+                        onClick={handleSendEmail}
+                      >
+                        Send Email
+                      </Button>
+                      </div>
                     )}
                   </td>
                 </tr>

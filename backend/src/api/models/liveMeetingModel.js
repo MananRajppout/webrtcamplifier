@@ -5,11 +5,14 @@ const liveMeetingSchema = new Schema({
   meetingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meeting', required: true },
   waitingRoom: [{
     name: { type: String, required: true },
-    role: { type: String, required: true }
+    role: { type: String, required: true },
+    email: { type: String, required: true },
   }],
   removedParticipants: [{
     name: { type: String, required: true },
-    role: { type: String, required: true }
+    role: { type: String, required: true },
+    email: { type: String, required: true },
+    
   }],
   moderator: {
     name: { type: String, required: true },
@@ -20,6 +23,7 @@ const liveMeetingSchema = new Schema({
     name: { type: String, required: true },
     id: { type: String, required: true },
     role: { type: String, required: true },
+    email: {type: String, requried: true},
     roomName: {type: String, required: false, default: "main"}
     }],
   observerList: [{

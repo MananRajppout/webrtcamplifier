@@ -246,7 +246,6 @@ const MeetingTab = ({
   const handleJoinBackroom = async (meeting) => {
     const fullName = `${user.firstName} ${user.lastName}`;
     const meetingId = meeting?._id;
-    console.log('meeting', meeting, 'user', user)
     try {
       if (socket) {
         socket.emit("observerJoinMeeting", {
