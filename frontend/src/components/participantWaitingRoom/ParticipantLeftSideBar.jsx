@@ -3,7 +3,7 @@ import { LuArrowLeftToLine, LuArrowRightToLine } from 'react-icons/lu'
 import ParticipantLeftSidebarOpenUI from './ParticipantLeftSidebarOpenUI';
 import ParticipantLeftSidebarCloseUI from './ParticipantLeftSidebarCloseUI';
 
-const ParticipantLeftSideBar = () => {
+const ParticipantLeftSideBar = ({participants,sendMessageParticipant,messages}) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -31,7 +31,7 @@ const ParticipantLeftSideBar = () => {
       <div className="flex flex-col w-full ">
         {/*  */}
         {isSidebarOpen ? (
-          <ParticipantLeftSidebarOpenUI/>
+          <ParticipantLeftSidebarOpenUI participants={participants} sendMessageParticipant={sendMessageParticipant} messages={messages}/>
         ) : (
           <ParticipantLeftSidebarCloseUI/>
         )}

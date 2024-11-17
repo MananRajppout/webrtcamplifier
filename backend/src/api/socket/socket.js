@@ -3,9 +3,45 @@ const Meeting = require("../models/meetingModel");
 const LiveMeeting = require("../models/liveMeetingModel");
 const { v4: uuidv4 } = require("uuid");
 const ChatMessage = require("../models/chatModel");
+const GroupMessage = require('../models/groupMessage');
+const MediaBoxModel = require('../models/mediaBox.js');
+
+let messageBatch = [];
+const FLUSH_INTERVAL = 10000;
+
+function addMessageToBatch(message) {
+  messageBatch.push(message);
+}
+
+
+async function flushMessages() {
+  if (messageBatch.length === 0) {
+    return;
+  }
+
+  // Create a copy of the batch and reset the main array
+  const batchToInsert = [...messageBatch];
+  messageBatch = [];
+  try {
+    await GroupMessage.insertMany(batchToInsert);
+    console.log(`Successfully inserted ${batchToInsert.length} messages`);
+  } catch (error) {
+    console.error('Failed to insert messages:', error);
+    messageBatch.push(...batchToInsert);
+  }
+}
+
+setInterval(flushMessages, FLUSH_INTERVAL);
+
+async  function getGroupMessage(meetingId){
+  const noAddedMessage = messageBatch.filter(m => m.meetingId == meetingId);
+  const addedMessage = await GroupMessage.find({meetingId});
+  return [...addedMessage,...noAddedMessage]
+}
 
 const usernames = {};
 const userchangeroom = {};
+
 
 const setupSocket = (server) => {
   const io = new Server(server, {
@@ -18,14 +54,16 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    socket.on("join-room",({roomid,name},callback) => {
+    socket.on("join-room",({roomid,name,email},callback) => {
       socket.join(roomid);
+      console.log(email,'email')
       usernames[socket.id] = {
         name,
-        roomid
+        roomid,
+        email
       };
 
-      const newname = name?.replaceAll(' ','')?.toLowerCase() + roomid;
+      const newname = email + roomid;
       delete userchangeroom[newname];
       callback(socket.id);
     })
@@ -731,7 +769,7 @@ const setupSocket = (server) => {
 
       for (let index = 0; index < participants.length; index++) {
         const element = participants[index];
-        const name = element.name?.replaceAll(' ','')?.toLowerCase() + meetingId;
+        const name = element.email + meetingId;
         userchangeroom[name] = true;
       }
 
@@ -739,7 +777,7 @@ const setupSocket = (server) => {
       liveMeeting.breakRooms = [...liveMeeting.breakRooms,newRoom];
       liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
 
-        const participant = participants.find(part => part.name == p.name);
+        const participant = participants.find(part => part.email == p.email);
         if(participant){  
           p.roomName = breakroomname;
         }
@@ -773,13 +811,13 @@ const setupSocket = (server) => {
 
       for (let index = 0; index < participants.length; index++) {
         const element = participants[index];
-        const name = element.name?.replaceAll(' ','')?.toLowerCase() + meetingId;
+        const name = element.email + meetingId;
         userchangeroom[name] = true;
       }
 
      
       liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
-        const participant = participants.find(part => part.name == p.name);
+        const participant = participants.find(part => part.email == p.email);
         if(participant){  
           p.roomName = breakroomname;
         }
@@ -797,14 +835,71 @@ const setupSocket = (server) => {
       socket.to(meetingId).emit('change-room',{participantList:participants,roomName: breakroomname});
     });
 
-    
+
+
+    //rename user name
+    socket.on("change-participant-name", async ({ meetingId,newname,userid},callback) => {
+      const existingMeeting = await Meeting.findById(meetingId);
+      if(!existingMeeting){
+        callback(null,"Meeting Not Exist.");
+        return
+      }
+
+      const liveMeeting = await LiveMeeting.findOne({ meetingId });
+      if(!liveMeeting){
+        callback(null,"Live Meeting Not Exist.");
+        return
+      }
+
+
+
+     
+      liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
+        if(p?.id?.toString() == userid?.toString()){  
+          p.name = newname;
+        }
+        return p;
+      });
+
+
+      await liveMeeting.save();
+      const fullParticipantList = [
+        liveMeeting.moderator,
+        ...liveMeeting.participantsList,
+      ];
+
+      callback({fullParticipantList},null);
+    });
+
+    socket.on('grounp:send-message',({meetingId,email,content,name}) => {
+      console.log('new message',name,email,content,meetingId);
+      const newMessage = {
+        meetingId,
+        senderEmail: email,
+        content,
+        name,
+        timestamp: Date.now()
+      }
+      addMessageToBatch(newMessage);
+      socket.to(meetingId).emit('group:receive-message',newMessage);
+    });
+
+    socket.on('grounp:get-message', async ({meetingId},callback) => {
+      const messages = await getGroupMessage(meetingId);
+      callback(messages);
+    })
+
+    socket.on('mediabox:on-get-media', async ({meetingId},callback) => {
+      const media = await MediaBoxModel.find({meetingId});
+      callback(media);
+    });
     
 
 // * disconnect
     socket.on("disconnect", async () => {
       console.log("User disconnected", usernames[socket.id]);
       const userDetails = usernames[socket.id] || {};
-      const newname = userDetails?.name?.replaceAll(' ','')?.toLowerCase() + userDetails?.roomid;
+      const newname = userDetails?.email + userDetails?.roomid;
       const isMoveByModerator = userchangeroom[newname];
       if(isMoveByModerator){
         return
@@ -814,7 +909,7 @@ const setupSocket = (server) => {
         return
       }
 
-      liveMeeting.participantsList = liveMeeting.participantsList.filter(p => p.name != userDetails?.name);
+      liveMeeting.participantsList = liveMeeting.participantsList.filter(p => p.email != userDetails?.email);
       await liveMeeting.save();
     });
   });

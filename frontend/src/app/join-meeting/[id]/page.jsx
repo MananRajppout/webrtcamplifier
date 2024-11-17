@@ -52,12 +52,19 @@ const Page = () => {
       meetingId: meetingId,
     })
     // Emit socket event instead of making an API call
+
+    if(typeof window !== 'undefined'){
+      window.localStorage.setItem('email',formData.email);
+    }
     socket.emit("participantJoinMeeting", {
       name: formData.fullName,
       email: formData.email,
       role: role, 
       meetingId: meetingId,
     });
+
+
+
 
     
     // Listen for the response from the socket

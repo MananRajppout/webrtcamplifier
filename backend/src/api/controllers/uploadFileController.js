@@ -1,70 +1,58 @@
-const File = require('../models/UploadFileModel.js');
-const fs = require('fs');
-const path = require('path');
+const MediaBoxModel = require('../models/mediaBox.js');
+const { v2:cloudinary } = require('cloudinary');
+
+
+async function handleUpload(file) {
+  cloudinary.config({ 
+    cloud_name: process.env.CLOUD_NAME, 
+    api_key: process.env.CLOUD_KEY, 
+    api_secret: process.env.CLOUD_SECRET
+  })
+
+  const res = await cloudinary.uploader.upload(file, {
+    resource_type: "auto",
+  });
+  return res;
+}
 
 // POST - Upload File
-exports.uploadFile = (req, res) => {
-  const file = req.file;
-  if (!file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
+exports.uploadFile = async (req, res) => {
+  try {
+    const {meetingId,email} = req.body;
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+  
+    //upload file on cloudinary
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+    const cldRes = await handleUpload(dataURI);
 
-  const newFile = new File({
-    filename: file.filename,
-    originalName: file.originalname,
-    path: file.path,
-    size: file.size,
-  });
-
-  newFile.save()
-    .then((savedFile) => res.status(201).json(savedFile))
-    .catch((error) => res.status(500).json({ message: 'Failed to save file', error }));
-};
-
-// GET - List All Files
-exports.getFiles = (req, res) => {
-  File.find()
-    .then((files) => {
-      
-      res.status(200).json(files);
-    })
-    .catch((error) => {
-      console.error('Error retrieving files:', error); // Debugging
-      res.status(500).json({ message: 'Failed to retrieve files', error });
+    //save on db
+    const newMedia = await MediaBoxModel.create({
+      meetingId,
+      uploaderEmail: email,
+      file: {
+        url: cldRes.secure_url,
+        public_id: cldRes.public_id,
+        name: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      }
     });
-};
 
-
-// DELETE - Delete a File
-
-
-exports.deleteFile = (req, res) => {
-  const fileId = req.params.id;
-
-  File.findByIdAndDelete(fileId)
-    .then((deletedFile) => {
-      if (!deletedFile) {
-        return res.status(404).json({ message: 'File not found' });
-      }
-
-      // Debugging: Check the path before deleting
-      const filePath = path.resolve(__dirname, '..', 'uploads', deletedFile.filename);
-
-      // Check if file exists
-      if (!fs.existsSync(filePath)) {
-        console.error('File does not exist:', filePath);
-        return res.status(404).json({ message: 'File not found on filesystem' });
-      }
-
-      // Remove file from the filesystem
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error('Error deleting file:', err);
-          return res.status(500).json({ message: 'Failed to delete file from filesystem', err });
-        }
-
-        res.status(200).json({ message: 'File deleted successfully' });
-      });
+    const EventsEmitter = req.app.get('EventsEmitter');
+    EventsEmitter.emit('mediabox:on-upload',{media: newMedia});
+    res.status(201).json({
+      success: true,
+      message: "Upload Successfully"
     })
-    .catch((error) => res.status(500).json({ message: 'Failed to delete file', error }));
+  } catch (error) {
+    res.status(501).json({
+      success: false,
+      message: error.message
+    })
+  } 
+
 };

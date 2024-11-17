@@ -43,22 +43,53 @@ const page = () => {
   const [isBreakoutRoom, setIsBreakoutRoom] = useState(false);
   const [breakoutRooms, setBreakoutRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [myEmail,setMyEmail] = useState(null);
+  
 
   const [peers, setPeers] = useState([]);
   const [streams, setStreams] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [groupMessage,setGroupMessage] = useState([]);
+  const [mediaBox, setMediaBox] = useState([]);
+
+
+
+
+  //get user email
+  useEffect(() => {
+    if(typeof window !== 'undefined'){
+      const email = window.localStorage.getItem('email');
+      setMyEmail(userRole == 'Moderator' ? 'admin@gmail.com' : email);
+    }
+  },[])
 
   const handleBreakoutRoomChange = (roomName) => {
     const room = breakoutRooms?.find((room) => room.roomName === roomName);
     setSelectedRoom(room);
   };
 
+
+
+
   //! Use effect for getting waiting list
   useEffect(() => {
     let intervalId;
-    socket.emit('join-room', { roomid: params.id, name: fullName }, (socketId) => {
+    let email;
+    if(typeof window !== 'undefined'){
+      email = userRole == 'Moderator' ? 'admin@gmail.com' : window.localStorage.getItem('email');
+    }
+    socket.emit('join-room', { roomid: params.id, name: fullName,email }, (socketId) => {
       socketIdRef.current = socketId;
     });
+    socket.emit('grounp:get-message', { meetingId: params.id}, (messages) => {
+      setGroupMessage([...messages]);
+    });
+
+    socket.emit('mediabox:on-get-media', { meetingId: params.id}, (media) => {
+      console.log(media,'mediassss',media)
+      setMediaBox([...media]);
+    });
+
     socket.on('change-room', handleChangeRoom)
     socket.on("getParticipantListResponse", handleParticipantList);
     socket.on("participantChatResponse", handleParticipantChatResponse);
@@ -67,6 +98,8 @@ const page = () => {
     socket.on("getStreamingStatusResponse", handleGetStreamingStatusResponse);
     socket.on("participantRemoved", handleParticipantRemoved);
     socket.on("getMeetingStatusResponse", handleGetMeetingStatusResponse);
+    socket.on("group:receive-message", handleNewMessageReceive);
+    socket.on("mediabox:on-upload", handleMediaNewUpload);
 
 
     // Initial request
@@ -95,6 +128,8 @@ const page = () => {
 
       return () => {
         socket.off("getWaitingListResponse", handleGetWaitingListResponse);
+        socket.off("group:receive-message", handleNewMessageReceive);
+        socket.off("mediabox:on-upload", handleMediaNewUpload);
       };
     }
 
@@ -109,6 +144,8 @@ const page = () => {
       socket.off("getObserverListResponse", handleObserverListResponse);
       socket.off("getObserverChatResponse", handleObserverChatResponse);
       socket.off("participantRemoved", handleParticipantRemoved);
+      socket.off("group:receive-message", handleNewMessageReceive);
+      socket.off("mediabox:on-upload", handleMediaNewUpload);
     };
   }, [userRole, params.id, socket]);
 
@@ -150,6 +187,14 @@ const page = () => {
     });
   }, [params.id, selectedRoom]);
 
+
+  const handleUserRename = useCallback((newname,user) => {
+    socket.emit('change-participant-name',{meetingId: params.id,newname,userid: user.id},({fullParticipantList},err) => {
+      if(err) return console.log(err.message);
+      setParticipants(fullParticipantList);
+    });
+  },[params.id])
+
   const handleMoveParticipant = useCallback((breakroomname, participant) => {
 
     socket.emit("user-move", { meetingId: params.id, breakroomname, participants: [participant] }, ({ fullParticipantList, breakroomname }, err) => {
@@ -159,8 +204,13 @@ const page = () => {
   }, [params.id, selectedRoom]);
 
   const handleChangeRoom = useCallback(({ participantList, roomName }) => {
+    let email;
+    if(typeof window !== 'undefined'){
+      email = window.localStorage.getItem('email');
+    }
 
-    const find = participantList.some(p => p.name == fullName);
+    console.log('participantList',participantList)
+    const find = participantList.some(p => p.email == email);
 
     if (find) {
       let url = '';
@@ -173,6 +223,49 @@ const page = () => {
       window.open(url, '_self');
     }
   }, []);
+
+
+  const sendGroupMessage = useCallback((content) => {
+    let name;
+    if(userRole == 'Moderator'){
+      name = fullName
+    }else{
+      name = participants.find(p => p.email == myEmail)?.name || 'Unkown';
+    }
+    const newMessage = {
+      meetingId: params.id,
+      senderEmail: myEmail,
+      content,
+      name,
+      timestamp: Date.now()
+    }
+    setGroupMessage(prev => [...prev,newMessage]);
+    socket.emit("grounp:send-message", {meetingId: params.id,email:myEmail,content,name});
+  },[myEmail,params.id,participants]);
+
+
+  const handleNewMessageReceive = useCallback((newMessage) => {
+    setGroupMessage(prev => [...prev,newMessage]);
+  },[]);
+
+  const handleMediaNewUpload = useCallback((media) => {
+    console.log('new media')
+    setMediaBox(prev => [...prev,media]);
+  },[]);
+
+  const handleMediaUpload = useCallback(async (file,setUploadProgress) => {
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,{file,meetingId: params,email: myEmail},{
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+        setUploadProgress(progress);
+      }
+    });
+    setUploadProgress(0);
+    return res;
+  },[myEmail,params.id]);
 
   // * get observer list response function
   const handleObserverListResponse = (response) => {
@@ -339,8 +432,12 @@ const page = () => {
   // *Use effect to check if the participant is in the list and admit them
   useEffect(() => {
     // Check if any participant matches the fullName
-    const participantFound = participants?.some(
-      (participant) => participant?.name === fullName
+    let email;
+    if(typeof window !== 'undefined'){
+      email = window.localStorage.getItem('email');
+    }
+    const participantFound = participants?.find(
+      (participant) => participant?.email === email
     );
 
     if (participantFound && !isAdmitted) {
@@ -429,6 +526,11 @@ const page = () => {
                 admitAllFromWaitingRoom={admitAllFromWaitingRoom}
                 handleBreakoutRoom={handleBreakoutRoom}
                 handleMoveParticipant={handleMoveParticipant}
+                handleUserRename={handleUserRename}
+                sendGroupMessage={sendGroupMessage}
+                groupMessage={groupMessage}
+                handleMediaUpload={handleMediaUpload}
+                mediaBox={mediaBox}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
@@ -447,6 +549,7 @@ const page = () => {
                 projectStatus={projectStatus}
                 iframeLink={iframeLink}
                 meetingDetails={meetingDetails}
+              
               />
             </div>
           </>
@@ -481,6 +584,11 @@ const page = () => {
                 admitAllFromWaitingRoom={admitAllFromWaitingRoom}
                 handleBreakoutRoom={handleBreakoutRoom}
                 handleMoveParticipant={handleMoveParticipant}
+                handleUserRename={handleUserRename}
+                sendGroupMessage={sendGroupMessage}
+                groupMessage={groupMessage}
+                handleMediaUpload={handleMediaUpload}
+                mediaBox={mediaBox}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -519,6 +627,9 @@ const page = () => {
                 setUsers={setUsers}
                 selectedRoom={selectedRoom}
                 setSelectedRoom={setSelectedRoom}
+                groupMessage={groupMessage}
+                handleMediaUpload={handleMediaUpload}
+                mediaBox={mediaBox}
               />
             </div>
           </>
@@ -560,6 +671,9 @@ const page = () => {
                 setUsers={setUsers}
                 selectedRoom={selectedRoom}
                 setSelectedRoom={setSelectedRoom}
+                groupMessage={groupMessage}
+                handleMediaUpload={handleMediaUpload}
+                mediaBox={mediaBox}
               />
             </div>
           </>

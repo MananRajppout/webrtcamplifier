@@ -35,10 +35,15 @@ const LeftSidebar = ({
   admitAllFromWaitingRoom,
   handleBreakoutRoom,
   handleMoveParticipant,
+  handleUserRename,
+  sendGroupMessage,
+  groupMessage,
+  handleMediaUpload,
+  mediaBox
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("participantList");
+  const [activeTab, setActiveTab] = useState("chats");
   const [currentUser, setCurrentUser] = useState(null);
   const [isModerator, setIsModerator] = useState(false);
   const [brealRoomModelOpen, setBreakoutRoomModelOpen] = useState(false);
@@ -52,7 +57,7 @@ const LeftSidebar = ({
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     setSelectedChat(null);
-    setIsSidebarOpen(!isSidebarOpen)
+    // setIsSidebarOpen(!isSidebarOpen)
   };
 
   const chatParticipants = [
@@ -239,6 +244,11 @@ const LeftSidebar = ({
               brealRoomModelOpen={brealRoomModelOpen}
               setBreakoutRoomModelOpen={setBreakoutRoomModelOpen}
               handleMoveParticipant={handleMoveParticipant}
+              handleUserRename={handleUserRename}
+              sendGroupMessage={sendGroupMessage}
+              groupMessage={groupMessage}
+              handleMediaUpload={handleMediaUpload}
+              mediaBox={mediaBox}
             />
           ) : (
             <LeftSidebarCloseUi
@@ -260,7 +270,8 @@ const LeftSidebar = ({
               selectedRoom={selectedRoom}
               setSelectedRoom={setSelectedRoom}
               setIsSidebarOpen={setIsSidebarOpen}
-             
+              sendGroupMessage={sendGroupMessage}
+              groupMessage={groupMessage}
             />
           )}
         </div>

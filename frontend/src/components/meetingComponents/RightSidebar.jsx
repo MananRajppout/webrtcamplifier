@@ -22,6 +22,9 @@ const RightSidebar = ({
   setUsers,
   selectedRoom,
   setSelectedRoom,
+  groupMessage,
+  handleMediaUpload,
+  mediaBox
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,7 +48,7 @@ const RightSidebar = ({
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     setSelectedChat(null);
-    setIsSidebarOpen(!isSidebarOpen);
+    // setIsSidebarOpen(!isSidebarOpen);
   };
 
   const chatParticipants = [
@@ -218,6 +221,9 @@ const RightSidebar = ({
             breakoutRooms={breakoutRooms}
             selectedRoom={selectedRoom}
             setSelectedRoom={setSelectedRoom}
+            groupMessage={groupMessage}
+            handleMediaUpload={handleMediaUpload}
+            mediaBox={mediaBox}
           />
         ) : (
           <RightSidebarCloseUi
@@ -236,6 +242,7 @@ const RightSidebar = ({
             files={files}
             role={role}
             breakoutRooms={breakoutRooms}
+            groupMessage={groupMessage}
           />
         )}
       </div>

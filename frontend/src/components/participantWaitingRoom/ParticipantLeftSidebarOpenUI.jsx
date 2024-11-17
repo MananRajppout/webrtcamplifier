@@ -1,30 +1,34 @@
 import { BsChatSquareFill } from "react-icons/bs";
 import HeadingLg from "../shared/HeadingLg";
 import Button from "../shared/button";
+import { useState } from "react";
+import { IoClose, IoSend } from "react-icons/io5";
+import { useParams, useSearchParams } from "next/navigation";
+import { MdInsertEmoticon } from "react-icons/md";
 
-const ParticipantLeftSidebarOpenUI = () => {
-  const participant = [
-    {
-      id: 1,
-      name: "John Doe",
-    },
-    {
-      id: 2,
-      name: "John Doe1",
-    },
-    {
-      id: 3,
-      name: "John Doe2",
-    },
-    {
-      id: 4,
-      name: "John Doe3",
-    },
-    {
-      id: 5,
-      name: "John Doe4",
-    },
-  ];
+const ParticipantLeftSidebarOpenUI = ({ participants,messages,sendMessageParticipant }) => {
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [inputMessage, setInputMessage] = useState('');
+
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const userName = searchParams.get('fullName');
+  const meetingId = params.id;
+
+
+  const handleSendMessage = () => {
+    if (inputMessage.trim()) {
+      const newMessage = {
+        meetingId: meetingId,
+        senderName: userName,
+        receiverName: selectedChat.name,
+        message: inputMessage.trim(),
+      };
+
+      sendMessageParticipant(newMessage);
+      setInputMessage("");
+    }
+  };
 
   return (
     <>
@@ -50,7 +54,7 @@ const ParticipantLeftSidebarOpenUI = () => {
           </div>
 
           {/* Participant chat */}
-          {/* {participant.map((user) => (
+          {!selectedChat && participants.filter(p => p.role == "Moderator").map((user) => (
             <div
               key={user.name}
               className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer"
@@ -60,7 +64,87 @@ const ParticipantLeftSidebarOpenUI = () => {
                 <p className="pb-1 font-bold">{user.name}</p>
               </div>
             </div>
-          ))} */}
+          ))}
+
+
+          {selectedChat && (
+            <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center">
+              {/* chat name and image */}
+              <div className="flex w-full items-center justify-center gap-2 mb-4 bg-custom-gray-4 p-2">
+
+                <p className="text-[#1a1a1a] text-[12px] font-bold flex-1">
+                  {selectedChat.name}
+                </p>
+                <IoClose
+                  className="text-custom-black cursor-pointer"
+                  onClick={() => setSelectedChat(null)}
+                />
+              </div>
+              {/* chat message */}
+              <div className="flex flex-col gap-2 flex-grow">
+                {messages
+                  .filter(
+                    (message) =>
+                      (message.senderName === selectedChat.name &&
+                        message.receiverName === userName) ||
+                      (message.senderName === userName &&
+                        message.receiverName === selectedChat.name)
+                  )
+                  .map((message, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 ${message.senderName === userName
+                        ? "justify-start"
+                        : "justify-end"
+                        }`}
+                    >
+                      <div
+                        className={`flex flex-col ${message.senderName === userName
+                          ? "items-start"
+                          : "items-end"
+                          }`}
+                      >
+                        <p
+                          className={`text-[12px] ${message.senderName === userName
+                            ? "text-blue-600"
+                            : "text-green-600"
+                            }`}
+                        >
+                          <span className="font-bold">
+                            {message.senderName}:
+                          </span>{" "}
+                          {message.message}
+                        </p>
+                        <p className="text-[#1a1a1a] text-[10px]">
+                          {new Date(message.createdAt).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              {/* send message */}
+              <div className="flex justify-between items-center gap-2 relative">
+                <input
+                  type="text"
+                  placeholder="Type Message"
+                  className="rounded-lg py-1 px-2 placeholder:text-[10px]"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                />
+                <div className="absolute right-11 cursor-pointer">
+                  <MdInsertEmoticon />
+                </div>
+                <div
+                  className="py-1.5 px-1.5 bg-custom-orange-2 rounded-[50%] text-white cursor-pointer text-sm"
+                  onClick={handleSendMessage}
+                >
+                  <IoSend />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
@@ -69,84 +153,4 @@ const ParticipantLeftSidebarOpenUI = () => {
 
 export default ParticipantLeftSidebarOpenUI;
 
-// {activeTab === "participantChat" && selectedChat && (
-//   <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center">
-//     {/* chat name and image */}
-//     <div className="flex w-full items-center justify-center gap-2 mb-4 bg-custom-gray-4 p-2">
 
-//       <p className="text-[#1a1a1a] text-[12px] font-bold flex-1">
-//         {selectedChat.name}
-//       </p>
-//       <IoClose
-//         className="text-custom-black cursor-pointer"
-//         onClick={() => setSelectedChat(null)}
-//       />
-//     </div>
-//     {/* chat message */}
-//     <div className="flex flex-col gap-2 flex-grow">
-//       {messages
-//         .filter(
-//           (message) =>
-//             (message.senderName === selectedChat.name &&
-//               message.receiverName === userName) ||
-//             (message.senderName === userName &&
-//               message.receiverName === selectedChat.name)
-//         )
-//         .map((message, index) => (
-//           <div
-//             key={index}
-//             className={`flex items-center gap-2 ${
-//               message.senderName === userName
-//                 ? "justify-start"
-//                 : "justify-end"
-//             }`}
-//           >
-//             <div
-//               className={`flex flex-col ${
-//                 message.senderName === userName
-//                   ? "items-start"
-//                   : "items-end"
-//               }`}
-//             >
-//               <p
-//                 className={`text-[12px] ${
-//                   message.senderName === userName
-//                     ? "text-blue-600"
-//                     : "text-green-600"
-//                 }`}
-//               >
-//                 <span className="font-bold">
-//                   {message.senderName}:
-//                 </span>{" "}
-//                 {message.message}
-//               </p>
-//               <p className="text-[#1a1a1a] text-[10px]">
-//                 {new Date(message.createdAt).toLocaleTimeString()}
-//               </p>
-//             </div>
-//           </div>
-//         ))}
-//     </div>
-
-//     {/* send message */}
-//     <div className="flex justify-between items-center gap-2 relative">
-//       <input
-//         type="text"
-//         placeholder="Type Message"
-//         className="rounded-lg py-1 px-2 placeholder:text-[10px]"
-//         value={inputMessage}
-//         onChange={(e) => setInputMessage(e.target.value)}
-//         onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-//       />
-//       <div className="absolute right-11 cursor-pointer">
-//         <MdInsertEmoticon />
-//       </div>
-//       <div
-//         className="py-1.5 px-1.5 bg-custom-orange-2 rounded-[50%] text-white cursor-pointer text-sm"
-//         onClick={handleSendMessage}
-//       >
-//         <IoSend />
-//       </div>
-//     </div>
-//   </div>
-// )}

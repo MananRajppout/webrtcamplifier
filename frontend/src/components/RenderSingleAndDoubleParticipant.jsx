@@ -37,9 +37,9 @@ const RenderSingleAndDoubleParticipants = ({socketId,name,videosElementsRef,audi
 
     <div className={`h-[96%] p-2 w-full bg-[#242424] shadow-xl rounded-xl flex items-end justify-start relative`} onClick={onClick}>
 
-        <video autoPlay ref={setVideoRefs} className={`absolute top left-0 right-0 bottom-0 rounded-xl object-contain z-0 w-full h-full ${!isWebCamMute ? 'block': 'hidden'}`}></video>
+        <video autoPlay ref={setVideoRefs} className={`absolute top-0 left-0 right-0 bottom-0 rounded-xl object-fill z-0 w-full h-full ${!isWebCamMute ? 'block': 'hidden'}`}></video>
         
-        <h1 className={`text-2xl font-medium text-white z-10 select-none text-center`}>{name}</h1>
+        <h1 className={`text-2xl font-medium text-white z-10 select-none text-center bg-[#242424] opacity-50 p-2 rounded-md`}>{name}</h1>
     
     </div>
   )

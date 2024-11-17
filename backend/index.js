@@ -11,23 +11,11 @@ const { Timestamp } = require("mongodb");
 const { default: mongoose } = require("mongoose");
 const app = express();
 const server = http.createServer(app);
+const Events  = require('events');
 
 const io = setupSocket(server);
+const EventsEmitter = new Events();
 
-
-
-
-// const http = require("http").createServer(app);
-
-
-// const io = require("socket.io")(http, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST"],
-//   },
-//     methods: ["GET", "POST"],
-//   },
-// );
 
 dotenv.config();
 app.use(
@@ -38,6 +26,10 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.set('EventsEmitter',EventsEmitter);
+
+
+
 
 // Import models
 const User = require("./src/api/models/userModelMessage.js");
@@ -46,7 +38,7 @@ const userRoleRoutes = require("./src/api/routes/userJoinMeetRoute.js");
 
 // Import routes
 const userRoutes = require("./src/api/routes/userMessRoutes.js");
-// const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
+const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
 app.use("/api", userRoleRoutes);
 
 // Import other route files
@@ -94,10 +86,15 @@ app.use(
 
 
 // Use the user routes
-// app.use("/api", uploadFileRoutes);
+app.use("/api", uploadFileRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 8008;
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+
+EventsEmitter.on('mediabox:on-upload',({media}) => {
+  io.to(media.meetingId.toString()).emit('mediabox:on-upload',media);
 });

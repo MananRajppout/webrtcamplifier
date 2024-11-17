@@ -1,5 +1,5 @@
 // RightSidebarOpenUi.js
-import React, { useEffect, useState,useCallback } from "react";
+import React, { useEffect, useState,useCallback, useRef } from "react";
 import { FaAngleDown, FaFolder, FaTrash } from "react-icons/fa";
 import { BsChatSquareDotsFill, BsChatSquareFill } from "react-icons/bs";
 import Search from "../singleComponent/Search";
@@ -11,6 +11,12 @@ import axios from "axios";
 import Button from "../shared/button";
 import { useParams, useSearchParams } from "next/navigation";
 import { PiCirclesFourFill } from "react-icons/pi";
+import toast from "react-hot-toast";
+
+
+export function bytesToMbs (size){
+  return (size / (1024**2)).toFixed(2);
+}
 
 const RightSidebarOpenUi = ({
   observers,
@@ -38,12 +44,15 @@ const RightSidebarOpenUi = ({
   selectedPartcipantChat,
   breakoutRooms,
   selectedRoom,
-  setSelectedRoom
-
+  setSelectedRoom,
+  groupMessage,
+  handleMediaUpload,
+  mediaBox
 }) => {
   const [fileList, setFileList] = useState(files);
   const [inputMessage, setInputMessage] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const params = useParams();
   const searchParams = useSearchParams();
@@ -52,6 +61,15 @@ const RightSidebarOpenUi = ({
   const fullName = searchParams.get('fullName');
   const roomname = searchParams.get('roomname') || 'main'
   const id = params.id;
+
+
+  const myEmailRef = useRef(null);
+  useEffect(() => {
+    if(typeof window != 'undefined'){
+      const email = window.localStorage.getItem('email');
+      myEmailRef.current = userrole == 'Moderator' ? 'admin@gmail.com' : email;
+    }
+  },[])
 
 
   const fetchFiles = async () => {
@@ -71,27 +89,14 @@ const RightSidebarOpenUi = ({
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/files`
-        );
-        setFileList(response.data);
-      } catch (error) {
-        console.error("Error uploading file:", error);
-      }
+    try {
+      if(!file) return;
+      const res = handleMediaUpload(file,setUploadProgress);
+      
+    } catch (error) {
+        toast.error(error.message);
+    }finally{
+      setUploadProgress(0)
     }
   };
 
@@ -203,7 +208,7 @@ const RightSidebarOpenUi = ({
         {/* tabs */}
         <div className="flex justify-center items-center gap-2 pb-2 ">
           <Button
-            children="Observers List"
+            children="Participants"
             variant="default"
             type="submit"
             className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersList"
@@ -214,7 +219,7 @@ const RightSidebarOpenUi = ({
           />
           <div className="w-full relative">
             <Button
-              children="Observers Chat"
+              children="Observers"
               variant="default"
               type="submit"
               className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersChat"
@@ -256,18 +261,16 @@ const RightSidebarOpenUi = ({
               iconClassName="!bg-[#EBEBEB]"
             />
             {/* participant container */}
-            {observers
-              ?.filter((observer) => observer.name !== userName)
-              .map((observer) => (
+            {users
+              ?.filter((user) => user.name !== userName)
+              .map((user,index) => (
                 <div
-                  className="flex justify-center items-center gap-2 py-1"
-                  key={observer?.id}
+                  className="flex justify-center items-center gap-2 py-1 my-2 px-2 rounded-md bg-gray-100"
+                  key={user?.id}
                 >
-                  <p className="text-[#1a1a1a] text-[10px] flex-grow">
-                    {observer?.name}
+                  <p className="text-[#1a1a1a] text-sm flex-grow">
+                    {index+1}. {user?.name}
                   </p>
-
-                  <BsChatSquareDotsFill />
                 </div>
               ))}
           </div>
@@ -282,23 +285,16 @@ const RightSidebarOpenUi = ({
             .map((observer) => (
               <div
                 key={observer.id}
-                className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer"
-                onClick={() => setSelectedChat(observer)}
+                className="p-2 items-center gap-2 border-b border-solid my-2 flex justify-between"
+                
               >
                 <div className="flex-grow-1 text-xs ">
                   <p className="pb-1 font-bold">{observer.name}</p>
-                  {/* <p className={`${chat.unreadCount > 0 ? "font-bold" : ""}`}>
-                  {chat.messagePreview}
-                </p> */}
                 </div>
-                {/* <div className="flex flex-col justify-end items-end text-xs">
-                <p className="pb-1">{chat.time}</p>
-                {chat.unreadCount > 0 && (
-                  <p className="py-0.5 px-1.5 text-white bg-[#ff2b2b] rounded-[50%]">
-                    {chat.unreadCount}
-                  </p>
-                )}
-              </div> */}
+
+                <button onClick={() => setSelectedChat(observer)} className="cursor-pointer">
+                  <BsChatSquareDotsFill/>
+                </button>
               </div>
             ))}
 
@@ -395,74 +391,47 @@ const RightSidebarOpenUi = ({
 
         {/* particpants chat */}
         {activeTab === "participantChat" &&
-          !selectedPartcipantChat &&
-          users.
-            filter(user => user.role !== "Moderator")
-            .map((participant) => (
-              <div
-                key={participant.id}
-                className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer"
-                onClick={() => setSelectedParticipantChat(participant)}
-              >
-                <div className="flex-grow-1 text-xs ">
-                  <p className="pb-1 font-bold">{participant.name}</p>
-                </div>
-              </div>
-            ))}
-
-        {activeTab === "participantChat" && selectedPartcipantChat && (
-          <div className="flex-grow pt-2 rounded-xl flex flex-col justify-center items-center">
-            {/* chat name and image */}
-            <div className="flex w-full items-center justify-center gap-2 mb-4 bg-custom-gray-4 p-2">
-              <p className="text-[#1a1a1a] text-[12px] font-bold flex-1">
-                {selectedPartcipantChat.name}
-              </p>
-              <IoClose
-                className="text-custom-black cursor-pointer"
-                onClick={() => setSelectedParticipantChat(null)}
-              />
-            </div>
+          <div className="flex-grow pt-2">
+          <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center relative">
             {/* chat message */}
-            <div className="flex flex-col gap-2 flex-grow">
-              {messages
-                .filter(
-                  (message) =>
-                    (message.senderName === selectedPartcipantChat.name) ||
-                    (message.receiverName === selectedPartcipantChat.name)
-                )
-                .map((message, index) => (
+            <div className="flex flex-col gap-2 flex-grow h-[24rem] overflow-y-auto w-full mb-5">
+              {
+                groupMessage && groupMessage.map((message, index) => (
                   <div
                     key={index}
-                    className={`flex items-center gap-2 ${message.senderName === userName
-                      ? "justify-start"
-                      : "justify-end"
+                    className={`flex items-center gap-2 mb-3 ${message.senderEmail === myEmailRef.current
+                      ? "justify-end"
+                      : "justify-start"
                       }`}
                   >
                     <div
-                      className={`flex flex-col ${message.senderName === userName
-                        ? "items-start"
-                        : "items-end"
+                      className={`flex flex-col ${message.senderEmail === myEmailRef.current
+                        ? "items-end"
+                        : "items-start"
                         }`}
                     >
                       <p
-                        className={`text-[12px] ${message.senderName === userName
+                        className={`text-[12px] w-full ${message.senderEmail === myEmailRef.current
                           ? "text-blue-600"
                           : "text-green-600"
                           }`}
                       >
-                        <span className="font-bold">{message.senderName}:</span>{" "}
-                        {message.message}
+                        <span className="font-bold">
+                          {message.name}:
+                        </span>{" "}
+                        {message.content}
                       </p>
                       <p className="text-[#1a1a1a] text-[10px]">
-                        {new Date(message.createdAt).toLocaleTimeString()}
+                        {new Date(message.timestamp).toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
-                ))}
+                ))
+              }
             </div>
           </div>
-        )}
-
+        </div>
+        }
 
 
       </div>
@@ -476,34 +445,34 @@ const RightSidebarOpenUi = ({
             document hub
           </h1>
           <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
-            Upload File
+            {uploadProgress != 0 ? `${uploadProgress}%`: 'Upload File'}
             <input type="file" className="hidden" onChange={handleFileUpload} />
           </label>
         </div>
         {/* Upload file div */}
-        <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto">
+        <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto h-[15rem]">
           {/* title */}
           <div className="flex justify-between items-center border-b border-solid border-custom-gray-3 pb-1">
             <p className="text-xs text-custom-gray-3">Name</p>
             <p className="text-xs text-custom-gray-3 mr-11">Size</p>
           </div>
           {/* files */}
-          {fileList.map((file, index) => (
+          {mediaBox && mediaBox.map((media, index) => (
             <div
               key={index}
               className="flex items-center justify-between bg-gray-200 py-3 rounded"
             >
               <div className="flex items-center space-x-2">
                 <FaFolder className="h-3 w-3 text-custom-gray-3" />
-                <span className="text-xs text-custom-gray-3">
-                  {file.filename}
-                </span>
+                <a href={media?.file?.url} target="_blank"  download={media?.file?.name} className="text-xs text-custom-gray-3">
+                  {media?.file?.name || "Unkown"}
+                </a>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-xs text-custom-gray-3">{file.size}</span>
+                <span className="text-xs text-custom-gray-3">{bytesToMbs(media?.file?.size || 49972)} Mb</span>
                 <button
                   className="text-red-600 hover:text-red-800"
-                  onClick={() => handleDeleteFile(file._id)}
+                  // onClick={() => handleDeleteFile(file._id)}
                 >
                   <FaTrash className="h-3 w-3" />
                 </button>

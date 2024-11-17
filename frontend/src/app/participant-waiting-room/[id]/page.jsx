@@ -20,6 +20,7 @@ const page = () => {
   const userRole = searchParams.get("role");
   const [participants, setParticipants] = useState([]);
   const [meetingDetails, setMeetingDetails] = useState([])
+  const [participantMessages, setParticipantMessages] = useState([]);
 
   const getMeetingDetails = async (meetingId) => {
     try {
@@ -80,11 +81,21 @@ const page = () => {
       }
     });
 
+    socket.on("participantChatResponse", handleParticipantChatResponse);
+
 
     // Function to request participant list
   const requestParticipantList = () => {
     socket.emit("getParticipantList", { meetingId: params.id });
   };
+
+  const getParticipantChat = async (meetingId) => {
+    socket.emit("getParticipantChat", { meetingId });
+  };
+
+  const requestParticipantListIntervalId = setInterval(() => {
+    getParticipantChat(params.id);
+  }, 1000);
 
   // Initial request
   requestParticipantList();
@@ -100,49 +111,36 @@ const page = () => {
       socket.off("getParticipantListResponse");
       socket.off("participantRemovedFromWaiting");
       socket.off("participantsAdmitted");
+      socket.off("participantChatResponse", handleParticipantChatResponse);
       clearInterval(intervalId);
+      clearInterval(requestParticipantListIntervalId);
     };
   }, [params.id, socket, fullName, userRole, router]);
 
 
-
-  // const getParticipantList = async (meetingId) => {
-  //   try {
-  //     const response = await axios.get(
-  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/participant-list/${meetingId}`
-  //     );
-  //     setParticipants(response?.data?.participantsList);
-
-  //     // Check if any participant matches the fullName and userRole
-  //     const matchedParticipant = response?.data?.participantsList.some(
-  //       (participant) =>
-  //         participant.name === fullName && participant.role === userRole
-  //     );
-
-  //     if (matchedParticipant) {
-  //       router.push(
-  //         `/meeting/${params.id}?fullName=${encodeURIComponent(
-  //           fullName
-  //         )}&role=${encodeURIComponent(userRole)}`
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Error in getting participant list", error);
-  //   }
-  // };
-
-  // Use effect for getting meeting details
-  // useEffect(() => {
-  //   getMeetingDetails(params.id);
-  // }, [params.id]);
+  const handleParticipantChatResponse = (response) => {
+    console.log('new message');
+    if (response.success) {
+      setParticipantMessages(response.participantMessages);
+    }
+  };
 
  
+
+  const sendMessageParticipant = async (message) => {
+    socket.emit("participantSendMessage", { message, meetingId: params.id });
+  };
+
+
+
+
+
 
   return (
     <div className="flex justify-between min-h-screen max-h-screen meeting_bg">
       {/* Left Sidebar */}
       <div className="h-full">
-        <ParticipantLeftSideBar />
+        <ParticipantLeftSideBar participants={participants} sendMessageParticipant={sendMessageParticipant} messages={participantMessages}/>
       </div>
       {/* Main content */}
       <div className="flex-1 w-full max-h-[100vh] overflow-hidden mb-5 flex flex-col">
@@ -171,13 +169,6 @@ const page = () => {
       {/* Second ---------- name bar */}
       <div className="flex justify-between items-center pb-4">
         <HeadingBlue25px children={meetingDetails?.title} />
-        {/* <Button
-          children="Leave"
-          type="submit"
-          variant="meeting"
-          icon={<IoLogOutSharp />}
-          className="rounded-lg text-custom-black px-3 py-1"
-        /> */}
       </div>
     </div>
 

@@ -38,6 +38,9 @@ const page = () => {
     e.preventDefault();
 
     
+    if(typeof window !== 'undefined'){
+      window.localStorage.setItem('email',formData.email);
+    }
     socket.emit("observerJoinMeeting", {
       name: formData.fullName,
       email: formData.email,

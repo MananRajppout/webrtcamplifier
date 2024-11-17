@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { LuClipboardSignature } from "react-icons/lu";
-import { FaAngleDown, FaVideo } from "react-icons/fa";
+import { FaAngleDown, FaFolder, FaTrash, FaVideo } from "react-icons/fa";
 import {
   BsChatSquareDotsFill,
   BsChatSquareFill,
@@ -8,7 +8,7 @@ import {
 } from "react-icons/bs";
 import HeadingLg from "../shared/HeadingLg";
 import Search from "../singleComponent/Search";
-import { IoMdMic } from "react-icons/io";
+import { IoIosDocument, IoMdMic } from "react-icons/io";
 import { IoClose, IoRemoveCircle, IoSend } from "react-icons/io5";
 import { MdInsertEmoticon, MdMoveDown } from "react-icons/md";
 import RemoveUserModal from "../singleComponent/RemoveUserModal";
@@ -20,6 +20,10 @@ import BreakoutRoomModal from "../singleComponent/BreakoutRoomModal";
 import { useParams, useSearchParams } from "next/navigation";
 import { GoMoveToEnd } from "react-icons/go";
 import MoveToBreakModal from "../singleComponent/MoveToBreakModal";
+import { BiEditAlt } from "react-icons/bi";
+import UserRename from "../singleComponent/UserRenameModal";
+import ScrollToBottom from 'react-scroll-to-bottom';
+import { bytesToMbs } from "./RightSidebarOpenUi";
 
 const LeftSidebarOpenUi = ({
   users,
@@ -56,7 +60,12 @@ const LeftSidebarOpenUi = ({
   handleBreakoutRoom,
   brealRoomModelOpen,
   setBreakoutRoomModelOpen,
-  handleMoveParticipant
+  handleMoveParticipant,
+  handleUserRename,
+  sendGroupMessage,
+  groupMessage,
+  handleMediaUpload,
+  mediaBox
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -65,9 +74,37 @@ const LeftSidebarOpenUi = ({
   const [userToRemove, setUserToRemove] = useState(null);
   const [userToMove, setUserToMove] = useState(null);
   const [userToMoveBreak, setUserToMoveBreak] = useState(null);
+  const [userToRename, setUserToRename] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [inputMessage, setInputMessage] = useState("");
-  const [openMoveToBreakModelOpen,setMoveToOpenBreakModelOpen] = useState(false);
+  const [openMoveToBreakModelOpen, setMoveToOpenBreakModelOpen] = useState(false);
+  const [openMoveToRenameOpen, setMoveToOpenRenameOpen] = useState(false);
+  const [groupMessageContent, setGroupMessageContent] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [showUDot,setUShowDot] = useState(false);
+  const [showCDot,setCShowDot] = useState(false);
+  const previosMCountRef = useRef(messages.length);
+  const previosCCountRef = useRef(groupMessage.length);
+
+
+  useEffect(() => {
+    if(previosMCountRef.current < messages?.length){
+      previosMCountRef.current = messages?.length;
+      if(activeTab != 'participants') setUShowDot(true);
+    }
+  },[messages]);
+
+  useEffect(() => {
+    if(previosCCountRef.current < groupMessage?.length){
+      previosCCountRef.current = groupMessage?.length;
+      if(activeTab != 'chats') setCShowDot(true);
+    }
+  },[groupMessage]);
+
+  const myEmailRef = useRef(null);
+
+
+
 
   const params = useParams();
   const searchParams = useSearchParams();
@@ -83,6 +120,7 @@ const LeftSidebarOpenUi = ({
         meetingId: meetingId,
         senderName: userName,
         receiverName: selectedChat.name,
+
         message: inputMessage.trim(),
       };
 
@@ -90,6 +128,14 @@ const LeftSidebarOpenUi = ({
       setInputMessage("");
     }
   };
+
+
+  useEffect(() => {
+    if (typeof window != 'undefined') {
+      const email = window.localStorage.getItem('email');
+      myEmailRef.current = userrole == 'Moderator' ? 'admin@gmail.com' : email;
+    }
+  }, [])
 
 
   const modalRef = useRef();
@@ -126,6 +172,11 @@ const LeftSidebarOpenUi = ({
   const openUserMoveToBreakModal = (event, user) => {
     setUserToMoveBreak(user);
     setMoveToOpenBreakModelOpen(true);
+  };
+
+  const openUserRenameModal = (event, user) => {
+    setUserToRename(user);
+    setMoveToOpenRenameOpen(true);
   };
 
   const closeMoveUserModal = () => {
@@ -197,7 +248,29 @@ const LeftSidebarOpenUi = ({
       url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
     }
     window.open(url, '_self')
-  }, [fullName, userrole, id])
+  }, [fullName, userrole, id]);
+
+
+  const handleGroupMessage = useCallback(() => {
+    if (!groupMessageContent) return;
+    sendGroupMessage(groupMessageContent);
+    setGroupMessageContent('');
+  }, [groupMessageContent]);
+
+
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    try {
+      if(!file) return;
+      const res = handleMediaUpload(file,setUploadProgress);
+      
+    } catch (error) {
+        toast.error(error.message);
+    }finally{
+      setUploadProgress(0)
+    }
+  };
 
 
   return (
@@ -296,113 +369,154 @@ const LeftSidebarOpenUi = ({
         {/* chat container */}
         <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto max-h-[300px] mx-4">
           <div className="flex justify-center items-center gap-2 pb-2 ">
+          <div className="w-full relative">
             <Button
-              children="Participants List"
+              children="Chats"
               variant="default"
               type="submit"
-              className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "participantList"
+              className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "chats"
                 ? "shadow-[0px_4px_6px_#1E656D4D]"
                 : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
                 }  `}
-              onClick={() => handleTabClick("participantList")}
+              onClick={() => {handleTabClick("chats"); setCShowDot(false)}}
             />
+            {
+                showCDot &&
+                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
+              }
+            </div>
             <div className="w-full relative">
               <Button
-                children="Participants Chat"
+                children="Participants"
                 variant="default"
                 type="submit"
-                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "participantChat"
+                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "participants"
                   ? "shadow-[0px_4px_6px_#1E656D4D]"
                   : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
                   }  `}
-                onClick={() => handleTabClick("participantChat")}
+                onClick={() => {handleTabClick("participants"); setUShowDot(false)}}
               />
-              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
+              {
+                showUDot &&
+                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
+              }
             </div>
           </div>
 
           {/* participants container */}
 
           {/* participants list */}
-          {activeTab === "participantList" && (
+          {activeTab === "chats" && (
             <div className="flex-grow pt-2">
-              <Search
-                placeholder="Search Name"
-                onSearch={handleSearch}
-                inputClassName="!bg-[#F3F4F5] !rounded-xl "
-                iconClassName="!bg-[#EBEBEB]"
-              />
-              {/* participant container */}
-              {/* !selectedChat &&
-              users
-                ?.filter((user) => user.name !== userName)
-                .map((user) */}
-              {users
-                ?.filter((user) => user.name !== userName)
-                ?.filter(user => (role == "Moderator" ? true : (user.roomName?.toLowerCase() == roomname?.toLowerCase() || user.role == "Moderator") ))
-                .map((user) => (
-                  <div
-                    className="flex justify-center items-center gap-2 py-1"
-                    key={user?.name}
-                  >
-                    <p className="text-[#1a1a1a] text-[10px] flex-grow">
-                      {user?.name}
-                    </p>
-                    <IoMdMic />
-                    <BsChatSquareDotsFill
-                      onClick={() => handleUserClick(user?.id)}
-                    />
-                    {role === "Moderator" && (
-                      <BsThreeDotsVertical
-                        onClick={(event) =>
-                          toggleRemoveAndWaitingOptionModal(event, user)
-                        }
-                        className="cursor-pointer"
-                      />
-                    )}
+              <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center relative">
+                {/* chat message */}
+                <ScrollToBottom className="flex flex-col gap-2 flex-grow h-[10rem] overflow-y-auto w-full mb-5">
+                  {
+                    groupMessage && groupMessage.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-2 mb-3 ${message.senderEmail === myEmailRef.current
+                          ? "justify-end"
+                          : "justify-start"
+                          }`}
+                      >
+                        <div
+                          className={`flex flex-col ${message.senderEmail === myEmailRef.current
+                            ? "items-end"
+                            : "items-start"
+                            }`}
+                        >
+                          <p
+                            className={`text-[12px] ${message.senderEmail === myEmailRef.current
+                              ? "text-blue-600"
+                              : "text-green-600"
+                              }`}
+                          >
+                            <span className="font-bold">
+                              {message.name}:
+                            </span>{" "}
+                            {message.content}
+                          </p>
+                          <p className="text-[#1a1a1a] text-[10px]">
+                            {new Date(message.timestamp).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </ScrollToBottom>
+
+                {/* send message */}
+                <div className="flex justify-between items-center gap-2 relative">
+                  <input
+                    type="text"
+                    placeholder={`Type Message ${groupMessage.length}`}
+                    className="rounded-lg py-1 px-2 placeholder:text-[10px]"
+                    value={groupMessageContent}
+                    onChange={(e) => setGroupMessageContent(e.target.value)}
+                  // onKeyPress={(e) => e.key === "Enter" && handleGroupMessage()}
+                  />
+                  <div className="absolute right-11 cursor-pointer">
+                    <MdInsertEmoticon />
                   </div>
-                ))}
-              {isModeratorPopupModalOpen && currentUser && (
-                <div
-                  ref={modalRef}
-                  className="absolute bg-white shadow-[0px_3px_6px_#0000004A] rounded-lg w-44 z-20"
-                  style={{
-                    top: modalPosition.top + 20,
-                    left: modalPosition.left - 30,
-                  }}
-                >
-                  <ul className="text-[12px]">
-                    <li
-                      className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-                      onClick={(e) => openRemoveUserModal(e, userToRemove)}
-                    >
-                      <IoRemoveCircle />
-                      <span>Remove</span>
-                    </li>
-                    <li
-                      className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-                      onClick={(e) => openMoveUserModal(e, currentUser)}
-                    >
-                      <MdMoveDown />
-                      <span>Move to Waiting Room</span>
-                    </li>
-
-                    <li
-                      className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2 relative"
-                      onClick={(e) => openUserMoveToBreakModal(e, currentUser)}
-                    >
-                      <GoMoveToEnd />
-                      <span>Move to</span>
-                    </li>
-
-                  </ul>
+                  <div
+                    className="py-1.5 px-1.5 bg-custom-orange-2 rounded-[50%] text-white cursor-pointer text-sm"
+                    onClick={handleGroupMessage}
+                  >
+                    <IoSend />
+                  </div>
                 </div>
-              )}
+              </div>
+            </div>
+          )}
+
+          {isModeratorPopupModalOpen && currentUser && (
+            <div
+              ref={modalRef}
+              className="absolute bg-white shadow-[0px_3px_6px_#0000004A] rounded-lg w-44 z-20"
+              style={{
+                top: modalPosition.top + 20,
+                left: modalPosition.left - 30,
+              }}
+            >
+              <ul className="text-[12px]">
+                <li
+                  className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                  onClick={(e) => openRemoveUserModal(e, userToRemove)}
+                >
+                  <IoRemoveCircle />
+                  <span>Remove</span>
+                </li>
+                <li
+                  className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                  onClick={(e) => openMoveUserModal(e, currentUser)}
+                >
+                  <MdMoveDown />
+                  <span>Move to Waiting Room</span>
+                </li>
+
+                <li
+                  className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2 relative"
+                  onClick={(e) => openUserMoveToBreakModal(e, currentUser)}
+                >
+                  <GoMoveToEnd />
+                  <span>Move to</span>
+                </li>
+
+                <li
+                  className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2 relative"
+                  onClick={(e) => openUserRenameModal(e, currentUser)}
+                >
+                  <BiEditAlt />
+                  <span>Rename</span>
+                </li>
+
+              </ul>
             </div>
           )}
 
           {/* Participant chat */}
-          {activeTab === "participantChat" &&
+          {activeTab === "participants" &&
             !selectedChat &&
             users
               ?.filter((user) => {
@@ -417,29 +531,90 @@ const LeftSidebarOpenUi = ({
               .map((user) => (
                 <div
                   key={user.name}
-                  className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer"
-                  onClick={() => setSelectedChat(user)}
+                  className=" p-2 flex justify-between items-center gap-2 cursor-pointer my-2"
                 >
                   <div className="flex-grow-1 text-xs ">
                     <p className="pb-1 font-bold">{user.name}</p>
                   </div>
+
+                  <div className="flex items-center gap-2">
+
+
+                    <button onClick={() => setSelectedChat(user)} className="cursor-pointer">
+                      <BsChatSquareDotsFill />
+                    </button>
+
+                    {role === "Moderator" && (
+                      <button
+                        onClick={(event) =>
+                          toggleRemoveAndWaitingOptionModal(event, user)
+                        }
+                      >
+                        <BsThreeDotsVertical
+                          className="cursor-pointer"
+                        />
+                      </button>
+
+                    )}
+                  </div>
                 </div>
               ))}
 
-          {activeTab === "participantChat" && selectedChat && (
+
+          {
+            activeTab === "participants" &&
+            !selectedChat && waitingRoom.length > 0 && userrole == 'Moderator' &&
+            waitingRoom.map((user) => (
+              <div
+                key={user.name}
+                className=" p-2 flex justify-between items-center gap-2 cursor-pointer my-2"
+              >
+                <div className="flex-grow-1 text-xs ">
+                  <p className="pb-1 font-bold">{user.name}</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+
+
+                  <button onClick={() => setSelectedChat(user)} className="cursor-pointer">
+                    <BsChatSquareDotsFill />
+                  </button>
+
+                  {role === "Moderator" && (
+                    <button
+                      onClick={(event) =>
+                        toggleRemoveAndWaitingOptionModal(event, user)
+                      }
+                    >
+                      <BsThreeDotsVertical
+                        className="cursor-pointer"
+                      />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          }
+
+
+          {activeTab === "participants" && selectedChat && (
             <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center">
               {/* chat name and image */}
               <div className="flex w-full items-center justify-center gap-2 mb-4 bg-custom-gray-4 p-2">
-                {/* <Image
-                    src={selectedChat.image}
-                    alt="chat-user-image"
-                    height={30}
-                    width={30}
-                    className="rounded-[50%]"
-                  /> */}
                 <p className="text-[#1a1a1a] text-[12px] font-bold flex-1">
                   {selectedChat.name}
                 </p>
+
+
+                {role === "Moderator" && (
+                  <BsThreeDotsVertical
+                    onClick={(event) =>
+                      toggleRemoveAndWaitingOptionModal(event, selectedChat)
+                    }
+                    className="cursor-pointer"
+                  />
+                )}
+
                 <IoClose
                   className="text-custom-black cursor-pointer"
                   onClick={() => setSelectedChat(null)}
@@ -458,7 +633,7 @@ const LeftSidebarOpenUi = ({
                   .map((message, index) => (
                     <div
                       key={index}
-                      className={`flex items-center gap-2 ${message.senderName === userName
+                      className={`flex items-center gap-2 ${message.senderNam === userName
                         ? "justify-end"
                         : "justify-start"
                         }`}
@@ -515,7 +690,7 @@ const LeftSidebarOpenUi = ({
 
       {/* waiting list */}
       {waitingRoom?.length > 0 &&
-        activeTab === "participantList" &&
+        // activeTab === "chats" &&
         role === "Moderator" && (
           <div
             className="flex-grow pt-2 bg-custom-gray-8 p-4 rounded-xl mb-4 overflow-y-auto mx-4"
@@ -564,6 +739,56 @@ const LeftSidebarOpenUi = ({
       {/* {selectedReceiverId && (
         <ChatDashboard  receiverId={selectedReceiverId} users={users}/>
       )} */}
+
+      {/* document hub */}
+      {
+        userrole == "Participant" &&
+        <div className="mb-4">
+        {/* heading */}
+        <div className="flex justify-center items-center gap-2 px-4 pb-2 ">
+          <IoIosDocument className="text-custom-dark-blue-1 text-lg" />
+          <h1 className="uppercase font-bold flex-1 text-custom-dark-blue-2">
+            document hub
+          </h1>
+          <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
+            {uploadProgress != 0 ? `${uploadProgress}%` : 'Upload File'}
+            <input type="file" className="hidden" onChange={handleFileUpload} />
+          </label>
+        </div>
+        {/* Upload file div */}
+        <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto h-[15rem]">
+          {/* title */}
+          <div className="flex justify-between items-center border-b border-solid border-custom-gray-3 pb-1">
+            <p className="text-xs text-custom-gray-3">Name</p>
+            <p className="text-xs text-custom-gray-3 mr-11">Size</p>
+          </div>
+          {/* files */}
+          {mediaBox && mediaBox.map((media, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between bg-gray-200 py-3 rounded"
+            >
+              <div className="flex items-center space-x-2">
+                <FaFolder className="h-3 w-3 text-custom-gray-3" />
+                <a href={media?.file?.url} target="_blank" download={media?.file?.name} className="text-xs text-custom-gray-3">
+                  {media?.file?.name || "Unkown"}
+                </a>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-xs text-custom-gray-3">{bytesToMbs(media?.file?.size || 49972)} Mb</span>
+                <button
+                  className="text-red-600 hover:text-red-800"
+                // onClick={() => handleDeleteFile(file._id)}
+                >
+                  <FaTrash className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      }
+
       {isRemoveModalOpen && (
         <RemoveUserModal
           onClose={closeRemoveUserModal}
@@ -586,6 +811,16 @@ const LeftSidebarOpenUi = ({
           breakoutRooms={breakoutRooms}
           userToMoveBreak={userToMoveBreak}
           handleMoveParticipant={handleMoveParticipant}
+        />
+      }
+
+      {
+        openMoveToRenameOpen &&
+        <UserRename
+          onClose={() => setMoveToOpenRenameOpen(false)}
+          user={userToRename}
+          handleUserRename={handleUserRename}
+          setSelectedChat={setSelectedChat}
         />
       }
 
