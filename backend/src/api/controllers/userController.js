@@ -60,26 +60,26 @@ const signup = async (req, res) => {
     if (!(firstName && lastName && email && password && terms !== undefined)) {
       return res
         .status(400)
-        .json({ message: "All fields are required", status: 400 });
+        .json({ message: "All fields are required" });
     }
     // Validate email format
     const emailError = validateEmail(email);
     if (emailError) {
-      return res.status(400).json({ message: emailError, status: 400 });
+      return res.status(400).json({ message: emailError});
     }
     // Validate password criteria
     const passwordErrors = validatePassword(password);
     if (passwordErrors) {
       return res
         .status(400)
-        .json({ message: passwordErrors.join(" "), status: 400 });
+        .json({ message: passwordErrors.join(" ") });
     }
     // Check if the user already exists
     const userExist = await userModel.findOne({ email }).select("_id");
     if (userExist) {
       return res
         .status(400)
-        .json({ message: "Email already in use", status: 400 });
+        .json({ message: "Email already in use" });
     }
     // Hash the password before saving it in the database
     const hashedPassword = bcrypt.hashSync(password, 8);
@@ -122,12 +122,11 @@ const signup = async (req, res) => {
 
     // Respond with success message
     return res.status(200).json({
-      message: "User registered successfully. Please verify your email!",
-      status: 200,
+      message: "User registered successfully. Please verify your email!"
     });
   } catch (error) {
     console.error("Signup error:", error);
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -135,7 +134,7 @@ const signin = async (req, res) => {
   try {
     const user = await userModel.findOne({ email: req.body.email });
     if (!user || user.isDeleted) {
-      return res.status(404).json({ message: "User Not found.", status: 404 });
+      return res.status(404).json({ message: "User Not found." });
     }
     var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
 
@@ -161,7 +160,7 @@ const signin = async (req, res) => {
 
     res.cookie("token", token, { httpOnly: false, secure: false });
 
-    return res.status(200).json({
+    return res.status(200).json( {message: "User Successfully logged in. " ,data:{
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -170,10 +169,9 @@ const signin = async (req, res) => {
       isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      // accessToken: token,
-    });
+    }});
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -190,7 +188,7 @@ const update = async (req, res) => {
     const user = await userModel.findById(req.body._id || req.body.id);
     // Check if the user is deleted
     if (!user || user.isDeleted) {
-      return res.status(404).json({ message: "User not found.", status: 404 });
+      return res.status(404).json({ message: "User not found."});
     }
     const updatedContact = await userModel.findByIdAndUpdate(
       { _id: req.body._id || req.body.id },
@@ -209,7 +207,7 @@ const update = async (req, res) => {
       { expiresIn: 86400 }
     );
 
-    res.status(200).json({
+    res.status(200).json({message: "User info successfully updated",data: {
       _id: updatedContact._id,
       firstName: updatedContact.firstName,
       lastName: updatedContact.lastName,
@@ -221,9 +219,9 @@ const update = async (req, res) => {
       createdAt: updatedContact.createdAt,
       updatedAt: updatedContact.updatedAt,
       accessToken: token,
-    });
+    }});
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -245,7 +243,7 @@ const deleteById = async (req, res) => {
     await Contact.deleteMany({ createdBy: req.query.id });
     res.status(200).json({ message: "User deleted successfully." });
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message});
   }
 };
 
@@ -257,9 +255,9 @@ const findById = async (req, res) => {
     if (!result || result.isDeleted) {
       res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({ result });
+    res.status(200).json({message: "User retrieved successfully", data: result });
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message});
   }
 };
 
@@ -267,7 +265,7 @@ const findAll = async (req, res) => {
   try {
     const token = req.cookies.token;
     const decoded = decodeToken(token);
-    // console.log('decoded in find all', decoded)
+   
 
     if (decoded?.role !== "SuperAdmin") {
       return res.status(403).json({ message: "Access denied" });
@@ -296,7 +294,7 @@ const findAll = async (req, res) => {
       .skip(limit * (page - 1));
 
     const totalRecords = await userModel.countDocuments({ isDeleted: false });
-    res.status(200).json({ result, totalRecords });
+    res.status(200).json({message: "User info successfully updated", data:{ result, totalRecords }});
   } catch (error) {
     return res
       .status(500)
@@ -316,18 +314,17 @@ const resetPassword = async (req, res) => {
         { new: true }
       );
       res.status(200).send({
-        success: true,
         message: "User password has been reset successfully",
         data: UserData,
       });
     } else {
       res.status(200).send({
-        success: false,
+
         message: "Unauthorized.",
       });
     }
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -336,7 +333,7 @@ const sendResetPasswordMail = async (name, email, token) => {
     const html = `<p> Hi ${name}, please copy the link <a href="${process.env.FRONTEND_BASE_URL}/resetPassword?token=${token}"> reset your password </a>.</p>`;
     await sendEmail(email, "For Reset password", html);
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message});
   }
 };
 
@@ -352,17 +349,17 @@ const forgotPassword = async (req, res) => {
       );
       sendResetPasswordMail(userData.firstName, userData.email, randomString);
       res.status(200).send({
-        success: true,
+     
         message: "Please check your inbox and reset your password",
       });
     } else {
       res.status(200).send({
-        success: true,
+   
         message: "This email does not exist",
       });
     }
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -373,14 +370,14 @@ const verifymail = async (req, res) => {
     const user = await userModel.findOne({ _id: id });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found", status: 404 });
+      return res.status(404).json({ message: "User not found"});
     }
 
     // Check if the user is already verified
     if (user.isEmailVerified) {
       return res
         .status(200)
-        .json({ message: "Account is already verified", status: 200 });
+        .json({ message: "Account is already verified"});
     }
 
     const verifiedMail = await userModel.updateOne(
@@ -389,9 +386,9 @@ const verifymail = async (req, res) => {
     );
     return res
       .status(200)
-      .json({ message: "Email successfully verified", status: 200 });
+      .json({ message: "Email successfully verified"});
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -456,11 +453,10 @@ const uploadUserExcel = async (req, res) => {
     }
 
     return res.status(200).json({
-      message: "Users imported successfully from Excel.",
-      status: 200,
+      message: "Users imported successfully from Excel."
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -530,7 +526,6 @@ const changePassword = async (req, res) => {
       return res
         .status(400)
         .json({
-          status: 400,
           message: "New Password should be different from the Old Password",
         });
     } else {
@@ -538,16 +533,18 @@ const changePassword = async (req, res) => {
       if (passwordErrors) {
         return res
           .status(400)
-          .json({ message: passwordErrors.join(" "), status: 400 });
+          .json({ message: passwordErrors.join(" ")});
       }
 
       const hashedPassword = bcrypt.hashSync(newPassword, 8);
       await userModel.findByIdAndUpdate(user._id, { password: hashedPassword });
       return res
         .status(200)
-        .json({ status: 200, message: "Password changed successfully" });
+        .json({ message: "Password changed successfully" });
     }
-  } catch (error) {}
+  } catch (error) {
+    return res.status(500).json({message: error.message})
+  }
 };
 
 const userCreateByAdmin = async (req, res) => {
@@ -579,7 +576,7 @@ const userCreateByAdmin = async (req, res) => {
   if (userExist) {
     return res
       .status(400)
-      .json({ message: "Email already in use", status: 400 });
+      .json({ message: "Email already in use" });
   }
 
   // Hash the password
@@ -623,8 +620,7 @@ const userCreateByAdmin = async (req, res) => {
 
   // Respond with success message
   return res.status(200).json({
-    message: "User registered successfully. ",
-    status: 200,
+    message: "User registered successfully. "
   });
 };
 
@@ -643,7 +639,7 @@ const updateByAdmin = async (req, res) => {
     const user = await userModel.findById(id);
     // Check if the user is deleted
     if (!user || user.isDeleted) {
-      return res.status(404).json({ message: "User not found.", status: 404 });
+      return res.status(404).json({ message: "User not found." });
     }
     // Prepare an object to hold the updates
     const updates = {};
@@ -660,16 +656,15 @@ const updateByAdmin = async (req, res) => {
     });
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "User not found", status: 404 });
+      return res.status(404).json({ message: "User not found" });
     }
 
     return res.status(200).json({
       message: "User updated successfully.",
-      user: updatedUser,
-      status: 200,
+      user: updatedUser
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -692,7 +687,7 @@ const deleteByAdmin = async (req, res) => {
 
     return res.status(200).json({ message: "User  deleted successfully." });
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message});
   }
 };
 

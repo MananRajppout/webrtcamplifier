@@ -15,14 +15,14 @@ const createCompany = async (req, res) => {
 
   // Check for required fields
   if (!name || !industry || !mobile || !companyEmail || !website || !country || !officialAddress) {
-    return res.status(404).send("Required information not provided all.");
+    return res.status(404).send({message: "Required information not provided all."});
   }
 
   // If sameAddress is true, billingAddress is not required
   if (sameAddress && !billingAddress) {
     billingAddress = officialAddress;
   } else if (!sameAddress && !billingAddress) {
-    return res.status(404).send("Billing address is required when sameAddress is false.");
+    return res.status(404).send({message: "Billing address is required when sameAddress is false."});
   }
 
   try {
@@ -47,7 +47,7 @@ const createCompany = async (req, res) => {
     res.status(201).send({message: "Company created successfully.", data: newCompany});
   } catch (error) {
     console.error("Error creating company:", error);
-    res.status(500).send("Error creating company.");
+    res.status(500).send({message: "Error creating company.", error: error.message});
   }
 };
 
@@ -138,7 +138,7 @@ const getCompany = async (req, res) => {
   try {
     const company = await Company.findById(id);
     if (!company || company.isDeleted) {
-      return res.status(404).send("Company not found.");
+      return res.status(404).send({message: "Company not found."});
     }
 
     res.status(200).json({message: "Company data retrieved successfully.", data:company});
@@ -178,7 +178,7 @@ const getAllCompanies = async (req, res) => {
 
     const count = await Company.countDocuments({isDeleted: false});
 
-    res.status(200).json({
+    res.status(200).json({message: "Companies data retrieved successfully.",
       companies,
       totalPages: Math.ceil(count / limit),
       currentPage: page,
@@ -186,7 +186,7 @@ const getAllCompanies = async (req, res) => {
     });
   } catch (error) {
     console.error("Error retrieving companies:", error);
-    res.status(500).send("Error retrieving companies.");
+    res.status(500).send({message: "Error retrieving companies.", error: error.message});
   }
 };
 
