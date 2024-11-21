@@ -256,13 +256,21 @@ const findById = async (req, res) => {
 
 const findAll = async (req, res) => {
   try {
+    const token = req.cookies.token; 
+    const decoded = decodeToken(token);
+    console.log('decoded in find all', decoded)
+
+    if (decoded?.role !== 'SuperAdmin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
     const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
+    const page = parseInt(req.query.page) ;
     const query = {};
     const result = await userModel
       .find(query)
       .limit(limit)
-      .skip(limit * page);
+      .skip(limit * (page -1));
     const totalRecords = await userModel.countDocuments(query);
     res.status(200).json({ result, totalRecords });
   } catch (error) {
