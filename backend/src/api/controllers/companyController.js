@@ -103,17 +103,25 @@ const updateCompany = async (req, res) => {
 // Delete a company
 const deleteCompany = async (req, res) => {
   const { id } = req.params;
-
+  const token = req.cookies.token;
+  
+  const decoded = decodeToken(token);
+  
+  if (decoded.role !== "SuperAdmin") {
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
-    const deletedCompany = await Company.findByIdAndDelete(id);
-    if (!deletedCompany) {
-      return res.status(404).send("Company not found.");
+    const deletedCompany = await Company.findById(id);
+    if (!deletedCompany || deletedCompany.isDeleted) {
+      return res.status(404).send({message: "Company not found."});
     }
 
-    res.status(200).send("Company deleted successfully.");
+    await Company.findByIdAndUpdate(id, {isDeleted: true})
+
+    res.status(200).send({message: "Company deleted successfully."});
   } catch (error) {
     console.error("Error deleting company:", error);
-    res.status(500).send("Error deleting company.");
+    res.status(500).send({message: "Error deleting company.", error: error.message});
   }
 };
 
