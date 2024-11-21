@@ -294,7 +294,10 @@ const findAll = async (req, res) => {
       .skip(limit * (page - 1));
 
     const totalRecords = await userModel.countDocuments({ isDeleted: false });
-    res.status(200).json({message: "User info successfully updated", data:{ result, totalRecords }});
+    
+    const totalPages = Math.ceil(totalRecords/limit)
+
+    res.status(200).json({message: "User info successfully updated", data:{ result, totalRecords, totalPages }});
   } catch (error) {
     return res
       .status(500)
@@ -551,14 +554,15 @@ const userCreateByAdmin = async (req, res) => {
   const token = req.cookies.token;
 
   const decoded = decodeToken(token);
+  console.log('decoded', decoded)
 
   if (decoded.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
-  const { firstName, lastName, email, company, password } = req.body;
+  const { firstName, lastName, email, companyName, password } = req.body;
   // Validate input fields
-  if (!firstName || !lastName || !email || !company || !password) {
+  if (!firstName || !lastName || !email || !companyName || !password) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
@@ -568,8 +572,8 @@ const userCreateByAdmin = async (req, res) => {
   }
   if (validatePassword(password)) {
     return res
-      .status(400)
-      .json({ message: "Password does not meet criteria." });
+    .status(400)
+    .json({ message: "Password does not meet criteria." });
   }
 
   const userExist = await userModel.findOne({ email }).select("_id");
@@ -587,13 +591,12 @@ const userCreateByAdmin = async (req, res) => {
     firstName,
     lastName,
     email,
-    company,
+    company:companyName,
     password: hashedPassword,
     createdBy: decoded.email,
     termsAccepted: true,
     termsAcceptedTime: new Date(),
   });
-
   const userSavedData = await newUser.save();
 
   // Send a verification email
@@ -610,7 +613,7 @@ const userCreateByAdmin = async (req, res) => {
     firstName,
     lastName,
     email,
-    companyName: company,
+    companyName,
     roles: ["Admin"],
     createdBy: userSavedData._id,
     isUser: true,

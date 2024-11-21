@@ -30,7 +30,7 @@ const ContactTable = ({
   const [isEditContactModalOpen, setIsEditContactModalOpen] = useState(false);
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  // const [inviteDetails, setInviteDetails] = useState({ firstName: '', lastName: '', email: '' });
+ 
 
   const modalRef = useRef();
 

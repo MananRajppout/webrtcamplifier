@@ -1,6 +1,9 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 const DashboardContext = createContext()
 
@@ -12,9 +15,11 @@ export function DashboardContextProvider({ children }) {
   }
 
   return (
+    <QueryClientProvider client={queryClient}>
     <DashboardContext.Provider value={value}>
       {children}
     </DashboardContext.Provider>
+  </QueryClientProvider>
   );
 
 }

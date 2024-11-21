@@ -85,7 +85,7 @@ const getAllContacts = async (req, res) => {
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit));
     const totalDocuments = await Contact.countDocuments(searchQuery);
-    const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
+    const totalPages = Math.ceil(totalDocuments / limit); 
 
     res.status(200).json({
       page: parseInt(page),
