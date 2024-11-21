@@ -54,26 +54,49 @@ const createCompany = async (req, res) => {
 // Update a company
 const updateCompany = async (req, res) => {
   const { id } = req.params;
-  const { name, description } = req.body;
-
-  if (!name || !description) {
-    return res.status(400).send("Name and description are required.");
+  const token = req.cookies.token;
+  
+  const decoded = decodeToken(token);
+  
+  if (decoded.role !== "SuperAdmin") {
+    return res.status(403).json({ message: "Access denied" });
   }
+  let {  name, industry, mobile, companyEmail, website, country, officialAddress, billingAddress, sameAddress } = req.body;
+
+  const updates = {};
+
+  // Only add fields to updates if they are provided
+  if (name) updates.name = name;
+  if (industry) updates.industry = industry;
+  if (mobile) updates.mobile = mobile;
+  if (companyEmail) updates.companyEmail = companyEmail;
+  if (website) updates.website = website;
+  if (country) updates.country = country;
+  if (officialAddress) updates.officialAddress = officialAddress;
+  if (billingAddress) updates.billingAddress = billingAddress;
+  if (sameAddress) updates.sameAddress = sameAddress;
 
   try {
+
+    const company = await Company.findById(id);
+    if (!company || company.isDeleted) {
+      return res.status(404).send({message: "Company not found."});
+    }
+
+
     const updatedCompany = await Company.findByIdAndUpdate(
       id,
-      { name, description },
+      updates,
       { new: true }
     );
     if (!updatedCompany) {
-      return res.status(404).send("Company not found.");
+      return res.status(404).send({message: "Company not found."});
     }
 
-    res.status(200).send("Company updated successfully.");
+    res.status(200).send({message: "Company updated successfully.", data: updatedCompany});
   } catch (error) {
     console.error("Error updating company:", error);
-    res.status(500).send("Error updating company.");
+    res.status(500).send({message: "Error updating company.", error: error.message});
   }
 };
 
@@ -113,7 +136,7 @@ const getCompany = async (req, res) => {
     res.status(200).json({message: "Company data retrieved successfully.", data:company});
   } catch (error) {
     console.error("Error retrieving company:", error);
-    res.status(500).send("Error retrieving company.");
+    res.status(500).send({message: "Error retrieving company.", error: error.message});
   }
 };
 
