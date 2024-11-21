@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Logo from "./Logo";
-import { FaListAlt } from "react-icons/fa";
-import { MdOutlinePets } from "react-icons/md";
+import { FaListAlt, FaUserClock } from "react-icons/fa";
+import { MdOutlineInsertChart, MdOutlinePets } from "react-icons/md";
 import userImage from "../../../public/user.jpg";
 import Image from "next/image";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -10,9 +10,7 @@ import { FaBars } from "react-icons/fa";
 import { AiOutlineClose } from "react-icons/ai";
 import { FaUser } from "react-icons/fa";
 import { IoIosLogOut } from "react-icons/io";
-import LogoutModal from "../singleComponent/LogoutModal";
 import Link from "next/link";
-import { useGlobalContext } from "@/context/GlobalContext";
 import { useDashboardContext } from "@/context/DashboardContext";
 
 const DashboardSidebar = ({
@@ -21,10 +19,11 @@ const DashboardSidebar = ({
   user,
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-const { setViewProject } = useDashboardContext()
+  const { setViewProject } = useDashboardContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const modalRef = useRef(null);
+  console.log("user in dashboard sidebar", user);
 
   const handleModalOpen = () => {
     setIsModalOpen(!isModalOpen);
@@ -65,8 +64,9 @@ const { setViewProject } = useDashboardContext()
             <Logo />
           </div>
           <div className=" flex-grow">
-            <Link href="/dashboard/project"
-            onClick={() => setViewProject(false)}
+            <Link
+              href="/dashboard/project"
+              onClick={() => setViewProject(false)}
             >
               <div className="flex justify-start items-center gap-3">
                 <FaListAlt className="text-base text-[#6A7E88]" />
@@ -76,13 +76,33 @@ const { setViewProject } = useDashboardContext()
               </div>
             </Link>
             <Link href="/dashboard/contacts">
-              <div className="flex justify-center items-center gap-3 pt-5">
+              <div className="flex justify-start items-center gap-3 pt-5">
                 <MdOutlinePets className="text-base text-[#6A7E88]" />
                 <p className="text-base text-[#6A7E88] font-semibold">
                   Contacts
                 </p>
               </div>
             </Link>
+            {user?.role === "SuperAdmin" && (
+              <>
+                <Link href="/dashboard/external-admins">
+                  <div className="flex justify-start items-center gap-3 pt-5">
+                  <FaUserClock className="text-base text-[#6A7E88]"/>
+                    <p className="text-base text-[#6A7E88] font-semibold">
+                      External Admins
+                    </p>
+                  </div>
+                </Link>
+                <Link href="/dashboard/companies">
+                  <div className="flex justify-start items-center gap-3 pt-5">
+                  <MdOutlineInsertChart className="text-base text-[#6A7E88]"/>
+                    <p className="text-base text-[#6A7E88] font-semibold">
+                      Companies
+                    </p>
+                  </div>
+                </Link>
+              </>
+            )}
           </div>
           <div className="w-[240px] mx-auto">
             <div className="flex justify-center items-center gap-2 bg-[#f1f1f1]  h-20 border-white rounded-lg bg-opacity-70 user_info_div_shadow mb-6 relative pl-2">
@@ -179,6 +199,26 @@ const { setViewProject } = useDashboardContext()
                 </p>
               </div>
             </Link>
+            {user?.role === "SuperAdmin" && (
+              <>
+                <Link href="/dashboard/external-admins">
+                  <div className="flex justify-start items-center gap-3 pt-5">
+                  <FaUserClock className="text-base text-[#6A7E88]"/>
+                    <p className="text-base text-[#6A7E88] font-semibold">
+                      External Admins
+                    </p>
+                  </div>
+                </Link>
+                <Link href="/dashboard/companies">
+                  <div className="flex justify-start items-center gap-3 pt-5">
+                  <MdOutlineInsertChart className="text-base text-[#6A7E88]"/>
+                    <p className="text-base text-[#6A7E88] font-semibold">
+                      Companies
+                    </p>
+                  </div>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* User Info Section */}
@@ -209,17 +249,20 @@ const { setViewProject } = useDashboardContext()
             </div>
             {isModalOpen && (
               <div className=" md:hidden absolute  bottom-20   -right-24 z-50 bg-white rounded-lg h-[90px] w-[125px] flex flex-col justify-center items-start px-3 gap-4">
-                <Link href={`/dashboard/my-profile/${user?._id}`} >
-                  <div className="flex justify-start items-center gap-2 cursor-pointer" onClick={()=>{setIsModalOpen(false)}}>
+                <Link href={`/dashboard/my-profile/${user?._id}`}>
+                  <div
+                    className="flex justify-start items-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                    }}
+                  >
                     <FaUser className="text-[#697e89] h-3 w-3" />
                     <p className="text-sm text-[#697e89]">My Profile</p>
                   </div>
                 </Link>
                 <div
                   className="flex justify-start items-center gap-2 cursor-pointer "
-                  onClick={(e) => handleLogoutModalOpen(e)
-                    
-                  }
+                  onClick={(e) => handleLogoutModalOpen(e)}
                 >
                   <IoIosLogOut className="text-[#697e89] h-3 w-3" />
                   <p className="text-sm text-[#697e89]">Logout</p>

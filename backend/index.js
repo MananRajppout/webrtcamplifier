@@ -1,7 +1,7 @@
 const express = require("express");
 const http = require("http");
 const setupSocket = require("./src/api/socket/socket.js");
-
+const cookieParser = require('cookie-parser');
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
@@ -21,13 +21,14 @@ dotenv.config();
 app.use(
   cors({
     origin: [process.env.FRONTEND_BASE_URL, "https://new-amplify-fe-kj4c.vercel.app", "http://localhost:3000", "http://localhost:3001", "http://localhost:5173"],
+    credentials: true,
   })
 );
 app.use(express.json());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('EventsEmitter',EventsEmitter);
-
+app.use(cookieParser());
 
 
 

@@ -9,6 +9,7 @@ const Contact = require("../models/contactModel");
 const { default: mongoose } = require("mongoose");
 const Meeting = require("../models/meetingModel");
 const Project = require("../models/projectModel");
+const { decodeToken } = require("../../utils/jwt");
 
 
 const validatePassword = (password) => {
@@ -40,8 +41,12 @@ const validatePassword = (password) => {
 };
 
 const validateEmail = (email) => {
+  console.log('email', email)
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  console.log('email pattern', EMAIL_PATTERN.test(email))
+
   if (!EMAIL_PATTERN.test(email)) {
+
     return "Invalid email format.";
   }
   return null;
@@ -87,10 +92,10 @@ const signup = async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
-      role: "Admin", // Default role set to 'Admin'
-      isEmailVerified: false, // Default to false until email is verified
-      termsAccepted: terms, // Capture acceptance of terms
-      termsAcceptedTime: new Date(), // Log the timestamp of the acceptance
+      role: "Admin", 
+      isEmailVerified: false, 
+      termsAccepted: terms, 
+      termsAcceptedTime: new Date(), 
     });
     // Save the new user
     const userSavedData = await newUser.save();
@@ -145,14 +150,15 @@ const signin = async (req, res) => {
       });
     }
 
-    var token = jwt.sign(
-      { id: user._id, name: user.firstName, role: user.role },
+    let token = jwt.sign(
+      { id: user._id, name: user.firstName, email:user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: 86400 }
-    ); // 24 hours
+    );
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
-
+    
+    res.cookie('token', token, { httpOnly: false, secure: false });
 
     return res.status(200).json({
       _id: user._id,
@@ -163,7 +169,7 @@ const signin = async (req, res) => {
       isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      accessToken: token,
+      // accessToken: token,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
@@ -507,6 +513,86 @@ const changePassword = async (req, res) => {
   }
 }
 
+const userCreateByAdmin = async (req, res) => {
+  const token = req.cookies.token; 
+
+  const decoded = decodeToken(token)
+
+  if (decoded.role !== 'SuperAdmin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+
+  const { firstName, lastName, email, company, password } = req.body;
+  // Validate input fields
+  if (!firstName || !lastName || !email || !company || !password) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  // Validate email and password
+  if (validateEmail(email)) {
+    return res.status(400).json({ message: 'Invalid email format.' });
+  }
+  if (validatePassword(password)) {
+    return res.status(400).json({ message: 'Password does not meet criteria.' });
+  }
+
+  const userExist = await userModel.findOne({ email }).select("_id");
+  if (userExist) {
+    return res
+      .status(400)
+      .json({ message: "Email already in use", status: 400 });
+  }
+
+  // Hash the password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Create user object
+  const newUser = new userModel({
+    firstName,
+    lastName,
+    email,
+    company,
+    password: hashedPassword,
+    createdBy: decoded.email,
+    termsAccepted: true, 
+    termsAcceptedTime: new Date(), 
+  });
+
+  const userSavedData = await newUser.save();
+
+
+  // Send a verification email
+  sendVerifyEmail(firstName, email, newUser._id);
+
+  const contacts = await Contact.find({ email });
+
+  if (contacts.length > 0) {
+    // Update all matching contacts to set isUser field to true
+    await Contact.updateMany({ email }, { $set: { isUser: true } });
+  }
+
+  const newContact = new Contact({
+    firstName,
+    lastName,
+    email,
+    companyName: company,
+    roles: ["Admin"],
+    createdBy: userSavedData._id,
+    isUser: true,
+  });
+
+  await newContact.save();
+
+
+  // Respond with success message
+  return res.status(200).json({
+    message: "User registered successfully. ",
+    status: 200,
+  });
+
+}
+
+
 module.exports = {
   signup,
   signin,
@@ -519,5 +605,6 @@ module.exports = {
   verifymail,
   uploadUserExcel,
   downloadUserExcel,
-  changePassword
+  changePassword,
+  userCreateByAdmin
 };

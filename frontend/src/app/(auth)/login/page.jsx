@@ -43,11 +43,12 @@ const Login = () => {
         {
           email: formData.email,
           password: formData.password,
-        }
+        },
+        { withCredentials: true }
       );
       setUser(response.data);
       // Store the token in cookies
-      document.cookie = `token=${response.data.accessToken}; path=/; max-age=86400;`;
+      // document.cookie = `token=${response.data.accessToken}; path=/; max-age=86400;`;
 
 
       localStorage.setItem("user", JSON.stringify(response.data));

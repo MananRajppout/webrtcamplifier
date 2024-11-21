@@ -27,7 +27,7 @@ const userSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ['Admin', 'Moderator', 'Observer'],
+    enum: ['Admin', 'Moderator', 'Observer', 'SuperAdmin'],
     default: 'Admin'
   },
   isEmailVerified: {
@@ -49,6 +49,13 @@ const userSchema = new Schema({
   token: {
     type: String,
   },
+  company: {
+    type: String,
+  },
+  createdBy: {
+    type: String,
+    default: 'self'
+  }
 
 }, { timestamps: true });
 

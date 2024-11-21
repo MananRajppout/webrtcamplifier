@@ -33,4 +33,5 @@ module.exports = function (app) {
   app.post("/api/users/forgot-password", controller.forgotPassword);
   app.get("/api/verify", controller.verifymail);
   app.post("/api/users/changePassword", controller.changePassword);
+  app.post("/api/users/create-by-admin", controller.userCreateByAdmin)
 };
