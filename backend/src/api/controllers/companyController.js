@@ -20,13 +20,18 @@ const createCompany = async (req, res) => {
 
   // If sameAddress is true, billingAddress is not required
   if (sameAddress && !billingAddress) {
-    
     billingAddress = officialAddress;
   } else if (!sameAddress && !billingAddress) {
     return res.status(404).send("Billing address is required when sameAddress is false.");
   }
 
   try {
+
+    const isExist = await Company.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    if (isExist) {
+      return res.status(400).send({message: "Company name already exists."});
+    }
+
     const newCompany = new Company({ 
       name, 
       industry, 
@@ -92,14 +97,20 @@ const deleteCompany = async (req, res) => {
 // Get a single company
 const getCompany = async (req, res) => {
   const { id } = req.params;
-
+  const token = req.cookies.token;
+  
+  const decoded = decodeToken(token);
+  
+  if (decoded.role !== "SuperAdmin") {
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
     const company = await Company.findById(id);
-    if (!company) {
+    if (!company || company.isDeleted) {
       return res.status(404).send("Company not found.");
     }
 
-    res.status(200).json(company);
+    res.status(200).json({message: "Company data retrieved successfully.", data:company});
   } catch (error) {
     console.error("Error retrieving company:", error);
     res.status(500).send("Error retrieving company.");
