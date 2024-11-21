@@ -30,6 +30,11 @@ const userSchema = new Schema({
     enum: ['Admin', 'Moderator', 'Observer', 'SuperAdmin'],
     default: 'Admin'
   },
+  status: {
+    type: String,
+    enum : ['Active', 'Inactive'],
+    default: 'Active'
+  },
   isEmailVerified: {
     type: Boolean,
     default: false
@@ -51,6 +56,10 @@ const userSchema = new Schema({
   },
   company: {
     type: String,
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
   },
   createdBy: {
     type: String,

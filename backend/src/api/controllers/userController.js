@@ -11,7 +11,6 @@ const Meeting = require("../models/meetingModel");
 const Project = require("../models/projectModel");
 const { decodeToken } = require("../../utils/jwt");
 
-
 const validatePassword = (password) => {
   const errors = [];
 
@@ -41,12 +40,11 @@ const validatePassword = (password) => {
 };
 
 const validateEmail = (email) => {
-  console.log('email', email)
+  console.log("email", email);
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  console.log('email pattern', EMAIL_PATTERN.test(email))
+  console.log("email pattern", EMAIL_PATTERN.test(email));
 
   if (!EMAIL_PATTERN.test(email)) {
-
     return "Invalid email format.";
   }
   return null;
@@ -92,14 +90,13 @@ const signup = async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
-      role: "Admin", 
-      isEmailVerified: false, 
-      termsAccepted: terms, 
-      termsAcceptedTime: new Date(), 
+      role: "Admin",
+      isEmailVerified: false,
+      termsAccepted: terms,
+      termsAcceptedTime: new Date(),
     });
     // Save the new user
     const userSavedData = await newUser.save();
-
 
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
@@ -123,7 +120,6 @@ const signup = async (req, res) => {
 
     await newContact.save();
 
-
     // Respond with success message
     return res.status(200).json({
       message: "User registered successfully. Please verify your email!",
@@ -138,7 +134,7 @@ const signup = async (req, res) => {
 const signin = async (req, res) => {
   try {
     const user = await userModel.findOne({ email: req.body.email });
-    if (!user) {
+    if (!user || user.isDeleted) {
       return res.status(404).json({ message: "User Not found.", status: 404 });
     }
     var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
@@ -151,14 +147,19 @@ const signin = async (req, res) => {
     }
 
     let token = jwt.sign(
-      { id: user._id, name: user.firstName, email:user.email, role: user.role },
+      {
+        id: user._id,
+        name: user.firstName,
+        email: user.email,
+        role: user.role,
+      },
       process.env.JWT_SECRET,
       { expiresIn: 86400 }
     );
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
-    
-    res.cookie('token', token, { httpOnly: false, secure: false });
+
+    res.cookie("token", token, { httpOnly: false, secure: false });
 
     return res.status(200).json({
       _id: user._id,
@@ -186,6 +187,11 @@ const update = async (req, res) => {
     }
 
     delete req.body.password;
+    const user = await userModel.findById(req.body._id || req.body.id);
+    // Check if the user is deleted
+    if (!user || user.isDeleted) {
+      return res.status(404).json({ message: "User not found.", status: 404 });
+    }
     const updatedContact = await userModel.findByIdAndUpdate(
       { _id: req.body._id || req.body.id },
       req.body,
@@ -197,7 +203,7 @@ const update = async (req, res) => {
       {
         id: updatedContact._id,
         name: updatedContact.firstName,
-        role: updatedContact.role
+        role: updatedContact.role,
       },
       process.env.JWT_SECRET,
       { expiresIn: 86400 }
@@ -214,7 +220,7 @@ const update = async (req, res) => {
       isEmailVerified: updatedContact.isEmailVerified,
       createdAt: updatedContact.createdAt,
       updatedAt: updatedContact.updatedAt,
-      accessToken: token
+      accessToken: token,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
@@ -224,16 +230,16 @@ const update = async (req, res) => {
 const deleteById = async (req, res) => {
   try {
     if (!req.query.id) {
-      return res.status(400).json({ message: "id is required" })
+      return res.status(400).json({ message: "id is required" });
     }
     const exist = await userModel.findById(req.query.id).select("name");
-    if (!exist) {
+    if (!exist || exist.isDeleted) {
       return res.status(404).json({ message: "User not found" });
     }
     await userModel.findByIdAndDelete({
       _id: req.query._id || req.query.id,
     });
-    const ids = await Project.distinct("_id", { createdBy: req.query.id })
+    const ids = await Project.distinct("_id", { createdBy: req.query.id });
     await Meeting.deleteMany({ projectId: { $in: ids } });
     await Project.deleteMany({ createdBy: req.query.id });
     await Contact.deleteMany({ createdBy: req.query.id });
@@ -248,6 +254,9 @@ const findById = async (req, res) => {
     const result = await userModel.findById({
       _id: req.query._id || req.query.id,
     });
+    if (!result || result.isDeleted) {
+      res.status(404).json({ message: "User not found" });
+    }
     res.status(200).json({ result });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
@@ -256,35 +265,37 @@ const findById = async (req, res) => {
 
 const findAll = async (req, res) => {
   try {
-    const token = req.cookies.token; 
+    const token = req.cookies.token;
     const decoded = decodeToken(token);
     // console.log('decoded in find all', decoded)
 
-    if (decoded?.role !== 'SuperAdmin') {
-      return res.status(403).json({ message: 'Access denied' });
+    if (decoded?.role !== "SuperAdmin") {
+      return res.status(403).json({ message: "Access denied" });
     }
 
     const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page) ;
-    const search = req.query.search || ""; 
-    const company = req.query.company || ""; 
+    const page = parseInt(req.query.page);
+    const search = req.query.search || "";
+    const company = req.query.company || "";
 
     // Build the query object
     const query = {
+      isDeleted: false,
       ...(search && {
         $or: [
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
-        ]
+          { firstName: { $regex: search, $options: "i" } },
+          { lastName: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
       }),
-      ...(company && { company: company }) 
+      ...(company && { company: company }),
     };
     const result = await userModel
       .find(query)
       .limit(limit)
-      .skip(limit * (page -1));
-    const totalRecords = await userModel.countDocuments(query);
+      .skip(limit * (page - 1));
+
+    const totalRecords = await userModel.countDocuments({ isDeleted: false });
     res.status(200).json({ result, totalRecords });
   } catch (error) {
     return res
@@ -359,24 +370,26 @@ const verifymail = async (req, res) => {
   const id = req.query.id;
 
   try {
-
     const user = await userModel.findOne({ _id: id });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found', status: 404 });
+      return res.status(404).json({ message: "User not found", status: 404 });
     }
 
     // Check if the user is already verified
     if (user.isEmailVerified) {
-      return res.status(200).json({ message: 'Account is already verified', status: 200 });
+      return res
+        .status(200)
+        .json({ message: "Account is already verified", status: 200 });
     }
 
     const verifiedMail = await userModel.updateOne(
       { _id: id }, // Correct query object
-      { $set: { isEmailVerified: true } },
-
+      { $set: { isEmailVerified: true } }
     );
-    return res.status(200).json({ message: 'Email successfully verified', status: 200 });
+    return res
+      .status(200)
+      .json({ message: "Email successfully verified", status: 200 });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
@@ -507,17 +520,20 @@ const changePassword = async (req, res) => {
     const { userId, oldPassword, newPassword } = req.body;
     const user = await userModel.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" })
+      return res.status(404).json({ message: "User not found" });
     }
     const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
     const isPasswordSame = await bcrypt.compare(newPassword, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ message: " Old Password is incorrect" });
-    }
-    else if (isPasswordSame) {
-      return res.status(400).json({ status: 400, message: "New Password should be different from the Old Password" });
-    }
-    else {
+    } else if (isPasswordSame) {
+      return res
+        .status(400)
+        .json({
+          status: 400,
+          message: "New Password should be different from the Old Password",
+        });
+    } else {
       const passwordErrors = validatePassword(newPassword);
       if (passwordErrors) {
         return res
@@ -527,34 +543,36 @@ const changePassword = async (req, res) => {
 
       const hashedPassword = bcrypt.hashSync(newPassword, 8);
       await userModel.findByIdAndUpdate(user._id, { password: hashedPassword });
-      return res.status(200).json({ status: 200, message: "Password changed successfully" });
+      return res
+        .status(200)
+        .json({ status: 200, message: "Password changed successfully" });
     }
-  } catch (error) {
-
-  }
-}
+  } catch (error) {}
+};
 
 const userCreateByAdmin = async (req, res) => {
-  const token = req.cookies.token; 
+  const token = req.cookies.token;
 
-  const decoded = decodeToken(token)
+  const decoded = decodeToken(token);
 
-  if (decoded.role !== 'SuperAdmin') {
-    return res.status(403).json({ message: 'Access denied' });
+  if (decoded.role !== "SuperAdmin") {
+    return res.status(403).json({ message: "Access denied" });
   }
 
   const { firstName, lastName, email, company, password } = req.body;
   // Validate input fields
   if (!firstName || !lastName || !email || !company || !password) {
-    return res.status(400).json({ message: 'All fields are required.' });
+    return res.status(400).json({ message: "All fields are required." });
   }
 
   // Validate email and password
   if (validateEmail(email)) {
-    return res.status(400).json({ message: 'Invalid email format.' });
+    return res.status(400).json({ message: "Invalid email format." });
   }
   if (validatePassword(password)) {
-    return res.status(400).json({ message: 'Password does not meet criteria.' });
+    return res
+      .status(400)
+      .json({ message: "Password does not meet criteria." });
   }
 
   const userExist = await userModel.findOne({ email }).select("_id");
@@ -575,12 +593,11 @@ const userCreateByAdmin = async (req, res) => {
     company,
     password: hashedPassword,
     createdBy: decoded.email,
-    termsAccepted: true, 
-    termsAcceptedTime: new Date(), 
+    termsAccepted: true,
+    termsAcceptedTime: new Date(),
   });
 
   const userSavedData = await newUser.save();
-
 
   // Send a verification email
   sendVerifyEmail(firstName, email, newUser._id);
@@ -604,15 +621,80 @@ const userCreateByAdmin = async (req, res) => {
 
   await newContact.save();
 
-
   // Respond with success message
   return res.status(200).json({
     message: "User registered successfully. ",
     status: 200,
   });
+};
 
-}
+const updateByAdmin = async (req, res) => {
+  const token = req.cookies.token;
 
+  const decoded = decodeToken(token);
+
+  if (decoded.role !== "SuperAdmin") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  const { id, firstName, lastName, status, company } = req.body;
+
+  try {
+    const user = await userModel.findById(id);
+    // Check if the user is deleted
+    if (!user || user.isDeleted) {
+      return res.status(404).json({ message: "User not found.", status: 404 });
+    }
+    // Prepare an object to hold the updates
+    const updates = {};
+
+    // Only add fields to updates if they are provided
+    if (firstName) updates.firstName = firstName;
+    if (lastName) updates.lastName = lastName;
+    if (status) updates.status = status;
+    if (company) updates.company = company;
+
+    // Update the user in the database
+    const updatedUser = await userModel.findByIdAndUpdate(id, updates, {
+      new: true,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found", status: 404 });
+    }
+
+    return res.status(200).json({
+      message: "User updated successfully.",
+      user: updatedUser,
+      status: 200,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }
+};
+
+const deleteByAdmin = async (req, res) => {
+  const { id } = req.params;
+  const token = req.cookies.token;
+
+  const decoded = decodeToken(token);
+
+  if (decoded.role !== "SuperAdmin") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  const exist = await userModel.findById(id);
+  if (!exist || exist.isDeleted) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  try {
+    await userModel.findByIdAndUpdate(id, { isDeleted: true });
+
+    return res.status(200).json({ message: "User  deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }
+};
 
 module.exports = {
   signup,
@@ -627,5 +709,7 @@ module.exports = {
   uploadUserExcel,
   downloadUserExcel,
   changePassword,
-  userCreateByAdmin
+  userCreateByAdmin,
+  updateByAdmin,
+  deleteByAdmin,
 };
