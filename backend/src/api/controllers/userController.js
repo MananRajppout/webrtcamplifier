@@ -258,7 +258,7 @@ const findAll = async (req, res) => {
   try {
     const token = req.cookies.token; 
     const decoded = decodeToken(token);
-    console.log('decoded in find all', decoded)
+    // console.log('decoded in find all', decoded)
 
     if (decoded?.role !== 'SuperAdmin') {
       return res.status(403).json({ message: 'Access denied' });
@@ -266,7 +266,20 @@ const findAll = async (req, res) => {
 
     const limit = parseInt(req.query.limit);
     const page = parseInt(req.query.page) ;
-    const query = {};
+    const search = req.query.search || ""; 
+    const company = req.query.company || ""; 
+
+    // Build the query object
+    const query = {
+      ...(search && {
+        $or: [
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      }),
+      ...(company && { company: company }) 
+    };
     const result = await userModel
       .find(query)
       .limit(limit)
