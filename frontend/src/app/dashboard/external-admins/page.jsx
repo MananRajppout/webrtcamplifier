@@ -1,5 +1,6 @@
 'use client'
 import Button from '@/components/shared/button'
+import Dropdown from '@/components/shared/Dropdown'
 import HeadingBlue25px from '@/components/shared/HeadingBlue25px'
 import AddExternalAdminModal from '@/components/singleComponent/AddExternalAdminModal'
 import ExternalAdminsTable from '@/components/singleComponent/ExternalAdminsTable'
@@ -14,9 +15,13 @@ const page = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
   const [currentAdmin, setCurrentAdmin] = useState(null)
-  // const [externalAdmins, setExternalAdmins] = useState([])
+  const [selectedCompany, setSelectedCompany] = useState('')
+
+  const handleSelectedCompany = (company) => {
+    setSelectedCompany(company)
+  }
+  
 
   const handleOpenAddExternalAdminModal = () => {
     setShowAddExternalAdminModal(true)
@@ -36,32 +41,56 @@ const page = () => {
     setShowAddExternalAdminModal(false)
   }
   
-  const fetchExternalAdmins = async (page=1, searchQuery = '') => {
+  const fetchExternalAdmins = async (page=1, searchQuery = '', company='') => {
     const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/find-all`, {
       params: {
-        page, limit: 10, search: searchQuery
+        page, limit: 10, search: searchQuery, company
       },
       withCredentials: true,
     });
+
     setTotalPages(response?.data?.data?.data?.totalPages)
     return response.data; 
   };
 
   const { data } = useQuery({
-    queryKey: ['externalAdmins'],
-    queryFn: fetchExternalAdmins,
+    queryKey: ['externalAdmins', searchTerm, selectedCompany, page],
+    queryFn: ()=> fetchExternalAdmins(page, searchTerm, selectedCompany),
   });
 
   const externalAdmins = data?.data?.result
 
- useEffect(() => {
+//  useEffect(() => {
    
-  fetchExternalAdmins(page, searchTerm)
- }, [page, searchTerm])
+//   fetchExternalAdmins(page, searchTerm)
+//  }, [page, searchTerm])
  
+    // New function to fetch all companies
+    const fetchAllCompanies = async () => {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all-companies`, {
+        withCredentials: true,
+      });
+      return response.data; 
+    };
   
-  console.log('external admins', externalAdmins)
-
+    // New query to fetch companies
+    const { data: companiesData } = useQuery({
+      queryKey: ['companies'],
+      queryFn: fetchAllCompanies,
+    });
+  
+    // You can access the companies data here
+    // const companies = companiesData?.data;
+    const companies = companiesData?.companies.reduce((acc, cur) => {
+     
+      if (!acc.includes(cur.name)) {
+        acc.push(cur.name);
+      }
+      return acc;
+    }, []);
+    
+    // Log the unique company names
+    
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
@@ -97,8 +126,23 @@ const page = () => {
     {/* search bar */}
     <div className="border-b border-solid border-gray-400 py-2 w-full bg-white">
     <div className="w-full bg-white">
-      <div className="p-2 flex justify-Start items-center ">
+      <div className="p-2 flex justify-between items-center ">
           <Search placeholder="Search name & email" onSearch={handleSearch} />
+          <div className='flex justify-end items-center gap-2'>
+          <Dropdown
+          options={companies}
+          selectedOption={selectedCompany}
+          onSelect={handleSelectedCompany}
+          className='min-w-60'
+          />
+          <Button 
+          children='Clear Filter'
+          variant='secondary'
+          type='button'
+          onClick={()=> setSelectedCompany('')}
+          className='px-3 py-2 rounded-lg'
+          />
+          </div>
         </div>
         {/* <ContactFilter onFilter={handleFilter} userId={user?._id} /> */}
       </div>
@@ -115,7 +159,7 @@ const page = () => {
         handlePageChange={handlePageChange}
         currentAdmin={currentAdmin} 
         setCurrentAdmin={setCurrentAdmin} 
-
+        companies={companies}
         />
       ) : (
         <div className="flex-grow w-full h-full flex justify-center items-center pt-20">

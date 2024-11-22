@@ -4,7 +4,6 @@ import { CiSearch } from "react-icons/ci";
 
 const Search = ({ placeholder, onSearch, inputClassName, iconClassName }) => {
   const [searchInput, setSearchInput] = useState('');
-
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       onSearch(searchInput);

@@ -46,14 +46,13 @@ const Login = () => {
         },
         { withCredentials: true }
       );
-      setUser(response.data);
-      // Store the token in cookies
-      // document.cookie = `token=${response.data.accessToken}; path=/; max-age=86400;`;
+      setUser(response.data.data);
+      
 
 
-      localStorage.setItem("user", JSON.stringify(response.data));
+      localStorage.setItem("user", JSON.stringify(response.data.data));
 
-      const redirectUrl = router.query?.redirect || `/dashboard/my-profile/${response.data._id}`;
+      const redirectUrl = router.query?.redirect || `/dashboard/my-profile/${response.data.data._id}`;
         router.replace(redirectUrl);
 
         // setIsLoading(false);

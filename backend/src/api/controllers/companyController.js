@@ -150,7 +150,7 @@ const getCompany = async (req, res) => {
 
 // Get all companies with pagination
 const getAllCompanies = async (req, res) => {
-  const { page = 1, limit = 10, search } = req.query;
+  const { page = 1, limit = 10, search =''} = req.query;
   const token = req.cookies.token;
   
   const decoded = decodeToken(token);
@@ -158,6 +158,7 @@ const getAllCompanies = async (req, res) => {
   if (decoded.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
+  console.log(req.query, decoded)
   try {
     const query = {
       isDeleted: false,
@@ -176,6 +177,7 @@ const getAllCompanies = async (req, res) => {
       .skip((page - 1) * limit)
       .exec();
 
+      console.log(companies)
     const count = await Company.countDocuments({isDeleted: false});
 
     res.status(200).json({message: "Companies data retrieved successfully.",

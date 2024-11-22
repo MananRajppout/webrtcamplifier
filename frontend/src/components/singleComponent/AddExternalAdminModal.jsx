@@ -1,11 +1,10 @@
 'use client'
 import React, { useState } from "react";
 import InputField from "../shared/InputField";
-import { useGlobalContext } from "@/context/GlobalContext";
-import toast from "react-hot-toast";
 import Button from "../shared/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const AddExternalAdminModal = ({
   onClose,
@@ -20,7 +19,6 @@ const AddExternalAdminModal = ({
 
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const { user } = useGlobalContext();
   const queryClient = useQueryClient()
 
   const addExternalAdmin = async (newAdmin) => {
@@ -37,7 +35,7 @@ const AddExternalAdminModal = ({
   const mutation = useMutation({
     mutationFn: addExternalAdmin,
     onSuccess: () => {
-      // Invalidate and refetch
+      toast.success('Admin Added Successfully.')
       queryClient.invalidateQueries({ queryKey: ['externalAdmins'] });
       onClose()
     },
@@ -45,7 +43,6 @@ const AddExternalAdminModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('handle submit')
     // Validation
     if (!email.includes('@')) {
       setError("Invalid email address.");
@@ -68,7 +65,6 @@ const AddExternalAdminModal = ({
       companyName,
       password,
     };
-console.log('new admin', newAdmin)
     // Call the mutation
     mutation.mutate(newAdmin);
   };

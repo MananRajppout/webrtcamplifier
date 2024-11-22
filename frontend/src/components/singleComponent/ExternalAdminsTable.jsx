@@ -10,12 +10,14 @@ import AddContactModal from "./AddContactModal";
 import { IoTrashBin } from "react-icons/io5";
 import Button from "../shared/button";
 import Pagination from "../shared/Pagination";
+import ViewExternalAdminModal from "./ViewExternalAdminModal";
+import EditExternalAdminModal from "./EditExternalAdminModal";
 
 const ExternalAdminsTable = ({
   externalAdmins,
   page,setPage,
   totalPages,
-  handlePageChange, currentAdmin, setCurrentAdmin
+  handlePageChange, currentAdmin, setCurrentAdmin, companies
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; 
@@ -23,7 +25,7 @@ const ExternalAdminsTable = ({
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [isViewExternalAdminModalOpen, setIsViewExternalAdminModalOpen] = useState(false);
   const [isEditExternalAdminModalOpen, setIsEditExternalAdminModalOpen] = useState(false);
-
+  // const [currentAdmin, setCurrentAdmin] = useState(null)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   // const [inviteDetails, setInviteDetails] = useState({ firstName: '', lastName: '', email: '' });
 
@@ -32,7 +34,8 @@ const ExternalAdminsTable = ({
 
 
   const handleEditAdminOpenModal = (admin) => {
-    
+    setIsEditExternalAdminModalOpen(true)
+    closeModal();
   };
 
   const handleEditAdminCloseModal = () => {
@@ -40,7 +43,8 @@ const ExternalAdminsTable = ({
   };
 
   const handleViewAdminOpenModal = (admin) => {
-    
+    setIsViewExternalAdminModalOpen(true)
+    closeModal();
   };
 
   const handleViewAdminCloseModal = () => {
@@ -174,20 +178,21 @@ const ExternalAdminsTable = ({
         />
       </div>
       {/* View Contact Modal */}
-      {/* {isViewAdminModalOpen && (
-        <ViewAdminModal
-          user={currentAdmin}
-          onClose={handleViewAdminCloseModal}
+      {isViewExternalAdminModalOpen && (
+        <ViewExternalAdminModal
+          onClose={()=> setIsViewExternalAdminModalOpen(false)}
+          currentAdmin={currentAdmin}
         />
-      )} */}
+      )}
 
       {/* Edit Moderator Modal */}
-      {/* {isEditAdminModalOpen && (
-        <AddAdminModal
-          onClose={handleEditAdminCloseModal}
-          contactToEdit={currentAdmin}
+      {isEditExternalAdminModalOpen && (
+        <EditExternalAdminModal
+          onClose={()=> setIsEditExternalAdminModalOpen(false)}
+          currentAdmin={currentAdmin}
+          companies={companies}
         />
-      )} */}
+      )}
     </div>
   );
 };

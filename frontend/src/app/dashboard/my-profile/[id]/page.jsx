@@ -59,6 +59,7 @@ const Page = () => {
     setShowModal(true);
   };
   const {user, setUser}= useGlobalContext()
+  console.log('user at the profile', user)
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -205,15 +206,15 @@ const Page = () => {
               <div className="space-y-7 pt-7">
                 <HeadingParagaraph
                   heading="First Name"
-                  paragraph={user && user.firstName.toUpperCase()}
+                  paragraph={user && user?.firstName?.toUpperCase()}
                 />
                 <HeadingParagaraph
                   heading="Last Name"
-                  paragraph={user && user.lastName.toUpperCase()}
+                  paragraph={user && user?.lastName?.toUpperCase()}
                 />
                 <HeadingParagaraph
                   heading="Email"
-                  paragraph={user && user.email}
+                  paragraph={user && user?.email}
                 />
               </div>
             </div>
@@ -254,10 +255,10 @@ const Page = () => {
               />
               <div className="flex-grow items-center justify-center">
                 <h1 className="text-3xl md:text-3xl font-semibold text-center text-custom-teal">
-                  {user ? user.firstName.toUpperCase() : "Loading..."}
+                  {user ? user?.firstName?.toUpperCase() : "Loading..."}
                 </h1>
                 <p className="text-sm text-center text-gray-400">
-                  {user ? user.role.toUpperCase() : "Loading..."}
+                  {user ? user?.role?.toUpperCase() : "Loading..."}
                 </p>
               </div>
             </div>
@@ -269,11 +270,11 @@ const Page = () => {
               <div className="space-y-7 pt-7">
                 <HeadingParagaraph
                   heading="First Name"
-                  paragraph={user && user.firstName.toUpperCase()}
+                  paragraph={user && user?.firstName?.toUpperCase()}
                 />
                 <HeadingParagaraph
                   heading="Last Name"
-                  paragraph={user && user.lastName.toUpperCase()}
+                  paragraph={user && user?.lastName?.toUpperCase()}
                 />
                 <HeadingParagaraph
                   heading="Email"
