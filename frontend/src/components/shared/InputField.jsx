@@ -12,6 +12,7 @@ const InputField = ({
   error,
   icon,
   emailSuccess,
+  disabled
 }) => {
   return (
     <div className="mb-4">
@@ -29,6 +30,7 @@ const InputField = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          disabled={disabled}
           className={`w-full px-4 py-2 border-[0.5px] rounded-xl focus:outline-none   ${
             error ? "border-custom-red" : "border-black"
           }`}

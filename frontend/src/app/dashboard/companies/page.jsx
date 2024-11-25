@@ -1,6 +1,7 @@
 'use client'
 import Button from '@/components/shared/button'
 import HeadingBlue25px from '@/components/shared/HeadingBlue25px'
+import AddCompanyModal from '@/components/singleComponent/AddCompanyModal'
 import CompanyTable from '@/components/singleComponent/CompanyTable'
 import Search from '@/components/singleComponent/Search'
 import { useQuery } from '@tanstack/react-query'
@@ -19,9 +20,6 @@ const page = () => {
     setShowAddCompanyModal(true)
   }
 
-  const handleAddCompany = () => {
-    
-  }
   
   const handleSearch = (term) => {
     setSearchTerm(term)
@@ -44,7 +42,6 @@ const page = () => {
       withCredentials: true,
     });
 
-    console.log('inside fetch', response.data)
     setTotalPages(response?.data?.totalPages)
     return response.data; 
   };
@@ -57,7 +54,6 @@ const page = () => {
 
   const companies = data?.companies
 
-  console.log('companies', companies)
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
@@ -76,7 +72,7 @@ const page = () => {
             variant="default"
             icon={<MdAdd />}
             className="rounded-xl text-center shadow-[0px_3px_6px_#2976a54d] hidden md:flex w-[250px] py-3"
-            onClick={handleAddCompany}
+            onClick={handleOpenAddCompanyModal}
           />
           <Button
             children="."
@@ -84,7 +80,7 @@ const page = () => {
             variant="default"
             icon={<MdAdd />}
             className="rounded-xl text-center py-3 mr-2 shadow-[0px_3px_6px_#2976a54d] md:hidden block pr-2 pl-3"
-            onClick={handleAddCompany}
+            onClick={handleOpenAddCompanyModal}
           />
         </div>
       </div>
@@ -117,12 +113,12 @@ const page = () => {
         </div>
       )}
     </div>
-    {/* {showAddExternalAdminModal && (
-      <AddExternalAdminModal
+    {showAddCompanyModal && (
+      <AddCompanyModal
         onClose={handleAddCompanyModalClose}
        
       />
-    )} */}
+    )}
   </div>
   )
 }
