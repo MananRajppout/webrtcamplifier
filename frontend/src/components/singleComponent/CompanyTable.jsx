@@ -11,6 +11,7 @@ import Pagination from "../shared/Pagination";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
+import ViewCompanyModal from "./ViewCompanyModal";
 
 const CompanyTable = ({
   companies,
@@ -42,10 +43,10 @@ const CompanyTable = ({
 
 
 
-  const toggleModal = (event, admin) => {
+  const toggleModal = (event, company) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
-    setCurrentAdmin(admin);
+    setCurrentCompany(company);
     setIsModalOpen(!isModalOpen);
   };
 
@@ -175,12 +176,12 @@ const CompanyTable = ({
         />
       </div>
       {/* View Contact Modal */}
-      {/* {isViewExternalAdminModalOpen && (
-        <ViewExternalAdminModal
-          onClose={()=> setIsViewExternalAdminModalOpen(false)}
-          currentAdmin={currentAdmin}
+      {isViewCompanyModalOpen && (
+        <ViewCompanyModal
+          onClose={()=> setIsViewCompanyModalOpen(false)}
+          currentCompany={currentCompany}
         />
-      )} */}
+      )}
 
       {/* Edit Moderator Modal */}
       {/* {isEditExternalAdminModalOpen && (

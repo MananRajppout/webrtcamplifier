@@ -22,7 +22,6 @@ const AddCompanyModal = ({ onClose }) => {
   const queryClient = useQueryClient();
 
   const addCompany = async (newCompany) => {
-    console.log("add exter Company", newCompany);
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create-company`,
       newCompany,
