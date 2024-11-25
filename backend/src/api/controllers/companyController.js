@@ -7,7 +7,7 @@ const createCompany = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
@@ -58,7 +58,7 @@ const updateCompany = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
   let {  name, industry, mobile, companyEmail, website, country, officialAddress, billingAddress, sameAddress } = req.body;
@@ -107,7 +107,7 @@ const deleteCompany = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
   try {
@@ -132,7 +132,7 @@ const getCompany = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
   try {
@@ -155,10 +155,9 @@ const getAllCompanies = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
-  console.log(req.query, decoded)
   try {
     const query = {
       isDeleted: false,
@@ -177,7 +176,6 @@ const getAllCompanies = async (req, res) => {
       .skip((page - 1) * limit)
       .exec();
 
-      console.log(companies)
     const count = await Company.countDocuments({isDeleted: false});
 
     res.status(200).json({message: "Companies data retrieved successfully.",

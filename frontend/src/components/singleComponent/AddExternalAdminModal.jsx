@@ -26,10 +26,10 @@ const AddExternalAdminModal = ({
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/create-by-admin`,
       newAdmin,
-      { withCredentials: true } // Include cookies
+      { withCredentials: true } 
     );
-    console.log('response', response.data)
-    return response.data; // Return the response data
+    
+    return response.data;
   };
 
   const mutation = useMutation({

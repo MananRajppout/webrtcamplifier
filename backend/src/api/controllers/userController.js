@@ -40,9 +40,7 @@ const validatePassword = (password) => {
 };
 
 const validateEmail = (email) => {
-  console.log("email", email);
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  console.log("email pattern", EMAIL_PATTERN.test(email));
 
   if (!EMAIL_PATTERN.test(email)) {
     return "Invalid email format.";
@@ -554,7 +552,6 @@ const userCreateByAdmin = async (req, res) => {
   const token = req.cookies.token;
 
   const decoded = decodeToken(token);
-  console.log('decoded', decoded)
 
   if (decoded.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
@@ -629,10 +626,12 @@ const userCreateByAdmin = async (req, res) => {
 
 const updateByAdmin = async (req, res) => {
   const token = req.cookies.token;
+  // console.log('token and req.body', token, req.body)
+  console.log('route hit')
 
   const decoded = decodeToken(token);
 
-  if (decoded.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
