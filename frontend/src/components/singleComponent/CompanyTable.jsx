@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 import ViewCompanyModal from "./ViewCompanyModal";
+import EditCompanyModal from "./EditCompanyModal";
 
 const CompanyTable = ({
   companies,
@@ -184,13 +185,12 @@ const CompanyTable = ({
       )}
 
       {/* Edit Moderator Modal */}
-      {/* {isEditExternalAdminModalOpen && (
-        <EditExternalAdminModal
-          onClose={()=> setIsEditExternalAdminModalOpen(false)}
-          currentAdmin={currentAdmin}
-          companies={companies}
+      {isEditCompanyModalOpen && (
+        <EditCompanyModal
+          onClose={()=> setIsEditCompanyModalOpen(false)}
+          currentCompany={currentCompany}
         />
-      )} */}
+      )}
     </div>
   );
 };
