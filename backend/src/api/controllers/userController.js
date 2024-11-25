@@ -40,8 +40,9 @@ const validatePassword = (password) => {
 };
 
 const validateEmail = (email) => {
+  console.log('email received', email)
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+console.log('emial pattern', EMAIL_PATTERN.test(email))
   if (!EMAIL_PATTERN.test(email)) {
     return "Invalid email format.";
   }
@@ -562,23 +563,26 @@ const userCreateByAdmin = async (req, res) => {
   if (!firstName || !lastName || !email || !companyName || !password) {
     return res.status(400).json({ message: "All fields are required." });
   }
-
   // Validate email and password
-  if (validateEmail(email)) {
-    return res.status(400).json({ message: "Invalid email format." });
-  }
-  if (validatePassword(password)) {
-    return res
-    .status(400)
-    .json({ message: "Password does not meet criteria." });
-  }
-
+  // if (!validateEmail(email)) {
+  //   return res.status(400).json({ message: "Invalid email format." });
+  // }
+  // if (!validatePassword(password)) {
+  //   return res
+  //   .status(400)
+  //   .json({ message: "Password does not meet criteria." });
+  // }
+console.log('token ', req.body, token)
   const userExist = await userModel.findOne({ email }).select("_id");
+
+  console.log('user exist', userExist)
+  
   if (userExist) {
     return res
       .status(400)
       .json({ message: "Email already in use" });
   }
+
 
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -676,7 +680,7 @@ const deleteByAdmin = async (req, res) => {
 
   const decoded = decodeToken(token);
 
-  if (decoded.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 

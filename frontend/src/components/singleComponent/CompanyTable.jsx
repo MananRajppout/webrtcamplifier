@@ -5,51 +5,42 @@ import TableData from "../shared/TableData";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaUser } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
-import ViewContactModal from "./ViewContactModal";
-import AddContactModal from "./AddContactModal";
 import { IoTrashBin } from "react-icons/io5";
 import Button from "../shared/button";
 import Pagination from "../shared/Pagination";
-import ViewExternalAdminModal from "./ViewExternalAdminModal";
-import EditExternalAdminModal from "./EditExternalAdminModal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const ExternalAdminsTable = ({
-  externalAdmins,
-  page,setPage,
+const CompanyTable = ({
+  companies,
+  page,
   totalPages,
-  handlePageChange, currentAdmin, setCurrentAdmin, companies
+  handlePageChange, currentCompany, setCurrentCompany
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
-  const [isViewExternalAdminModalOpen, setIsViewExternalAdminModalOpen] = useState(false);
-  const [isEditExternalAdminModalOpen, setIsEditExternalAdminModalOpen] = useState(false);
-  // const [currentAdmin, setCurrentAdmin] = useState(null)
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isViewCompanyModalOpen, setIsViewCompanyModalOpen] = useState(false);
+  const [isEditCompanyModalOpen, setIsEditCompanyModalOpen] = useState(false);
+  
+  const itemsPerPage = 10; 
   const queryClient = useQueryClient(); 
-
   const modalRef = useRef();
 
-  const handleEditAdminOpenModal = (admin) => {
-    setIsEditExternalAdminModalOpen(true)
+  const handleEditCompanyOpenModal = (company) => {
+    setIsEditCompanyModalOpen(true)
     closeModal();
   };
 
-  const handleEditAdminCloseModal = () => {
-    
-  };
 
-  const handleViewAdminOpenModal = (admin) => {
-    setIsViewExternalAdminModalOpen(true)
+
+  const handleViewCompanyOpenModal = (company) => {
+    setIsViewCompanyModalOpen(true)
     closeModal();
   };
 
-  const handleViewAdminCloseModal = () => {
-  };
+
 
   const toggleModal = (event, admin) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
@@ -68,15 +59,15 @@ const ExternalAdminsTable = ({
     }
   };
 
-  const deleteAdmin = async (adminId) => {
-    await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/delete-by-admin/${adminId}`, { withCredentials: true });
+  const deleteCompany = async (companyId) => {
+    await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-company/${companyId}`, { withCredentials: true });
   };
   
-  const handleDeleteAdmin = useMutation({
-    mutationFn: deleteAdmin, // Use the mutation function style
+  const handleDeleteCompany = useMutation({
+    mutationFn: deleteCompany, // Use the mutation function style
     onSuccess: () => {
-      toast.success("User Deleted Successfully.");
-      queryClient.invalidateQueries({ queryKey: ['externalAdmins'] });
+      toast.success("Company Deleted Successfully.");
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
     },
   });
 
@@ -91,63 +82,80 @@ const ExternalAdminsTable = ({
         <table className="min-w-full divide-y divide-gray-200 rounded-lg w-full ">
           <thead className="bg-custom-gray-2 rounded-lg py-2 w-full">
             <tr className="shadow-[0px_0px_26px_#00000029] w-full">
-              <TableHead>First Name</TableHead>
-              <TableHead>Last Name</TableHead>
-              <TableHead>Email</TableHead>
-              {/* <TableHead>Company</TableHead> */}
-              <TableHead>Status</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Industry</TableHead>
+              <TableHead>Mobile</TableHead>
+              <TableHead>Company Email</TableHead>
+              <TableHead>Website</TableHead>
+              <TableHead>Official Address</TableHead>
+              <TableHead>Billing Address</TableHead>
+              <TableHead>Country</TableHead>
               <TableHead>Action</TableHead>
               
             
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200 rounded-lg w-full">
-            {externalAdmins?.map((admin) => (
+            {companies?.map((company) => (
               <tr
-                key={admin._id}
+                key={company._id}
                 className="shadow-[0px_0px_26px_#00000029] w-full "
               >
                 <TableData>
-                  {admin.firstName} 
+                  {company.name} 
                 </TableData>
                 <TableData>
-                   {admin.lastName}
+                  {company.industry} 
                 </TableData>
-                <TableData>{admin.email}</TableData>
-                {/* <TableData>{admin.companyName}</TableData> */}
                 <TableData>
-                  {admin.status}
+                  {company.mobile} 
                 </TableData>
+                <TableData>
+                  {company.companyEmail} 
+                </TableData>
+                <TableData>
+                  {company.website} 
+                </TableData>
+                <TableData>
+                  {company.officialAddress} 
+                </TableData>
+                <TableData>
+                  {company.billingAddress} 
+                </TableData>
+                <TableData>
+                  {company.country} 
+                </TableData>
+                
 
                 
                 <td className="flex justify-between items-center gap-2 relative py-2">
                   <Button
                     variant="primary"
                     className="w-16 text-center text-[12px] rounded-xl py-1"
-                    onClick={(event) => toggleModal(event, admin)}
+                    onClick={(event) => toggleModal(event, company)}
                   >
                     <BsThreeDotsVertical />
                   </Button>
-                  {isModalOpen && currentAdmin === admin && (
+                  {isModalOpen && currentCompany === company && (
                     <div
                       ref={modalRef}
                       className="absolute top-2 right-12 z-50 bg-white shadow-lg rounded-md overflow-hidden"
                     >
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleViewAdminOpenModal(admin)}
+                        onClick={() => handleViewCompanyOpenModal(company)}
                       >
                         <FaUser className="mr-2" /> View
                       </button>
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleEditAdminOpenModal(admin)}
+                        onClick={() => handleEditCompanyOpenModal(company)}
                       >
                         <RiPencilFill className="mr-2" /> Edit
                       </button>
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleDeleteAdmin.mutate(admin._id)} // Call the mutation
+                        onClick={() => handleDeleteCompany.mutate(company._id)} // Call the mutation
 >
                         <IoTrashBin className="mr-2" /> Delete
                       </button>
@@ -167,23 +175,23 @@ const ExternalAdminsTable = ({
         />
       </div>
       {/* View Contact Modal */}
-      {isViewExternalAdminModalOpen && (
+      {/* {isViewExternalAdminModalOpen && (
         <ViewExternalAdminModal
           onClose={()=> setIsViewExternalAdminModalOpen(false)}
           currentAdmin={currentAdmin}
         />
-      )}
+      )} */}
 
       {/* Edit Moderator Modal */}
-      {isEditExternalAdminModalOpen && (
+      {/* {isEditExternalAdminModalOpen && (
         <EditExternalAdminModal
           onClose={()=> setIsEditExternalAdminModalOpen(false)}
           currentAdmin={currentAdmin}
           companies={companies}
         />
-      )}
+      )} */}
     </div>
   );
 };
 
-export default ExternalAdminsTable;
+export default CompanyTable;

@@ -48,8 +48,7 @@ const page = () => {
       },
       withCredentials: true,
     });
-
-    setTotalPages(response?.data?.data?.data?.totalPages)
+    setTotalPages(response?.data?.data?.totalPages)
     return response.data; 
   };
 
@@ -60,10 +59,6 @@ const page = () => {
 
   const externalAdmins = data?.data?.result
 
-//  useEffect(() => {
-   
-//   fetchExternalAdmins(page, searchTerm)
-//  }, [page, searchTerm])
  
     // New function to fetch all companies
     const fetchAllCompanies = async () => {

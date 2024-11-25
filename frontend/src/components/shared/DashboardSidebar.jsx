@@ -23,7 +23,6 @@ const DashboardSidebar = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const modalRef = useRef(null);
-  console.log("user in dashboard sidebar", user);
 
   const handleModalOpen = () => {
     setIsModalOpen(!isModalOpen);

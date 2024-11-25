@@ -10,12 +10,12 @@ const AddExternalAdminModal = ({
   onClose,
 
 }) => {
-  const [firstName, setFirstName] = useState( "");
-  const [lastName, setLastName] = useState( "");
-  const [email, setEmail] = useState( "");
-  const [companyName, setCompanyName] = useState(    ""  );
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [firstName, setFirstName] = useState( "User6FN");
+  const [lastName, setLastName] = useState( "User6LN");
+  const [email, setEmail] = useState( "user6@gmail.com");
+  const [companyName, setCompanyName] = useState(    "abc"  );
+  const [password, setPassword] = useState("Ab123456@")
+  const [confirmPassword, setConfirmPassword] = useState('Ab123456@')
 
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
