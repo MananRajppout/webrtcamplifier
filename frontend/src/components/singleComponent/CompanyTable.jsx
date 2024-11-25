@@ -157,7 +157,7 @@ const CompanyTable = ({
                       </button>
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleDeleteCompany.mutate(company._id)} // Call the mutation
+                        onClick={() => handleDeleteCompany.mutate(company._id)}
 >
                         <IoTrashBin className="mr-2" /> Delete
                       </button>
