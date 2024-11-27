@@ -154,7 +154,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
         toast.success(`${response.data.message}`);
       } else {
         console.error("Failed to update project");
-        alert("Failed to update project. Please try again.");
+        toast.error("Failed to update project. Please try again.");
       }
     } catch (error) {
       if (error.response) {
@@ -319,7 +319,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
       } else {
         console.error("Failed to update status");
         // Show a generic error message to the user
-        alert("Failed to update status. Please try again.");
+        toast.error("Failed to update status. Please try again.");
       }
     } catch (error) {
       // Handle error based on the response or error message
@@ -330,25 +330,25 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
 
         if (status === 400) {
           // Handle bad request, possibly due to validation error
-          alert(`Validation Error: ${data.message}`);
+          toast.error(`Validation Error: ${data.message}`);
         } else if (status === 404) {
           // Handle project not found error
-          alert(`Error: Project not found`);
+          toast.error(`Error: Project not found`);
         } else if (status === 500) {
           // Handle internal server error
-          alert(`Server Error: ${data.message}`);
+          toast.error(`Server Error: ${data.message}`);
         } else {
           // Handle any other errors
-          alert(`Error: ${data.message || "An unexpected error occurred"}`);
+          toast.error(`Error: ${data.message || "An unexpected error occurred"}`);
         }
       } else if (error.request) {
         // The request was made but no response was received
         console.error("No response received:", error.request);
-        alert("No response from the server. Please try again later.");
+        toast.error("No response from the server. Please try again later.");
       } else {
         // Something happened in setting up the request that triggered an Error
         console.error("Error setting up the request:", error.message);
-        alert(`Error: ${error.message}`);
+        toast.error(`Error: ${error.message}`);
       }
     }
   };

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { BsCheckCircle } from "react-icons/bs";
 
 const ShareMeetingModal = ({ meeting, onClose }) => {
@@ -12,7 +13,7 @@ const ShareMeetingModal = ({ meeting, onClose }) => {
         : `Nancy Jones has invited you to a scheduled meeting for the project ${meeting.title}.\n\nTitle: Focus Group Meeting\nJoin Meeting\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting._id}`;
 
     navigator.clipboard.writeText(inviteText);
-    alert("Project invite copied to clipboard!");
+    toast.success("Project invite copied to clipboard!");
   };
 
   return (

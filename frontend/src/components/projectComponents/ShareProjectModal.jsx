@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { BsCheckCircle } from "react-icons/bs";
 
 const ShareProjectModal = ({ project, onClose }) => {
@@ -12,7 +13,7 @@ const ShareProjectModal = ({ project, onClose }) => {
         : `Participant does not have access to the project.`;
 
     navigator.clipboard.writeText(inviteText);
-    alert("Project invite copied to clipboard!");
+    toast.success("Project invite copied to clipboard!");
   };
 
   return (

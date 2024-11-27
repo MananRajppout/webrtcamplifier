@@ -66,7 +66,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
       setContacts(data);
     } catch (error) {
       console.error("Error fetching contacts:", error);
-      alert(
+      toast.error(
         `Error fetching contacts: ${error.message}. Please try again later.`
       );
     } finally {

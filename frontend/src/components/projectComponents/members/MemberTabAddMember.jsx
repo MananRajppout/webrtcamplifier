@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Button from "@/components/shared/button";
+import toast from "react-hot-toast";
 
 const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState }) => {
   const [peoples, setPeoples] = useState([]);
@@ -73,7 +74,7 @@ const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState })
   // Function to copy the registration link
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`);
-    alert("Link copied to clipboard!");
+    toast.success("Link copied to clipboard!");
   };
 
   const handleSendEmail = () => {

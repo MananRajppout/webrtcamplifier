@@ -71,7 +71,7 @@ const Page = () => {
       setContacts(data);
     } catch (error) {
       console.error("Error fetching contacts:", error);
-      // alert(`Error fetching contacts: ${error.message}. Please try again later.`);
+      toast.error(`Error fetching contacts: ${error.message}. Please try again later.`);
     } finally {
       setIsLoading(false);
     }
@@ -127,11 +127,11 @@ const Page = () => {
         error.response.data.message ===
           "Email needs to be verified before creating a project."
       ) {
-        alert(
+        toast.error(
           "Your email is not verified. Please verify your email to create a project."
         );
       } else {
-        alert("Failed to create project. Please try again.");
+        toast.error("Failed to create project. Please try again.");
       }
     }
   };
@@ -196,7 +196,7 @@ const Page = () => {
     if (validateForm()) {
       setCurrentStep((prevStep) => prevStep + 1);
     } else {
-      alert("Please fill out all required fields before proceeding.");
+      toast.error("Please fill out all required fields before proceeding.");
     }
   };
 

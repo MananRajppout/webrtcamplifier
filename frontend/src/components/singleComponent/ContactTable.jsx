@@ -10,6 +10,7 @@ import AddContactModal from "./AddContactModal";
 import { IoTrashBin } from "react-icons/io5";
 import Button from "../shared/button";
 import Pagination from "../shared/Pagination";
+import toast from "react-hot-toast";
 
 const ContactTable = ({
   contacts,
@@ -117,16 +118,16 @@ const ContactTable = ({
       );
       const data = await response.json();
       if (response.ok) {
-        alert(data.message);
+        toast.success(data.message);
         setContacts((prevContacts) =>
           prevContacts.filter((contact) => contact._id !== contactId)
         );
       } else {
-        alert(data.message);
+        toast.error(data.message);
       }
     } catch (error) {
       console.error("Error deleting moderator:", error);
-      alert("Error deleting moderator.");
+      toast.error("Error deleting moderator.");
     }
   };
 

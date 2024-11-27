@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import Button from "../shared/button";
 import Dropdown from "../shared/Dropdown";
+import toast from "react-hot-toast";
 
 const MoveToBreakModal = ({ onClose, breakoutRooms,userToMoveBreak,handleMoveParticipant}) => {
     const [selected,setSelected] = useState(breakoutRooms[0]);
@@ -12,7 +13,7 @@ const MoveToBreakModal = ({ onClose, breakoutRooms,userToMoveBreak,handleMovePar
             handleMoveParticipant(selected,userToMoveBreak);
             onClose();
         }else{
-            alert('Please Select Room')
+            toast.error('Please Select Room')
         }
     },[selected])
   return (

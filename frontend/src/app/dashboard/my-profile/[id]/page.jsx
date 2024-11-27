@@ -17,6 +17,7 @@ import Link from "next/link";
 import Button from "@/components/shared/button";
 import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
+import ConfirmationModal from "@/components/shared/ConfirmationModal";
 
 const initialNotifications = [
   {
@@ -222,7 +223,9 @@ const Page = () => {
         </div>
         {showModal && <PasswordModal onClose={handleCloseModal} id={id} />}
         {isDeleteModalOpen && (
-          <DeleteModal onClose={handleCloseDeleteModal} onDelete={deleteUser} />
+          <ConfirmationModal onCancel={handleCloseDeleteModal} onYes={deleteUser} heading={'Delete Account'} text={'Are you sure you want to delete your account? All your data will be permanently deleted. This action cannot be undone.'}
+          />
+
         )}
       </div>
       <div className="md:hidden my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-start items-center p-5 relative">
@@ -309,7 +312,8 @@ const Page = () => {
         </div>
         {showModal && <PasswordModal onClose={handleCloseModal} id={id} />}
         {isDeleteModalOpen && (
-          <DeleteModal onClose={handleCloseDeleteModal} onDelete={deleteUser} />
+          <ConfirmationModal onCancel={handleCloseDeleteModal} onYes={deleteUser} heading={'Delete Account'} text={'Are you sure you want to delete your account? All your data will be permanently deleted. This action cannot be undone.'}
+          />
         )}
       </div>
     </div>
