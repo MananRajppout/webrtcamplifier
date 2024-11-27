@@ -2,6 +2,8 @@ import React from 'react';
 import Button from '../shared/button';
 
 const UploadResultsModal = ({ onClose, successResults, rejectedData }) => {
+  console.log('success result', successResults )
+  console.log('error result', rejectedData)
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-5 w-1/2">

@@ -1,8 +1,8 @@
 const Project = require("../models/projectModel");
 const Meeting = require("../models/meetingModel");
 const Contact = require("../models/contactModel");
-const XLSX = require('xlsx'); 
-const fs = require('fs');
+const XLSX = require("xlsx");
+const fs = require("fs");
 // Controller to create a new project
 const createMeeting = async (req, res) => {
   const meetingData = req.body;
@@ -56,10 +56,10 @@ const getAllMeetings = async (req, res) => {
     }
     if (search) {
       query.$or = [
-        { status: { $regex: search, $options: 'i' } }, // Case-insensitive search
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ]
+        { status: { $regex: search, $options: "i" } }, // Case-insensitive search
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
     }
     // Find all meetings that match the projectId with pagination
     const meetings = await Meeting.find(query)
@@ -125,12 +125,17 @@ const getMeetingById = async (req, res) => {
       return res.status(404).json({ message: "Meeting not found" });
     }
     const project = await Project.findById(meeting.projectId);
-   
+
     const meetingWithProjectTitle = {
-      ...meeting.toObject(), 
+      ...meeting.toObject(),
       projectTitle: project ? project.name : null,
     };
-    res.status(200).json({ message: "Meeting found", meetingDetails: meetingWithProjectTitle });
+    res
+      .status(200)
+      .json({
+        message: "Meeting found",
+        meetingDetails: meetingWithProjectTitle,
+      });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -158,37 +163,42 @@ const meetingStatusChange = async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!data) {
-      return res.status(404).json({ message: 'Meeting not found' });
+      return res.status(404).json({ message: "Meeting not found" });
     }
     return res.status(200).json({
-      message: 'Meeting status updated successfully',
+      message: "Meeting status updated successfully",
       data,
     });
   } catch (error) {
-    console.error('Error updating meeting status:', error);
+    console.error("Error updating meeting status:", error);
     return res.status(500).json({
-      message: 'Failed to update meeting status',
+      message: "Failed to update meeting status",
       error: error.message,
     });
   }
 };
 
 const editMeeting = async (req, res) => {
-  
   try {
-    const data = await Meeting.findByIdAndUpdate({ _id: req.body?.id }, req.body, { new: true, runValidators: true });
+    const data = await Meeting.findByIdAndUpdate(
+      { _id: req.body?.id },
+      req.body,
+      { new: true, runValidators: true }
+    );
     if (!data) {
       return res.status(404).json({ message: "Meeting not found" });
     }
-    return res.status(200).json({ data, message: "Meeting updated successfully" });
+    return res
+      .status(200)
+      .json({ data, message: "Meeting updated successfully" });
   } catch (error) {
-    console.error('Error updating meeting:', error);
+    console.error("Error updating meeting:", error);
     return res.status(500).json({
-      message: 'Failed to update meeting',
+      message: "Failed to update meeting",
       error: error.message,
     });
   }
-}
+};
 
 // const bulkUploadMeeting = async (req, res) => {
 //   try {
@@ -259,7 +269,6 @@ const editMeeting = async (req, res) => {
 //   }
 // };
 
-  
 const bulkUploadMeeting = async (req, res) => {
   try {
     if (!req.file) {
@@ -270,14 +279,21 @@ const bulkUploadMeeting = async (req, res) => {
     const workbook = XLSX.readFile(req.file.path);
     const sheetName = workbook.SheetNames[1];
     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
     const rejectedData = [];
+    const successResults = [];
     const meetingsToInsert = [];
 
-    // Process each row using map
-    const results = await Promise.all(
-      sheetData.map(async (row, index) => {
-        try {
+    // Add a column for status messages
+    const updatedSheetData = sheetData.map((row, index) => ({
+      ...row,
+      statusMessage: '', // Placeholder for statusMessage
+    }));
 
+    // Process each row
+    await Promise.all(
+      updatedSheetData.map(async (row, index) => {
+        try {
           let formattedTime = row.startTime;
           if (typeof row.startTime === 'number') {
             const totalMinutes = Math.round(row.startTime * 1440);
@@ -289,12 +305,12 @@ const bulkUploadMeeting = async (req, res) => {
           // Validate the projectId
           const project = await Project.findById(row.projectId);
           if (!project) {
-            // Add to rejected data
             rejectedData.push({
               row: index + 1,
               message: `Project not found for projectId: ${row.projectId}`,
             });
-            return null;
+            row.statusMessage = `Project not found for projectId: ${row.projectId}`;
+            return;
           }
 
           // Prepare meeting data
@@ -303,48 +319,79 @@ const bulkUploadMeeting = async (req, res) => {
             title: row.title,
             description: row.description || '',
             startDate: row.startDate ? new Date(row.startDate) : null,
-            startTime: formattedTime  || null,
+            startTime: formattedTime || null,
             moderator: row.moderator ? row.moderator.split(',').map(id => id.trim()) : [],
             timeZone: row.timeZone,
             duration: row.duration,
             ongoing: row.ongoing === 'true',
             enableBreakoutRoom: row.enableBreakoutRoom === 'true',
-            meetingPasscode: project.projectPasscode, 
+            meetingPasscode: project.projectPasscode,
             status: row.status || 'Draft',
           };
-          
+
           // Add to bulk insert array
           meetingsToInsert.push(meetingData);
 
-          // Return success
-          return {
+          // Mark as success
+          row.statusMessage = 'Meeting processed successfully';
+          successResults.push({
             row: index + 1,
             message: 'Meeting processed successfully',
-          };
+          });
         } catch (error) {
-          // Add to rejected data
           rejectedData.push({
             row: index + 1,
             message: error.message,
           });
-          return null;
+          row.statusMessage = error.message;
         }
       })
     );
 
-    // Filter out null results (rejected rows)
-    const successResults = results.filter(result => result !== null);
-
     // Insert all valid meetings at once
     if (meetingsToInsert.length > 0) {
-      await Meeting.insertMany(meetingsToInsert);
+      // await Meeting.insertMany(meetingsToInsert);
     }
 
-    // Respond with results
+    // Define the order of columns with `statusMessage` explicitly in J column
+    const columnsOrder = [
+      'projectId',
+      'title',
+      'description',
+      'startDate',
+      'startTime',
+      'moderator',
+      'timeZone',
+      'duration',
+      'ongoing',
+      'enableBreakoutRoom',
+      'statusMessage', // Ensure this is in J column
+    ];
+
+    // Ensure column order is respected
+    const finalSheetData = updatedSheetData.map((row) => {
+      const orderedRow = {};
+      columnsOrder.forEach((key) => {
+        orderedRow[key] = row[key] || ''; // Ensure missing keys are filled with empty values
+      });
+      return orderedRow;
+    });
+
+    // Write the updated data to a buffer
+    const newSheet = XLSX.utils.json_to_sheet(finalSheetData);
+    const newWorkbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);
+    const fileBuffer = XLSX.write(newWorkbook, { type: 'buffer', bookType: 'xlsx' });
+
+    // Convert the file buffer to Base64
+    const base64File = fileBuffer.toString('base64');
+
+    // Send JSON response with the Base64 file
     res.status(200).json({
       message: 'Bulk upload processed',
       successResults,
       rejectedData,
+      file: base64File, // Base64-encoded file
     });
   } catch (error) {
     console.error("Error in bulkUploadMeeting:", error);
@@ -373,5 +420,5 @@ module.exports = {
   deleteMeeting,
   meetingStatusChange,
   editMeeting,
-  bulkUploadMeeting
+  bulkUploadMeeting,
 };

@@ -395,6 +395,28 @@ const handleFileUpload = async (event) => {
         },
       });
 
+      console.log('response', response.data)
+      const { file: base64File, successResults, rejectedData } = response.data;
+
+      // Decode Base64 and create a Blob
+      const binaryString = atob(base64File); // Decode Base64
+      const byteArray = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        byteArray[i] = binaryString.charCodeAt(i);
+      }
+
+      const blob = new Blob([byteArray], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+
+      // Trigger file download
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', 'updated_meeting_data.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       setUploadResults(response.data.successResults); 
       setRejectedData(response.data.rejectedData); 
       setIsUploadResultsModalOpen(true);
