@@ -240,11 +240,11 @@ const MeetingTab = ({
     const [hours, minutes] = time.split(":").map(Number);
     const period = hours >= 12 ? "PM" : "AM";
     const adjustedHours = hours % 12 || 12; // Convert 0 to 12 for midnight
-    return `${adjustedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+    return `${adjustedHours}:${minutes?.toString().padStart(2, "0")} ${period}`;
   };
 
   const handleJoinBackroom = async (meeting) => {
-    const fullName = `${user.firstName} ${user.lastName}`;
+    const fullName = `${user?.firstName} ${user?.lastName}`;
     const meetingId = meeting?._id;
     try {
       if (socket) {
@@ -252,7 +252,7 @@ const MeetingTab = ({
           meetingId,
           name: fullName,
           role: "Observer",
-          passcode: meeting.meetingPasscode,
+          passcode: meeting?.meetingPasscode,
           email: user.email
         });
   

@@ -10,5 +10,5 @@ module.exports = function (app) {
   app.put("/api/change-meeting-status", controller.meetingStatusChange);
   app.put("/api/edit-meeting", controller.editMeeting);
   app.post("/api/bulk-meeting-upload", upload.single('file'), controller.bulkUploadMeeting)
-  app.get("/api/download-")
+  
 };

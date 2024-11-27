@@ -276,6 +276,15 @@ const bulkUploadMeeting = async (req, res) => {
     const results = await Promise.all(
       sheetData.map(async (row, index) => {
         try {
+
+          let formattedTime = row.startTime;
+          if (typeof row.startTime === 'number') {
+            const totalMinutes = Math.round(row.startTime * 1440); // 1440 minutes in a day
+            const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+            const minutes = (totalMinutes % 60).toString().padStart(2, '0');
+            formattedTime = `${hours}:${minutes}`;
+          }
+
           // Validate the projectId
           const project = await Project.findById(row.projectId);
           if (!project) {
@@ -293,7 +302,7 @@ const bulkUploadMeeting = async (req, res) => {
             title: row.title,
             description: row.description || '',
             startDate: row.startDate ? new Date(row.startDate) : null,
-            startTime: row.startTime || null,
+            startTime: formattedTime  || null,
             moderator: row.moderator ? row.moderator.split(',').map(id => id.trim()) : [],
             timeZone: row.timeZone,
             duration: row.duration,
@@ -302,7 +311,8 @@ const bulkUploadMeeting = async (req, res) => {
             meetingPasscode: project.projectPasscode, 
             status: row.status || 'Draft',
           };
-
+          
+          console.log('meeting data', meetingData)
           // Add to bulk insert array
           meetingsToInsert.push(meetingData);
 

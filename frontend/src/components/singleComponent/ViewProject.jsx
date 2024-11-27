@@ -50,12 +50,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isAddRepositoryModalOpen, setIsAddRepositoryModalOpen] =
     useState(false);
   const [repositories, setRepositories] = useState([]);
-  const [repositoryData, setRepositoryData] = useState({
-    documents: [],
-    media: [],
-  });
-  const [selectedRepositoryMeetingTab, setSelectedRepositoryMeetingTab] =
-    useState(null);
+  const [repositoryData, setRepositoryData] = useState({documents: [],media: [] });
+  const [selectedRepositoryMeetingTab, setSelectedRepositoryMeetingTab] = useState(null);
   const [showDocAndMediaTab, setShowDocAndMediaTab] = useState(false);
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
   const [meetingPage, setMeetingPage] = useState(1);
@@ -69,8 +65,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false);
   const [isSingleChoiceModalOpen, setIsSingleChoiceModalOpen] = useState(false);
-  const [isMultipleChoiceModalOpen, setIsMultipleChoiceModalOpen] =
-    useState(false);
+  const [isMultipleChoiceModalOpen, setIsMultipleChoiceModalOpen] = useState(false);
   const [isMatchingModalOpen, setIsMatchingModalOpen] = useState(false);
   const [isRankOrderModalOpen, setIsRankOrderModalOpen] = useState(false);
   const [isShortAnswerModalOpen, setIsShortAnswerModalOpen] = useState(false);
@@ -78,9 +73,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isBlankModalOpen, setIsBlankModalOpen] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isBulkAddDropdownOpen, setIsBulkAddDropdownOpen] = useState(false);
-  const [uploadResults, setUploadResults] = useState(null); // State to hold upload results
-  const [rejectedData, setRejectedData] = useState([]); // State to hold rejected data
-  const [isUploadResultsModalOpen, setIsUploadResultsModalOpen] = useState(false); // State to control modal visibility
+  const [uploadResults, setUploadResults] = useState(null);
+  const [rejectedData, setRejectedData] = useState([]); 
+  const [isUploadResultsModalOpen, setIsUploadResultsModalOpen] = useState(false); 
 
 
   const handleSingleChoiceSave = async (singleChoiceData) => {
@@ -121,7 +116,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     }
   };
 
-  // console.log('total meeting pages', totalMeetingPages)
+ 
 
   const handleRepositoryMeetingTabChange = (meeting) => {
     setSelectedRepositoryMeetingTab(meeting);
@@ -383,6 +378,7 @@ const handleDownloadFormat = () => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  setIsBulkAddDropdownOpen(false)
 };
 
 // Function to handle file upload
@@ -399,10 +395,11 @@ const handleFileUpload = async (event) => {
         },
       });
 
-      console.log('res', response.data)
       setUploadResults(response.data.successResults); 
       setRejectedData(response.data.rejectedData); 
       setIsUploadResultsModalOpen(true);
+      fetchMeetings()
+      setIsBulkAddDropdownOpen(false)
       toast.success(response.data.message);
 
     } catch (error) {
