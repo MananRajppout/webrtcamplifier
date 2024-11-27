@@ -292,7 +292,7 @@ const bulkUploadMeeting = async (req, res) => {
             // Add to rejected data
             rejectedData.push({
               row: index + 1,
-              reason: `Project not found for projectId: ${row.projectId}`,
+              message: `Project not found for projectId: ${row.projectId}`,
             });
             return null;
           }
@@ -313,7 +313,6 @@ const bulkUploadMeeting = async (req, res) => {
             status: row.status || 'Draft',
           };
           
-          console.log('meeting data', meetingData)
           // Add to bulk insert array
           meetingsToInsert.push(meetingData);
 
