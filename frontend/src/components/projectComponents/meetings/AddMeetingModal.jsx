@@ -151,24 +151,26 @@ if (!formData.duration) {
       projectId: project._id,
     };
 
-    try {
-      const url = isEditing 
-        ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/edit-meeting`
-        : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/meeting`;
+    console.log('form data', updatedFormData)
 
-      const method = isEditing ? 'put' : 'post';
+    // try {
+    //   const url = isEditing 
+    //     ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/edit-meeting`
+    //     : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/meeting`;
 
-      const response = await axios[method](url, updatedFormData);
+    //   const method = isEditing ? 'put' : 'post';
 
-      if (response.status === (isEditing ? 200 : 201)) {
-        refetchMeetings();
-        toast.success(`Meeting ${isEditing ? 'updated' : 'created'} successfully`);
-        onClose();
-      }
-    } catch (error) {
-      console.error(`Error ${isEditing ? 'updating' : 'creating'} meeting:`, error);
-      toast.error(`${error.response?.data?.error || 'An error occurred'}`);
-    }
+    //   const response = await axios[method](url, updatedFormData);
+
+    //   if (response.status === (isEditing ? 200 : 201)) {
+    //     refetchMeetings();
+    //     toast.success(`Meeting ${isEditing ? 'updated' : 'created'} successfully`);
+    //     onClose();
+    //   }
+    // } catch (error) {
+    //   console.error(`Error ${isEditing ? 'updating' : 'creating'} meeting:`, error);
+    //   toast.error(`${error.response?.data?.error || 'An error occurred'}`);
+    // }
   };
 
   return (

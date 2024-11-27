@@ -30,6 +30,7 @@ import ShortAnswerPollModal from "../projectComponents/polls/PollModal/ShortAnsw
 import LongAnswerPollModal from "../projectComponents/polls/PollModal/LongAnswerPollModal";
 import FillBlankModal from "../projectComponents/polls/PollModal/FillBlankModal";
 import RatingScaleModal from "../projectComponents/polls/PollModal/RatingScaleModal";
+import UploadResultsModal from "./UploadResultsModal";
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [localProjectState, setLocalProjectState] = useState(project);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +77,11 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isLongAnswerModalOpen, setIsLongAnswerModalOpen] = useState(false);
   const [isBlankModalOpen, setIsBlankModalOpen] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [isBulkAddDropdownOpen, setIsBulkAddDropdownOpen] = useState(false);
+  const [uploadResults, setUploadResults] = useState(null); // State to hold upload results
+  const [rejectedData, setRejectedData] = useState([]); // State to hold rejected data
+  const [isUploadResultsModalOpen, setIsUploadResultsModalOpen] = useState(false); // State to control modal visibility
+
 
   const handleSingleChoiceSave = async (singleChoiceData) => {
     try {
@@ -362,6 +368,54 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     fetchMeetings(1, term);
   };
 
+  
+
+// Function to toggle the dropdown
+const handleBulkAddDropdownToggle = () => {
+  setIsBulkAddDropdownOpen((prev) => !prev);
+};
+
+// Function to handle downloading the format
+const handleDownloadFormat = () => {
+  const link = document.createElement('a');
+  link.href = '/sample_data.xlsx';
+  link.setAttribute('download', 'excel-format.xlsx');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// Function to handle file upload
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/bulk-meeting-upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('res', response.data)
+      setUploadResults(response.data.successResults); 
+      setRejectedData(response.data.rejectedData); 
+      setIsUploadResultsModalOpen(true);
+      toast.success(response.data.message);
+
+    } catch (error) {
+      toast.error("Failed to upload file: " + error.message);
+    }
+  }
+};
+
+ // Function to close the upload results modal
+ const closeUploadResultsModal = () => {
+  setIsUploadResultsModalOpen(false);
+};
+
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center w-full">
       {/* navbar */}
@@ -502,6 +556,29 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                   onSearch={handleMeetingSearch}
                   placeholder="Search Meeting Name"
                 />
+                <div className="relative">
+    <Button
+      children="Bulk Add"
+      className="px-4 py-2 rounded-xl"
+      onClick={handleBulkAddDropdownToggle} // Function to toggle dropdown
+    />
+    {isBulkAddDropdownOpen && ( // Conditional rendering for dropdown
+      <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg">
+        <button
+          className="block px-4 py-2 text-left"
+          onClick={handleDownloadFormat} // Function to download format
+        >
+          Download Format
+        </button>
+        <input
+          type="file"
+          onChange={handleFileUpload} // Function to handle file upload
+          className="block px-4 py-2 text-left"
+        />
+      </div>
+    )}
+  </div>
+
                 <Button
                   children="Add Meeting"
                   className="px-4 py-2 rounded-xl"
@@ -862,13 +939,13 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             />
           )}
 
-          {/* <div className="flex justify-end py-3">
-            <Pagination
-              currentPage={2}
-              totalPages={5}
-              onPageChange={handlePageChange}
-            />
-          </div> */}
+{isUploadResultsModalOpen && (
+        <UploadResultsModal
+          onClose={closeUploadResultsModal}
+          successResults={uploadResults} // Pass the success results to the modal
+          rejectedData={rejectedData} // Pass the rejected data to the modal
+        />
+      )}
         </div>
       </div>
     </div>

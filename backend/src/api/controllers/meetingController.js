@@ -1,11 +1,10 @@
 const Project = require("../models/projectModel");
 const Meeting = require("../models/meetingModel");
 const Contact = require("../models/contactModel");
-
+const XLSX = require('xlsx'); 
 // Controller to create a new project
 const createMeeting = async (req, res) => {
   const meetingData = req.body;
-  console.log('meeting data',meetingData)
   try {
     // Find the project by projectId
     const project = await Project.findById(meetingData.projectId);
@@ -190,6 +189,161 @@ const editMeeting = async (req, res) => {
   }
 }
 
+// const bulkUploadMeeting = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ message: "No file uploaded" });
+//     }
+
+//     // Read the uploaded Excel file
+//     const workbook = XLSX.readFile(req.file.path);
+//     const sheetName = workbook.SheetNames[0];
+//     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+//     const successResults = [];
+//     const errorResults = [];
+
+//     for (const [index, row] of sheetData.entries()) {
+//       try {
+//         // Validate the projectId
+//         const project = await Project.findById(row.projectId);
+//         if (!project) {
+//           throw new Error(`Project not found for projectId: ${row.projectId}`);
+//         }
+
+//         // Prepare meeting data
+//         const meetingData = {
+//           projectId: row.projectId,
+//           title: row.title,
+//           description: row.description || '',
+//           startDate: row.startDate ? new Date(row.startDate) : null,
+//           startTime: row.startTime || null,
+//           moderator: row.moderator ? row.moderator.split(',').map(id => id.trim()) : [],
+//           timeZone: row.timeZone,
+//           duration: row.duration,
+//           ongoing: row.ongoing === 'true',
+//           enableBreakoutRoom: row.enableBreakoutRoom === 'true',
+//           meetingPasscode: project.projectPasscode, // Set from project
+//           status: row.status || 'Draft',
+//         };
+
+//         // Create a new meeting
+//         const newMeeting = new Meeting(meetingData);
+//         const savedMeeting = await newMeeting.save();
+
+//         // Add to success results
+//         successResults.push({
+//           row: index + 1,
+//           meetingId: savedMeeting._id,
+//           message: 'Meeting created successfully',
+//         });
+//       } catch (error) {
+//         // Add to error results
+//         errorResults.push({
+//           row: index + 1,
+//           error: error.message,
+//         });
+//       }
+//     }
+
+//     // Respond with results
+//     res.status(200).json({
+//       message: 'Bulk upload processed',
+//       successResults,
+//       errorResults,
+//     });
+//   } catch (error) {
+//     console.error("Error in bulkUploadMeeting:", error);
+//     res.status(500).json({ message: "Internal Server Error", error: error.message });
+//   }
+// };
+
+  
+const bulkUploadMeeting = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Read the uploaded Excel file
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[1];
+    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const rejectedData = [];
+    const meetingsToInsert = [];
+
+    // Process each row using map
+    const results = await Promise.all(
+      sheetData.map(async (row, index) => {
+        try {
+          // Validate the projectId
+          const project = await Project.findById(row.projectId);
+          if (!project) {
+            // Add to rejected data
+            rejectedData.push({
+              row: index + 1,
+              reason: `Project not found for projectId: ${row.projectId}`,
+            });
+            return null;
+          }
+
+          // Prepare meeting data
+          const meetingData = {
+            projectId: row.projectId,
+            title: row.title,
+            description: row.description || '',
+            startDate: row.startDate ? new Date(row.startDate) : null,
+            startTime: row.startTime || null,
+            moderator: row.moderator ? row.moderator.split(',').map(id => id.trim()) : [],
+            timeZone: row.timeZone,
+            duration: row.duration,
+            ongoing: row.ongoing === 'true',
+            enableBreakoutRoom: row.enableBreakoutRoom === 'true',
+            meetingPasscode: project.projectPasscode, 
+            status: row.status || 'Draft',
+          };
+
+          // Add to bulk insert array
+          meetingsToInsert.push(meetingData);
+
+          // Return success
+          return {
+            row: index + 1,
+            message: 'Meeting processed successfully',
+          };
+        } catch (error) {
+          // Add to rejected data
+          rejectedData.push({
+            row: index + 1,
+            message: error.message,
+          });
+          return null;
+        }
+      })
+    );
+
+    // Filter out null results (rejected rows)
+    const successResults = results.filter(result => result !== null);
+
+    // Insert all valid meetings at once
+    if (meetingsToInsert.length > 0) {
+      await Meeting.insertMany(meetingsToInsert);
+    }
+
+    // Respond with results
+    res.status(200).json({
+      message: 'Bulk upload processed',
+      successResults,
+      rejectedData,
+    });
+  } catch (error) {
+    console.error("Error in bulkUploadMeeting:", error);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+
+
 module.exports = {
   createMeeting,
   getAllMeetings,
@@ -197,5 +351,6 @@ module.exports = {
   getMeetingById,
   deleteMeeting,
   meetingStatusChange,
-  editMeeting
+  editMeeting,
+  bulkUploadMeeting
 };

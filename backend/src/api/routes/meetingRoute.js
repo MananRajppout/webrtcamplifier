@@ -1,4 +1,5 @@
 const controller = require("../controllers/meetingController");
+const upload = require("../../middleware/upload")
 
 module.exports = function (app) {
   app.post("/api/create/meeting", controller.createMeeting);
@@ -8,4 +9,6 @@ module.exports = function (app) {
   app.delete("/api/delete-meeting/:meetingId", controller.deleteMeeting);
   app.put("/api/change-meeting-status", controller.meetingStatusChange);
   app.put("/api/edit-meeting", controller.editMeeting);
+  app.post("/api/bulk-meeting-upload", upload.single('file'), controller.bulkUploadMeeting)
+  app.get("/api/download-")
 };

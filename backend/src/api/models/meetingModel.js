@@ -9,8 +9,7 @@ const meetingSchema = new Schema({
     type: Date,
     validate: {
       validator: function(value) {
-        // If ongoing is true, startDate is optional
-        return this.ongoing || value != null;
+      return this.ongoing || value != null;
       },
       message: 'Start Date is required unless Ongoing/TBD is checked.'
     }
@@ -19,7 +18,6 @@ const meetingSchema = new Schema({
     type: String,
     validate: {
       validator: function(value) {
-        // If ongoing is true, startTime is optional
         return this.ongoing || value != null;
       },
       message: 'Start Time is required unless Ongoing/TBD is checked.'
