@@ -2,6 +2,7 @@ const Project = require("../models/projectModel");
 const Meeting = require("../models/meetingModel");
 const Contact = require("../models/contactModel");
 const XLSX = require('xlsx'); 
+const fs = require('fs');
 // Controller to create a new project
 const createMeeting = async (req, res) => {
   const meetingData = req.body;
@@ -279,7 +280,7 @@ const bulkUploadMeeting = async (req, res) => {
 
           let formattedTime = row.startTime;
           if (typeof row.startTime === 'number') {
-            const totalMinutes = Math.round(row.startTime * 1440); // 1440 minutes in a day
+            const totalMinutes = Math.round(row.startTime * 1440);
             const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
             const minutes = (totalMinutes % 60).toString().padStart(2, '0');
             formattedTime = `${hours}:${minutes}`;
@@ -349,6 +350,17 @@ const bulkUploadMeeting = async (req, res) => {
   } catch (error) {
     console.error("Error in bulkUploadMeeting:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
+  } finally {
+    // Cleanup: Delete the uploaded file
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) {
+          console.error(`Error deleting file: ${req.file.path}`, err);
+        } else {
+          console.log(`Successfully deleted file: ${req.file.path}`);
+        }
+      });
+    }
   }
 };
 
