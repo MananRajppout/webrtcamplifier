@@ -13,6 +13,7 @@ import io from "socket.io-client";
 import AddMeetingModal from "./AddMeetingModal";
 import Pagination from "@/components/shared/Pagination";
 import Button from "@/components/shared/button";
+import ConfirmationModal from "@/components/shared/ConfirmationModal";
 
 const MeetingTab = ({
   meetings,
@@ -33,6 +34,10 @@ const MeetingTab = ({
   const [showMeetingDetails, setShowMeetingDetails] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState(null);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [meetingToDelete, setMeetingToDelete] = useState(null);
+
+  console.log('local meeting state', localMeetingState)
 
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
@@ -83,8 +88,10 @@ const MeetingTab = ({
       (mod) => mod.email === user.email
     );
     if (isModerator) {
-      const confirmStart = window.confirm("Are you sure you want to start this session?");
-                        if (!confirmStart) return;
+      const confirmStart = window.confirm(
+        "Are you sure you want to start this session?"
+      );
+      if (!confirmStart) return;
       const fullName = `${user.firstName} ${user.lastName}`;
       try {
         if (socket) {
@@ -134,33 +141,37 @@ const MeetingTab = ({
     };
   }, [socket]);
 
-  const handleDeleteMeeting = async (meeting) => {
-    const isConfirmed = confirm(
-      "Are you sure you want to delete this meeting?"
-    );
+  const handleDeleteMeeting = (meeting) => {
+    console.log('meeting to delete', meeting)
+    setMeetingToDelete(meeting); 
+    setIsConfirmationModalOpen(true); 
+  };
 
-    if (!isConfirmed) {
-      return; // If the user cancels, exit the function
-    }
+  const confirmDeleteMeeting = async (meeting) => {
+    if (!meetingToDelete) return;
 
     try {
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-meeting/${meeting._id}`
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-meeting/${meetingToDelete._id}`
       );
 
       if (response.status === 200) {
         toast.success(`${response.data.message}`);
         // Update the meetings state by filtering out the deleted meeting
         const updatedMeetings = localMeetingState.filter(
-          (m) => m._id !== meeting._id
+          (m) => m._id !== meetingToDelete._id
         );
-        setIsModalOpen(false);
+        // setIsModalOpen(false);
+        console.log('updated meetings', updatedMeetings)
         setLocalMeetingState(updatedMeetings);
       } else {
         console.error("Failed to delete meeting");
       }
     } catch (error) {
       console.error("Error deleting meeting:", error);
+    } finally {
+      setIsConfirmationModalOpen(false);
+      setMeetingToDelete(null);
     }
   };
 
@@ -253,29 +264,29 @@ const MeetingTab = ({
           name: fullName,
           role: "Observer",
           passcode: meeting?.meetingPasscode,
-          email: user.email
+          email: user.email,
         });
-  
+
         socket.on("observerJoinMeetingResponse", (response) => {
-     
-          if(response.message === "Meeting not found") {
+          if (response.message === "Meeting not found") {
             toast.error("Meeting not found");
           } else if (response.message === "Invalid passcode") {
             toast.error("Invalid passcode");
-          } else if(response.message === "Live meeting not found") {
+          } else if (response.message === "Live meeting not found") {
             toast.error("Live meeting not found");
-          } else  if(response.message === "Observer already added to the meeting") {
+          } else if (
+            response.message === "Observer already added to the meeting"
+          ) {
             router.push(
               `/meeting/${meetingId}?fullName=${encodeURIComponent(
                 fullName
               )}&role=Observer`
             );
           } else if (response.message === "Observer added to the meeting") {
-            
             if (response.isStreaming) {
               router.push(
                 `/meeting/${meetingId}?fullName=${encodeURIComponent(
-                 fullName
+                  fullName
                 )}&role=Observer`
               );
             } else {
@@ -334,13 +345,16 @@ const MeetingTab = ({
                       onClick={() => handleJoinMeeting(meeting)}
                       disabled={activeMeetingId === meeting._id}
                     >
-                      {activeMeetingId === meeting._id ? "Starting Meeting" : "Start Meeting"}
+                      {activeMeetingId === meeting._id
+                        ? "Starting Meeting"
+                        : "Start Meeting"}
                     </button>
-                    <button onClick={() => handleJoinBackroom(meeting)}
+                    <button
+                      onClick={() => handleJoinBackroom(meeting)}
                       className="text-blue-500 hover:text-blue-700"
-                      >
-      Join Backroom
-    </button>
+                    >
+                      Join Backroom
+                    </button>
 
                     <BsThreeDotsVertical
                       onClick={(e) => toggleModal(e, meeting)}
@@ -498,6 +512,15 @@ const MeetingTab = ({
           refetchMeetings={fetchMeetings}
           meetingToEdit={meetingToEdit}
           isEditing={true}
+        />
+      )}
+
+      {isConfirmationModalOpen && (
+        <ConfirmationModal
+          onCancel={() => setIsConfirmationModalOpen(false)}
+          onYes={confirmDeleteMeeting}
+          heading="Delete Meeting"
+          text="Are you sure you want to delete this meeting? This action cannot be undone."
         />
       )}
 

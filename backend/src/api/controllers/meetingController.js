@@ -350,7 +350,7 @@ const bulkUploadMeeting = async (req, res) => {
 
     // Insert all valid meetings at once
     if (meetingsToInsert.length > 0) {
-      // await Meeting.insertMany(meetingsToInsert);
+      await Meeting.insertMany(meetingsToInsert);
     }
 
     // Define the order of columns with `statusMessage` explicitly in J column
