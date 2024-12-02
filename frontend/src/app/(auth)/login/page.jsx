@@ -49,8 +49,11 @@ const Login = () => {
       setUser(response.data.data);
       
 
+      if(typeof window !== 'undefined'){
+        window.localStorage.setItem("user", JSON.stringify(response.data.data));
+      }
 
-      localStorage.setItem("user", JSON.stringify(response.data.data));
+      console.log('trying to redirect');
 
       const redirectUrl = router.query?.redirect || `/dashboard/my-profile/${response.data.data._id}`;
         router.replace(redirectUrl);
