@@ -31,6 +31,36 @@ async function flushMessages() {
   }
 }
 
+async function checkMeetingExists(meetingId, socket, event) {
+  const existingMeeting = await Meeting.findById(meetingId);
+
+  if (!existingMeeting) {
+    socket.emit(event, {
+      success: false,
+      message: "Meeting not found",
+      meetingId,
+    });
+    return false; 
+  }
+
+  return existingMeeting; 
+}
+async function checkLiveMeetingExists(meetingId, socket, event) {
+  const existingMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
+
+  if (!existingMeeting) {
+    socket.emit(event, {
+      success: false,
+      message: "Meeting not found",
+      meetingId,
+    });
+    return false; 
+  }
+
+  return existingMeeting; 
+}
+
+
 setInterval(flushMessages, FLUSH_INTERVAL);
 
 async  function getGroupMessage(meetingId){
@@ -56,29 +86,24 @@ const setupSocket = (server) => {
 
     socket.on("join-room",({roomid,name,email},callback) => {
       socket.join(roomid);
-      console.log(email,'email')
+      // console.log(email,'email')
       usernames[socket.id] = {
         name,
         roomid,
         email
       };
-
+      console.log(`User with name ${name} joined meeting ${roomid}`)
       const newname = email + roomid;
       delete userchangeroom[newname];
       callback(socket.id);
     })
+
     socket.on("startMeeting", async (data) => {
       const { meetingId, user } = data;
-      const existingMeeting = await Meeting.findById(meetingId);
 
-      if (!existingMeeting) {
-        socket.emit("startMeetingResponse", {
-          success: false,
-          message: "Meeting not found",
-          meetingId: meetingId,
-        });
-        return; // Exit if no meeting exists
-      }
+      const existingMeeting = await checkMeetingExists(meetingId, socket, "meeting-not-found");
+      if (!existingMeeting) return;
+
 
       const liveMeeting = await LiveMeeting.findOne({ meetingId });
 
@@ -124,20 +149,13 @@ const setupSocket = (server) => {
 
     });
 
-    socket.on("participantJoinMeeting", async (data) => {
+    socket.on("participantWantToJoin", async (data) => {
       const { meetingId, name, role, email } = data;
-      console.log('participant join meeting', data)
 
-      let liveMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
+      let liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+      if (!liveMeeting) return;
 
-      if (!liveMeeting) {
-        socket.emit("participantJoinMeetingResponse", {
-          success: false,
-          message: "Meeting not found",
-          meetingId: meetingId,
-        });
-        return;
-      }
+      
 
       const isInWaitingRoom = liveMeeting.waitingRoom.some(
         (participant) => participant.email === email
@@ -172,21 +190,182 @@ const setupSocket = (server) => {
         message: "Participant added to waiting room",
         participant: { name, role, email },
       });
+
+      // Broadcast the updated waiting room list to all clients in the meeting room
+  io.to(meetingId).emit("participantWaiting", {
+    waitingRoom: liveMeeting.waitingRoom,
+  });
+    });
+
+    socket.on("acceptFromWaitingRoom", async (data) => {
+      const { meetingId, participant } = data;
+      try {
+        console.log(io.sockets.adapter.rooms);
+
+
+        let liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+      if (!liveMeeting) return;
+
+        
+        const participantIndex = liveMeeting.waitingRoom.findIndex(
+          (p) => p.email === participant.email
+        );
+
+        if (participantIndex === -1) {
+          socket.emit("acceptFromWaitingRoomResponse", {
+            success: false,
+            message: "Participant not found in waiting room",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        const [removedParticipant] = liveMeeting.waitingRoom.splice(
+          participantIndex,
+          1
+        );
+
+        
+
+        const participantWithId = {
+          ...removedParticipant.toObject(),
+          id: uuidv4(),
+        };
+
+        liveMeeting.participantsList.push(participantWithId);
+        await liveMeeting.save();
+
+        const fullParticipantList = [
+          liveMeeting.moderator,
+          ...liveMeeting.participantsList,
+        ];
+        io.emit("participantList", {
+          success: true,
+          message: "Participant added to participants list",
+          waitingRoom: liveMeeting.waitingRoom,
+          participantList: fullParticipantList,
+        });
+        
+      } catch (error) {
+        console.error("Error in acceptFromWaitingRoom:", error);
+        socket.emit("acceptFromWaitingRoomResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+    socket.on("getParticipantList", async (data) => {
+      const { meetingId } = data;
+      try {
+
+        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        if (!liveMeeting) return;
+
+       
+        const fullParticipantList = [
+          liveMeeting.moderator,
+          ...liveMeeting.participantsList,
+        ];
+
+        let breakoutRooms = liveMeeting.breakRooms?.map((r) => r.roomName) || [];
+        breakoutRooms = ["Main",...breakoutRooms];
+
+        io.to(meetingId).emit("participantList", {
+          success: true,
+          message: "Participant added to participants list",
+          waitingRoom: liveMeeting.waitingRoom,
+          participantList: fullParticipantList,
+        });
+
+       
+      } catch (error) {
+        console.error("Error in getParticipantList:", error);
+        socket.emit("getParticipantListResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+
+    socket.on("removeFromWaitingRoom", async (data) => {
+      const { meetingId, participant } = data;
+      try {
+        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        if (!liveMeeting) return;
+
+          
+        // Remove the participant from the waiting room
+        liveMeeting.waitingRoom = liveMeeting.waitingRoom.filter(
+          (p) => p.name !== participant.name
+        );
+        await liveMeeting.save();
+    
+        
+    
+        // Notify the removed participant
+        io.emit("participantRemovedFromWaiting", { name: participant.name, role: participant.role, email: participant.email });
+
+        io.to(meetingId).emit("participantWaiting", {
+          waitingRoom: liveMeeting.waitingRoom,
+        });
+    
+      } catch (error) {
+        console.error("Error in removeFromWaitingRoom:", error);
+        socket.emit("removeFromWaitingRoomResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+    socket.on("toggleStreaming", async (data) => {
+      const { meetingId } = data;
+      try {
+
+        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        if (!liveMeeting) return;
+
+
+           
+        liveMeeting.isStreaming = !liveMeeting.isStreaming;
+        await liveMeeting.save();
+    
+        socket.emit("getStreamingStatusResponse", {
+          success: true,
+          message: `Streaming ${liveMeeting.isStreaming ? "started" : "stopped"} successfully`,
+          isStreaming: liveMeeting.isStreaming,
+        });
+    
+        // Notify observers based on streaming status
+        if (liveMeeting.isStreaming) {
+          console.log('navigateToMeeting')
+          io.emit("navigateToMeeting", { meetingId });
+        } else {
+          console.log('navigateToObserverWaitingRoom')
+          io.emit("navigateToObserverWaitingRoom", { meetingId });
+        }
+      } catch (error) {
+        console.error("Error in toggleStreaming:", error);
+        socket.emit("toggleStreamingResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
     });
 
     socket.on("observerJoinMeeting", async (data) => {
       const { meetingId, name, role, passcode } = data;
 
-      const meeting = await Meeting.findById(meetingId);
-      if (!meeting) {
-        socket.emit("observerJoinMeetingResponse", {
-          success: false,
-          message: "Meeting not found",
-          meetingId: meetingId,
-        });
-        return;
-      }
+      const meeting = await checkMeetingExists(meetingId, socket, "meeting-not-found");
+      if (!meeting) return;
 
+      
       if (meeting.meetingPasscode !== passcode) {
         socket.emit("observerJoinMeetingResponse", {
           success: false,
@@ -195,15 +374,10 @@ const setupSocket = (server) => {
         });
         return;
       }
-      let liveMeeting = await LiveMeeting.findOne({ meetingId });
-      if (!liveMeeting) {
-        socket.emit("observerJoinMeetingResponse", {
-          success: false,
-          message: "Live meeting not found",
-          meetingId: meetingId,
-        });
-        return;
-      }
+
+      let liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+      if (!liveMeeting) return;
+
       const isInObserverList = liveMeeting.observerList.some(
         (observer) => observer.name === name
       );
@@ -229,138 +403,14 @@ const setupSocket = (server) => {
       });
     });
 
-    socket.on("getWaitingList", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("getWaitingListResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        socket.emit("getWaitingListResponse", {
-          success: true,
-          message: "Waiting list retrieved",
-          waitingRoom: liveMeeting.waitingRoom,
-        });
-      } catch (error) {
-        console.error("Error in getWaitingList:", error);
-        socket.emit("getWaitingListResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
-    socket.on("acceptFromWaitingRoom", async (data) => {
-      const { meetingId, participant } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("acceptFromWaitingRoomResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        const participantIndex = liveMeeting.waitingRoom.findIndex(
-          (p) => p.email === participant.email
-        );
-
-        if (participantIndex === -1) {
-          socket.emit("acceptFromWaitingRoomResponse", {
-            success: false,
-            message: "Participant not found in waiting room",
-            meetingId: meetingId,
-          });
-          return;
-        }
-
-        const [removedParticipant] = liveMeeting.waitingRoom.splice(
-          participantIndex,
-          1
-        );
-
-        const participantWithId = {
-          ...removedParticipant.toObject(),
-          id: uuidv4(),
-        };
-
-        liveMeeting.participantsList.push(participantWithId);
-        await liveMeeting.save();
-
-        socket.emit("participantList", {
-          success: true,
-          message: "Participant added to participants list",
-          participantList: liveMeeting.participantsList,
-        });
-      } catch (error) {
-        console.error("Error in acceptFromWaitingRoom:", error);
-        socket.emit("acceptFromWaitingRoomResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
-    socket.on("getParticipantList", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("getParticipantListResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-
-        const fullParticipantList = [
-          liveMeeting.moderator,
-          ...liveMeeting.participantsList,
-        ];
-
-        let breakoutRooms = liveMeeting.breakRooms?.map((r) => r.roomName) || [];
-        breakoutRooms = ["Main",...breakoutRooms];
-
-        socket.emit("getParticipantListResponse", {
-          success: true,
-          message: "Participant list retrieved",
-          participantList: fullParticipantList,
-          breakoutRooms
-
-          
-        });
-      } catch (error) {
-        console.error("Error in getParticipantList:", error);
-        socket.emit("getParticipantListResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
     socket.on("removeParticipantFromMeeting", async (data) => {
       const { meetingId, name, role, email } = data;
+      console.log('removeParticipantFromMeeting', data)
       
       try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("removeParticipantFromMeetingResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
+
+        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        if (!liveMeeting) return;
 
         if (role === "Participant") {
           const initialParticipantsLength = liveMeeting.participantsList.length;
@@ -370,6 +420,8 @@ const setupSocket = (server) => {
             (participant) => participant.email === email
           );
 
+          console.log('participantToRemove', participantToRemove)
+
           liveMeeting.participantsList = liveMeeting.participantsList.filter(
             (participant) => participant.email !== email
           );
@@ -378,9 +430,14 @@ const setupSocket = (server) => {
           liveMeeting.removedParticipants.push({
             name: name,
             role: role,
-            email: email
+            email: participantToRemove.email
           });
           await liveMeeting.save();
+
+          const fullParticipantList = [
+            liveMeeting.moderator,
+            ...liveMeeting.participantsList,
+          ];
 
           io.emit("participantRemoved", { name, role, email });
 
@@ -389,11 +446,12 @@ const setupSocket = (server) => {
             message: "Participant removed from meeting",
             removeParticipantList: liveMeeting.removedParticipants,
           });
-          console.log("liveMeeting.participantsList in removeParticipantFromMeeting", liveMeeting.removedParticipants);
-          socket.emit("participantList", {
+          
+          io.emit("participantList", {
             success: true,
             message: "Participant list retrieved",
-            participantList: liveMeeting.participantsList,
+            participantList: fullParticipantList,
+            waitingRoom: liveMeeting.waitingRoom
           });
         }
       } catch (error) {
@@ -406,18 +464,88 @@ const setupSocket = (server) => {
       }
     });
 
+
+    socket.on("moveParticipantToWaitingRoom", async (data) => {
+      const { meetingId, name, role, email } = data;
+      console.log('moveParticipantToWaitingRoom', data)
+      
+      try {
+
+        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        if (!liveMeeting) return;
+
+        if (role === "Participant") {
+
+          // Remove the participant from participantsList
+          const participantToRemove = liveMeeting.participantsList.find(
+            (participant) => participant.email === email
+          );
+
+
+          liveMeeting.participantsList = liveMeeting.participantsList.filter(
+            (participant) => participant.email !== email
+          );
+
+          // Add the removed participant to removedParticipants list
+          liveMeeting.waitingRoom.push({
+            name: name,
+            role: role,
+            email: participantToRemove.email
+          });
+          await liveMeeting.save();
+
+          const fullParticipantList = [
+            liveMeeting.moderator,
+            ...liveMeeting.participantsList,
+          ];
+
+          io.emit("participantMovedToWaitingRoom", { name, role, email });
+
+                   
+          io.emit("participantList", {
+            success: true,
+            message: "Participant list retrieved",
+            participantList: fullParticipantList,
+            waitingRoom: liveMeeting.waitingRoom
+          });
+        }
+      } catch (error) {
+        console.error("Error in participantMovedToWaitingRoom:", error);
+       
+      }
+    });
+
+    socket.on("getMeetingStatus", async (data) => {
+      const { meetingId } = data;
+      try {
+
+        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+      if (!liveMeeting) return;
+
+        socket.emit("getMeetingStatusResponse", {
+          success: true,
+          message: "Meeting status retrieved",
+          meetingStatus: liveMeeting.ongoing,
+        });
+      } catch (error) {
+        console.error("Error in getMeetingStatus:", error);
+        socket.emit("getMeetingStatusResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
     socket.on("participantSendMessage", async (data) => {
       const { meetingId, message } = data;
+
+      console.log('participantSendMessage', data)
       try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("participantSendMessageResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
+
+        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+      if (!liveMeeting) return;
+
 
         // Create a new ChatMessage document
         const newChatMessage = new ChatMessage({
@@ -436,7 +564,7 @@ const setupSocket = (server) => {
         const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
 
 
-        socket.emit("participantChatResponse", {
+        io.emit("participantChatResponse", {
           success: true,
           message: "Message sent to participant",
           participantMessages: updatedLiveMeeting.participantChat,
@@ -450,308 +578,6 @@ const setupSocket = (server) => {
         });
       }
     });
-
-    socket.on("getParticipantChat", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
-        if (!liveMeeting) {
-          socket.emit("participantChatResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-
-        if (!liveMeeting.participantChat || liveMeeting.participantChat.length === 0) {
-          socket.emit("participantChatResponse", {
-            success: false,
-            message: "No chat messages found for this meeting",
-            meetingId: meetingId,
-          });
-          return;
-        }
-
-
-        socket.emit("participantChatResponse", {
-          success: true,
-          message: "Participant chat retrieved successfully",
-          participantMessages: liveMeeting.participantChat,
-        });
-      } catch (error) {
-        console.error("Error in getParticipantChat:", error);
-        socket.emit("participantChatResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
-    socket.on("getObserverList", async (data) => {
-      ("Received getObserverList event:", data);
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("getObserverListResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,   
-          });
-          return;
-        }
-
-        const fullObserverList = [
-          liveMeeting.moderator,
-          ...liveMeeting.observerList,
-        ];
-        
-        socket.emit("getObserverListResponse", {
-          success: true,
-          message: "Observer list retrieved successfully",
-          observersList: fullObserverList,
-        });
-      } catch (error) {
-        console.error("Error in getObserverList:", error);
-        socket.emit("getObserverListResponse", {
-          success: false, 
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
-    socket.on("sendMessageObserver", async (data) => {
-      const { meetingId, message } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("sendMessageObserverResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-
-        // Create a new ChatMessage document
-        const newChatMessage = new ChatMessage({
-          senderName: message.senderName,
-          receiverName: message.receiverName,
-          message: message.message,
-        });
-
-        // Save the new chat message
-        const savedChatMessage = await newChatMessage.save();
-
-        // Add the saved chat message's ID to the liveMeeting's observerChat array
-        liveMeeting.observerChat.push(savedChatMessage._id);
-        await liveMeeting.save();
-
-        const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
-      
-
-        socket.emit("observerChatResponse", {
-          success: true,
-          message: "Message sent to observer",
-          observerMessages: updatedLiveMeeting.observerChat,
-        });
-      } catch (error) {
-        console.error("Error in sendMessageObserver:", error);
-        socket.emit("observerChatResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
-    socket.on("getObserverChat", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
-        if (!liveMeeting) {
-          socket.emit("observerChatResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-
-        if (!liveMeeting.observerChat || liveMeeting.observerChat.length === 0) {
-          socket.emit("observerChatResponse", {
-            success: false,
-            message: "No chat messages found for this meeting",
-            meetingId: meetingId,
-          });
-          return;
-        }
-        socket.emit("observerChatResponse", {
-          success: true,
-          message: "Observer chat retrieved successfully",
-          observerMessages: liveMeeting.observerChat,
-        });
-      } catch (error) {
-    
-        console.error("Error in getObserverChat:", error);
-        socket.emit("observerChatResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
-   
-    socket.on("toggleStreaming", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("toggleStreamingResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-    
-        liveMeeting.isStreaming = !liveMeeting.isStreaming;
-        await liveMeeting.save();
-    
-        socket.emit("getStreamingStatusResponse", {
-          success: true,
-          message: `Streaming ${liveMeeting.isStreaming ? "started" : "stopped"} successfully`,
-          isStreaming: liveMeeting.isStreaming,
-        });
-    
-        // Notify observers based on streaming status
-        if (liveMeeting.isStreaming) {
-          io.emit("navigateToMeeting", { meetingId });
-        } else {
-          io.emit("navigateToObserverWaitingRoom", { meetingId });
-        }
-      } catch (error) {
-        console.error("Error in toggleStreaming:", error);
-        socket.emit("toggleStreamingResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-    
-    socket.on("removeFromWaitingRoom", async (data) => {
-      const { meetingId, participant } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("removeFromWaitingRoomResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-    
-        // Remove the participant from the waiting room
-        liveMeeting.waitingRoom = liveMeeting.waitingRoom.filter(
-          (p) => p.name !== participant.name
-        );
-        await liveMeeting.save();
-    
-        socket.emit("removeFromWaitingRoomResponse", {
-          success: true,
-          message: "Participant removed from waiting room",
-          removedParticipant: participant,
-        });
-    
-        // Notify the removed participant
-        io.emit("participantRemovedFromWaiting", { name: participant.name, role: participant.role });
-    
-      } catch (error) {
-        console.error("Error in removeFromWaitingRoom:", error);
-        socket.emit("removeFromWaitingRoomResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
-    socket.on("admitAllFromWaitingRoom", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("admitAllFromWaitingRoomResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-    
-        // Move all participants from waiting room to participants list
-        const participantsToAdmit = liveMeeting.waitingRoom.map(participant => ({
-          ...participant.toObject(),
-          id: uuidv4()
-        }));
-    
-        liveMeeting.participantsList.push(...participantsToAdmit);
-        liveMeeting.waitingRoom = [];
-        await liveMeeting.save();
-    
-        socket.emit("admitAllFromWaitingRoomResponse", {
-          success: true,
-          message: "All participants admitted",
-          admittedParticipants: participantsToAdmit,
-        });
-    
-        // Notify all admitted participants
-        io.emit("participantsAdmitted", { admittedParticipants: participantsToAdmit });
-    
-      } catch (error) {
-        console.error("Error in admitAllFromWaitingRoom:", error);
-        socket.emit("admitAllFromWaitingRoomResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-  
-    socket.on("getMeetingStatus", async (data) => {
-      const { meetingId } = data;
-      try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          socket.emit("getMeetingStatusResponse", {
-            success: false,
-            message: "Live meeting not found",
-            meetingId: meetingId,
-          });
-          return;
-        }
-
-        socket.emit("getMeetingStatusResponse", {
-          success: true,
-          message: "Meeting status retrieved",
-          meetingStatus: liveMeeting.ongoing,
-        });
-      } catch (error) {
-        console.error("Error in getMeetingStatus:", error);
-        socket.emit("getMeetingStatusResponse", {
-          success: false,
-          message: "Server error occurred",
-          meetingId: meetingId,
-        });
-      }
-    });
-
 
     socket.on("create-breakout-room", async ({ meetingId,breakroomname,participants},callback) => {
       const existingMeeting = await Meeting.findById(meetingId);

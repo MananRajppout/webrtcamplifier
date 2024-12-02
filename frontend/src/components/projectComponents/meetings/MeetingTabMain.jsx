@@ -14,7 +14,6 @@ import AddMeetingModal from "./AddMeetingModal";
 import Pagination from "@/components/shared/Pagination";
 import Button from "@/components/shared/button";
 import ConfirmationModal from "@/components/shared/ConfirmationModal";
-import useSocketListen from "@/hooks/useSocketListen";
 
 const MeetingTab = ({
   meetings,
@@ -81,10 +80,6 @@ const MeetingTab = ({
     closeModal();
   };
 
-  useSocketListen("meeting-not-found", ()=> {
-    toast.error("Meeting not found");
-  })
-
   const handleJoinMeeting = async (meeting) => {
     if (activeMeetingId === meeting._id) return;
 
@@ -108,8 +103,6 @@ const MeetingTab = ({
               role: "Moderator",
             },
           });
-
-         
 
           // Listen for a response from the server
           socket.on("startMeetingResponse", (response) => {
@@ -461,7 +454,7 @@ const MeetingTab = ({
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={(e) => {
-                e.stopPropagation(); 
+                e.stopPropagation(); // Add this line
                 handleView(selectedMeeting);
                 closeModal();
               }}

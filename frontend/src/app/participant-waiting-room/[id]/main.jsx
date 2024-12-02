@@ -5,7 +5,6 @@ import Button from "@/components/shared/button";
 import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import Logo from "@/components/shared/Logo";
 import { useGlobalContext } from "@/context/GlobalContext";
-import useSocketListen from "@/hooks/useSocketListen";
 import axios from "axios";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,11 +15,9 @@ const page = () => {
   const searchParams = useSearchParams();
   const params = useParams();
   const router = useRouter();
-  const meetingId = params?.id
   const {socket} = useGlobalContext()
   const fullName = searchParams.get("fullName");
   const userRole = searchParams.get("role");
-  const userEmail = searchParams.get("email");
   const [participants, setParticipants] = useState([]);
   const [meetingDetails, setMeetingDetails] = useState([])
   const [participantMessages, setParticipantMessages] = useState([]);
@@ -36,45 +33,7 @@ const page = () => {
     }
   };
 
-
-
-
   // * transferring participant from waiting room to meeting room
-
-  useSocketListen("participantList", (data) => {
-    console.log('waiting room participant list', data)
-    const participantAccepted = data?.participantList?.find(p => p.email === userEmail)
-    if(participantAccepted){
-      router.push(
-        `/meeting/${params.id}?fullName=${encodeURIComponent(
-          fullName
-        )}&role=${encodeURIComponent(userRole)}&email=${encodeURIComponent(userEmail)}`
-      );
-    }
-  });
-
-  // * Participant removed from the waiting room
-  useSocketListen("participantRemovedFromWaiting", (data) => {
-    const isParticipantRemoved = data?.email === userEmail
-    if(isParticipantRemoved){
-      router.push(
-        `/remove-participant`
-      );
-    }
-  });
-
-
-
-  
-  useEffect(() => {
-    if (socket) {
-      socket.emit("join-room", { meetingId, fullName, userEmail }, (socketId) => {
-       
-      });
-    }
-  }, [socket, meetingId, fullName, userEmail]);
-
-
   useEffect(() => {
     getMeetingDetails(params.id);
 
@@ -86,49 +45,49 @@ const page = () => {
       }
     });
 
-    // socket.on("participantsAdmitted", (data) => {
-    //   const isUserAdmitted = data.admittedParticipants.some(
-    //     participant => participant.name === fullName && participant.role === userRole
-    //   );
-    //   if (isUserAdmitted) {
-    //     router.push(
-    //       `/meeting/${params.id}?fullName=${encodeURIComponent(
-    //         fullName
-    //       )}&role=${encodeURIComponent(userRole)}`
-    //     );
-    //   }
-    // });
+    socket.on("participantsAdmitted", (data) => {
+      const isUserAdmitted = data.admittedParticipants.some(
+        participant => participant.name === fullName && participant.role === userRole
+      );
+      if (isUserAdmitted) {
+        router.push(
+          `/meeting/${params.id}?fullName=${encodeURIComponent(
+            fullName
+          )}&role=${encodeURIComponent(userRole)}`
+        );
+      }
+    });
       
     // Set up socket listener for participant list
-    // socket.on("getParticipantListResponse", (response) => {
-    //   if (response.success) {
-    //     setParticipants(response.participantList);
+    socket.on("getParticipantListResponse", (response) => {
+      if (response.success) {
+        setParticipants(response.participantList);
       
         
-    //     // Check if the current user is in the participant list
-    //     const isUserInMeeting = response.participantList.some(
-    //       (participant) => participant.name === fullName && participant.role === userRole
-    //     );
+        // Check if the current user is in the participant list
+        const isUserInMeeting = response.participantList.some(
+          (participant) => participant.name === fullName && participant.role === userRole
+        );
 
-    //     if (isUserInMeeting) {
-    //       router.push(
-    //         `/meeting/${params.id}?fullName=${encodeURIComponent(
-    //           fullName
-    //         )}&role=${encodeURIComponent(userRole)}`
-    //       );
-    //     }
-    //   } else {
-    //     console.error("Failed to get participant list:", response.message);
-    //   }
-    // });
+        if (isUserInMeeting) {
+          router.push(
+            `/meeting/${params.id}?fullName=${encodeURIComponent(
+              fullName
+            )}&role=${encodeURIComponent(userRole)}`
+          );
+        }
+      } else {
+        console.error("Failed to get participant list:", response.message);
+      }
+    });
 
     socket.on("participantChatResponse", handleParticipantChatResponse);
 
 
     // Function to request participant list
-  // const requestParticipantList = () => {
-  //   socket.emit("getParticipantList", { meetingId: params.id });
-  // };
+  const requestParticipantList = () => {
+    socket.emit("getParticipantList", { meetingId: params.id });
+  };
 
   const getParticipantChat = async (meetingId) => {
     socket.emit("getParticipantChat", { meetingId });
@@ -138,16 +97,22 @@ const page = () => {
     getParticipantChat(params.id);
   }, 1000);
 
-  // // Initial request
-  // requestParticipantList();
+  // Initial request
+  requestParticipantList();
 
-  
+   // Set up interval to request participant list every 5 seconds
+   const intervalId = setInterval(requestParticipantList, 1000);
+
+
+
 
     // Clean up function
     return () => {
+      socket.off("getParticipantListResponse");
       socket.off("participantRemovedFromWaiting");
+      socket.off("participantsAdmitted");
       socket.off("participantChatResponse", handleParticipantChatResponse);
-      // clearInterval(intervalId);
+      clearInterval(intervalId);
       clearInterval(requestParticipantListIntervalId);
     };
   }, [params.id, socket, fullName, userRole, router]);
