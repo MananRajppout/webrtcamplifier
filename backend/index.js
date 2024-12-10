@@ -57,6 +57,7 @@ require("./src/api/routes/videoRoute.js")(app);
 require("./src/api/routes/companyRoute.js")(app);
 require("./src/api/routes/repositoryRoute.js")(app);
 require("./src/api/routes/tagRoute.js")(app);
+require("./src/api/routes/permissionRoute.js")(app);
 
 mongoose.set("strictQuery", false);
 
