@@ -2,7 +2,7 @@ const Permission = require("../models/permissionModel");
 
 const getPermissions = async (req, res) => {
     try {
-        // await InsertPermissions()
+        // await insertPermissions()
         const result = await Permission.find({}).select("name status");
         return res.status(200).json({ result, message: "Data fetched successfully." });
     } catch (error) {
@@ -10,7 +10,7 @@ const getPermissions = async (req, res) => {
     }
 }
 
-const InsertPermissions = async () => {
+const insertPermissions = async () => {
     try {
         const permissions = [
             { name: "Can create internal admin" },
