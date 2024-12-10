@@ -39,7 +39,7 @@ const RenderParticipants = ({socketId,name,videosElementsRef,audiosElementRef,so
 
         <video autoPlay ref={setVideoRefs} className={`absolute top left-0 right-0 bottom-0 rounded-xl object-contain z-0 w-full h-full ${!isWebCamMute ? 'block': 'hidden'}`}></video>
         
-        <h1 className={`text-2xl font-medium text-white z-10 select-none text-center`}>{name}</h1>
+        <h1 className={`text-sm px-2 py-2 rounded-md bg-black/50 font-medium text-white z-10 select-none text-center`}>{name}</h1>
     
     </div>
   )

@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/context/GlobalContext";
 import Button from "@/components/shared/button";
 import ProjectFilter from "@/components/singleComponent/ProjectFilter";
-import Pagination from "@/components/shared/Pagination";
 
 const Page = () => {
   const router = useRouter();

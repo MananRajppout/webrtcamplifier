@@ -9,19 +9,16 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import io from "socket.io-client";
 import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
-import useSocketListen from "@/hooks/useSocketListen";
 
 const page = () => {
   const searchParams = useSearchParams();
   const params = useParams();
-  const meetingId = params?.id;
-  const roomname = searchParams.get("roomname");
-  const type = searchParams.get("type");
+  const roomname = searchParams.get('roomname');
+  const type = searchParams.get('type');
   const router = useRouter();
   const { user, socket } = useGlobalContext();
   const fullName = searchParams.get("fullName");
   const userRole = searchParams.get("role");
-  const userEmail = searchParams.get("email");
   const [meetingDetails, setMeetingDetails] = useState([]);
   const [users, setUsers] = useState([]);
   const [participants, setParticipants] = useState([]);
@@ -46,55 +43,56 @@ const page = () => {
   const [isBreakoutRoom, setIsBreakoutRoom] = useState(false);
   const [breakoutRooms, setBreakoutRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [myEmail, setMyEmail] = useState(null);
+  const [myEmail,setMyEmail] = useState(null);
+  
 
   const [peers, setPeers] = useState([]);
   const [streams, setStreams] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [groupMessage, setGroupMessage] = useState([]);
+  const [groupMessage,setGroupMessage] = useState([]);
   const [mediaBox, setMediaBox] = useState([]);
+
+
+
 
   //get user email
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const email = window.localStorage.getItem("email");
-      setMyEmail(userRole == "Moderator" ? "admin@gmail.com" : email);
+    if(typeof window !== 'undefined'){
+      const email = window.localStorage.getItem('email');
+      setMyEmail(userRole == 'Moderator' ? 'admin@gmail.com' : email);
     }
-  }, []);
+  },[])
 
   const handleBreakoutRoomChange = (roomName) => {
     const room = breakoutRooms?.find((room) => room.roomName === roomName);
     setSelectedRoom(room);
   };
 
+
+
+
   //! Use effect for getting waiting list
   useEffect(() => {
+    let intervalId;
     let email;
-    if (typeof window !== "undefined") {
-      email =
-        userRole == "Moderator"
-          ? "admin@gmail.com"
-          : window.localStorage.getItem("email");
+    if(typeof window !== 'undefined'){
+      email = userRole == 'Moderator' ? 'admin@gmail.com' : window.localStorage.getItem('email');
     }
-    socket.emit(
-      "join-room",
-      { roomid: params.id, name: fullName, email },
-      (socketId) => {
-        socketIdRef.current = socketId;
-      }
-    );
-    socket.emit("grounp:get-message", { meetingId: params.id }, (messages) => {
+    socket.emit('join-room', { roomid: params.id, name: fullName,email }, (socketId) => {
+      socketIdRef.current = socketId;
+    });
+    socket.emit('grounp:get-message', { meetingId: params.id}, (messages) => {
       setGroupMessage([...messages]);
     });
 
-    socket.emit("mediabox:on-get-media", { meetingId: params.id }, (media) => {
-      console.log(media, "mediassss", media);
+    socket.emit('mediabox:on-get-media', { meetingId: params.id}, (media) => {
+      console.log(media,'mediassss',media)
       setMediaBox([...media]);
     });
 
-    socket.on("change-room", handleChangeRoom);
+    socket.on('change-room', handleChangeRoom)
     socket.on("getParticipantListResponse", handleParticipantList);
-    // socket.on("participantChatResponse", handleParticipantChatResponse);
+    socket.on("participantChatResponse", handleParticipantChatResponse);
     socket.on("getObserverListResponse", handleObserverListResponse);
     socket.on("observerChatResponse", handleObserverChatResponse);
     socket.on("getStreamingStatusResponse", handleGetStreamingStatusResponse);
@@ -103,19 +101,46 @@ const page = () => {
     socket.on("group:receive-message", handleNewMessageReceive);
     socket.on("mediabox:on-upload", handleMediaNewUpload);
 
+
+    // Initial request
+    requestParticipantList();
+
+    // getStreamingStatus(params.id);
     getMeetingStatus(params.id);
+    // getParticipantChat(params.id);
 
     const requestParticipantListIntervalId = setInterval(() => {
-      // getParticipantChat(params.id);
+      requestParticipantList(); // Request participant list
+      getParticipantChat(params.id);
       getObserverList(params.id);
       getObserverChat(params.id);
-    }, 1000);
+    }, 1000)
+
+    if (userRole === "Moderator") {
+      // Initial call
+      getWaitingList(params.id);
+      socket.on("getWaitingListResponse", handleGetWaitingListResponse);
+
+      // Set up interval to call getWaitingList every 10 seconds
+      intervalId = setInterval(() => {
+        getWaitingList(params.id);
+      }, 1000);
+
+      return () => {
+        socket.off("getWaitingListResponse", handleGetWaitingListResponse);
+        socket.off("group:receive-message", handleNewMessageReceive);
+        socket.off("mediabox:on-upload", handleMediaNewUpload);
+      };
+    }
 
     // Clean up function to clear the interval when component unmounts or userRole changes
     return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
       clearInterval(requestParticipantListIntervalId);
       socket.off("getParticipantListResponse", handleParticipantList);
-      // socket.off("participantChatResponse", handleParticipantChatResponse);
+      socket.off("participantChatResponse", handleParticipantChatResponse);
       socket.off("getObserverListResponse", handleObserverListResponse);
       socket.off("getObserverChatResponse", handleObserverChatResponse);
       socket.off("participantRemoved", handleParticipantRemoved);
@@ -133,12 +158,9 @@ const page = () => {
   useEffect(() => {
     if (userRole === "Observer") {
       socket.on("navigateToObserverWaitingRoom", ({ meetingId }) => {
+
         if (params.id === meetingId) {
-          router.push(
-            `/observer-waiting-room/${meetingId}?fullName=${encodeURIComponent(
-              fullName
-            )}&role=${encodeURIComponent(userRole)}`
-          );
+          router.push(`/observer-waiting-room/${meetingId}?fullName=${encodeURIComponent(fullName)}&role=${encodeURIComponent(userRole)}`);
         }
       });
     }
@@ -149,134 +171,101 @@ const page = () => {
   }, [params.id, userRole, socket]);
 
   const handleToggleStreaming = (meetingId) => {
+
     socket.emit("toggleStreaming", { meetingId });
   };
 
-  const handleBreakoutRoom = useCallback(
-    (breakroomname, participants) => {
-      if (breakoutRooms.includes(breakroomname))
-        return toast.error("This room name is already exist.");
-      socket.emit(
-        "create-breakout-room",
-        { meetingId: params.id, breakroomname, participants },
-        ({ fullParticipantList, breakroomname }, err) => {
-          if (err) return console.log(err);
-          setBreakoutRooms((prev) => [...prev, breakroomname]);
-          setParticipants(fullParticipantList);
-          if (!selectedRoom) {
-            setSelectedRoom(breakroomname);
-          }
-        }
-      );
-    },
-    [params.id, selectedRoom]
-  );
+  const handleBreakoutRoom = useCallback((breakroomname, participants) => {
+    if(breakoutRooms.includes(breakroomname)) return toast.error("This room name is already exist.")
+    socket.emit("create-breakout-room", { meetingId: params.id, breakroomname, participants }, ({ fullParticipantList, breakroomname }, err) => {
+      if (err) return console.log(err);
+      setBreakoutRooms(prev => [...prev, breakroomname]);
+      setParticipants(fullParticipantList);
+      if (!selectedRoom) {
+        setSelectedRoom(breakroomname);
+      }
+    });
+  }, [params.id, selectedRoom]);
 
-  const handleUserRename = useCallback(
-    (newname, user) => {
-      socket.emit(
-        "change-participant-name",
-        { meetingId: params.id, newname, userid: user.id },
-        ({ fullParticipantList }, err) => {
-          if (err) return console.log(err.message);
-          setParticipants(fullParticipantList);
-        }
-      );
-    },
-    [params.id]
-  );
 
-  const handleMoveParticipant = useCallback(
-    (breakroomname, participant) => {
-      socket.emit(
-        "user-move",
-        { meetingId: params.id, breakroomname, participants: [participant] },
-        ({ fullParticipantList, breakroomname }, err) => {
-          if (err) return console.log(err);
-          setParticipants(fullParticipantList);
-        }
-      );
-    },
-    [params.id, selectedRoom]
-  );
+  const handleUserRename = useCallback((newname,user) => {
+    socket.emit('change-participant-name',{meetingId: params.id,newname,userid: user.id},({fullParticipantList},err) => {
+      if(err) return console.log(err.message);
+      setParticipants(fullParticipantList);
+    });
+  },[params.id])
+
+  const handleMoveParticipant = useCallback((breakroomname, participant) => {
+
+    socket.emit("user-move", { meetingId: params.id, breakroomname, participants: [participant] }, ({ fullParticipantList, breakroomname }, err) => {
+      if (err) return console.log(err);
+      setParticipants(fullParticipantList);
+    });
+  }, [params.id, selectedRoom]);
 
   const handleChangeRoom = useCallback(({ participantList, roomName }) => {
     let email;
-    if (typeof window !== "undefined") {
-      email = window.localStorage.getItem("email");
+    if(typeof window !== 'undefined'){
+      email = window.localStorage.getItem('email');
     }
 
-    console.log("participantList", participantList);
-    const find = participantList.some((p) => p.email == email);
+    console.log('participantList',participantList)
+    const find = participantList.some(p => p.email == email);
 
     if (find) {
-      let url = "";
+      let url = '';
       if (roomName?.toLowerCase() == "main") {
-        url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}`;
+        url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}`
       } else {
-        url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}&type=breackout&roomname=${roomName}`;
+
+        url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}&type=breackout&roomname=${roomName}`
       }
-      window.open(url, "_self");
+      window.open(url, '_self');
     }
   }, []);
 
-  const sendGroupMessage = useCallback(
-    (content) => {
-      let name;
-      if (userRole == "Moderator") {
-        name = fullName;
-      } else {
-        name = participants.find((p) => p.email == myEmail)?.name || "Unkown";
-      }
-      const newMessage = {
-        meetingId: params.id,
-        senderEmail: myEmail,
-        content,
-        name,
-        timestamp: Date.now(),
-      };
-      setGroupMessage((prev) => [...prev, newMessage]);
-      socket.emit("grounp:send-message", {
-        meetingId: params.id,
-        email: myEmail,
-        content,
-        name,
-      });
-    },
-    [myEmail, params.id, participants]
-  );
+
+  const sendGroupMessage = useCallback((content) => {
+    let name;
+    if(userRole == 'Moderator'){
+      name = fullName
+    }else{
+      name = participants.find(p => p.email == myEmail)?.name || 'Unkown';
+    }
+    const newMessage = {
+      meetingId: params.id,
+      senderEmail: myEmail,
+      content,
+      name,
+      timestamp: Date.now()
+    }
+    setGroupMessage(prev => [...prev,newMessage]);
+    socket.emit("grounp:send-message", {meetingId: params.id,email:myEmail,content,name});
+  },[myEmail,params.id,participants]);
+
 
   const handleNewMessageReceive = useCallback((newMessage) => {
-    setGroupMessage((prev) => [...prev, newMessage]);
-  }, []);
+    setGroupMessage(prev => [...prev,newMessage]);
+  },[]);
 
   const handleMediaNewUpload = useCallback((media) => {
-    console.log("new media");
-    setMediaBox((prev) => [...prev, media]);
-  }, []);
+    console.log('new media')
+    setMediaBox(prev => [...prev,media]);
+  },[]);
 
-  const handleMediaUpload = useCallback(
-    async (file, setUploadProgress) => {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,
-        { file, meetingId: params, email: myEmail },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            const progress = Math.round(
-              (progressEvent.loaded / progressEvent.total) * 100
-            );
-            setUploadProgress(progress);
-          },
-        }
-      );
-      setUploadProgress(0);
-      return res;
-    },
-    [myEmail, params.id]
-  );
+  const handleMediaUpload = useCallback(async (file,setUploadProgress) => {
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,{file,meetingId: params,email: myEmail},{
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+        setUploadProgress(progress);
+      }
+    });
+    setUploadProgress(0);
+    return res;
+  },[myEmail,params.id]);
 
   // * get observer list response function
   const handleObserverListResponse = (response) => {
@@ -287,27 +276,17 @@ const page = () => {
     }
   };
 
-
-// ? Listing participant chat response
-  useSocketListen("participantChatResponse", (data) => {
-    console.log('participantChatResponse', data)
-    if (data.success) {
-      setParticipantMessages(data.participantMessages);
-    }
-  });
-
   // * get participant chat response function
-  // const handleParticipantChatResponse = (response) => {
-  //   if (response.success) {
-  //     setParticipantMessages(response.participantMessages);
-  //   } else {
-  //     // console.error("Failed to get participant chat:", response.message);
-  //   }
-  // };
+  const handleParticipantChatResponse = (response) => {
+    if (response.success) {
+      setParticipantMessages(response.participantMessages);
+    } else {
+      // console.error("Failed to get participant chat:", response.message);
+    }
+  };
 
   // * participant send message function
   const sendMessageParticipant = async (message) => {
-    console.log('send message', message)
     socket.emit("participantSendMessage", { message, meetingId: params.id });
   };
 
@@ -338,12 +317,13 @@ const page = () => {
       setParticipants(response.participantList);
       setBreakoutRooms(response.breakoutRooms);
       if (!selectedRoom) {
-        if (roomname && type == "breackout") {
+        if (roomname && type == 'breackout') {
           setSelectedRoom(roomname);
         } else {
           setSelectedRoom(response.breakoutRooms[0]);
         }
       }
+
     } else {
       console.error("Failed to update participant list:", response.message);
     }
@@ -354,47 +334,27 @@ const page = () => {
     if (response.success) {
       setIsMeetingOngoing(true);
     }
+  }
+
+  // * get waiting list response function
+  const handleGetWaitingListResponse = (response) => {
+    if (response.success) {
+      setWaitingRoom(response.waitingRoom);
+    } else {
+      console.error("Failed to get waiting list:", response.message);
+    }
   };
 
-  // ? Using took to get waiting room data
-  useSocketListen("participantWaiting", (data) => {
-    setWaitingRoom(data.waitingRoom);
-  });
-  useSocketListen("participantList", (data) => {
-    console.log("at the meeting room participant list", data);
-    setWaitingRoom(data.waitingRoom);
-    setParticipants(data.participantList);
-  });
-
-  useSocketListen("acceptFromWaitingRoomResponse", () => {
-    toast.error("Participant not found in waiting room");
-  });
-  // ? removing participant from the meeting
-  useSocketListen("participantRemoved", (data) => {
-    if(data.email === userEmail){
-      router.push(
-        `/remove-participant`
-      );
-    }
-    console.log('removed participant data', data)
-  });
-  // ? moving participant from the meeting to the waiting room
-  useSocketListen("participantMovedToWaitingRoom", (data) => {
-    if(data.email === userEmail){
-      router.push(
-        `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
-        fullName
-        )}&email=${encodeURIComponent(
-          userEmail
-        )}&role=Participant`
-      );
-    }
-  });
+  // * function to request waiting list
+  const getWaitingList = async (meetingId) => {
+    socket.emit("getWaitingList", { meetingId });
+  };
 
   // *Function to request participant list
   const requestParticipantList = () => {
     socket.emit("getParticipantList", { meetingId: params.id });
   };
+
 
   // *accept participant from waiting list
   const acceptParticipant = async (participant) => {
@@ -402,12 +362,8 @@ const page = () => {
   };
 
   // * request function for removing participant  from meeting
-  const removeParticipant = async (name, role, email, meetingId) => {
-    socket.emit("removeParticipantFromMeeting", { name, role, email, meetingId });
-  };
-  // * request function for moving participant  from meeting to waiting room
-  const moveParticipantToWaitingRoom = async (name, role, email, meetingId) => {
-    socket.emit("moveParticipantToWaitingRoom", { name, role, email, meetingId });
+  const removeParticipant = async (name, role, meetingId) => {
+    socket.emit("removeParticipantFromMeeting", { name, role, meetingId });
   };
 
   // *get observer list request function
@@ -430,8 +386,9 @@ const page = () => {
   //   socket.emit("getStreamingStatus", { meetingId });
   // };
 
-  // ? remove from waiting room
+  // * remove from waiting room
   const removeFromWaitingRoom = (participant, meetingId) => {
+
     socket.emit("removeFromWaitingRoom", { meetingId, participant });
   };
 
@@ -449,19 +406,35 @@ const page = () => {
     }
   };
 
-  //? Use effect for admitting participant into meeting after acceptance
+  //* Use effect for admitting participant into meeting after acceptance
   useEffect(() => {
+    let intervalId;
+
     if (userRole === "Participant" && !isAdmitted) {
+      // Initial call
+      // getParticipantList(params.id);
       requestParticipantList();
+
+      // Set up interval to call getWaitingList every 10 seconds
+      intervalId = setInterval(() => {
+        requestParticipantList();
+      }, 1000);
     }
+
+    // Clean up function to clear the interval when component unmounts or userRole changes
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [userRole, params.id, isAdmitted]);
 
-  // ?Use effect to check if the participant is in the list and admit them
+  // *Use effect to check if the participant is in the list and admit them
   useEffect(() => {
     // Check if any participant matches the fullName
     let email;
-    if (typeof window !== "undefined") {
-      email = window.localStorage.getItem("email");
+    if(typeof window !== 'undefined'){
+      email = window.localStorage.getItem('email');
     }
     const participantFound = participants?.find(
       (participant) => participant?.email === email
@@ -488,7 +461,7 @@ const page = () => {
     }
   };
 
-  const startMeeting = () => {};
+  const startMeeting = () => { };
 
   const participantLeft = async (name, role, meetingId) => {
     try {
@@ -508,6 +481,9 @@ const page = () => {
       }
     }
   };
+
+
+
 
   return (
     <>
@@ -573,6 +549,7 @@ const page = () => {
                 projectStatus={projectStatus}
                 iframeLink={iframeLink}
                 meetingDetails={meetingDetails}
+              
               />
             </div>
           </>
@@ -612,7 +589,6 @@ const page = () => {
                 groupMessage={groupMessage}
                 handleMediaUpload={handleMediaUpload}
                 mediaBox={mediaBox}
-                moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">

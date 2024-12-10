@@ -65,7 +65,8 @@ const LeftSidebarOpenUi = ({
   sendGroupMessage,
   groupMessage,
   handleMediaUpload,
-  mediaBox
+  mediaBox,
+  moveParticipantToWaitingRoom
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -207,7 +208,8 @@ const LeftSidebarOpenUi = ({
 
   const handleRemoveUser = (userId) => {
     const userName = users?.find((user) => user._id === userId);
-    removeParticipant(userName.name, userName.role, meetingId);
+    console.log('removed participant user name', userName)
+    removeParticipant(userName.name, userName.role, userName.email,  meetingId);
     notify("success", "Success", `${userName.name} has been removed`);
 
     // setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
@@ -216,6 +218,7 @@ const LeftSidebarOpenUi = ({
 
   const handleMoveUser = (userId) => {
     const userName = users?.find((user) => user.id === userId);
+    moveParticipantToWaitingRoom(userName.name, userName.role, userName.email, meetingId)
     notify(
       "success",
       "Success",

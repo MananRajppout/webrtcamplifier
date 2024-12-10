@@ -11,7 +11,6 @@ import joinMeetingImage from "../../../../public/join-meeting.png";
 import Footer from "@/components/shared/Footer";
 import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
-import useSocketListen from "@/hooks/useSocketListen";
 
 const Page = () => {
   const [formData, setFormData] = useState({
@@ -41,27 +40,31 @@ const Page = () => {
     }));
   };
 
-  useSocketListen("meeting-not-found", ()=> {
-    toast.error("Live Meeting not found");
-  })
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const role = getRoleFromUrl(); 
 
- 
+    console.log('participant', {
+      name: formData.fullName,
+      email: formData.email,
+      role: role, 
+      meetingId: meetingId,
+    })
     // Emit socket event instead of making an API call
 
     if(typeof window !== 'undefined'){
       window.localStorage.setItem('email',formData.email);
     }
-    socket.emit("participantWantToJoin", {
+    socket.emit("participantJoinMeeting", {
       name: formData.fullName,
       email: formData.email,
       role: role, 
       meetingId: meetingId,
     });
+
+
+
 
     
     // Listen for the response from the socket
@@ -71,8 +74,6 @@ const Page = () => {
         router.push(
           `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName
-          )}&email=${encodeURIComponent(
-            formData.email
           )}&role=Participant`
         );
       } else if (response.message === "Participant already in waiting room" || response.message === "Participant added to waiting room" ) {
@@ -80,16 +81,12 @@ const Page = () => {
         router.push(
           `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName
-          )}&email=${encodeURIComponent(
-            formData.email
           )}&role=Participant`
         );
       } else if (response.message === "Participant already in the meeting") {
         router.push(
           `/meeting/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName
-          )}&email=${encodeURIComponent(
-            formData.email
           )}&role=Participant`
         );
       } else if (response.message === "Meeting not found") {
