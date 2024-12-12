@@ -42,7 +42,7 @@ const validatePassword = (password) => {
 const validateEmail = (email) => {
   console.log('email received', email)
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-console.log('emial pattern', EMAIL_PATTERN.test(email))
+  console.log('emial pattern', EMAIL_PATTERN.test(email))
   if (!EMAIL_PATTERN.test(email)) {
     return "Invalid email format.";
   }
@@ -64,7 +64,7 @@ const signup = async (req, res) => {
     // Validate email format
     const emailError = validateEmail(email);
     if (emailError) {
-      return res.status(400).json({ message: emailError});
+      return res.status(400).json({ message: emailError });
     }
     // Validate password criteria
     const passwordErrors = validatePassword(password);
@@ -159,16 +159,18 @@ const signin = async (req, res) => {
 
     res.cookie("token", token, { httpOnly: false, secure: false });
 
-    return res.status(200).json( {message: "User Successfully logged in. " ,data:{
-      _id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
-      isEmailVerified: user.isEmailVerified,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }});
+    return res.status(200).json({
+      message: "User Successfully logged in. ", data: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -187,7 +189,7 @@ const update = async (req, res) => {
     const user = await userModel.findById(req.body._id || req.body.id);
     // Check if the user is deleted
     if (!user || user.isDeleted) {
-      return res.status(404).json({ message: "User not found."});
+      return res.status(404).json({ message: "User not found." });
     }
     const updatedContact = await userModel.findByIdAndUpdate(
       { _id: req.body._id || req.body.id },
@@ -206,19 +208,21 @@ const update = async (req, res) => {
       { expiresIn: 86400 }
     );
 
-    res.status(200).json({message: "User info successfully updated",data: {
-      _id: updatedContact._id,
-      firstName: updatedContact.firstName,
-      lastName: updatedContact.lastName,
-      email: updatedContact.email,
-      role: updatedContact.role,
-      companyName: updatedContact.companyName,
-      roles: updatedContact.roles,
-      isEmailVerified: updatedContact.isEmailVerified,
-      createdAt: updatedContact.createdAt,
-      updatedAt: updatedContact.updatedAt,
-      accessToken: token,
-    }});
+    res.status(200).json({
+      message: "User info successfully updated", data: {
+        _id: updatedContact._id,
+        firstName: updatedContact.firstName,
+        lastName: updatedContact.lastName,
+        email: updatedContact.email,
+        role: updatedContact.role,
+        companyName: updatedContact.companyName,
+        roles: updatedContact.roles,
+        isEmailVerified: updatedContact.isEmailVerified,
+        createdAt: updatedContact.createdAt,
+        updatedAt: updatedContact.updatedAt,
+        accessToken: token,
+      }
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -242,7 +246,7 @@ const deleteById = async (req, res) => {
     await Contact.deleteMany({ createdBy: req.query.id });
     res.status(200).json({ message: "User deleted successfully." });
   } catch (error) {
-    return res.status(500).json({ message: error.message});
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -254,9 +258,9 @@ const findById = async (req, res) => {
     if (!result || result.isDeleted) {
       res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({message: "User retrieved successfully", data: result });
+    res.status(200).json({ message: "User retrieved successfully", data: result });
   } catch (error) {
-    return res.status(500).json({ message: error.message});
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -264,7 +268,7 @@ const findAll = async (req, res) => {
   try {
     const token = req.cookies.token;
     const decoded = decodeToken(token);
-   
+
 
     if (decoded?.role !== "SuperAdmin") {
       return res.status(403).json({ message: "Access denied" });
@@ -293,10 +297,10 @@ const findAll = async (req, res) => {
       .skip(limit * (page - 1));
 
     const totalRecords = await userModel.countDocuments({ isDeleted: false });
-    
-    const totalPages = Math.ceil(totalRecords/limit)
 
-    res.status(200).json({message: "User info successfully updated", data:{ result, totalRecords, totalPages }});
+    const totalPages = Math.ceil(totalRecords / limit)
+
+    res.status(200).json({ message: "User info successfully updated", data: { result, totalRecords, totalPages } });
   } catch (error) {
     return res
       .status(500)
@@ -335,7 +339,7 @@ const sendResetPasswordMail = async (name, email, token) => {
     const html = `<p> Hi ${name}, please copy the link <a href="${process.env.FRONTEND_BASE_URL}/resetPassword?token=${token}"> reset your password </a>.</p>`;
     await sendEmail(email, "For Reset password", html);
   } catch (error) {
-    return res.status(500).json({ message: error.message});
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -351,12 +355,12 @@ const forgotPassword = async (req, res) => {
       );
       sendResetPasswordMail(userData.firstName, userData.email, randomString);
       res.status(200).send({
-     
+
         message: "Please check your inbox and reset your password",
       });
     } else {
       res.status(200).send({
-   
+
         message: "This email does not exist",
       });
     }
@@ -372,14 +376,14 @@ const verifymail = async (req, res) => {
     const user = await userModel.findOne({ _id: id });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found"});
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Check if the user is already verified
     if (user.isEmailVerified) {
       return res
         .status(200)
-        .json({ message: "Account is already verified"});
+        .json({ message: "Account is already verified" });
     }
 
     const verifiedMail = await userModel.updateOne(
@@ -388,7 +392,7 @@ const verifymail = async (req, res) => {
     );
     return res
       .status(200)
-      .json({ message: "Email successfully verified"});
+      .json({ message: "Email successfully verified" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -535,7 +539,7 @@ const changePassword = async (req, res) => {
       if (passwordErrors) {
         return res
           .status(400)
-          .json({ message: passwordErrors.join(" ")});
+          .json({ message: passwordErrors.join(" ") });
       }
 
       const hashedPassword = bcrypt.hashSync(newPassword, 8);
@@ -545,7 +549,7 @@ const changePassword = async (req, res) => {
         .json({ message: "Password changed successfully" });
     }
   } catch (error) {
-    return res.status(500).json({message: error.message})
+    return res.status(500).json({ message: error.message })
   }
 };
 
@@ -572,11 +576,11 @@ const userCreateByAdmin = async (req, res) => {
   //   .status(400)
   //   .json({ message: "Password does not meet criteria." });
   // }
-console.log('token ', req.body, token)
+  console.log('token ', req.body, token)
   const userExist = await userModel.findOne({ email }).select("_id");
 
   console.log('user exist', userExist)
-  
+
   if (userExist) {
     return res
       .status(400)
@@ -592,7 +596,7 @@ console.log('token ', req.body, token)
     firstName,
     lastName,
     email,
-    company:companyName,
+    company: companyName,
     password: hashedPassword,
     createdBy: decoded.email,
     termsAccepted: true,
@@ -693,7 +697,19 @@ const deleteByAdmin = async (req, res) => {
 
     return res.status(200).json({ message: "User  deleted successfully." });
   } catch (error) {
-    return res.status(500).json({ message: error.message});
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const createAmplifyAdmin = async (req, res) => {
+  try {
+    if (req.body.role != "AmplifyAdmin") {
+      return res.json(400).json({ message: "Invalid role" })
+    }
+    const user = await userModel.create(req.body);
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -713,4 +729,5 @@ module.exports = {
   userCreateByAdmin,
   updateByAdmin,
   deleteByAdmin,
+  createAmplifyAdmin
 };
