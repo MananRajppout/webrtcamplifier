@@ -92,6 +92,14 @@ const DashboardSidebar = ({
                     </p>
                   </div>
                 </Link>
+                <Link href="/dashboard/internal-admins">
+                  <div className="flex justify-start items-center gap-3 pt-5">
+                  <FaUserClock className="text-base text-[#6A7E88]"/>
+                    <p className="text-base text-[#6A7E88] font-semibold">
+                    Internal Admins
+                    </p>
+                  </div>
+                </Link>
                 <Link href="/dashboard/companies">
                   <div className="flex justify-start items-center gap-3 pt-5">
                   <MdOutlineInsertChart className="text-base text-[#6A7E88]"/>

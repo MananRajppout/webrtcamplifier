@@ -635,7 +635,6 @@ const userCreateByAdmin = async (req, res) => {
 const updateByAdmin = async (req, res) => {
   const token = req.cookies.token;
   // console.log('token and req.body', token, req.body)
-  console.log('route hit')
 
   const decoded = decodeToken(token);
 
@@ -702,6 +701,7 @@ const deleteByAdmin = async (req, res) => {
 };
 
 const createAmplifyAdmin = async (req, res) => {
+  console.log('req.body', req.body)
   try {
     if (req.body?.role != "AmplifyAdmin") {
       return res.status(400).json({ message: "Invalid role" })
@@ -709,6 +709,7 @@ const createAmplifyAdmin = async (req, res) => {
     const user = await userModel.create(req.body);
     return res.status(200).json(user);
   } catch (error) {
+    console.log('error in createAmplifyAdmin', error)
     return res.status(500).json({ message: error.message });
   }
 };
