@@ -27,12 +27,12 @@ const userSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ['Admin', 'Moderator', 'Observer', 'SuperAdmin'],
-    default: 'Admin'
+    enum: ['Admin', 'Moderator', 'Observer', 'Participant', 'AmplifyAdmin', 'AmplifyModerator', 'AmplifyObserver', 'AmplifyParticipant', 'AmplifyTechHost'],
+    required: true
   },
   status: {
     type: String,
-    enum : ['Active', 'Inactive'],
+    enum: ['Active', 'Inactive'],
     default: 'Active'
   },
   isEmailVerified: {
