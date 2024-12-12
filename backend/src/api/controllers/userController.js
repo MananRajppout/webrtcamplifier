@@ -703,8 +703,8 @@ const deleteByAdmin = async (req, res) => {
 
 const createAmplifyAdmin = async (req, res) => {
   try {
-    if (req.body.role != "AmplifyAdmin") {
-      return res.json(400).json({ message: "Invalid role" })
+    if (req.body?.role != "AmplifyAdmin") {
+      return res.status(400).json({ message: "Invalid role" })
     }
     const user = await userModel.create(req.body);
     return res.status(200).json(user);

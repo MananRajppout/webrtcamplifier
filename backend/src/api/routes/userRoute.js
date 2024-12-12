@@ -36,5 +36,5 @@ module.exports = function (app) {
   app.post("/api/users/create-by-admin", controller.userCreateByAdmin);
   app.patch("/api/users/update-by-admin", controller.updateByAdmin);
   app.delete("/api/users/delete-by-admin/:id", controller.deleteByAdmin);
-  app.post("/api/users/createAmplifyAdmin", controller.deleteByAdmin);
+  app.post("/api/users/createAmplifyAdmin", controller.createAmplifyAdmin);
 };
