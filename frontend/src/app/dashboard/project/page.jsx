@@ -21,22 +21,25 @@ const Page = () => {
   const [totalPages, setTotalPages] = useState(1);
   const { user } = useGlobalContext();
 
-  const fetchProjects = async (userId, page = 1, searchQuery = "",  filters = {}) => {
+  const fetchProjects = async (userId, page = 1, searchQuery = "", filters = {}) => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/project/${userId}`,
-        {
-          params: { 
-            page, 
-            limit: 10,
-            search: searchQuery, 
-            ...filters,
-          },
-        }
-      );
+      // Determine API endpoint based on user role
+      const endpoint =
+        user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin" || user?.role === "TechHost"
+          ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/project/getAllProjectsForAmplify`
+          : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/project/${userId}`;
+
+      const response = await axios.get(endpoint, {
+        params: {
+          page,
+          limit: 10,
+          search: searchQuery,
+          ...filters,
+        },
+      });
+
       setProjects(response.data.projects);
-     
       setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);

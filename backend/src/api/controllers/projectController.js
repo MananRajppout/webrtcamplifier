@@ -424,7 +424,7 @@ const assignTagsToProject = async (req, res) => {
 
 const getAllProjectsForAmplify = async (req, res) => {
   const { page = 1, limit = 10, search = '', startDate, endDate, status, tag, role } = req.query;
-  const { id } = req.params;
+ 
 
   try {
     // Create search query
