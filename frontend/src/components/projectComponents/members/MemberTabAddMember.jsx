@@ -2,21 +2,32 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Button from "@/components/shared/button";
 import toast from "react-hot-toast";
+import { useGlobalContext } from "@/context/GlobalContext";
 
-const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState }) => {
+const MemberTabAddMember = ({
+  onClose,
+  project,
+  userId,
+  setLocalProjectState,
+}) => {
   const [peoples, setPeoples] = useState([]);
   const [selectedRoles, setSelectedRoles] = useState({});
+  const { user } = useGlobalContext();
   const fetchContacts = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/contact-from-member-tab/${userId}/${project?._id}`
-      );
+      const apiEndpoint =
+        user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin"
+          ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/getAllAmplifyAdminsByAdminId`
+          : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/contact-from-member-tab/${userId}/${project?._id}`;
+  
+      const response = await axios.get(apiEndpoint, { withCredentials: true });
       setPeoples(response.data);
     } catch (error) {
-      console.error("error", error);
+      console.error("Error fetching contacts:", error);
     }
   };
-
+  
+ console.log("people", peoples)
 
   useEffect(() => {
     fetchContacts();
@@ -53,7 +64,6 @@ const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState })
         roles: selectedRoles[person._id],
       }));
 
-
     try {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/app-people-to-project`,
@@ -73,14 +83,13 @@ const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState })
 
   // Function to copy the registration link
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`);
+    navigator.clipboard.writeText(
+      `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
+    );
     toast.success("Link copied to clipboard!");
   };
 
-  const handleSendEmail = () => {
-    
-  }
-  
+  const handleSendEmail = () => {};
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
@@ -147,21 +156,21 @@ const MemberTabAddMember = ({ onClose, project,  userId, setLocalProjectState })
                     {!person.isUser && (
                       <div className="flex flex-col gap-2 justify-center items-center">
                         <Button
-                        className=" text-white px-3 py-1 rounded-lg text-xs"
-                        variant="secondary"
-                        type="button"
-                        onClick={handleCopyLink}
-                      >
-                        Copy Link
-                      </Button>
+                          className=" text-white px-3 py-1 rounded-lg text-xs"
+                          variant="secondary"
+                          type="button"
+                          onClick={handleCopyLink}
+                        >
+                          Copy Link
+                        </Button>
                         <Button
-                        className=" text-white px-3 py-1 rounded-lg text-xs"
-                        variant="secondary"
-                        type="button"
-                        onClick={handleSendEmail}
-                      >
-                        Send Email
-                      </Button>
+                          className=" text-white px-3 py-1 rounded-lg text-xs"
+                          variant="secondary"
+                          type="button"
+                          onClick={handleSendEmail}
+                        >
+                          Send Email
+                        </Button>
                       </div>
                     )}
                   </td>

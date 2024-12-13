@@ -733,8 +733,8 @@ const createAmplifyAdmin = async (req, res) => {
       lastName,
       email,
       companyName: "N/A",
-      roles,
-      createdBy: userSavedData._id,
+      roles: role,
+      createdBy: decoded.id,
       isUser: true,
     });
 
@@ -750,7 +750,9 @@ const createAmplifyAdmin = async (req, res) => {
 const getAllAmplifyAdminsByAdminId = async (req, res) => {
   try {
     const decoded = decodeToken(req.cookies.token);
+    console.log('decoded', decoded)
     const data = await Contact.find({ createdBy: decoded?.id });
+    console.log("Data", data)
     return res.status(200).json(data);
   } catch (error) {
     console.log("error in getAllAmplifyAdminsByAdminId", error);

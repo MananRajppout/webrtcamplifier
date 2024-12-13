@@ -78,7 +78,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
       toast.error(`${error.response.data.message}`);
     }
   };
-
+console.log('current memeber', currentMembers)
 
   return (
     <div className="overflow-x-auto">
@@ -99,7 +99,8 @@ const MembersTab = ({ project, setLocalProjectState }) => {
                 {member?.userId?.firstName} {member?.userId?.lastName}
               </TableData>
               <TableData>
-                {member?.roles?.join(", ")}{" "}
+                {member?.roles?.role}
+                {/* {member?.roles?.join(", ")}{" "} */}
                 {/* Display all roles (e.g., Admin, Moderator) */}
               </TableData>
               <TableData>

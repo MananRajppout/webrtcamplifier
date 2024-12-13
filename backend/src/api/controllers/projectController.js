@@ -196,8 +196,6 @@ const deleteProject = async (req, res) => {
   }
 };
 
-// DELETE route
-//search API
 
 const searchProjectsByFirstName = async (req, res) => {
   const { name } = req.query; // Get the firstName from query parameters

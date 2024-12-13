@@ -116,8 +116,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     }
   };
 
- 
-
   const handleRepositoryMeetingTabChange = (meeting) => {
     setSelectedRepositoryMeetingTab(meeting);
     setSelectedDocAndMediaTab("");
