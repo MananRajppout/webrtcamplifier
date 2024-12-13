@@ -35,9 +35,13 @@ async function sendVerifyEmail(name, email, id) {
     const mailOptions = {
       from: "test356sales@gmail.com",
       to: email,
-      subject: "for Verification mail",
-      html: `<p>Hi ${name},</p>
-      <p>Please click here to <a href="${process.env.FRONTEND_BASE_URL}/verify-account?id=${id}">verify your email</a>.</p>`,
+      subject: "Verification email",
+      html: `<p>Dear ${name},</p>
+      <p>Thank you for signing up to host your project on the Amplify Research Virtual Backroom platform. Please click the link below to verify your account information:</p>
+      <p><a href="${process.env.FRONTEND_BASE_URL}/verify-account?id=${id}">Verify Your Account</a></p>
+      <p>You will not be able to set up project details or conduct any sessions until this step is complete, so we encourage you to do this immediately upon receipt of this email.</p>
+      <p>Thank you!</p>
+      <p>The Amplify Team</p>`,
     };
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
