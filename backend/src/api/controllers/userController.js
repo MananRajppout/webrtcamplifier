@@ -728,6 +728,17 @@ const createAmplifyAdmin = async (req, res) => {
     // Save the new user
     const userSavedData = await newUser.save();
 
+    const newContact = new Contact({
+      firstName,
+      lastName,
+      email,
+      companyName: "N/A",
+      roles,
+      createdBy: userSavedData._id,
+      isUser: true,
+    });
+
+    await newContact.save();
     // const user = await userModel.create(req.body);
     return res.status(200).json(userSavedData);
   } catch (error) {
@@ -739,7 +750,7 @@ const createAmplifyAdmin = async (req, res) => {
 const getAllAmplifyAdminsByAdminId = async (req, res) => {
   try {
     const decoded = decodeToken(req.cookies.token);
-    const data = await userModel.find({ createdById: decoded?.id, role: "AmplifyAdmin" });
+    const data = await Contact.find({ createdBy: decoded?.id });
     return res.status(200).json(data);
   } catch (error) {
     console.log("error in getAllAmplifyAdminsByAdminId", error);
