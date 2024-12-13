@@ -132,9 +132,10 @@ const getCompany = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded?.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
+
   try {
     const company = await Company.findById(id);
     if (!company || company.isDeleted) {
@@ -155,7 +156,7 @@ const getAllCompanies = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded?.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
   try {

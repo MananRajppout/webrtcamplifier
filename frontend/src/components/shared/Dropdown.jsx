@@ -29,7 +29,7 @@ const Dropdown = ({ options, selectedOption, onSelect, className = "" }) => {
         <ul
           className={`absolute z-50 left-0 text-xs bg-white rounded-lg shadow-[0px_3px_6px_#00000029] text-custom-dark-blue-1 font-semibold ${defaultWidthClass} `}
         >
-          {options.map((option, index) => (
+          {options?.map((option, index) => (
             <li
               key={index}
               onClick={() => handleSelect(option)}
