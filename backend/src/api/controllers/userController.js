@@ -616,11 +616,10 @@ const userCreateByAdmin = async (req, res) => {
 
 const updateByAdmin = async (req, res) => {
   const token = req.cookies.token;
-  // console.log('token and req.body', token, req.body)
 
   const decoded = decodeToken(token);
 
-  if (decoded?.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
@@ -631,6 +630,11 @@ const updateByAdmin = async (req, res) => {
     // Check if the user is deleted
     if (!user || user.isDeleted) {
       return res.status(404).json({ message: "User not found." });
+    }
+
+     // Prevent AmplifyAdmin from updating another AmplifyAdmin
+     if (decoded?.role === "AmplifyAdmin" && user?.role === "AmplifyAdmin") {
+      return res.status(403).json({ message: "Access denied: You cannot update another AmplifyAdmin." });
     }
     // Prepare an object to hold the updates
     const updates = {};
