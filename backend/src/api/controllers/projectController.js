@@ -422,6 +422,54 @@ const assignTagsToProject = async (req, res) => {
 };
 
 
+const getAllProjectsForAmplify = async (req, res) => {
+  const { page = 1, limit = 10, search = '', startDate, endDate, status, tag, role } = req.query;
+  const { id } = req.params;
+
+  try {
+    // Create search query
+    const searchQuery = search
+      ? {
+        $or: [
+          { name: { $regex: search, $options: 'i' } }, // Case-insensitive search
+          { description: { $regex: search, $options: 'i' } }
+        ]
+      }
+      : {};
+    if (startDate) {
+      searchQuery.startDate = { $gte: new Date(startDate) }
+    }
+    if (endDate) {
+      searchQuery.endDate = { $lte: new Date(endDate) }
+    }
+    if (status) {
+      searchQuery.status = status
+    }
+    if (tag) {
+      searchQuery.tags = tag
+    }
+    if (role) {
+      searchQuery["members.roles"] = role;
+    }
+
+    const projects = await Project.find(searchQuery)
+      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color')
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const totalDocuments = await Project.countDocuments(searchQuery); // Total number of documents matching the criteria
+    const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
+
+    res.status(200).json({
+      page: parseInt(page),
+      totalPages,
+      totalDocuments,
+      projects,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 
 
@@ -440,6 +488,7 @@ module.exports = {
   editMemberRole,
   deleteMemberFromProject,
   updateBulkMembers,
-  assignTagsToProject
+  assignTagsToProject,
+  getAllProjectsForAmplify
 };
 
