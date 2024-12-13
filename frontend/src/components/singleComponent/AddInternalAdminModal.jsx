@@ -27,15 +27,9 @@ const AddInternalAdminModal = ({ onClose }) => {
           "AmplifyAdmin",
           "AmplifyModerator",
           "AmplifyObserver",
-          "AmplifyParticipant",
           "AmplifyTechHost",
         ]
-      : [
-          "AmplifyModerator",
-          "AmplifyObserver",
-          "AmplifyParticipant",
-          "AmplifyTechHost",
-        ];
+      : ["AmplifyModerator", "AmplifyObserver", "AmplifyTechHost"];
 
   const addInternalAdmin = async (newAdmin) => {
     console.log("add Internaladmin", newAdmin);

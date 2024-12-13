@@ -264,7 +264,7 @@ const findAll = async (req, res) => {
     const token = req.cookies.token;
     const decoded = decodeToken(token);
 
-    if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin" ) {
+    if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -294,12 +294,10 @@ const findAll = async (req, res) => {
 
     const totalPages = Math.ceil(totalRecords / limit);
 
-    res
-      .status(200)
-      .json({
-        message: "User info successfully updated",
-        data: { result, totalRecords, totalPages },
-      });
+    res.status(200).json({
+      message: "User info successfully updated",
+      data: { result, totalRecords, totalPages },
+    });
   } catch (error) {
     return res
       .status(500)
@@ -687,7 +685,15 @@ const createAmplifyAdmin = async (req, res) => {
   try {
     const { firstName, lastName, email, role, password, termsAccepted } =
       req.body;
-    if (req.body?.role != "AmplifyAdmin") {
+
+    const validRoles = [
+      "AmplifyAdmin",
+      "AmplifyModerator",
+      "AmplifyObserver",
+      "AmplifyTechHost",
+    ];
+
+    if (!validRoles.includes(req.body?.role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
 

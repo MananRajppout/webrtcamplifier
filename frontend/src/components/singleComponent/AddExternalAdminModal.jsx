@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React, { useState } from "react";
 import InputField from "../shared/InputField";
 import Button from "../shared/button";
@@ -6,45 +6,42 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const AddExternalAdminModal = ({
-  onClose,
-
-}) => {
-  const [firstName, setFirstName] = useState( "User6FN");
-  const [lastName, setLastName] = useState( "User6LN");
-  const [email, setEmail] = useState( "user6@gmail.com");
-  const [companyName, setCompanyName] = useState(    "abc"  );
-  const [password, setPassword] = useState("Ab123456@")
-  const [confirmPassword, setConfirmPassword] = useState('Ab123456@')
+const AddExternalAdminModal = ({ onClose }) => {
+  const [firstName, setFirstName] = useState("User6FN");
+  const [lastName, setLastName] = useState("User6LN");
+  const [email, setEmail] = useState("user6@gmail.com");
+  const [companyName, setCompanyName] = useState("abc");
+  const [password, setPassword] = useState("Ab123456@");
+  const [confirmPassword, setConfirmPassword] = useState("Ab123456@");
 
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const addExternalAdmin = async (newAdmin) => {
-    console.log('add exter admin', newAdmin)
+    console.log("add exter admin", newAdmin);
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/create-by-admin`,
       newAdmin,
-      { withCredentials: true } 
+      { withCredentials: true }
     );
-    
+
     return response.data;
   };
 
   const mutation = useMutation({
     mutationFn: addExternalAdmin,
     onSuccess: () => {
-      toast.success('Admin Added Successfully.')
-      queryClient.invalidateQueries({ queryKey: ['externalAdmins'] });
-      onClose()
+      toast.success("Admin Added Successfully.");
+      queryClient.invalidateQueries({ queryKey: ["externalAdmins"] });
+      onClose();
     },
   });
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validation
-    if (!email.includes('@')) {
+    if (!email.includes("@")) {
       setError("Invalid email address.");
       return;
     }
@@ -77,7 +74,7 @@ const AddExternalAdminModal = ({
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
       <div className="bg-white p-8 rounded-lg w-[420px]">
         <h2 className="text-2xl font-semibold mb-1 text-custom-dark-blue-2">
-           Add External Admin
+          Add External Admin
         </h2>
 
         {error && (
@@ -106,41 +103,37 @@ const AddExternalAdminModal = ({
             />
           </div>
           <div className="flex justify-center items-center gap-3">
-          <InputField
-            label="Email"
-            type="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <InputField
-            label="Company"
-            type="text"
-            name="company-name"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-          />
+            <InputField
+              label="Email"
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <InputField
+              label="Company"
+              type="text"
+              name="company-name"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+            />
           </div>
           <div className="flex justify-center items-center gap-3">
-          <InputField
-            label="Password"
-            type="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <InputField
-            label="Confirm Password"
-            type="password"
-            name="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
+            <InputField
+              label="Password"
+              type="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <InputField
+              label="Confirm Password"
+              type="password"
+              name="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
           </div>
-        
-         
-
-         
 
           {/* Button */}
           <div className="flex justify-end gap-4 mt-4">
