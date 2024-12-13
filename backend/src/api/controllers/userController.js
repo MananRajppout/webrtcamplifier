@@ -281,6 +281,7 @@ const findAll = async (req, res) => {
           { firstName: { $regex: search, $options: "i" } },
           { lastName: { $regex: search, $options: "i" } },
           { email: { $regex: search, $options: "i" } },
+          { role: { $regex: search, $options: "i" } },
         ],
       }),
       ...(company && { company: company }),
@@ -295,7 +296,7 @@ const findAll = async (req, res) => {
     const totalPages = Math.ceil(totalRecords / limit);
 
     res.status(200).json({
-      message: "User info successfully updated",
+      message: "User info successfully fetched",
       data: { result, totalRecords, totalPages },
     });
   } catch (error) {
