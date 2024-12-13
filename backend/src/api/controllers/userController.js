@@ -635,8 +635,8 @@ const updateByAdmin = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-     // Prevent AmplifyAdmin from updating another AmplifyAdmin
-     if (decoded?.role === "AmplifyAdmin" && user?.role === "AmplifyAdmin") {
+    // Prevent AmplifyAdmin from updating another AmplifyAdmin
+    if (decoded?.role === "AmplifyAdmin" && user?.role === "AmplifyAdmin") {
       return res.status(403).json({ message: "Access denied: You cannot update another AmplifyAdmin." });
     }
     // Prepare an object to hold the updates
@@ -736,6 +736,17 @@ const createAmplifyAdmin = async (req, res) => {
   }
 };
 
+const getAllAmplifyAdminsByAdminId = async (req, res) => {
+  try {
+    const decoded = decodeToken(req.cookies.token);
+    const data = await userModel.find({ createdById: decoded?.id, role: "AmplifyAdmin" });
+    return res.status(200).json(data);
+  } catch (error) {
+    console.log("error in getAllAmplifyAdminsByAdminId", error);
+    return res.status(500).json({ message: error.message });
+  }
+}
+
 module.exports = {
   signup,
   signin,
@@ -753,4 +764,5 @@ module.exports = {
   updateByAdmin,
   deleteByAdmin,
   createAmplifyAdmin,
+  getAllAmplifyAdminsByAdminId,
 };

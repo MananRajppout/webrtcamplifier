@@ -37,4 +37,5 @@ module.exports = function (app) {
   app.patch("/api/users/update-by-admin", controller.updateByAdmin);
   app.delete("/api/users/delete-by-admin/:id", controller.deleteByAdmin);
   app.post("/api/users/createAmplifyAdmin", controller.createAmplifyAdmin);
+  app.get("/api/users/getAllAmplifyAdminsByAdminId", controller.getAllAmplifyAdminsByAdminId);
 };
