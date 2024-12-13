@@ -97,7 +97,7 @@ const page = () => {
           <p className="text-2xl font-bold text-custom-teal">External Admins</p>
         </div>
         {/* right div */}
-        <div className="flex justify-end items-center gap-2">
+       {/* <div className="flex justify-end items-center gap-2">
           <Button
             children="Add New External Admin"
             type="submit"
@@ -114,7 +114,7 @@ const page = () => {
             className="rounded-xl text-center py-3 mr-2 shadow-[0px_3px_6px_#2976a54d] md:hidden block pr-2 pl-3"
             onClick={handleOpenAddExternalAdminModal}
           />
-        </div>
+        </div>*/}
       </div>
     </div>
 

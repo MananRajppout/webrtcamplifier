@@ -10,12 +10,10 @@ const AddInternalAdminModal = ({ onClose }) => {
   const [firstName, setFirstName] = useState("User6FN");
   const [lastName, setLastName] = useState("User6LN");
   const [email, setEmail] = useState("user6@gmail.com");
-  // const [companyName, setCompanyName] = useState("abc");
   const [password, setPassword] = useState("Ab123456@");
   const [confirmPassword, setConfirmPassword] = useState("Ab123456@");
   const [role, setRole] = useState("AmplifyAdmin");
   const [error, setError] = useState(null);
-  // const [successMessage, setSuccessMessage] = useState(null);
   const queryClient = useQueryClient();
 
   const roles = [
