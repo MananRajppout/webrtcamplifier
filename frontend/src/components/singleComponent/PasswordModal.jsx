@@ -31,9 +31,9 @@ const PasswordModal = ({ onClose, id }) => {
   };
 
   const handleSubmit = async (e) => {
+    
     e.preventDefault();
     if (validateForm()) {
-     
       try {
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/changePassword`,
