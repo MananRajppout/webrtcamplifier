@@ -264,7 +264,7 @@ const findAll = async (req, res) => {
     const token = req.cookies.token;
     const decoded = decodeToken(token);
 
-    if (decoded?.role !== "SuperAdmin") {
+    if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin" ) {
       return res.status(403).json({ message: "Access denied" });
     }
 

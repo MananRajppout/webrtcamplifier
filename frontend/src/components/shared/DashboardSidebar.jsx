@@ -82,7 +82,7 @@ const DashboardSidebar = ({
                 </p>
               </div>
             </Link>
-            {user?.role === "SuperAdmin" && (
+            {(user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin") && (
               <>
                 <Link href="/dashboard/external-admins">
                   <div className="flex justify-start items-center gap-3 pt-5">
