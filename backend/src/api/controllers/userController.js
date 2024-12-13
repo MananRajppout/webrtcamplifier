@@ -40,9 +40,9 @@ const validatePassword = (password) => {
 };
 
 const validateEmail = (email) => {
-  console.log('email received', email)
+  console.log("email received", email);
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  console.log('emial pattern', EMAIL_PATTERN.test(email))
+  console.log("emial pattern", EMAIL_PATTERN.test(email));
   if (!EMAIL_PATTERN.test(email)) {
     return "Invalid email format.";
   }
@@ -53,13 +53,9 @@ const signup = async (req, res) => {
   try {
     const { firstName, lastName, email, password, terms } = req.body;
 
-    // Log the received body for debugging
-
     // Validate required fields
     if (!(firstName && lastName && email && password && terms !== undefined)) {
-      return res
-        .status(400)
-        .json({ message: "All fields are required" });
+      return res.status(400).json({ message: "All fields are required" });
     }
     // Validate email format
     const emailError = validateEmail(email);
@@ -69,16 +65,12 @@ const signup = async (req, res) => {
     // Validate password criteria
     const passwordErrors = validatePassword(password);
     if (passwordErrors) {
-      return res
-        .status(400)
-        .json({ message: passwordErrors.join(" ") });
+      return res.status(400).json({ message: passwordErrors.join(" ") });
     }
     // Check if the user already exists
     const userExist = await userModel.findOne({ email }).select("_id");
     if (userExist) {
-      return res
-        .status(400)
-        .json({ message: "Email already in use" });
+      return res.status(400).json({ message: "Email already in use" });
     }
     // Hash the password before saving it in the database
     const hashedPassword = bcrypt.hashSync(password, 8);
@@ -121,7 +113,7 @@ const signup = async (req, res) => {
 
     // Respond with success message
     return res.status(200).json({
-      message: "User registered successfully. Please verify your email!"
+      message: "User registered successfully. Please verify your email!",
     });
   } catch (error) {
     console.error("Signup error:", error);
@@ -136,7 +128,6 @@ const signin = async (req, res) => {
       return res.status(404).json({ message: "User Not found." });
     }
     var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
-
     if (!passwordIsValid) {
       return res.status(401).send({
         accessToken: null,
@@ -160,7 +151,8 @@ const signin = async (req, res) => {
     res.cookie("token", token, { httpOnly: false, secure: false });
 
     return res.status(200).json({
-      message: "User Successfully logged in. ", data: {
+      message: "User Successfully logged in. ",
+      data: {
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -169,7 +161,7 @@ const signin = async (req, res) => {
         isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-      }
+      },
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -209,7 +201,8 @@ const update = async (req, res) => {
     );
 
     res.status(200).json({
-      message: "User info successfully updated", data: {
+      message: "User info successfully updated",
+      data: {
         _id: updatedContact._id,
         firstName: updatedContact.firstName,
         lastName: updatedContact.lastName,
@@ -221,7 +214,7 @@ const update = async (req, res) => {
         createdAt: updatedContact.createdAt,
         updatedAt: updatedContact.updatedAt,
         accessToken: token,
-      }
+      },
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -258,7 +251,9 @@ const findById = async (req, res) => {
     if (!result || result.isDeleted) {
       res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({ message: "User retrieved successfully", data: result });
+    res
+      .status(200)
+      .json({ message: "User retrieved successfully", data: result });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -268,7 +263,6 @@ const findAll = async (req, res) => {
   try {
     const token = req.cookies.token;
     const decoded = decodeToken(token);
-
 
     if (decoded?.role !== "SuperAdmin") {
       return res.status(403).json({ message: "Access denied" });
@@ -298,9 +292,14 @@ const findAll = async (req, res) => {
 
     const totalRecords = await userModel.countDocuments({ isDeleted: false });
 
-    const totalPages = Math.ceil(totalRecords / limit)
+    const totalPages = Math.ceil(totalRecords / limit);
 
-    res.status(200).json({ message: "User info successfully updated", data: { result, totalRecords, totalPages } });
+    res
+      .status(200)
+      .json({
+        message: "User info successfully updated",
+        data: { result, totalRecords, totalPages },
+      });
   } catch (error) {
     return res
       .status(500)
@@ -325,7 +324,6 @@ const resetPassword = async (req, res) => {
       });
     } else {
       res.status(200).send({
-
         message: "Unauthorized.",
       });
     }
@@ -355,12 +353,10 @@ const forgotPassword = async (req, res) => {
       );
       sendResetPasswordMail(userData.firstName, userData.email, randomString);
       res.status(200).send({
-
         message: "Please check your inbox and reset your password",
       });
     } else {
       res.status(200).send({
-
         message: "This email does not exist",
       });
     }
@@ -381,18 +377,14 @@ const verifymail = async (req, res) => {
 
     // Check if the user is already verified
     if (user.isEmailVerified) {
-      return res
-        .status(200)
-        .json({ message: "Account is already verified" });
+      return res.status(200).json({ message: "Account is already verified" });
     }
 
     const verifiedMail = await userModel.updateOne(
       { _id: id }, // Correct query object
       { $set: { isEmailVerified: true } }
     );
-    return res
-      .status(200)
-      .json({ message: "Email successfully verified" });
+    return res.status(200).json({ message: "Email successfully verified" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -459,7 +451,7 @@ const uploadUserExcel = async (req, res) => {
     }
 
     return res.status(200).json({
-      message: "Users imported successfully from Excel."
+      message: "Users imported successfully from Excel.",
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -529,27 +521,21 @@ const changePassword = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(400).json({ message: " Old Password is incorrect" });
     } else if (isPasswordSame) {
-      return res
-        .status(400)
-        .json({
-          message: "New Password should be different from the Old Password",
-        });
+      return res.status(400).json({
+        message: "New Password should be different from the Old Password",
+      });
     } else {
       const passwordErrors = validatePassword(newPassword);
       if (passwordErrors) {
-        return res
-          .status(400)
-          .json({ message: passwordErrors.join(" ") });
+        return res.status(400).json({ message: passwordErrors.join(" ") });
       }
 
       const hashedPassword = bcrypt.hashSync(newPassword, 8);
       await userModel.findByIdAndUpdate(user._id, { password: hashedPassword });
-      return res
-        .status(200)
-        .json({ message: "Password changed successfully" });
+      return res.status(200).json({ message: "Password changed successfully" });
     }
   } catch (error) {
-    return res.status(500).json({ message: error.message })
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -576,17 +562,14 @@ const userCreateByAdmin = async (req, res) => {
   //   .status(400)
   //   .json({ message: "Password does not meet criteria." });
   // }
-  console.log('token ', req.body, token)
+  console.log("token ", req.body, token);
   const userExist = await userModel.findOne({ email }).select("_id");
 
-  console.log('user exist', userExist)
+  console.log("user exist", userExist);
 
   if (userExist) {
-    return res
-      .status(400)
-      .json({ message: "Email already in use" });
+    return res.status(400).json({ message: "Email already in use" });
   }
-
 
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -628,7 +611,7 @@ const userCreateByAdmin = async (req, res) => {
 
   // Respond with success message
   return res.status(200).json({
-    message: "User registered successfully. "
+    message: "User registered successfully. ",
   });
 };
 
@@ -670,7 +653,7 @@ const updateByAdmin = async (req, res) => {
 
     return res.status(200).json({
       message: "User updated successfully.",
-      user: updatedUser
+      user: updatedUser,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -701,15 +684,33 @@ const deleteByAdmin = async (req, res) => {
 };
 
 const createAmplifyAdmin = async (req, res) => {
-  console.log('req.body', req.body)
   try {
+    const { firstName, lastName, email, role, password, termsAccepted } =
+      req.body;
     if (req.body?.role != "AmplifyAdmin") {
-      return res.status(400).json({ message: "Invalid role" })
+      return res.status(400).json({ message: "Invalid role" });
     }
-    const user = await userModel.create(req.body);
-    return res.status(200).json(user);
+
+    const hashedPassword = bcrypt.hashSync(password, 8);
+
+    // Create new user with all necessary data
+    const newUser = new userModel({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      role,
+      isEmailVerified: false,
+      termsAccepted,
+      termsAcceptedTime: new Date(),
+    });
+    // Save the new user
+    const userSavedData = await newUser.save();
+
+    // const user = await userModel.create(req.body);
+    return res.status(200).json(userSavedData);
   } catch (error) {
-    console.log('error in createAmplifyAdmin', error)
+    console.log("error in createAmplifyAdmin", error);
     return res.status(500).json({ message: error.message });
   }
 };
@@ -730,5 +731,5 @@ module.exports = {
   userCreateByAdmin,
   updateByAdmin,
   deleteByAdmin,
-  createAmplifyAdmin
+  createAmplifyAdmin,
 };
