@@ -10,10 +10,10 @@ cloudinary.config({
 });
 
 
-const createRepository = async (req,res) => {
+const createRepository = async (req, res) => {
   let filePath = req.file ? req.file.path : null;
   try {
-   
+
 
     // Check if file and meeting ID are provided
     if (!req.file || !req.body.meetingId) {
@@ -23,7 +23,7 @@ const createRepository = async (req,res) => {
     // Extract information from request
     const { originalname: fileName, mimetype: type, size } = req.file;
     const { meetingId, projectId, addedBy, role } = req.body;
-   
+
 
 
     // Optional: Upload file to Cloudinary and get the URL
@@ -48,7 +48,7 @@ const createRepository = async (req,res) => {
       role,
       meetingId,
       projectId,
-      cloudinaryLink, 
+      cloudinaryLink,
     });
 
     // Save the repository document to MongoDB
@@ -59,7 +59,7 @@ const createRepository = async (req,res) => {
   } catch (error) {
     console.error('Error in createRepository:', error);
     return res.status(500).json({ error: 'Internal server error.' });
-  }finally {
+  } finally {
     // Delete the file from the server
     if (filePath) {
       fs.unlink(filePath, (err) => {
@@ -73,24 +73,28 @@ const createRepository = async (req,res) => {
   }
 }
 
-const getRepositoryByProjectId = async(req, res) => {
+const getRepositoryByProjectId = async (req, res) => {
   try {
     const limit = parseInt(req.query?.limit) || 10;
-    const page = parseInt(req.query?.page) || 0;
-    const projectId = req.params.projectId;
-    const repositories = await Repository.find({ projectId }).skip((page -1) * limit).limit(limit)
-    const totalDocuments = await Repository.countDocuments({projectId})
-    const totalPages = Math.ceil(totalDocuments/limit)
+    const page = parseInt(req.query?.page) || 1;
+    let query = { projectId: req.params.projectId };
+    if (req.query?.type) {
+      const regexPattern = new RegExp(`^${req.query?.type}/`, 'i');
+      query.type = { $regex: regexPattern }
+    }
+    const repositories = await Repository.find(query).skip((page - 1) * limit).limit(limit)
+    const totalDocuments = await Repository.countDocuments(query)
+    const totalPages = Math.ceil(totalDocuments / limit)
     res.status(200).json({
       page,
       totalPages,
       totalDocuments,
       repositories
     });
-    
+
   } catch (error) {
     res.status(500).json({ message: 'Error fetching repository by project ID', error: error.message });
-    
+
   }
 }
 const renameFile = async (req, res) => {
@@ -100,7 +104,7 @@ const renameFile = async (req, res) => {
     const updatedFile = await Repository.findByIdAndUpdate(
       id,
       { fileName: fileName },
-      { new: true } 
+      { new: true }
     );
     if (!updatedFile) {
       res.status(404).json({ message: 'File not found' });
@@ -109,7 +113,7 @@ const renameFile = async (req, res) => {
     res.status(200).json({ message: 'File renamed successfully', updatedFile });
   } catch (error) {
     console.error('Error renaming file:', error);
-   res.status(500).json({ message: 'Error renaming file', error: error.message });
+    res.status(500).json({ message: 'Error renaming file', error: error.message });
   }
 };
 const deleteFile = async (req, res) => {
@@ -131,14 +135,19 @@ const deleteFile = async (req, res) => {
 const getRepositoryByMeetingId = async (req, res) => {
   const { meetingId } = req.params;
   const limit = parseInt(req.query?.limit) || 10;
-    const page = parseInt(req.query?.page) || 0;
+  const page = parseInt(req.query?.page) || 1;
   try {
-    const repositories = await Repository.find({ meetingId }).skip((page -1) *limit).limit(limit);
-    const totalDocuments = await Repository.countDocuments({meetingId})
-    const totalPages = Math.ceil(totalDocuments/limit)
+    let query = { meetingId }
+    if (req.query?.type) {
+      const regexPattern = new RegExp(`^${req.query?.type}/`, 'i');
+      query.type = { $regex: regexPattern }
+    }
+    const repositories = await Repository.find(query).skip((page - 1) * limit).limit(limit);
+    const totalDocuments = await Repository.countDocuments(query)
+    const totalPages = Math.ceil(totalDocuments / limit)
     res.status(200).json({
-      page, 
-      totalPages, 
+      page,
+      totalPages,
       totalDocuments,
       repositories
     });
