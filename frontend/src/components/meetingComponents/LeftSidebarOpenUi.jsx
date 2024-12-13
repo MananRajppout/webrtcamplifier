@@ -208,7 +208,6 @@ const LeftSidebarOpenUi = ({
 
   const handleRemoveUser = (userId) => {
     const userName = users?.find((user) => user._id === userId);
-    console.log('removed participant user name', userName)
     removeParticipant(userName.name, userName.role, userName.email,  meetingId);
     notify("success", "Success", `${userName.name} has been removed`);
 

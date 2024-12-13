@@ -6,7 +6,7 @@ const isLogin = (req, res, next) => {
             res.redirect('/');
         }
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
     }
 };
 
@@ -18,7 +18,7 @@ const isLogout = (req, res, next) => {
             next();
         }
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
     }
 };
 

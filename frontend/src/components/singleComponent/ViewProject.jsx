@@ -393,7 +393,6 @@ const handleFileUpload = async (event) => {
         },
       });
 
-      console.log('response', response.data)
       const { file: base64File, successResults, rejectedData } = response.data;
 
       // Decode Base64 and create a Blob

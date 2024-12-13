@@ -19,7 +19,6 @@ const AddExternalAdminModal = ({ onClose }) => {
   const queryClient = useQueryClient();
 
   const addExternalAdmin = async (newAdmin) => {
-    console.log("add exter admin", newAdmin);
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/create-by-admin`,
       newAdmin,

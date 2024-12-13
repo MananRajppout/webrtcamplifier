@@ -42,7 +42,6 @@ const page = () => {
   // * transferring participant from waiting room to meeting room
 
   useSocketListen("participantList", (data) => {
-    console.log('waiting room participant list', data)
     const participantAccepted = data?.participantList?.find(p => p.email === userEmail)
     if(participantAccepted){
       router.push(
@@ -154,7 +153,6 @@ const page = () => {
 
 
   const handleParticipantChatResponse = (response) => {
-    console.log('new message');
     if (response.success) {
       setParticipantMessages(response.participantMessages);
     }

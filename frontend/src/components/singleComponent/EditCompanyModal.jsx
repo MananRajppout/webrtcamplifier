@@ -27,7 +27,6 @@ const EditCompanyModal = ({ onClose, currentCompany }) => {
   const queryClient = useQueryClient();
 
   const updateCompany = async (companyData) => {
-    console.log('update external admin ', companyData)
     const response = await axios.put(
       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-company/${companyData.id}`,
       companyData,
@@ -36,14 +35,12 @@ const EditCompanyModal = ({ onClose, currentCompany }) => {
       }
     );
 
-    console.log('response', response.data)
     return response.data;
   };
 
   const mutation = useMutation({
     mutationFn: updateCompany,
     onSuccess: (data) => {
-      console.log('data in side on success', data)
       toast.success(data.message);
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       onClose();

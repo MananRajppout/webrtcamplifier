@@ -5,7 +5,6 @@ import Heading20pxBlueUC from "../shared/Heading20pxBlueUC";
 import { FaCheckCircle, FaCross } from "react-icons/fa";
 
 const ViewInternalAdminModal = ({ onClose, currentAdmin }) => {
-  console.log('current admin', currentAdmin)
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");

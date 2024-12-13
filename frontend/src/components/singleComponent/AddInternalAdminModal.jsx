@@ -32,7 +32,6 @@ const AddInternalAdminModal = ({ onClose }) => {
       : ["AmplifyModerator", "AmplifyObserver", "AmplifyTechHost"];
 
   const addInternalAdmin = async (newAdmin) => {
-    console.log("add Internaladmin", newAdmin);
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/createAmplifyAdmin`,
       newAdmin,

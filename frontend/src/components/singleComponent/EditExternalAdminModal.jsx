@@ -34,7 +34,6 @@ const handleStatusChange = (newStatus) => {
 };
 
   const updateExternalAdmin = async (adminData) => {
-    console.log('update external admin ', adminData)
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/update-by-admin`,
       adminData,
@@ -43,14 +42,12 @@ const handleStatusChange = (newStatus) => {
       }
     );
 
-    console.log('response', response.data)
     return response.data;
   };
 
   const mutation = useMutation({
     mutationFn: updateExternalAdmin,
     onSuccess: (data) => {
-      console.log('data in side on success', data)
       toast.success(data.message);
       queryClient.invalidateQueries({ queryKey: ['externalAdmins'] });
       onClose();

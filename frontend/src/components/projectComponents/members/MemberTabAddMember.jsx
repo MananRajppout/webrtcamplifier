@@ -27,7 +27,6 @@ const MemberTabAddMember = ({
     }
   };
   
- console.log("people", peoples)
 
   useEffect(() => {
     fetchContacts();

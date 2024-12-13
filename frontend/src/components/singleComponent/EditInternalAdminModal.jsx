@@ -33,7 +33,6 @@ const EditInternalAdminModal = ({ onClose, currentAdmin, companies }) => {
   };
 
   const updateInternalAdmin = async (adminData) => {
-    console.log("update Internal admin ", adminData);
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/update-by-admin`,
       adminData,
@@ -42,14 +41,12 @@ const EditInternalAdminModal = ({ onClose, currentAdmin, companies }) => {
       }
     );
 
-    console.log("response", response.data);
     return response.data;
   };
 
   const mutation = useMutation({
     mutationFn: updateInternalAdmin,
     onSuccess: (data) => {
-      console.log("data in side on success", data);
       toast.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["internalAdmins"] });
       onClose();

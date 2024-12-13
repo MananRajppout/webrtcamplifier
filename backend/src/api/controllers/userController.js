@@ -40,9 +40,7 @@ const validatePassword = (password) => {
 };
 
 const validateEmail = (email) => {
-  console.log("email received", email);
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  console.log("emial pattern", EMAIL_PATTERN.test(email));
   if (!EMAIL_PATTERN.test(email)) {
     return "Invalid email format.";
   }
@@ -561,10 +559,8 @@ const userCreateByAdmin = async (req, res) => {
   //   .status(400)
   //   .json({ message: "Password does not meet criteria." });
   // }
-  console.log("token ", req.body, token);
   const userExist = await userModel.findOne({ email }).select("_id");
 
-  console.log("user exist", userExist);
 
   if (userExist) {
     return res.status(400).json({ message: "Email already in use" });
@@ -742,7 +738,7 @@ const createAmplifyAdmin = async (req, res) => {
     // const user = await userModel.create(req.body);
     return res.status(200).json(userSavedData);
   } catch (error) {
-    console.log("error in createAmplifyAdmin", error);
+    console.error("error in createAmplifyAdmin", error);
     return res.status(500).json({ message: error.message });
   }
 };
@@ -750,12 +746,10 @@ const createAmplifyAdmin = async (req, res) => {
 const getAllAmplifyAdminsByAdminId = async (req, res) => {
   try {
     const decoded = decodeToken(req.cookies.token);
-    console.log('decoded', decoded)
     const data = await Contact.find({ createdBy: decoded?.id });
-    console.log("Data", data)
     return res.status(200).json(data);
   } catch (error) {
-    console.log("error in getAllAmplifyAdminsByAdminId", error);
+    console.error("error in getAllAmplifyAdminsByAdminId", error);
     return res.status(500).json({ message: error.message });
   }
 }

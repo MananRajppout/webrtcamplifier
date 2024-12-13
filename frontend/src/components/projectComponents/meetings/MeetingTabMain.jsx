@@ -37,7 +37,6 @@ const MeetingTab = ({
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState(null);
 
-  console.log('local meeting state', localMeetingState)
 
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
@@ -142,7 +141,6 @@ const MeetingTab = ({
   }, [socket]);
 
   const handleDeleteMeeting = (meeting) => {
-    console.log('meeting to delete', meeting)
     setMeetingToDelete(meeting); 
     setIsConfirmationModalOpen(true); 
   };
@@ -162,7 +160,6 @@ const MeetingTab = ({
           (m) => m._id !== meetingToDelete._id
         );
         // setIsModalOpen(false);
-        console.log('updated meetings', updatedMeetings)
         setLocalMeetingState(updatedMeetings);
       } else {
         console.error("Failed to delete meeting");

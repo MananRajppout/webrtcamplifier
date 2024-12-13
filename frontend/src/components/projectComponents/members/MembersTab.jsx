@@ -78,7 +78,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
       toast.error(`${error.response.data.message}`);
     }
   };
-console.log('current memeber', currentMembers)
+
 
   return (
     <div className="overflow-x-auto">

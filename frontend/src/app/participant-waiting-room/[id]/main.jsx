@@ -119,7 +119,6 @@ const page = () => {
 
 
   const handleParticipantChatResponse = (response) => {
-    console.log('new message');
     if (response.success) {
       setParticipantMessages(response.participantMessages);
     }

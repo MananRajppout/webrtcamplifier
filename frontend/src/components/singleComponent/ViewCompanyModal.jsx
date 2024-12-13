@@ -2,7 +2,6 @@ import Button from "../shared/button";
 import Heading20pxBlueUC from "../shared/Heading20pxBlueUC";
 
 const ViewCompanyModal = ({ onClose, currentCompany }) => {
-  console.log('current admin', currentCompany)
  
 
 

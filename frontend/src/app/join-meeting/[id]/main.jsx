@@ -45,12 +45,7 @@ const Page = () => {
 
     const role = getRoleFromUrl(); 
 
-    console.log('participant', {
-      name: formData.fullName,
-      email: formData.email,
-      role: role, 
-      meetingId: meetingId,
-    })
+  
     // Emit socket event instead of making an API call
 
     if(typeof window !== 'undefined'){
