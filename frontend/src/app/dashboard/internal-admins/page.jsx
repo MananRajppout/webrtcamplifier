@@ -101,7 +101,7 @@ const page = () => {
         {/* right div */}
         <div className="flex justify-end items-center gap-2">
           <Button
-            children="Add New Internal Admin"
+            children="Add New User"
             type="submit"
             variant="default"
             icon={<MdAdd />}

@@ -162,7 +162,7 @@ const getAllCompanies = async (req, res) => {
   try {
     const query = {
       isDeleted: false,
-      $or: [ // Added search criteria
+      $or: [ 
         { name: { $regex: search, $options: 'i' } },
         { companyEmail: { $regex: search, $options: 'i' } },
         { officialAddress: { $regex: search, $options: 'i' } },

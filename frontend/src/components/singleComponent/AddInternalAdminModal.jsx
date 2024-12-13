@@ -5,24 +5,37 @@ import Button from "../shared/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const AddInternalAdminModal = ({ onClose }) => {
+  const { user } = useGlobalContext();
+  const userRole = user?.role;
   const [firstName, setFirstName] = useState("User6FN");
   const [lastName, setLastName] = useState("User6LN");
   const [email, setEmail] = useState("user6@gmail.com");
   const [password, setPassword] = useState("Ab123456@");
   const [confirmPassword, setConfirmPassword] = useState("Ab123456@");
-  const [role, setRole] = useState("AmplifyAdmin");
+  const [role, setRole] = useState(
+    userRole === "SuperAdmin" ? "AmplifyAdmin" : "AmplifyModerator"
+  );
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
-  const roles = [
-    "AmplifyAdmin",
-    "AmplifyModerator",
-    "AmplifyObserver",
-    "AmplifyParticipant",
-    "AmplifyTechHost",
-  ];
+  const roles =
+    userRole === "SuperAdmin"
+      ? [
+          "AmplifyAdmin",
+          "AmplifyModerator",
+          "AmplifyObserver",
+          "AmplifyParticipant",
+          "AmplifyTechHost",
+        ]
+      : [
+          "AmplifyModerator",
+          "AmplifyObserver",
+          "AmplifyParticipant",
+          "AmplifyTechHost",
+        ];
 
   const addInternalAdmin = async (newAdmin) => {
     console.log("add Internaladmin", newAdmin);
