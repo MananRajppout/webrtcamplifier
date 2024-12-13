@@ -238,10 +238,10 @@ const projectStatusChange = async (req, res) => {
   const { projectId } = req.params;
   const { status } = req.body;
   // Validate status to ensure it's one of the allowed values
-  const validStatuses = ['Draft', 'Active', 'Complete', 'Inactive', 'Closed'];
+  const validStatuses = ['Draft', 'Active', 'Complete', 'Inactive', 'Closed', 'Pause', 'Unpause', 'Reopen'];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({
-      message: "Invalid status. Status must be one of 'Draft', 'Active', 'Complete', 'Inactive', or 'Closed'.",
+      message: "Invalid status. Status must be one of 'Draft', 'Active', 'Complete', 'Inactive','Pause','Unpause','Reopen' or 'Closed'.",
     });
   }
 
