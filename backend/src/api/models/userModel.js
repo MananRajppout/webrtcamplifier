@@ -64,6 +64,9 @@ const userSchema = new Schema({
   createdBy: {
     type: String,
     default: 'self'
+  },
+  createdById: {
+    type: Schema.Types.ObjectId,
   }
 
 }, { timestamps: true });

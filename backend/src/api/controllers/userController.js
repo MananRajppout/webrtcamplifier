@@ -620,14 +620,17 @@ const updateByAdmin = async (req, res) => {
 
   const decoded = decodeToken(token);
 
-  if (decoded?.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
   const { id, firstName, lastName, status, company } = req.body;
 
   try {
-    const user = await userModel.findById(id);
+    let user = await userModel.findById(id);
+    if (decoded?.role === "AmplifyAdmin") {
+      user = await userModel.findOne({ _id: id, createdById: decoded?.id });
+    }
     // Check if the user is deleted
     if (!user || user.isDeleted) {
       return res.status(404).json({ message: "User not found." });
@@ -665,11 +668,14 @@ const deleteByAdmin = async (req, res) => {
 
   const decoded = decodeToken(token);
 
-  if (decoded?.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
-  const exist = await userModel.findById(id);
+  let exist = await userModel.findById(id);
+  if (decoded?.role === "AmplifyAdmin") {
+    exist = await userModel.findOne({ _id: id, createdById: decoded?.id });
+  }
   if (!exist || exist.isDeleted) {
     return res.status(404).json({ message: "User not found" });
   }
@@ -684,6 +690,9 @@ const deleteByAdmin = async (req, res) => {
 
 const createAmplifyAdmin = async (req, res) => {
   try {
+    const token = req.cookies.token;
+    const decoded = decodeToken(token);
+
     const { firstName, lastName, email, role, password, termsAccepted } =
       req.body;
 
@@ -710,6 +719,7 @@ const createAmplifyAdmin = async (req, res) => {
       isEmailVerified: false,
       termsAccepted,
       termsAcceptedTime: new Date(),
+      createdById: decoded?.id
     });
     // Save the new user
     const userSavedData = await newUser.save();
