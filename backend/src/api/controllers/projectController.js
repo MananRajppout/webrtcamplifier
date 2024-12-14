@@ -184,16 +184,17 @@ const updateProject = async (req, res) => {
 };
 // DELETE route
 const deleteProject = async (req, res) => {
-  const { id } = req.params; // Extract ID from request parameters
-  try {
-    const deletedProject = await Project.findByIdAndDelete(id);
-    if (!deletedProject) {
-      return res.status(404).json({ message: "Project not found" });
-    }
-    res.status(200).json({ message: "Project deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  const { id } = req.params; 
+  console.log('delete projec id', id)
+  // try {
+  //   const deletedProject = await Project.findByIdAndDelete(id);
+  //   if (!deletedProject) {
+  //     return res.status(404).json({ message: "Project not found" });
+  //   }
+  //   res.status(200).json({ message: "Project deleted successfully" });
+  // } catch (error) {
+  //   res.status(500).json({ message: error.message });
+  // }
 };
 
 

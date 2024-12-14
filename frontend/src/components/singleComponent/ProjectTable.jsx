@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import TableHead from "../shared/TableHead";
 import TableData from "../shared/TableData";
 import { BsFillEnvelopeAtFill, BsThreeDotsVertical } from "react-icons/bs";
-import { FaShareAlt, FaUser } from "react-icons/fa";
+import { FaShareAlt, FaTrash, FaUser } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import ViewProject from "./ViewProject";
 import ShareProjectModal from "../projectComponents/ShareProjectModal";
@@ -12,6 +12,7 @@ import Button from "../shared/button";
 import { useDashboardContext } from "@/context/DashboardContext";
 import AssignTagModal from "./AssignTagModal";
 import Pagination from "../shared/Pagination";
+import axios from "axios";
 
 const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageChange }) => {
   const { viewProject, setViewProject } = useDashboardContext();
@@ -50,6 +51,20 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
       </div>
     );
   };
+
+  const handleDeleteProject = async(project) => {
+    try {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete/project/${project._id}`);
+     console.log("Deleted project", response.data)
+     fetchProjects()
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  
 
   const getButtonVariant = (status) => {
     const actionVariants = {
@@ -261,6 +276,17 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
               <BsFillEnvelopeAtFill />
               <span>Assign Tag</span>
             </li>
+            {
+              (user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin") && (
+                <li
+              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+              onClick={() => handleDeleteProject(selectedProject)}
+            >
+              <FaTrash />
+              <span>Delete</span>
+            </li>
+              )
+            }
           </ul>
         </div>
       )}
