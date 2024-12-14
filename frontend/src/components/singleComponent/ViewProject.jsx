@@ -50,8 +50,12 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isAddRepositoryModalOpen, setIsAddRepositoryModalOpen] =
     useState(false);
   const [repositories, setRepositories] = useState([]);
-  const [repositoryData, setRepositoryData] = useState({documents: [],media: [] });
-  const [selectedRepositoryMeetingTab, setSelectedRepositoryMeetingTab] = useState(null);
+  const [repositoryData, setRepositoryData] = useState({
+    documents: [],
+    media: [],
+  });
+  const [selectedRepositoryMeetingTab, setSelectedRepositoryMeetingTab] =
+    useState(null);
   const [showDocAndMediaTab, setShowDocAndMediaTab] = useState(false);
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
   const [meetingPage, setMeetingPage] = useState(1);
@@ -65,7 +69,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false);
   const [isSingleChoiceModalOpen, setIsSingleChoiceModalOpen] = useState(false);
-  const [isMultipleChoiceModalOpen, setIsMultipleChoiceModalOpen] = useState(false);
+  const [isMultipleChoiceModalOpen, setIsMultipleChoiceModalOpen] =
+    useState(false);
   const [isMatchingModalOpen, setIsMatchingModalOpen] = useState(false);
   const [isRankOrderModalOpen, setIsRankOrderModalOpen] = useState(false);
   const [isShortAnswerModalOpen, setIsShortAnswerModalOpen] = useState(false);
@@ -74,9 +79,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isBulkAddDropdownOpen, setIsBulkAddDropdownOpen] = useState(false);
   const [uploadResults, setUploadResults] = useState(null);
-  const [rejectedData, setRejectedData] = useState([]); 
-  const [isUploadResultsModalOpen, setIsUploadResultsModalOpen] = useState(false); 
-
+  const [rejectedData, setRejectedData] = useState([]);
+  const [isUploadResultsModalOpen, setIsUploadResultsModalOpen] =
+    useState(false);
 
   const handleSingleChoiceSave = async (singleChoiceData) => {
     try {
@@ -88,7 +93,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
       toast.success("Poll created successfully!");
       setIsSingleChoiceModalOpen(false);
       setIsMultipleChoiceModalOpen(false);
-      setIsPollDropdownOpen(false)
+      setIsPollDropdownOpen(false);
       fetchPolls();
     } catch (error) {
       toast.error("Failed to create poll: " + error.message);
@@ -99,16 +104,17 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsPollDropdownOpen((prev) => !prev);
   };
 
-  const fetchRepositoriesByMeetingId = async (meetingId, page =1) => {
+  const fetchRepositoriesByMeetingId = async (meetingId, page = 1) => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository-by-meeting/${meetingId}`,
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository-by-meeting/${meetingId}`,
         {
-          params: {page, limit: 10}
+          params: { page, limit: 10 },
         }
       );
       setRepositories(response.data.repositories);
-      setTotalMeetingRepoPages(response.data.totalPages)
+      setTotalMeetingRepoPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching repositories by meeting ID:", error);
     } finally {
@@ -206,10 +212,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     fetchRepositoriesByMeetingId(meetingId, page);
   };
 
-  const handlePollPageChange =(page)=>{
+  const handlePollPageChange = (page) => {
     setPollPage(page);
-    fetchPolls(page)
-  }
+    fetchPolls(page);
+  };
 
   // Fetching project meetings
   const fetchMeetings = async (page = 1, searchQuery = "", filters = {}) => {
@@ -245,7 +251,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
         }
       );
       setPolls(response.data.polls);
-      setTotalPollPages(response.data.totalPages)
+      setTotalPollPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
@@ -253,16 +259,17 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     }
   };
   // Fetching project meetings
-  const fetchRepositories = async (projectId, page=1) => {
+  const fetchRepositories = async (projectId, page = 1) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`,{
-          params :{page, limit:10}
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`,
+        {
+          params: { page, limit: 10 },
         }
       );
       setRepositories(response.data.repositories);
-      setTotalAllRepoPages(response.data.totalPages)
+      setTotalAllRepoPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
@@ -337,7 +344,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           toast.error(`Server Error: ${data.message}`);
         } else {
           // Handle any other errors
-          toast.error(`Error: ${data.message || "An unexpected error occurred"}`);
+          toast.error(
+            `Error: ${data.message || "An unexpected error occurred"}`
+          );
         }
       } else if (error.request) {
         // The request was made but no response was received
@@ -361,76 +370,81 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     fetchMeetings(1, term);
   };
 
-  
+  // Function to toggle the dropdown
+  const handleBulkAddDropdownToggle = () => {
+    setIsBulkAddDropdownOpen((prev) => !prev);
+  };
 
-// Function to toggle the dropdown
-const handleBulkAddDropdownToggle = () => {
-  setIsBulkAddDropdownOpen((prev) => !prev);
-};
+  // Function to handle downloading the format
+  const handleDownloadFormat = () => {
+    const link = document.createElement("a");
+    link.href = "/sample_data.xlsx";
+    link.setAttribute("download", "excel-format.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setIsBulkAddDropdownOpen(false);
+  };
 
-// Function to handle downloading the format
-const handleDownloadFormat = () => {
-  const link = document.createElement('a');
-  link.href = '/sample_data.xlsx';
-  link.setAttribute('download', 'excel-format.xlsx');
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  setIsBulkAddDropdownOpen(false)
-};
+  // Function to handle file upload
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
 
-// Function to handle file upload
-const handleFileUpload = async (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    const formData = new FormData();
-    formData.append('file', file);
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/bulk-meeting-upload`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
 
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/bulk-meeting-upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+        const {
+          file: base64File,
+          successResults,
+          rejectedData,
+        } = response.data;
 
-      const { file: base64File, successResults, rejectedData } = response.data;
+        // Decode Base64 and create a Blob
+        const binaryString = atob(base64File); // Decode Base64
+        const byteArray = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          byteArray[i] = binaryString.charCodeAt(i);
+        }
 
-      // Decode Base64 and create a Blob
-      const binaryString = atob(base64File); // Decode Base64
-      const byteArray = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        byteArray[i] = binaryString.charCodeAt(i);
+        const blob = new Blob([byteArray], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        // Trigger file download
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute("download", "updated_meeting_data.xlsx");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setUploadResults(response.data.successResults);
+        setRejectedData(response.data.rejectedData);
+        setIsUploadResultsModalOpen(true);
+        fetchMeetings();
+        setIsBulkAddDropdownOpen(false);
+        toast.success(response.data.message);
+      } catch (error) {
+        toast.error("Failed to upload file: " + error.message);
       }
-
-      const blob = new Blob([byteArray], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-
-      // Trigger file download
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.setAttribute('download', 'updated_meeting_data.xlsx');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      setUploadResults(response.data.successResults); 
-      setRejectedData(response.data.rejectedData); 
-      setIsUploadResultsModalOpen(true);
-      fetchMeetings()
-      setIsBulkAddDropdownOpen(false)
-      toast.success(response.data.message);
-
-    } catch (error) {
-      toast.error("Failed to upload file: " + error.message);
     }
-  }
-};
+  };
 
- // Function to close the upload results modal
- const closeUploadResultsModal = () => {
-  setIsUploadResultsModalOpen(false);
-};
+  // Function to close the upload results modal
+  const closeUploadResultsModal = () => {
+    setIsUploadResultsModalOpen(false);
+  };
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center w-full">
@@ -485,28 +499,38 @@ const handleFileUpload = async (event) => {
               Fieldwork Start Date:
             </p>
             {/* Format the start date to include both date and 12-hour time */}
-            <ParagraphBlue2 children={new Date(localProjectState?.startDate).toLocaleString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric', 
-              hour: 'numeric', 
-              minute: 'numeric', 
-              hour12: true 
-            })} />
+            <ParagraphBlue2
+              children={new Date(localProjectState?.startDate).toLocaleString(
+                "en-US",
+                {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "numeric",
+                  hour12: true,
+                }
+              )}
+            />
           </div>
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
               Fieldwork End Date:
             </p>
             {/* Format the end date to include both date and 12-hour time */}
-            <ParagraphBlue2 children={new Date(localProjectState?.endDate).toLocaleString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric', 
-              hour: 'numeric', 
-              minute: 'numeric', 
-              hour12: true 
-            })} />
+            <ParagraphBlue2
+              children={new Date(localProjectState?.endDate).toLocaleString(
+                "en-US",
+                {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "numeric",
+                  hour12: true,
+                }
+              )}
+            />
           </div>
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
@@ -573,27 +597,27 @@ const handleFileUpload = async (event) => {
                   placeholder="Search Meeting Name"
                 />
                 <div className="relative">
-    <Button
-      children="Bulk Add"
-      className="px-4 py-2 rounded-xl"
-      onClick={handleBulkAddDropdownToggle} // Function to toggle dropdown
-    />
-    {isBulkAddDropdownOpen && ( // Conditional rendering for dropdown
-      <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg">
-        <button
-          className="block px-4 py-2 text-left"
-          onClick={handleDownloadFormat} // Function to download format
-        >
-          Download Format
-        </button>
-        <input
-          type="file"
-          onChange={handleFileUpload} // Function to handle file upload
-          className="block px-4 py-2 text-left"
-        />
-      </div>
-    )}
-  </div>
+                  <Button
+                    children="Bulk Add"
+                    className="px-4 py-2 rounded-xl"
+                    onClick={handleBulkAddDropdownToggle} // Function to toggle dropdown
+                  />
+                  {isBulkAddDropdownOpen && ( // Conditional rendering for dropdown
+                    <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg">
+                      <button
+                        className="block px-4 py-2 text-left"
+                        onClick={handleDownloadFormat} // Function to download format
+                      >
+                        Download Format
+                      </button>
+                      <input
+                        type="file"
+                        onChange={handleFileUpload} // Function to handle file upload
+                        className="block px-4 py-2 text-left"
+                      />
+                    </div>
+                  )}
+                </div>
 
                 <Button
                   children="Add Meeting"
@@ -699,20 +723,23 @@ const handleFileUpload = async (event) => {
                         <HiMiniBars2 />
                         <span className="ml-2">Short answer</span>
                       </div>
-                      <div className="flex items-center p-2 cursor-pointer"
-                      onClick={()=>setIsLongAnswerModalOpen(true)}
+                      <div
+                        className="flex items-center p-2 cursor-pointer"
+                        onClick={() => setIsLongAnswerModalOpen(true)}
                       >
                         <HiMiniBars4 />
                         <span className="ml-2">Long answer</span>
                       </div>
-                      <div className="flex items-center p-2 cursor-pointer"
-                      onClick={()=>setIsBlankModalOpen(true)}
+                      <div
+                        className="flex items-center p-2 cursor-pointer"
+                        onClick={() => setIsBlankModalOpen(true)}
                       >
                         <IoRemoveOutline />
                         <span className="ml-2">Fill in the blank</span>
                       </div>
-                      <div className="flex items-center p-2 cursor-pointer"
-                      onClick={()=>setIsRatingModalOpen(true)}
+                      <div
+                        className="flex items-center p-2 cursor-pointer"
+                        onClick={() => setIsRatingModalOpen(true)}
                       >
                         <FaStarHalfAlt />
                         <span className="ml-2">Rating scale</span>
@@ -753,7 +780,7 @@ const handleFileUpload = async (event) => {
               </div>
               <div className="overflow-x-auto border-b">
                 <div className="flex space-x-5 whitespace-nowrap">
-                <button
+                  <button
                     className={`py-2 border-custom-dark-blue-1 text-sm ${
                       selectedRepositoryMeetingTab === "All"
                         ? "border-b-2"
@@ -955,13 +982,13 @@ const handleFileUpload = async (event) => {
             />
           )}
 
-{isUploadResultsModalOpen && (
-        <UploadResultsModal
-          onClose={closeUploadResultsModal}
-          successResults={uploadResults} // Pass the success results to the modal
-          rejectedData={rejectedData} // Pass the rejected data to the modal
-        />
-      )}
+          {isUploadResultsModalOpen && (
+            <UploadResultsModal
+              onClose={closeUploadResultsModal}
+              successResults={uploadResults} // Pass the success results to the modal
+              rejectedData={rejectedData} // Pass the rejected data to the modal
+            />
+          )}
         </div>
       </div>
     </div>

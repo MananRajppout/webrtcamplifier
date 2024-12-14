@@ -38,7 +38,6 @@ const MeetingTab = ({
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState(null);
 
-
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -80,11 +79,18 @@ const MeetingTab = ({
     closeModal();
   };
 
-  useSocketListen("meeting-not-found", ()=> {
+  useSocketListen("meeting-not-found", () => {
     toast.error("Meeting not found");
-  })
+  });
+  console.log("project", project);
 
   const handleJoinMeeting = async (meeting) => {
+    if (project.status === "Draft") {
+      toast.error(
+        "Meeting cannot be started while project in the draft status."
+      );
+      return;
+    }
     if (activeMeetingId === meeting._id) return;
 
     setActiveMeetingId(meeting._id);
@@ -107,8 +113,6 @@ const MeetingTab = ({
               role: "Moderator",
             },
           });
-
-         
 
           // Listen for a response from the server
           socket.on("startMeetingResponse", (response) => {
@@ -148,8 +152,8 @@ const MeetingTab = ({
   }, [socket]);
 
   const handleDeleteMeeting = (meeting) => {
-    setMeetingToDelete(meeting); 
-    setIsConfirmationModalOpen(true); 
+    setMeetingToDelete(meeting);
+    setIsConfirmationModalOpen(true);
   };
 
   const confirmDeleteMeeting = async (meeting) => {
@@ -259,6 +263,10 @@ const MeetingTab = ({
   };
 
   const handleJoinBackroom = async (meeting) => {
+    if (project.status === "Draft") {
+      toast.error("You cannot join backroom while meeting is in draft state.");
+      return;
+    }
     const fullName = `${user?.firstName} ${user?.lastName}`;
     const meetingId = meeting?._id;
     try {
@@ -458,7 +466,7 @@ const MeetingTab = ({
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={(e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 handleView(selectedMeeting);
                 closeModal();
               }}
