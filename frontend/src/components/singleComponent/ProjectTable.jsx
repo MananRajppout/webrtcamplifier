@@ -90,6 +90,8 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
         break;
       case "Closed":
         break;
+      case "Paused":
+        break;
       default:
     }
   };

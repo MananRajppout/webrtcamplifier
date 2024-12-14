@@ -37,6 +37,7 @@ const MeetingTab = ({
   const [meetingToEdit, setMeetingToEdit] = useState(null);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState(null);
+  const router = useRouter();
 
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
@@ -45,7 +46,6 @@ const MeetingTab = ({
     setIsModalOpen(!isModalOpen);
   };
 
-  const router = useRouter();
 
   const handleClickOutside = (event) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -85,12 +85,13 @@ const MeetingTab = ({
   console.log("project", project);
 
   const handleJoinMeeting = async (meeting) => {
-    if (project.status === "Draft") {
+    if (project.status === "Draft" || project.status === "Paused" || project.status === "Closed") {
       toast.error(
-        "Meeting cannot be started while project in the draft status."
+        `Meeting cannot be started while project in the ${project.status} status.`
       );
       return;
     }
+    
     if (activeMeetingId === meeting._id) return;
 
     setActiveMeetingId(meeting._id);
@@ -263,8 +264,8 @@ const MeetingTab = ({
   };
 
   const handleJoinBackroom = async (meeting) => {
-    if (project.status === "Draft") {
-      toast.error("You cannot join backroom while meeting is in draft state.");
+    if (project.status === "Draft" || project.status === "Closed") {
+      toast.error(`You cannot join backroom while meeting is in ${project.status} state.`);
       return;
     }
     const fullName = `${user?.firstName} ${user?.lastName}`;
