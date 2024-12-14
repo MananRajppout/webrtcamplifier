@@ -284,6 +284,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   }, [localProjectState, meetingPage]);
 
   const handleAddMeetingModal = () => {
+    if (project.status === "Closed") {
+      toast.error(`You cannot add a meeting in closed project`);
+      return;
+    }
     setIsAddMeetingModalOpen(true);
   };
 
@@ -372,6 +376,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
 
   // Function to toggle the dropdown
   const handleBulkAddDropdownToggle = () => {
+    if (project.status === "Closed") {
+      toast.error(`You cannot add a meeting in closed project`);
+      return;
+    }
     setIsBulkAddDropdownOpen((prev) => !prev);
   };
 
