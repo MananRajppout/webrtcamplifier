@@ -15,6 +15,7 @@ const RepositoryTab = ({
   totalAllRepoPages,
   totalMeetingRepoPages,
   fetchRepositoriesByMeetingId,
+  projectStaus,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(totalAllRepoPages);
@@ -24,7 +25,10 @@ const RepositoryTab = ({
       const response = await fetchRepositories(projectId, page);
       setTotalPages(totalAllRepoPages);
     } else if (selectedRepositoryMeetingTab) {
-      const response = await fetchRepositoriesByMeetingId(selectedRepositoryMeetingTab._id, page);
+      const response = await fetchRepositoriesByMeetingId(
+        selectedRepositoryMeetingTab._id,
+        page
+      );
       setTotalPages(totalMeetingRepoPages);
     }
   };
@@ -132,63 +136,72 @@ const RepositoryTab = ({
 
     return (
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg ">
-          <thead className="border-b-[0.5px] border-solid border-custom-dark-blue-1">
-            <tr>
-              <TableHead>File Name</TableHead>
-              <TableHead>File Type</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Added By</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Action</TableHead>
-            </tr>
-          </thead>
-          <tbody>
-            {displayRepositories?.map((repo) => (
-              <tr key={repo._id}>
-                <TableData>{repo.fileName}</TableData>
-                <TableData>{repo.type}</TableData>
-                <TableData>{repo.size}</TableData>
-                <TableData>{repo.addedBy}</TableData>
-                <TableData>{repo.role}</TableData>
-                <TableData>
-                  <div className="flex flex-col justify-center items-center gap-1">
-                    <Button
-                      children={"Rename"}
-                      type="button"
-                      variant="plain"
-                      className=" text-xs px-2 font-semibold"
-                      onClick={() => renameFile(repo._id)}
-                    ></Button>
-                    <Button
-                      children={"Delete"}
-                      type="button"
-                      variant="plain"
-                      className=" text-xs px-2   font-semibold"
-                      onClick={() => deleteFile(repo._id)}
-                    ></Button>
-                    <Button
-                      onClick={() =>
-                        downloadFile(repo.cloudinaryLink, repo.fileName)
-                      }
-                      children={"Download"}
-                      type="button"
-                      variant="plain"
-                      className=" text-xs px-2 font-semibold"
-                    ></Button>
-                  </div>
-                </TableData>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="flex justify-end py-3">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
+        {projectStaus === "Closed" ? (
+          <div className="flex justify-center items-center pt-10 font-bold text-custom-dark-blue-2">
+            Files cannot be accessed in close project.
+          </div>
+        ) : (
+          <>
+            <table className="min-w-full bg-white shadow-md rounded-lg ">
+              <thead className="border-b-[0.5px] border-solid border-custom-dark-blue-1">
+                <tr>
+                  <TableHead>File Name</TableHead>
+                  <TableHead>File Type</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Added By</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Action</TableHead>
+                </tr>
+              </thead>
+              <tbody>
+                {displayRepositories?.map((repo) => (
+                  <tr key={repo._id}>
+                    <TableData>{repo.fileName}</TableData>
+                    <TableData>{repo.type}</TableData>
+                    <TableData>{repo.size}</TableData>
+                    <TableData>{repo.addedBy}</TableData>
+                    <TableData>{repo.role}</TableData>
+                    <TableData>
+                      <div className="flex flex-col justify-center items-center gap-1">
+                        <Button
+                          children={"Rename"}
+                          type="button"
+                          variant="plain"
+                          className=" text-xs px-2 font-semibold"
+                          onClick={() => renameFile(repo._id)}
+                        ></Button>
+                        <Button
+                          children={"Delete"}
+                          type="button"
+                          variant="plain"
+                          className=" text-xs px-2   font-semibold"
+                          onClick={() => deleteFile(repo._id)}
+                        ></Button>
+                        <Button
+                          onClick={() =>
+                            downloadFile(repo.cloudinaryLink, repo.fileName)
+                          }
+                          children={"Download"}
+                          type="button"
+                          variant="plain"
+                          className=" text-xs px-2 font-semibold"
+                        ></Button>
+                      </div>
+                    </TableData>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="flex justify-end py-3">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </>
+        )}
       </div>
     );
   };

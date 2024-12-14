@@ -465,7 +465,9 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
       {/* body */}
       <div className="flex-grow px-6 w-full">
         {/* project status change button */}
-        <div className="flex justify-end py-5">
+      {
+        (user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin") && (
+          <div className="flex justify-end py-5">
           <select
             value={selectedStatus}
             onChange={handleStatusChange}
@@ -478,6 +480,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             <option value="Closed">Closed</option>
           </select>
         </div>
+        )
+      }
         {/*  general information  div*/}
         <div className="bg-white shadow-[0px_0px_12px_#00000029] rounded-xl p-5 w-full relative">
           <div className="flex justify-between items-center">
@@ -858,6 +862,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
                   handleAllRepoPageChange={handleAllRepoPageChange}
                   handleMeetingRepoPageChange={handleMeetingRepoPageChange}
                   fetchRepositoriesByMeetingId={fetchRepositoriesByMeetingId}
+                  projectStaus={project.status}
                 />
               </div>
             </div>
