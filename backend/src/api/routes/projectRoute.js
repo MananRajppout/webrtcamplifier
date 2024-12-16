@@ -18,6 +18,7 @@ module.exports = function (app) {
   app.put("/api/project/updateBulkMembers", controller.updateBulkMembers);
   app.put("/api/project/assignTagsToProject", controller.assignTagsToProject);
   app.get("/api/project/getAllProjectsForAmplify", controller.getAllProjectsForAmplify);
+  app.post("/api/send-email-to-new-contact", controller.sendEmailToNewContact)
 };
 
 // for usage of this search Api

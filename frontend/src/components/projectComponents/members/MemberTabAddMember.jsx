@@ -13,20 +13,21 @@ const MemberTabAddMember = ({
   const [peoples, setPeoples] = useState([]);
   const [selectedRoles, setSelectedRoles] = useState({});
   const { user } = useGlobalContext();
+  const [isLoading, setIsLoading] = useState(false);
+
   const fetchContacts = async () => {
     try {
       const apiEndpoint =
         user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin"
           ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/getAllAmplifyAdminsByAdminId`
           : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/contact-from-member-tab/${userId}/${project?._id}`;
-  
+
       const response = await axios.get(apiEndpoint, { withCredentials: true });
       setPeoples(response.data);
     } catch (error) {
       console.error("Error fetching contacts:", error);
     }
   };
-  
 
   useEffect(() => {
     fetchContacts();
@@ -88,7 +89,24 @@ const MemberTabAddMember = ({
     toast.success("Link copied to clipboard!");
   };
 
-  const handleSendEmail = () => {};
+  const handleSendEmail = async (person) => {
+    console.log("person", person);
+    try {
+      setIsLoading(true);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/send-email-to-new-contact`,
+        person,
+        { withCredentials: true }
+      );
+      if(response.status === 200){
+        toast.success(`${response.data.message}`)
+      }
+    } catch (error) {
+      toast.error(`${error.response.data.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
@@ -166,7 +184,7 @@ const MemberTabAddMember = ({
                           className=" text-white px-3 py-1 rounded-lg text-xs"
                           variant="secondary"
                           type="button"
-                          onClick={handleSendEmail}
+                          onClick={() => handleSendEmail(person)}
                         >
                           Send Email
                         </Button>

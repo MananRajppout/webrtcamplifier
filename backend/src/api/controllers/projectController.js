@@ -6,6 +6,8 @@ const Meeting = require("../models/meetingModel");
 const User = require("../models/userModel");
 const Tag = require("../models/tagModel");
 const { sendEmail } = require("../../config/email.config");
+const dotenv = require("dotenv");
+dotenv.config();
 
 // Controller to create a new project
 const createProject = async (req, res) => {
@@ -470,7 +472,34 @@ const getAllProjectsForAmplify = async (req, res) => {
   }
 };
 
+const sendEmailToNewContact = async (req, res) => {
+  const memberData = req.body
+  console.log("memberData",memberData)
+  try {
+    const createdBy = await User.findById(memberData.createdBy)
+    const email = memberData.email;
 
+    let html = `
+  <p>Hello, ${memberData.firstName}</p>
+  <p>You have been added to the project of <strong>${createdBy?.firstName}</strong>.</p>
+  <p>Please click the link below to register into the system and accept the invitation:</p>
+  <a href="${process.env.FRONTEND_BASE_URL}/register">Register</a>
+`;
+
+
+  sendEmail(email, "Invitation to join project", html)
+  
+  res.status(200).json({
+    message: "Email successfully sent. "
+  })
+  } catch (error) {
+  console.log('Error', error)
+  res.status(500).json({ message: error.message });
+}
+
+  
+
+}
 
 
 
@@ -488,6 +517,6 @@ module.exports = {
   deleteMemberFromProject,
   updateBulkMembers,
   assignTagsToProject,
-  getAllProjectsForAmplify
+  getAllProjectsForAmplify, sendEmailToNewContact
 };
 
