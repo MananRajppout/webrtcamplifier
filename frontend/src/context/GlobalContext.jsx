@@ -35,9 +35,9 @@ export function GlobalContextProvider({ children }) {
 
   const handleLogout = () => {
     document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    router.push('/login')
     localStorage.clear();
     setUser(null)
+    router.push('/login')
     // onClose();
   };
 

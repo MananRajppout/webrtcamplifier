@@ -31,22 +31,51 @@ import LongAnswerPollModal from "../projectComponents/polls/PollModal/LongAnswer
 import FillBlankModal from "../projectComponents/polls/PollModal/FillBlankModal";
 import RatingScaleModal from "../projectComponents/polls/PollModal/RatingScaleModal";
 import UploadResultsModal from "./UploadResultsModal";
+import ViewProjectNavbar from "../projectComponents/viewProject/ViewProjectNavbar";
+import ProjectStatusChange from "../projectComponents/viewProject/ProjectStatusChange";
+import TabNavigation from "../projectComponents/viewProject/TabNavigation";
+import TabContent from "../projectComponents/viewProject/TabContent";
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
+  // *Shared State
   const [localProjectState, setLocalProjectState] = useState(project);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("Meetings");
   const [secondaryTab, setSecondaryTab] = useState("Documents");
-  const [selectedMeeting, setSelectedMeeting] = useState(null);
-  const [meetings, setMeetings] = useState([]);
-  const [polls, setPolls] = useState([]);
-  const [isAddMeetingModalOpen, setIsAddMeetingModalOpen] = useState(false);
+
+  // *Project details related states
   const [selectedStatus, setSelectedStatus] = useState(
     localProjectState?.status || ""
   );
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // *Meeting realted state
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [meetings, setMeetings] = useState([]);
+  const [isAddMeetingModalOpen, setIsAddMeetingModalOpen] = useState(false);
+  const [meetingPage, setMeetingPage] = useState(1);
+  const [totalMeetingPages, setTotalMeetingPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isBulkAddDropdownOpen, setIsBulkAddDropdownOpen] = useState(false);
+
+  // *Project team related state
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
+
+  // *Polls related states
+  const [polls, setPolls] = useState([]);
   const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false);
+  const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false);
+  const [isSingleChoiceModalOpen, setIsSingleChoiceModalOpen] = useState(false);
+  const [isMultipleChoiceModalOpen, setIsMultipleChoiceModalOpen] =
+    useState(false);
+  const [isMatchingModalOpen, setIsMatchingModalOpen] = useState(false);
+  const [isRankOrderModalOpen, setIsRankOrderModalOpen] = useState(false);
+  const [isShortAnswerModalOpen, setIsShortAnswerModalOpen] = useState(false);
+  const [isLongAnswerModalOpen, setIsLongAnswerModalOpen] = useState(false);
+  const [isBlankModalOpen, setIsBlankModalOpen] = useState(false);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+
+  // *Files related state
   const [isAddRepositoryModalOpen, setIsAddRepositoryModalOpen] =
     useState(false);
   const [repositories, setRepositories] = useState([]);
@@ -58,88 +87,24 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     useState(null);
   const [showDocAndMediaTab, setShowDocAndMediaTab] = useState(false);
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
-  const [meetingPage, setMeetingPage] = useState(1);
-  const [totalMeetingPages, setTotalMeetingPages] = useState(1);
   const [pollPage, setPollPage] = useState(1);
   const [totalPollPages, setTotalPollPages] = useState(1);
   const [allRepoPage, setAllRepoPage] = useState(1);
   const [totalAllRepoPages, setTotalAllRepoPages] = useState(1);
   const [meetingRepoPage, setMeetingRepoPage] = useState(1);
   const [totalMeetingRepoPages, setTotalMeetingRepoPages] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isPollDropdownOpen, setIsPollDropdownOpen] = useState(false);
-  const [isSingleChoiceModalOpen, setIsSingleChoiceModalOpen] = useState(false);
-  const [isMultipleChoiceModalOpen, setIsMultipleChoiceModalOpen] =
-    useState(false);
-  const [isMatchingModalOpen, setIsMatchingModalOpen] = useState(false);
-  const [isRankOrderModalOpen, setIsRankOrderModalOpen] = useState(false);
-  const [isShortAnswerModalOpen, setIsShortAnswerModalOpen] = useState(false);
-  const [isLongAnswerModalOpen, setIsLongAnswerModalOpen] = useState(false);
-  const [isBlankModalOpen, setIsBlankModalOpen] = useState(false);
-  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
-  const [isBulkAddDropdownOpen, setIsBulkAddDropdownOpen] = useState(false);
-  const [uploadResults, setUploadResults] = useState(null);
-  const [rejectedData, setRejectedData] = useState([]);
   const [isUploadResultsModalOpen, setIsUploadResultsModalOpen] =
     useState(false);
+  const [uploadResults, setUploadResults] = useState(null);
+  const [rejectedData, setRejectedData] = useState([]);
 
-  
-
-  const handleSingleChoiceSave = async (singleChoiceData) => {
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
-        singleChoiceData
-      );
-
-      toast.success("Poll created successfully!");
-      setIsSingleChoiceModalOpen(false);
-      setIsMultipleChoiceModalOpen(false);
-      setIsPollDropdownOpen(false);
-      fetchPolls();
-    } catch (error) {
-      toast.error("Failed to create poll: " + error.message);
-    }
+  // *Shared functions
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
   };
 
-  const handleOpenPollDropdown = () => {
-    setIsPollDropdownOpen((prev) => !prev);
-  };
+  //* Function related to edit project
 
-  const fetchRepositoriesByMeetingId = async (meetingId, page = 1) => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository-by-meeting/${meetingId}`,
-        {
-          params: { page, limit: 10 },
-        }
-      );
-      setRepositories(response.data.repositories);
-      setTotalMeetingRepoPages(response.data.totalPages);
-    } catch (error) {
-      console.error("Error fetching repositories by meeting ID:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRepositoryMeetingTabChange = (meeting) => {
-    setSelectedRepositoryMeetingTab(meeting);
-    setSelectedDocAndMediaTab("");
-    setShowDocAndMediaTab(true);
-    fetchRepositoriesByMeetingId(meeting._id);
-  };
-
-  const handleDocAndMediaTabChange = (tab) => {
-    setSelectedDocAndMediaTab(tab);
-  };
-
-  const handleModalClose = () => {
-    setShowAddContactModal(false);
-  };
-
-  // Handle edit modal open/close
   const handleEditModal = () => {
     setIsEditModalOpen(true);
   };
@@ -197,122 +162,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     }
   };
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
-
-  const handleMeetingPageChange = (page) => {
-    setMeetingPage(page);
-    fetchMeetings(page, searchTerm);
-  };
-  const handleAllRepoPageChange = (projectId, page) => {
-    setAllRepoPage(page);
-    fetchRepositories(projectId, page);
-  };
-  const handleMeetingRepoPageChange = (meetingId, page) => {
-    setMeetingPage(page);
-    fetchRepositoriesByMeetingId(meetingId, page);
-  };
-
-  const handlePollPageChange = (page) => {
-    setPollPage(page);
-    fetchPolls(page);
-  };
-
-  // Fetching project meetings
-  const fetchMeetings = async (page = 1, searchQuery = "", filters = {}) => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/meeting/${localProjectState._id}`,
-        {
-          params: {
-            page,
-            limit: 10,
-            search: searchQuery,
-            ...filters,
-          },
-        }
-      );
-      setMeetings(response.data.meetings);
-      setTotalMeetingPages(response.data.totalPages);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  // Fetching project meetings
-  const fetchPolls = async (page = 1) => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/poll/${localProjectState._id}`,
-        {
-          params: { page, limit: 10 },
-        }
-      );
-      setPolls(response.data.polls);
-      setTotalPollPages(response.data.totalPages);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  // Fetching project meetings
-  const fetchRepositories = async (projectId, page = 1) => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`,
-        {
-          params: { page, limit: 10 },
-        }
-      );
-      
-      setRepositories(response.data.repositories);
-      setTotalAllRepoPages(response.data.totalPages);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMeetings(meetingPage);
-    fetchPolls();
-    fetchRepositories(localProjectState?._id, 1);
-  }, [localProjectState, meetingPage]);
-
-  const handleAddMeetingModal = () => {
-    if (project.status === "Closed") {
-      toast.error(`You cannot add a meeting in closed project`);
-      return;
-    }
-    setIsAddMeetingModalOpen(true);
-  };
-
-  const handleOpenAddPollModal = () => {
-    setIsAddPollModalOpen(true);
-  };
-  const handleOpenAddRepositoryModal = () => {
-    setIsAddRepositoryModalOpen(true);
-  };
-
-  const closeAddMeetingModal = () => {
-    setIsAddMeetingModalOpen(false);
-  };
-  const handleBulkUpdateModal = () => {
-    setShowBulkUpdateModal(true);
-  };
-
-  const closeBulkUpdateModal = () => {
-    setShowBulkUpdateModal(false);
-  };
-
-  // Function to handle status change
   const handleStatusChange = async (e) => {
     const newStatus = e.target.value;
     setSelectedStatus(newStatus);
@@ -367,8 +216,42 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     }
   };
 
-  const handleOpenAddContactModal = () => {
-    setShowAddContactModal(true);
+  // * Function related to meetings
+
+  const handleMeetingPageChange = (page) => {
+    setMeetingPage(page);
+    fetchMeetings(page, searchTerm);
+  };
+
+  const fetchMeetings = async (page = 1, searchQuery = "", filters = {}) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/meeting/${localProjectState._id}`,
+        {
+          params: {
+            page,
+            limit: 10,
+            search: searchQuery,
+            ...filters,
+          },
+        }
+      );
+      setMeetings(response.data.meetings);
+      setTotalMeetingPages(response.data.totalPages);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddMeetingModal = () => {
+    if (project.status === "Closed") {
+      toast.error(`You cannot add a meeting in closed project`);
+      return;
+    }
+    setIsAddMeetingModalOpen(true);
   };
 
   const handleMeetingSearch = (term) => {
@@ -377,7 +260,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     fetchMeetings(1, term);
   };
 
-  // Function to toggle the dropdown
   const handleBulkAddDropdownToggle = () => {
     if (project.status === "Closed") {
       toast.error(`You cannot add a meeting in closed project`);
@@ -386,7 +268,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsBulkAddDropdownOpen((prev) => !prev);
   };
 
-  // Function to handle downloading the format
   const handleDownloadFormat = () => {
     const link = document.createElement("a");
     link.href = "/sample_data.xlsx";
@@ -457,34 +338,161 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsUploadResultsModalOpen(false);
   };
 
+  // * Function related to project teams
+
+  const handleModalClose = () => {
+    setShowAddContactModal(false);
+  };
+
+  const handleBulkUpdateModal = () => {
+    setShowBulkUpdateModal(true);
+  };
+
+  const closeBulkUpdateModal = () => {
+    setShowBulkUpdateModal(false);
+  };
+
+  const handleOpenAddContactModal = () => {
+    setShowAddContactModal(true);
+  };
+
+  // * Function related to polls
+
+  const handleSingleChoiceSave = async (singleChoiceData) => {
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
+        singleChoiceData
+      );
+
+      toast.success("Poll created successfully!");
+      setIsSingleChoiceModalOpen(false);
+      setIsMultipleChoiceModalOpen(false);
+      setIsPollDropdownOpen(false);
+      fetchPolls();
+    } catch (error) {
+      toast.error("Failed to create poll: " + error.message);
+    }
+  };
+
+  const handleOpenPollDropdown = () => {
+    setIsPollDropdownOpen((prev) => !prev);
+  };
+
+  const handlePollPageChange = (page) => {
+    setPollPage(page);
+    fetchPolls(page);
+  };
+
+  const fetchPolls = async (page = 1) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/poll/${localProjectState._id}`,
+        {
+          params: { page, limit: 10 },
+        }
+      );
+      setPolls(response.data.polls);
+      setTotalPollPages(response.data.totalPages);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenAddPollModal = () => {
+    setIsAddPollModalOpen(true);
+  };
+
+  // * Function related to files
+
+  const fetchRepositoriesByMeetingId = async (meetingId, page = 1) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository-by-meeting/${meetingId}`,
+        {
+          params: { page, limit: 10 },
+        }
+      );
+      setRepositories(response.data.repositories);
+      setTotalMeetingRepoPages(response.data.totalPages);
+    } catch (error) {
+      console.error("Error fetching repositories by meeting ID:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRepositoryMeetingTabChange = (meeting) => {
+    setSelectedRepositoryMeetingTab(meeting);
+    setSelectedDocAndMediaTab("");
+    setShowDocAndMediaTab(true);
+    fetchRepositoriesByMeetingId(meeting._id);
+  };
+
+  const handleDocAndMediaTabChange = (tab) => {
+    setSelectedDocAndMediaTab(tab);
+  };
+
+  const handleAllRepoPageChange = (projectId, page) => {
+    setAllRepoPage(page);
+    fetchRepositories(projectId, page);
+  };
+
+  const handleMeetingRepoPageChange = (meetingId, page) => {
+    setMeetingPage(page);
+    fetchRepositoriesByMeetingId(meetingId, page);
+  };
+
+  const fetchRepositories = async (projectId, page = 1) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`,
+        {
+          params: { page, limit: 10 },
+        }
+      );
+
+      setRepositories(response.data.repositories);
+      setTotalAllRepoPages(response.data.totalPages);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenAddRepositoryModal = () => {
+    setIsAddRepositoryModalOpen(true);
+  };
+
+  const closeAddMeetingModal = () => {
+    setIsAddMeetingModalOpen(false);
+  };
+
+  // * use effects
+  useEffect(() => {
+    fetchMeetings(meetingPage);
+    fetchPolls();
+    fetchRepositories(localProjectState?._id, 1);
+  }, [localProjectState, meetingPage]);
+
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center w-full">
       {/* navbar */}
-      <div className="pt-5 w-full px-6 flex justify-between items-center ">
-        <div>
-          <HeadingBlue25px children="View Project Details" />
-        </div>
-      </div>
+      <ViewProjectNavbar />
       {/* body */}
       <div className="flex-grow px-6 w-full">
         {/* project status change button */}
-      {
-        (user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin") && (
-          <div className="flex justify-end py-5">
-          <select
-            value={selectedStatus}
-            onChange={handleStatusChange}
-            className="border rounded-lg text-white font-semibold px-4  py-2 bg-custom-teal outline-none"
-          >
-            <option value="Draft">Draft</option>
-            <option value="Active">Active</option>
-            <option value="Complete">Complete</option>
-            <option value="Inactive">Inactive</option>
-            <option value="Closed">Closed</option>
-          </select>
-        </div>
-        )
-      }
+        <ProjectStatusChange
+          user={user}
+          selectedStatus={selectedStatus}
+          handleStatusChange={handleStatusChange}
+        />
         {/*  general information  div*/}
         <div className="bg-white shadow-[0px_0px_12px_#00000029] rounded-xl p-5 w-full relative">
           <div className="flex justify-between items-center">
@@ -566,310 +574,133 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
         {/* participants, observers, breakout rooms and polls div container */}
         <div className="bg-white shadow-[0px_0px_12px_#00000029] rounded-xl p-5 mt-3 mb-10">
           {/* tab navigation */}
-          <div className="flex justify-around space-x-10 overflow-x-auto border-b">
-            <button
-              className={`py-2 border-custom-dark-blue-1 ${
-                activeTab === "Meetings" ? "border-b-2 " : "opacity-25"
-              }`}
-              onClick={() => handleTabChange("Meetings")}
-            >
-              Meetings
-            </button>
-            <button
-              className={`py-2 border-custom-dark-blue-1 ${
-                activeTab === "Project Team" ? "border-b-2 " : "opacity-25"
-              }`}
-              onClick={() => handleTabChange("Project Team")}
-            >
-              Project Team
-            </button>
-            <button
-              className={`py-2 border-custom-dark-blue-1 ${
-                activeTab === "Polls" ? "border-b-2 " : "opacity-25"
-              }`}
-              onClick={() => handleTabChange("Polls")}
-            >
-              Polls
-            </button>
-            <button
-              className={`py-2 border-custom-dark-blue-1 ${
-                activeTab === "Files" ? "border-b-2 " : "opacity-25"
-              }`}
-              onClick={() => handleTabChange("Files")}
-            >
-              Files
-            </button>
-          </div>
+          <TabNavigation
+            activeTab={activeTab}
+            handleTabChange={handleTabChange}
+          />
 
           {/* tab content */}
-          {activeTab === "Meetings" && (
-            <div className="pt-5">
-              <div className="flex justify-between items-center">
-                <HeadingLg children="Meetings" />
-                {/* !Search button */}
-                <Search
-                  onSearch={handleMeetingSearch}
-                  placeholder="Search Meeting Name"
-                />
-                <div className="relative">
-                  <Button
-                    children="Bulk Add"
-                    className="px-4 py-2 rounded-xl"
-                    onClick={handleBulkAddDropdownToggle} // Function to toggle dropdown
-                  />
-                  {isBulkAddDropdownOpen && ( // Conditional rendering for dropdown
-                    <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg">
-                      <button
-                        className="block px-4 py-2 text-left"
-                        onClick={handleDownloadFormat} // Function to download format
-                      >
-                        Download Format
-                      </button>
-                      <input
-                        type="file"
-                        onChange={handleFileUpload} // Function to handle file upload
-                        className="block px-4 py-2 text-left"
-                      />
-                    </div>
-                  )}
-                </div>
+          {/* <TabContent
+            activeTab={activeTab}
+            handleMeetingSearch={handleMeetingSearch}
+            handleBulkAddDropdownToggle={handleBulkAddDropdownToggle}
+            isBulkAddDropdownOpen={isBulkAddDropdownOpen}
+            handleDownloadFormat={handleDownloadFormat}
+            handleFileUpload={handleFileUpload}
+            handleAddMeetingModal={handleAddMeetingModal}
+            meetings={meetings}
+            fetchMeetings={fetchMeetings}
+            project={project}
+            meetingPage={meetingPage}
+            totalMeetingPages={totalMeetingPages}
+            handleMeetingPageChange={handleMeetingPageChange}
+            handleBulkUpdateModal={handleBulkUpdateModal}
+            handleOpenAddContactModal={handleOpenAddContactModal}
+            localProjectState={localProjectState}
+            setLocalProjectState={setLocalProjectState}
+            handleOpenPollDropdown={handleOpenPollDropdown}
+            isPollDropdownOpen={isPollDropdownOpen}
+            setIsSingleChoiceModalOpen={setIsSingleChoiceModalOpen}
+            setIsMultipleChoiceModalOpen={setIsMultipleChoiceModalOpen}
+            setIsMatchingModalOpen={setIsMatchingModalOpen}
+            setIsRankOrderModalOpen={setIsRankOrderModalOpen}
+            setIsShortAnswerModalOpen={setIsShortAnswerModalOpen}
+            setIsLongAnswerModalOpen={setIsLongAnswerModalOpen}
+            setIsBlankModalOpen={setIsBlankModalOpen}
+            setIsRatingModalOpen={setIsRatingModalOpen}
+            polls={polls}
+            setPolls={setPolls}
+            pollPage={pollPage}
+            totalPollPages={totalPollPages}
+            handlePollPageChange={handlePollPageChange}
+            handleOpenAddRepositoryModal={handleOpenAddRepositoryModal}
+            selectedRepositoryMeetingTab={selectedRepositoryMeetingTab}
+            setSelectedRepositoryMeetingTab={setSelectedRepositoryMeetingTab}
+            setSelectedDocAndMediaTab={setSelectedDocAndMediaTab}
+            setShowDocAndMediaTab={setShowDocAndMediaTab}
+            handleRepositoryMeetingTabChange={handleRepositoryMeetingTabChange}
+            showDocAndMediaTab={showDocAndMediaTab}
+            handleDocAndMediaTabChange={handleDocAndMediaTabChange}
+            selectedDocAndMediaTab={selectedDocAndMediaTab}
+            repositories={repositories}
+            fetchRepositories={fetchRepositories}
+            allRepoPage={allRepoPage}
+            totalAllRepoPages={totalAllRepoPages}
+            meetingRepoPage={meetingRepoPage}
+            totalMeetingRepoPages={totalMeetingRepoPages}
+            handleAllRepoPageChange={handleAllRepoPageChange}
+            handleMeetingRepoPageChange={handleMeetingRepoPageChange}
+            fetchRepositoriesByMeetingId={fetchRepositoriesByMeetingId}
+          /> */}
+          <TabContent
+  activeTab={activeTab}
+  searchHandlers={{
+    handleMeetingSearch,
+    handleBulkAddDropdownToggle,
+    isBulkAddDropdownOpen,
+    handleDownloadFormat,
+    handleFileUpload,
+  }}
+  meetingHandlers={{
+    handleAddMeetingModal,
+    meetings,
+    fetchMeetings,
+    project,
+    meetingPage,
+    totalMeetingPages,
+    handleMeetingPageChange,
+    handleBulkUpdateModal
+  }}
+  modalStates={{
+    setIsSingleChoiceModalOpen,
+    setIsMultipleChoiceModalOpen,
+    setIsMatchingModalOpen,
+    setIsRankOrderModalOpen,
+    setIsShortAnswerModalOpen,
+    setIsLongAnswerModalOpen,
+    setIsBlankModalOpen,
+    setIsRatingModalOpen,
+  }}
+  projectTeam={{
+    handleOpenAddContactModal
+  }}
+  pollsData={{
+    polls,
+    setPolls,
+    pollPage,
+    totalPollPages,
+    handlePollPageChange,
+    handleOpenPollDropdown,
+    isPollDropdownOpen
+  }}
+  repositoryData={{
+    repositories,
+    fetchRepositories,
+    allRepoPage,
+    totalAllRepoPages,
+    meetingRepoPage,
+    totalMeetingRepoPages,
+    handleAllRepoPageChange,
+    handleMeetingRepoPageChange,
+    fetchRepositoriesByMeetingId,
+  }}
+  additionalHandlers={{
+    handleOpenAddRepositoryModal,
+    selectedRepositoryMeetingTab,
+    setSelectedRepositoryMeetingTab,
+    setSelectedDocAndMediaTab,
+    setShowDocAndMediaTab,
+    handleRepositoryMeetingTabChange,
+    showDocAndMediaTab,
+    handleDocAndMediaTabChange,
+    selectedDocAndMediaTab,
+  }}
+  localProjectStateHandlers={{
+    localProjectState,
+    setLocalProjectState,
+  }}
+/>
 
-                <Button
-                  children="Add Meeting"
-                  className="px-4 py-2 rounded-xl"
-                  type="submit"
-                  onClick={handleAddMeetingModal}
-                />
-              </div>
-              <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
-                <MeetingTab
-                  meetings={meetings}
-                  fetchMeetings={fetchMeetings}
-                  project={project}
-                  meetingPage={meetingPage}
-                  totalMeetingPages={totalMeetingPages}
-                  onPageChange={handleMeetingPageChange}
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === "Project Team" && (
-            <div className="pt-5">
-              <div className="flex justify-between items-center">
-                <HeadingLg children="Project Members" />
-                <div
-                  className="flex justify-end items-center
-               gap-5"
-                >
-                  <Button
-                    className="font-bold"
-                    variant="plain"
-                    type="submit"
-                    onClick={handleBulkUpdateModal}
-                  >
-                    Bulk Update
-                  </Button>
-                  <Button
-                    children={"Add"}
-                    className="px-5 py-1.5 rounded-xl"
-                    variant="secondary"
-                    onClick={handleOpenAddContactModal}
-                  />
-                </div>
-              </div>
-              <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
-                <MembersTab
-                  project={localProjectState}
-                  setLocalProjectState={setLocalProjectState}
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === "Polls" && (
-            <div className="pt-5">
-              <div className="flex justify-between items-center">
-                <HeadingLg children="Polls List" />
-                <div
-                  className="flex justify-end items-center
-             gap-5 relative"
-                >
-                  <Button
-                    children={"Add Poll"}
-                    className="px-5 py-1.5 rounded-xl"
-                    variant="secondary"
-                    onClick={handleOpenPollDropdown}
-                  />
-                  {isPollDropdownOpen && (
-                    <div className="absolute top-9 -left-20 bg-white border rounded shadow-lg p-2">
-                      <div
-                        className="flex items-center p-2 cursor-pointer"
-                        onClick={() => setIsSingleChoiceModalOpen(true)}
-                      >
-                        <MdOutlineRadioButtonChecked />
-                        <span className="ml-2">Single choice</span>
-                      </div>
-                      <div
-                        className="flex items-center p-2 cursor-pointer"
-                        onClick={() => setIsMultipleChoiceModalOpen(true)}
-                      >
-                        <FaCheckSquare />
-                        <span className="ml-2">Multiple choice</span>
-                      </div>
-                      <div
-                        className="flex items-center p-2 cursor-pointer"
-                        onClick={() => setIsMatchingModalOpen(true)}
-                      >
-                        <TbArrowsShuffle />
-                        <span className="ml-2">Matching</span>
-                      </div>
-                      <div
-                        className="flex items-center p-2 cursor-pointer"
-                        onClick={() => setIsRankOrderModalOpen(true)}
-                      >
-                        <MdBarChart />
-                        <span className="ml-2">Rank order</span>
-                      </div>
-                      <div
-                        className="flex items-center p-2 cursor-pointer"
-                        onClick={() => setIsShortAnswerModalOpen(true)}
-                      >
-                        <HiMiniBars2 />
-                        <span className="ml-2">Short answer</span>
-                      </div>
-                      <div
-                        className="flex items-center p-2 cursor-pointer"
-                        onClick={() => setIsLongAnswerModalOpen(true)}
-                      >
-                        <HiMiniBars4 />
-                        <span className="ml-2">Long answer</span>
-                      </div>
-                      <div
-                        className="flex items-center p-2 cursor-pointer"
-                        onClick={() => setIsBlankModalOpen(true)}
-                      >
-                        <IoRemoveOutline />
-                        <span className="ml-2">Fill in the blank</span>
-                      </div>
-                      <div
-                        className="flex items-center p-2 cursor-pointer"
-                        onClick={() => setIsRatingModalOpen(true)}
-                      >
-                        <FaStarHalfAlt />
-                        <span className="ml-2">Rating scale</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
-                <PollsTab
-                  project={localProjectState}
-                  polls={polls}
-                  setPolls={setPolls}
-                  setLocalProjectState={setLocalProjectState}
-                  pollPage={pollPage}
-                  totalPollPages={totalPollPages}
-                  onPageChange={handlePollPageChange}
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === "Files" && (
-            <div className="pt-2">
-              <div className="flex justify-between items-center">
-                <HeadingLg children="Files List" />
-                <div
-                  className="flex justify-end items-center
-             gap-5"
-                >
-                  <Button
-                    children={"Upload"}
-                    className="px-5 py-1.5 rounded-xl"
-                    variant="secondary"
-                    onClick={handleOpenAddRepositoryModal}
-                  />
-                </div>
-              </div>
-              <div className="overflow-x-auto border-b">
-                <div className="flex space-x-5 whitespace-nowrap">
-                  <button
-                    className={`py-2 border-custom-dark-blue-1 text-sm ${
-                      selectedRepositoryMeetingTab === "All"
-                        ? "border-b-2"
-                        : "opacity-25"
-                    }`}
-                    onClick={() => {
-                      setSelectedRepositoryMeetingTab("All");
-                      setSelectedDocAndMediaTab(""); // Reset selected tab
-                      setShowDocAndMediaTab(true); // Show documents and media
-                    }}
-                  >
-                    All
-                  </button>
-                  {meetings?.map((meeting) => (
-                    <button
-                      key={meeting?._id}
-                      className={`py-2 border-custom-dark-blue-1 text-sm ${
-                        selectedRepositoryMeetingTab === meeting
-                          ? "border-b-2"
-                          : "opacity-25"
-                      }`}
-                      onClick={() => handleRepositoryMeetingTabChange(meeting)}
-                    >
-                      {meeting?.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Show "Documents" and "Media" tabs immediately below the selected meeting tab */}
-              {showDocAndMediaTab && selectedRepositoryMeetingTab && (
-                <div className="flex justify-center space-x-5 border-b">
-                  <button
-                    className={`py-2 border-custom-dark-blue-1 text-sm ${
-                      selectedDocAndMediaTab === "Documents"
-                        ? "border-b-2"
-                        : "opacity-25"
-                    }`}
-                    onClick={() => handleDocAndMediaTabChange("Documents")}
-                  >
-                    Documents
-                  </button>
-                  <button
-                    className={`py-2 px-4 rounded ${
-                      selectedDocAndMediaTab === "Media"
-                        ? "border-b-2"
-                        : "opacity-25"
-                    }`}
-                    onClick={() => handleDocAndMediaTabChange("Media")}
-                  >
-                    Media
-                  </button>
-                </div>
-              )}
-
-              <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
-                <RepositoryTab
-                  repositories={repositories}
-                  selectedRepositoryMeetingTab={selectedRepositoryMeetingTab}
-                  selectedDocAndMediaTab={selectedDocAndMediaTab}
-                  fetchRepositories={fetchRepositories}
-                  projectId={localProjectState?._id}
-                  allRepoPage={allRepoPage}
-                  totalAllRepoPages={totalAllRepoPages}
-                  meetingRepoPage={meetingRepoPage}
-                  totalMeetingRepoPages={totalMeetingRepoPages}
-                  handleAllRepoPageChange={handleAllRepoPageChange}
-                  handleMeetingRepoPageChange={handleMeetingRepoPageChange}
-                  fetchRepositoriesByMeetingId={fetchRepositoriesByMeetingId}
-                  projectStaus={project.status}
-                />
-              </div>
-            </div>
-          )}
 
           {isAddMeetingModalOpen && (
             <AddMeetingModal
