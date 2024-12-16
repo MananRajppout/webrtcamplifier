@@ -83,6 +83,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isUploadResultsModalOpen, setIsUploadResultsModalOpen] =
     useState(false);
 
+  
+
   const handleSingleChoiceSave = async (singleChoiceData) => {
     try {
       await axios.post(
@@ -268,6 +270,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           params: { page, limit: 10 },
         }
       );
+      
       setRepositories(response.data.repositories);
       setTotalAllRepoPages(response.data.totalPages);
     } catch (error) {

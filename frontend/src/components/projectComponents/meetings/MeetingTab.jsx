@@ -82,7 +82,6 @@ const MeetingTab = ({
   useSocketListen("meeting-not-found", () => {
     toast.error("Meeting not found");
   });
-  console.log("project", project);
 
   const handleJoinMeeting = async (meeting) => {
     if (project.status === "Draft" || project.status === "Paused" || project.status === "Closed") {
