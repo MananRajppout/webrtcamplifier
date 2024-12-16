@@ -90,7 +90,6 @@ const MemberTabAddMember = ({
   };
 
   const handleSendEmail = async (person) => {
-    console.log("person", person);
     try {
       setIsLoading(true);
       const response = await axios.post(

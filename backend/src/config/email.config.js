@@ -45,13 +45,13 @@ async function sendVerifyEmail(name, email, id) {
     };
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
-        console.log(error);
+        console.error(error);
       } else {
         console.log("Email has been sent:-", info.response);
       }
     });
   } catch (error) {
-    console.log(error.message);
+    console.error(error.message);
   }
 }
 
@@ -80,7 +80,7 @@ const sendStatusChangeEmail = async (ticket) => {
       }
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 

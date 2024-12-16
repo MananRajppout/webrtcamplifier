@@ -35,7 +35,7 @@ const insertPermissions = async () => {
         ];
          await Permission.insertMany(permissions);
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }
 

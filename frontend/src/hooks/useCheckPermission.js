@@ -70,7 +70,7 @@ const useCheckPermission = () => {
         }
         setPermission(permissionStatus, setPermissionState, setPermissionStatusState);
       } catch (error) {
-        console.log('permission','denied',name,error)
+        console.error('permission','denied',name,error)
         const permissionStatus = {
           state: 'denied'
         }

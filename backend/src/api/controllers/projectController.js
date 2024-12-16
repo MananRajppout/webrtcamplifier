@@ -187,7 +187,6 @@ const updateProject = async (req, res) => {
 // DELETE route
 const deleteProject = async (req, res) => {
   const { id } = req.params; 
-  console.log('delete projec id', id)
   // try {
   //   const deletedProject = await Project.findByIdAndDelete(id);
   //   if (!deletedProject) {
@@ -474,7 +473,6 @@ const getAllProjectsForAmplify = async (req, res) => {
 
 const sendEmailToNewContact = async (req, res) => {
   const memberData = req.body
-  console.log("memberData",memberData)
   try {
     const createdBy = await User.findById(memberData.createdBy)
     const email = memberData.email;
@@ -493,7 +491,7 @@ const sendEmailToNewContact = async (req, res) => {
     message: "Email successfully sent. "
   })
   } catch (error) {
-  console.log('Error', error)
+  console.error('Error', error)
   res.status(500).json({ message: error.message });
 }
 

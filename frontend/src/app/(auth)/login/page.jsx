@@ -53,7 +53,7 @@ const Login = () => {
         window.localStorage.setItem("user", JSON.stringify(response.data.data));
       }
 
-      console.log('trying to redirect');
+     
 
       const redirectUrl = router.query?.redirect || `/dashboard/my-profile/${response.data.data._id}`;
         router.replace(redirectUrl);
