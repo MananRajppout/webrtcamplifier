@@ -7,6 +7,7 @@ const User = require("../models/userModel");
 const Tag = require("../models/tagModel");
 const { sendEmail } = require("../../config/email.config");
 const dotenv = require("dotenv");
+const LiveMeeting = require("../models/liveMeetingModel");
 dotenv.config();
 
 // Controller to create a new project
@@ -186,16 +187,19 @@ const updateProject = async (req, res) => {
 };
 // DELETE route
 const deleteProject = async (req, res) => {
-  const { id } = req.params; 
-  // try {
-  //   const deletedProject = await Project.findByIdAndDelete(id);
-  //   if (!deletedProject) {
-  //     return res.status(404).json({ message: "Project not found" });
-  //   }
-  //   res.status(200).json({ message: "Project deleted successfully" });
-  // } catch (error) {
-  //   res.status(500).json({ message: error.message });
-  // }
+  const { id } = req.params;
+  try {
+    const project = await Project.findById(id).select("_id");
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    const meetingIds = await Meeting.distinct("_id", { projectId: id });
+    await LiveMeeting.deleteMany({ meetingId: { $in: meetingIds } });
+    await Project.findByIdAndDelete(id);
+    res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 
@@ -424,7 +428,7 @@ const assignTagsToProject = async (req, res) => {
 
 const getAllProjectsForAmplify = async (req, res) => {
   const { page = 1, limit = 10, search = '', startDate, endDate, status, tag, role } = req.query;
- 
+
 
   try {
     // Create search query
@@ -485,17 +489,17 @@ const sendEmailToNewContact = async (req, res) => {
 `;
 
 
-  sendEmail(email, "Invitation to join project", html)
-  
-  res.status(200).json({
-    message: "Email successfully sent. "
-  })
-  } catch (error) {
-  console.error('Error', error)
-  res.status(500).json({ message: error.message });
-}
+    sendEmail(email, "Invitation to join project", html)
 
-  
+    res.status(200).json({
+      message: "Email successfully sent. "
+    })
+  } catch (error) {
+    console.error('Error', error)
+    res.status(500).json({ message: error.message });
+  }
+
+
 
 }
 
