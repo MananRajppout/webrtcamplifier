@@ -108,6 +108,7 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
   };
 
   const handleView = (project) => {
+    console.log('handle view clicked', project)
     setSelectedProject(project);
     setViewProject(true);
     closeModal();
