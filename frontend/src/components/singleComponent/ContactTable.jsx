@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import TableHead from "../shared/TableHead";
 import TableData from "../shared/TableData";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -35,41 +35,7 @@ const ContactTable = ({
 
   const modalRef = useRef();
 
-  // useEffect(() => {
-  //   filterModerators();
-  // }, [searchQuery, selectedStatus, contacts]);
-
-  // const filterModerators = () => {
-  //   let results = moderators;
-
-  //   if (searchQuery) {
-  //     results = results.filter(
-  //       (moderator) =>
-  //         moderator.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //         moderator.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //         moderator.email.toLowerCase().includes(searchQuery.toLowerCase())
-  //     );
-  //   }
-
-  //   if (selectedStatus !== 'All') {
-  //     results = results.filter((moderator) => moderator.status === selectedStatus);
-  //   }
-
-  //   setFilteredModerators(results);
-  // };
-
-  // const handleSearchChange = (e) => {
-  //   setSearchQuery(e.target.value);
-  // };
-
-  // const handleStatusChange = (e) => {
-  //   setSelectedStatus(e.target.value);
-  // };
-
-  // const handleReload = () => {
-  //   fetchModerators();
-  // };
-
+ 
   const handleEditContactOpenModal = (contact) => {
     closeModal();
     setIsEditing(true);
@@ -91,22 +57,62 @@ const ContactTable = ({
     setIsViewContactModalOpen(false);
   };
 
-  const toggleModal = (event, contact) => {
-    const { top, left } = event.currentTarget.getBoundingClientRect();
-    setModalPosition({ top, left });
-    setCurrentContact(contact);
-    setIsModalOpen(!isModalOpen);
+  // const toggleModal = (event, contact) => {
+  //   const { top, left } = event.currentTarget.getBoundingClientRect();
+  //   setModalPosition({ top, left });
+  //   setCurrentContact(contact);
+  //   setIsModalOpen(!isModalOpen);
+  // };
+
+ // Add useEffect to handle click outside
+ useEffect(() => {
+  if (isModalOpen) {
+    document.addEventListener('mousedown', handleClickOutside);
+  }
+  
+  // Cleanup function to remove event listener
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
   };
+}, [isModalOpen]); // Only re-run when isModalOpen changes
+
+const handleClickOutside = (event) => {
+  if (modalRef.current && !modalRef.current.contains(event.target) && 
+      !event.target.closest('button')) {
+    closeModal();
+  }
+};
+
+const toggleModal = (event, contact) => {
+  const { top, left, bottom } = event.currentTarget.getBoundingClientRect();
+  const windowHeight = window.innerHeight;
+  
+  // Check if there's enough space below
+  const spaceBelow = windowHeight - bottom;
+  const modalHeight = 150; // Approximate height of modal
+  
+  // If space below is less than modal height, position above the button
+  const topPosition = spaceBelow < modalHeight ? 
+    'auto' : top;
+  const bottomPosition = spaceBelow < modalHeight ?
+    `${windowHeight - top}px` : 'auto';
+
+  setModalPosition({ top: topPosition, left, bottom: bottomPosition });
+  setCurrentContact(contact);
+  setIsModalOpen(!isModalOpen);
+};
+
+
 
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  const handleClickOutside = (event) => {
-    if (modalRef.current && !modalRef.current.contains(event.target)) {
-      closeModal();
-    }
-  };
+  // const handleClickOutside = (event) => {
+  //   if (modalRef.current && !modalRef.current.contains(event.target)) {
+  //     closeModal();
+  //   }
+  // };
 
   const handleDeleteContact = async (contactId) => {
     try {
@@ -196,7 +202,13 @@ const ContactTable = ({
                   {isModalOpen && currentContact === contact && (
                     <div
                       ref={modalRef}
-                      className="absolute top-2 right-12 z-50 bg-white shadow-lg rounded-md overflow-hidden"
+                      style={{
+                        position: 'fixed',
+                        top: modalPosition.top !== 'auto' ? `${modalPosition.top}px` : 'auto',
+                        left: `${modalPosition.left}px`,
+                        bottom: modalPosition.bottom,
+                      }}
+                      className="z-50 bg-white shadow-lg rounded-md overflow-hidden"
                     >
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
