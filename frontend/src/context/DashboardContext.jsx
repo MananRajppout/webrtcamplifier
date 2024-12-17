@@ -2,16 +2,19 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useGlobalContext } from './GlobalContext';
 
 const queryClient = new QueryClient();
 
 const DashboardContext = createContext()
 
 export function DashboardContextProvider({ children }) {
-  const [viewProject, setViewProject] = useState(false);
+  const { user } = useGlobalContext()
+
+  console.log("user in the dashboard context", user)
 
   const value ={
-    viewProject, setViewProject
+    user
   }
 
   return (
