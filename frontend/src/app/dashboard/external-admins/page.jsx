@@ -7,8 +7,7 @@ import ExternalAdminsTable from '@/components/singleComponent/ExternalAdminsTabl
 import Search from '@/components/singleComponent/Search'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import React, { useEffect, useState } from 'react'
-import { MdAdd } from 'react-icons/md'
+import React, { useState } from 'react'
 
 const page = () => {
   const [showAddExternalAdminModal, setShowAddExternalAdminModal] = useState(false)
