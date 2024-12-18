@@ -21,12 +21,19 @@ const Page = () => {
   const [totalPages, setTotalPages] = useState(1);
   const { user } = useGlobalContext();
 
-  const fetchProjects = async (userId, page = 1, searchQuery = "", filters = {}) => {
+  const fetchProjects = async (
+    userId,
+    page = 1,
+    searchQuery = "",
+    filters = {}
+  ) => {
     setLoading(true);
     try {
       // Determine API endpoint based on user role
       const endpoint =
-        user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin" || user?.role === "TechHost"
+        user?.role === "SuperAdmin" ||
+        user?.role === "AmplifyAdmin" ||
+        user?.role === "AmplifyTechHost"
           ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/project/getAllProjectsForAmplify`
           : `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/project/${userId}`;
 
@@ -75,15 +82,14 @@ const Page = () => {
   };
 
   // Add handleFilter function
-const handleFilter = (filters) => {
-  setPage(1);
-  fetchProjects(user?._id, 1, searchTerm, filters);
-};
+  const handleFilter = (filters) => {
+    setPage(1);
+    fetchProjects(user?._id, 1, searchTerm, filters);
+  };
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
       <div className="bg-white h-20 w-full border-b">
-       
         <div className="bg-white py-5 border-b border-solid border-gray-400 w-full">
           <div className="md:px-10 flex justify-between items-center">
             {/* left div */}
@@ -116,17 +122,16 @@ const handleFilter = (filters) => {
       {/* Search Bar */}
       <div className="w-full bg-white">
         <div className="p-5 flex justify-Start items-center ">
-          <Search 
-          onSearch={handleSearch} 
-          placeholder="Search project name" 
-          />
+          <Search onSearch={handleSearch} placeholder="Search project name" />
         </div>
-           <ProjectFilter onFilter={handleFilter} />
+        <ProjectFilter onFilter={handleFilter} />
       </div>
 
       <div className="flex-grow mx-auto w-full">
         {loading ? (
-          <p className="text-center pt-20 font-bold text-5xl text-custom-orange-1">Loading...</p>
+          <p className="text-center pt-20 font-bold text-5xl text-custom-orange-1">
+            Loading...
+          </p>
         ) : projects && projects.length > 0 ? (
           <ProjectTable
             projects={projects}
@@ -139,7 +144,7 @@ const handleFilter = (filters) => {
         ) : (
           <NoSearchResult />
         )}
-        
+
         {/* <div className="flex justify-center mt-4">
           <Button
             onClick={() => handlePageChange(page - 1)}
