@@ -9,6 +9,7 @@ import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import Button from "@/components/shared/button";
 import axios from "axios";
 import ContactFilter from "@/components/singleComponent/ContactFilter";
+import { useQuery } from "@tanstack/react-query";
 
 const page = () => {
   const [selectedStatus, setSelectedStatus] = useState("Active");
@@ -24,8 +25,6 @@ const page = () => {
 
 
   const fetchContacts = async (userId, page = 1,  searchQuery = '', filters = {}) => {
-    setLoading(true);
-    try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/contact`, {
           params:{
@@ -37,23 +36,27 @@ const page = () => {
           }
         }
       );
-      
-      setContacts(response.data.contacts);
+      setContacts(response.data.contacts)
       setTotalPages(response.data.totalPages);
-    } catch (error) {
-      console.error("Error fetching contacts:", error);
-    } finally {
-      setLoading(false);
-    }
+      return response.data.contacts
+    
   };
 
-  useEffect(() => {
-    if (user?._id) {
-      fetchContacts(user._id, page, searchTerm);
-    }
-  }, [user, page, searchTerm]);
+  const { data, isLoading} = useQuery({
+    queryKey: ["contacts", searchTerm,  page, user],
+    queryFn:() => fetchContacts(user._id, page, searchTerm)
+  })
 
-  // Project status related functionality
+  console.log('contacts', contacts)
+  console.log('totalPages', totalPages)
+
+  // useEffect(() => {
+  //   if (user?._id) {
+  //     console.log("Dependencies changed", { user, page, searchTerm });
+  //     fetchContacts(user._id, page, searchTerm);
+  //   }
+  // }, [user, page, searchTerm]);
+
 
   // Debounced search handler
   const handleSearch = (term) => {
@@ -64,10 +67,8 @@ const page = () => {
 
   const handleStatusSelect = (status) => {
     setSelectedStatus(status);
-    // Add your status select logic here
   };
 
-  // Modal  functionality
 
   const handleOpenAddContactModal = () => {
     setShowAddContactModal(true);
@@ -86,6 +87,16 @@ const page = () => {
     setPage(1);
     fetchContacts(user?._id, 1, searchTerm, filters);
   };
+
+  if(isLoading){
+    return(
+      <div className='flex flex-col justify-center items-center min-h-[60vh]'>
+        <p className="text-center  font-bold text-5xl text-custom-orange-1">
+            Loading...
+          </p>
+      </div>
+    )
+  }
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">

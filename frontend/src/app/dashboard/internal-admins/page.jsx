@@ -2,14 +2,12 @@
 import Button from '@/components/shared/button'
 import Dropdown from '@/components/shared/Dropdown'
 import HeadingBlue25px from '@/components/shared/HeadingBlue25px'
-import AddExternalAdminModal from '@/components/singleComponent/AddExternalAdminModal'
 import AddInternalAdminModal from '@/components/singleComponent/AddInternalAdminModal'
-import ExternalAdminsTable from '@/components/singleComponent/ExternalAdminsTable'
 import InternalAdminsTable from '@/components/singleComponent/InternalAdminsTable'
 import Search from '@/components/singleComponent/Search'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { MdAdd } from 'react-icons/md'
 
 const page = () => {
@@ -44,7 +42,7 @@ const page = () => {
   }
   
   const fetchInternalAdmins = async (page=1, searchQuery = '', company='') => {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/find-all`, {
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/getAllAmplifyAdminsByAdminId`, {
       params: {
         page, limit: 10, search: searchQuery, company
       },
@@ -54,13 +52,12 @@ const page = () => {
     return response.data; 
   };
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['internalAdmins', searchTerm, selectedCompany, page],
     queryFn: ()=> fetchInternalAdmins(page, searchTerm, selectedCompany),
   });
 
-  const internalAdmins = data?.data?.result
-
+  const internalAdmins = data
  
     // New function to fetch all companies
     const fetchAllCompanies = async () => {
@@ -86,7 +83,15 @@ const page = () => {
       return acc;
     }, []);
     
-    // Log the unique company names
+    if(isLoading){
+      return(
+        <div className='flex flex-col justify-center items-center min-h-[60vh]'>
+          <p className="text-center  font-bold text-5xl text-custom-orange-1">
+              Loading...
+            </p>
+        </div>
+      )
+    }
     
 
   return (

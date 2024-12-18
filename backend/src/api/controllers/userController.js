@@ -280,6 +280,7 @@ const findAll = async (req, res) => {
     // Build the query object
     const query = {
       isDeleted: false,
+      role: { $in: ["Admin", "Moderator", "Observer"] },
       ...(search && {
         $or: [
           { firstName: { $regex: search, $options: "i" } },
@@ -556,15 +557,7 @@ const userCreateByAdmin = async (req, res) => {
   if (!firstName || !lastName || !email || !companyName || !password) {
     return res.status(400).json({ message: "All fields are required." });
   }
-  // Validate email and password
-  // if (!validateEmail(email)) {
-  //   return res.status(400).json({ message: "Invalid email format." });
-  // }
-  // if (!validatePassword(password)) {
-  //   return res
-  //   .status(400)
-  //   .json({ message: "Password does not meet criteria." });
-  // }
+  
   const userExist = await userModel.findOne({ email }).select("_id");
 
 
