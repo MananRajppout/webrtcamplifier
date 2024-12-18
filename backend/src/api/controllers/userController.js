@@ -146,7 +146,13 @@ const signin = async (req, res) => {
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
 
-    res.cookie("token", token, { httpOnly: false, secure: false });
+    const options = {
+      expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
+      httpOnly: true, // Protects against XSS attacks
+      secure: process.env.MODE === 'production', // Allow over HTTP (not recommended for production)
+    };
+
+    res.cookie("token", token, options);
 
     return res.status(200).json({
       message: "User Successfully logged in. ",

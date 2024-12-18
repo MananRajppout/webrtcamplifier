@@ -121,7 +121,8 @@ const LeftSidebarOpenUi = ({
         meetingId: meetingId,
         senderName: userName,
         receiverName: selectedChat.name,
-
+        senderEmail: myEmailRef.current,
+        receiverEmail: selectedChat.email || (selectedChat.role == 'Moderator' ? 'admin@gmail.com' : 'unkown@gmail.com'),
         message: inputMessage.trim(),
       };
 
@@ -279,7 +280,7 @@ const LeftSidebarOpenUi = ({
     <>
       <div className=" md:pt-0 pt-16">
         {/* break rooms  */}
-        {role === "Moderator" && breakoutRooms.length > 1 &&
+        {role === "Moderator" && breakoutRooms?.length > 1 &&
           <div className=" flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4 mt-16 hidden md:flex">
             {/* top heading */}
 
@@ -627,27 +628,27 @@ const LeftSidebarOpenUi = ({
                 {messages
                   .filter(
                     (message) =>
-                      (message.senderName === selectedChat.name &&
-                        message.receiverName === userName) ||
-                      (message.senderName === userName &&
-                        message.receiverName === selectedChat.name)
+                      (message.senderEmail === (selectedChat.email || (selectedChat.role == "Moderator" ? "admin@gmail.com" : "unkown@gmail.com")) &&
+                        message.receiverEmail === myEmailRef.current) ||
+                      (message.senderEmail === myEmailRef.current &&
+                        message.receiverEmail === (selectedChat.email || (selectedChat.role == "Moderator" ? "admin@gmail.com" : "unkown@gmail.com")))
                   )
                   .map((message, index) => (
                     <div
                       key={index}
-                      className={`flex items-center gap-2 ${message.senderNam === userName
+                      className={`flex items-center gap-2 ${message.senderEmail === myEmailRef.current
                         ? "justify-end"
                         : "justify-start"
                         }`}
                     >
                       <div
-                        className={`flex flex-col ${message.senderName === userName
+                        className={`flex flex-col ${message.senderEmail === myEmailRef.current
                           ? "items-end"
                           : "items-start"
                           }`}
                       >
                         <p
-                          className={`text-[12px] ${message.senderName === userName
+                          className={`text-[12px] ${message.senderEmail === myEmailRef.current
                             ? "text-blue-600"
                             : "text-green-600"
                             }`}

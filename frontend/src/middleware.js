@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from 'next/headers';
 
 const authRoutes = ["/login", "/register"];
 
@@ -6,9 +7,11 @@ const authRoutes = ["/login", "/register"];
 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
-
+  const cookieStore = cookies();
+  const token = cookieStore.get('token');
   // Get token from cookies
-  const token = request.cookies.get('token')?.value;
+  // const token = request.cookies.get('token')?.value;
+  console.log(cookieStore)
 
   if(!token){
     if(authRoutes.includes(pathname)){

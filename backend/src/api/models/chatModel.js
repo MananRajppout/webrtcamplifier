@@ -14,14 +14,22 @@ const ChatMessageSchema = new mongoose.Schema({
     message: {
       type: String,
       required: true
-    }
+    },
+    senderEmail: {
+      type: String,
+      require: true,
+      default: undefined
+    },
+    receiverEmail: {
+      type: String,
+      require: true,
+      default: undefined
+    },
   }, { timestamps: true });
   
   const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
 
   module.exports = ChatMessage;
-
-
 // const chatSchema=mongoose.Schema({
 //     sender_id:{
 //         type:mongoose.Schema.Types.ObjectId,

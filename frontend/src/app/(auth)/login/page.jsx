@@ -38,6 +38,7 @@ const Login = () => {
       
     try {
       setIsLoading(true);
+      
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/signin`,
         {
@@ -51,6 +52,7 @@ const Login = () => {
 
       if(typeof window !== 'undefined'){
         window.localStorage.setItem("user", JSON.stringify(response.data.data));
+        console.log(response.data.data,'ssss')
       }
 
      

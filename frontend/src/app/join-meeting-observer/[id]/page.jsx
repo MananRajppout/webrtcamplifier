@@ -86,67 +86,6 @@ const page = () => {
    
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   try {
-  //     const response1 = await axios.post(
-  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/user-role`,
-  //       {
-  //         name: formData.fullName,
-  //         role: "Observer", 
-  //       }
-  //     );
-  //     // Redirect based on the role and the API response
-  //     localStorage.setItem("RoletoSend", response1.data._id);
-  //     const response = await axios.post(
-  //       `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/join-meeting-observer`,
-  //       {
-  //         name: formData.fullName,
-  //         role: "Observer", // Fixed role as Observer
-  //         passcode: formData.passcode,
-  //         meetingId: meetingId,
-  //       }
-  //     );
-
-  //     if (response?.data?.message === "Observer added to the meeting") {
-  //       const { isStreaming } = response.data;
-  //       localStorage.setItem("RoletoSend", response.data._id);
-  //       // Redirect based on `isStreaming` status
-  //       if (isStreaming) {
-  //         router.push(
-  //           `/meeting/${meetingId}?fullName=${encodeURIComponent(
-  //             formData.fullName
-  //           )}&role=Observer`
-  //         );
-  //       } else {
-  //         router.push(
-  //           `/observer-waiting-room/${meetingId}?fullName=${encodeURIComponent(
-  //             formData.fullName
-  //           )}&role=Observer`
-  //         );
-  //       }
-  //     }
-  //   } catch (error) {
-  //     if (
-  //       error?.response?.data?.message ===
-  //       "Observer already added to the meeting"
-  //     ) {
-  //       router.push(
-  //         `/meeting/${meetingId}?fullName=${encodeURIComponent(
-  //           formData.fullName
-  //         )}&role=Observer`
-  //       );
-  //     } else {
-  //       console.error(
-  //         "Received error from backend",
-  //         error?.response?.data?.message
-  //       );
-  //       setErrorMessage("Error: " + error?.response?.data?.message);
-  //     }
-  //   }
-  // };
-
   return (
     <div className="2xl:min-h-screen">
       <div className="bg-white lg:flex lg:justify-center lg:items-center lg:pl-20 min-h-screen">
