@@ -52,7 +52,7 @@ const page = () => {
     return response.data; 
   };
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['internalAdmins', searchTerm, selectedCompany, page],
     queryFn: ()=> fetchInternalAdmins(page, searchTerm, selectedCompany),
   });
@@ -83,7 +83,15 @@ const page = () => {
       return acc;
     }, []);
     
-    // Log the unique company names
+    if(isLoading){
+      return(
+        <div className='flex flex-col justify-center items-center min-h-[60vh]'>
+          <p className="text-center  font-bold text-5xl text-custom-orange-1">
+              Loading...
+            </p>
+        </div>
+      )
+    }
     
 
   return (

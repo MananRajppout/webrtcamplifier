@@ -51,7 +51,7 @@ const page = () => {
     return response.data; 
   };
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['externalAdmins', searchTerm, selectedCompany, page],
     queryFn: ()=> fetchExternalAdmins(page, searchTerm, selectedCompany),
   });
@@ -73,8 +73,7 @@ const page = () => {
       queryFn: fetchAllCompanies,
     });
   
-    // You can access the companies data here
-    // const companies = companiesData?.data;
+    
     const companies = companiesData?.companies.reduce((acc, cur) => {
      
       if (!acc.includes(cur.name)) {
@@ -83,8 +82,15 @@ const page = () => {
       return acc;
     }, []);
     
-    // Log the unique company names
-    
+  if(isLoading){
+    return(
+      <div className='flex flex-col justify-center items-center min-h-[60vh]'>
+        <p className="text-center  font-bold text-5xl text-custom-orange-1">
+            Loading...
+          </p>
+      </div>
+    )
+  }
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
@@ -95,25 +101,6 @@ const page = () => {
         <div className="flex-grow text-start">
           <p className="text-2xl font-bold text-custom-teal">External Admins</p>
         </div>
-        {/* right div */}
-       {/* <div className="flex justify-end items-center gap-2">
-          <Button
-            children="Add New External Admin"
-            type="submit"
-            variant="default"
-            icon={<MdAdd />}
-            className="rounded-xl text-center shadow-[0px_3px_6px_#2976a54d] hidden md:flex w-[250px] py-3"
-            onClick={handleOpenAddExternalAdminModal}
-          />
-          <Button
-            children="."
-            type="submit"
-            variant="default"
-            icon={<MdAdd />}
-            className="rounded-xl text-center py-3 mr-2 shadow-[0px_3px_6px_#2976a54d] md:hidden block pr-2 pl-3"
-            onClick={handleOpenAddExternalAdminModal}
-          />
-        </div>*/}
       </div>
     </div>
 
