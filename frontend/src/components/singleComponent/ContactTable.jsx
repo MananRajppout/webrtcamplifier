@@ -57,12 +57,7 @@ const ContactTable = ({
     setIsViewContactModalOpen(false);
   };
 
-  // const toggleModal = (event, contact) => {
-  //   const { top, left } = event.currentTarget.getBoundingClientRect();
-  //   setModalPosition({ top, left });
-  //   setCurrentContact(contact);
-  //   setIsModalOpen(!isModalOpen);
-  // };
+  
 
  // Add useEffect to handle click outside
  useEffect(() => {
@@ -74,7 +69,7 @@ const ContactTable = ({
   return () => {
     document.removeEventListener('mousedown', handleClickOutside);
   };
-}, [isModalOpen]); // Only re-run when isModalOpen changes
+}, [isModalOpen]); 
 
 const handleClickOutside = (event) => {
   if (modalRef.current && !modalRef.current.contains(event.target) && 
