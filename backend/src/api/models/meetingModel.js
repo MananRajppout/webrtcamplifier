@@ -51,7 +51,8 @@ const meetingSchema = new Schema({
     type: String,
     enum: ['Draft', 'Active', 'Complete', 'Inactive', 'Closed', 'Join', 'Scheduled'],
     default: 'Draft'
-  }
+  },
+  
 }, { timestamps: true });
 
 const Meeting = mongoose.model('Meeting', meetingSchema);

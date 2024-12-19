@@ -66,7 +66,8 @@ const LeftSidebarOpenUi = ({
   groupMessage,
   handleMediaUpload,
   mediaBox,
-  moveParticipantToWaitingRoom
+  moveParticipantToWaitingRoom,
+  enabledBreakoutRoom
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -335,7 +336,7 @@ const LeftSidebarOpenUi = ({
 
         {/* Whiteboard and local recording */}
         <div className=" lg:pt-10 px-4">
-          {role === "Moderator" && (
+          {role === "Moderator" && enabledBreakoutRoom &&(
             <Button
               children={"Create Breakout Room"}
               variant="meeting"
