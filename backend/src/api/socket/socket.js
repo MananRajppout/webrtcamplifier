@@ -84,9 +84,11 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    socket.on("join-room",({roomid,name,email},callback) => {
+    socket.on("join-room",async ({roomid,name,email,roomname},callback) => {
+     
       socket.join(roomid);
-      // console.log(email,'email')
+      // for group chat
+      socket.join(`${roomid}-${roomname}`);
       usernames[socket.id] = {
         name,
         roomid,
@@ -95,7 +97,8 @@ const setupSocket = (server) => {
       console.log(`User with name ${name} joined meeting ${roomid}`)
       const newname = email + roomid;
       delete userchangeroom[newname];
-      callback(socket.id);
+      const meeting = await Meeting.findById(roomid).populate("moderator");
+      callback(socket.id,meeting);
     })
 
     socket.on("startMeeting", async (data) => {
@@ -239,7 +242,7 @@ const setupSocket = (server) => {
           liveMeeting.moderator,
           ...liveMeeting.participantsList,
         ];
-        io.emit("participantList", {
+        io.to(meetingId).emit("participantList", {
           success: true,
           message: "Participant added to participants list",
           waitingRoom: liveMeeting.waitingRoom,
@@ -537,21 +540,47 @@ const setupSocket = (server) => {
       }
     });
 
-    socket.on("participantSendMessage", async (data) => {
-      const { meetingId, message } = data;
 
-      console.log('participantSendMessage', data)
+    //get all previous chat when medirator joined
+    socket.on("getParticipantsChat", async (data) => {
+      const { meetingId } = data;
       try {
 
         const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
       if (!liveMeeting) return;
 
+        const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
+        const allBreakRoomsNameList = updatedLiveMeeting.breakRooms.map((room) => room.roomName).filter(name => !!name);
+        io.emit("participantChatResponse", {
+          success: true,
+          message: "Message sent to participant",
+          participantMessages: updatedLiveMeeting.participantChat,
+          allBreakRoomsNameList
+        }); 
+      } catch (error) {
+        console.error("Error in participantSendMessage:", error);
+        socket.emit("participantChatResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+    socket.on("participantSendMessage", async (data) => {
+      const { meetingId, message } = data;
+      try {
+
+        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+      if (!liveMeeting) return;
 
         // Create a new ChatMessage document
         const newChatMessage = new ChatMessage({
           senderName: message.senderName,
           receiverName: message.receiverName,
           message: message.message,
+          senderEmail: message.senderEmail,
+          receiverEmail: message.receiverEmail
         });
 
         // Save the new chat message
@@ -599,8 +628,17 @@ const setupSocket = (server) => {
         userchangeroom[name] = true;
       }
 
-      const newRoom = {roomName: breakroomname}
-      liveMeeting.breakRooms = [...liveMeeting.breakRooms,newRoom];
+
+      const newRoom = [];
+      const isMainRoomExist = liveMeeting.breakRooms.some(room => room.roomName == 'main');
+      console.log('main room not exist',isMainRoomExist);
+      if(!isMainRoomExist){
+        newRoom.push({roomName: "main"});
+      }
+
+      newRoom.push({roomName: breakroomname});
+      
+      liveMeeting.breakRooms = [...liveMeeting.breakRooms,...newRoom];
       liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
 
         const participant = participants.find(part => part.email == p.email);
@@ -617,7 +655,15 @@ const setupSocket = (server) => {
         ...liveMeeting.participantsList,
       ];
 
-      callback({fullParticipantList,breakroomname},null);
+
+      for (let index = 0; index < participants.length; index++) {
+        const element = participants[index];
+        const name = element.email + meetingId;
+        userchangeroom[name] = true;
+      }
+
+      const allBreakRoomsNameList = liveMeeting.breakRooms.map((room) => room.roomName).filter(name => !!name);
+      callback({fullParticipantList,breakroomname,breakoutsRooms:allBreakRoomsNameList},null);
       socket.to(meetingId).emit('change-room',{participantList:participants,roomName: breakroomname});
     });
 
@@ -697,21 +743,23 @@ const setupSocket = (server) => {
       callback({fullParticipantList},null);
     });
 
-    socket.on('grounp:send-message',({meetingId,email,content,name}) => {
-      console.log('new message',name,email,content,meetingId);
+    socket.on('grounp:send-message',({meetingId,email,content,name,roomname}) => {
+      const id = `${meetingId}-${roomname}`;
       const newMessage = {
-        meetingId,
+        meetingId: id,
         senderEmail: email,
         content,
         name,
         timestamp: Date.now()
       }
       addMessageToBatch(newMessage);
-      socket.to(meetingId).emit('group:receive-message',newMessage);
+      socket.to(id).emit('group:receive-message',newMessage);
     });
 
-    socket.on('grounp:get-message', async ({meetingId},callback) => {
-      const messages = await getGroupMessage(meetingId);
+    socket.on('grounp:get-message', async ({meetingId,roomname},callback) => {
+      const id = `${meetingId}-${roomname}`;
+      const messages = await getGroupMessage(id);
+     
       callback(messages);
     })
 
@@ -727,6 +775,7 @@ const setupSocket = (server) => {
       const userDetails = usernames[socket.id] || {};
       const newname = userDetails?.email + userDetails?.roomid;
       const isMoveByModerator = userchangeroom[newname];
+      console.log(isMoveByModerator)
       if(isMoveByModerator){
         return
       }
@@ -737,6 +786,20 @@ const setupSocket = (server) => {
 
       liveMeeting.participantsList = liveMeeting.participantsList.filter(p => p.email != userDetails?.email);
       await liveMeeting.save();
+
+      const fullParticipantList = [
+        liveMeeting.moderator,
+        ...liveMeeting.participantsList,
+      ];
+
+      io.to(liveMeeting.meetingId.toString()).emit("participantList", {
+        success: true,
+        message: "Participant added to participants list",
+        waitingRoom: liveMeeting.waitingRoom,
+        participantList: fullParticipantList,
+      });
+
+
     });
   });
 

@@ -144,26 +144,6 @@ const Page = () => {
         ) : (
           <NoSearchResult />
         )}
-
-        {/* <div className="flex justify-center mt-4">
-          <Button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page <= 1}
-            className="px-4 py-2 bg-gray-300 rounded-md"
-          >
-            Previous
-          </Button>
-          <span className="mx-4">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page >= totalPages}
-            className="px-4 py-2 bg-gray-300 rounded-md"
-          >
-            Next
-          </Button>
-        </div> */}
       </div>
     </div>
   );

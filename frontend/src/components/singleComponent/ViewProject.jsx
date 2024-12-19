@@ -580,58 +580,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           />
 
           {/* tab content */}
-          {/* <TabContent
-            activeTab={activeTab}
-            handleMeetingSearch={handleMeetingSearch}
-            handleBulkAddDropdownToggle={handleBulkAddDropdownToggle}
-            isBulkAddDropdownOpen={isBulkAddDropdownOpen}
-            handleDownloadFormat={handleDownloadFormat}
-            handleFileUpload={handleFileUpload}
-            handleAddMeetingModal={handleAddMeetingModal}
-            meetings={meetings}
-            fetchMeetings={fetchMeetings}
-            project={project}
-            meetingPage={meetingPage}
-            totalMeetingPages={totalMeetingPages}
-            handleMeetingPageChange={handleMeetingPageChange}
-            handleBulkUpdateModal={handleBulkUpdateModal}
-            handleOpenAddContactModal={handleOpenAddContactModal}
-            localProjectState={localProjectState}
-            setLocalProjectState={setLocalProjectState}
-            handleOpenPollDropdown={handleOpenPollDropdown}
-            isPollDropdownOpen={isPollDropdownOpen}
-            setIsSingleChoiceModalOpen={setIsSingleChoiceModalOpen}
-            setIsMultipleChoiceModalOpen={setIsMultipleChoiceModalOpen}
-            setIsMatchingModalOpen={setIsMatchingModalOpen}
-            setIsRankOrderModalOpen={setIsRankOrderModalOpen}
-            setIsShortAnswerModalOpen={setIsShortAnswerModalOpen}
-            setIsLongAnswerModalOpen={setIsLongAnswerModalOpen}
-            setIsBlankModalOpen={setIsBlankModalOpen}
-            setIsRatingModalOpen={setIsRatingModalOpen}
-            polls={polls}
-            setPolls={setPolls}
-            pollPage={pollPage}
-            totalPollPages={totalPollPages}
-            handlePollPageChange={handlePollPageChange}
-            handleOpenAddRepositoryModal={handleOpenAddRepositoryModal}
-            selectedRepositoryMeetingTab={selectedRepositoryMeetingTab}
-            setSelectedRepositoryMeetingTab={setSelectedRepositoryMeetingTab}
-            setSelectedDocAndMediaTab={setSelectedDocAndMediaTab}
-            setShowDocAndMediaTab={setShowDocAndMediaTab}
-            handleRepositoryMeetingTabChange={handleRepositoryMeetingTabChange}
-            showDocAndMediaTab={showDocAndMediaTab}
-            handleDocAndMediaTabChange={handleDocAndMediaTabChange}
-            selectedDocAndMediaTab={selectedDocAndMediaTab}
-            repositories={repositories}
-            fetchRepositories={fetchRepositories}
-            allRepoPage={allRepoPage}
-            totalAllRepoPages={totalAllRepoPages}
-            meetingRepoPage={meetingRepoPage}
-            totalMeetingRepoPages={totalMeetingRepoPages}
-            handleAllRepoPageChange={handleAllRepoPageChange}
-            handleMeetingRepoPageChange={handleMeetingRepoPageChange}
-            fetchRepositoriesByMeetingId={fetchRepositoriesByMeetingId}
-          /> */}
+          
           <TabContent
   activeTab={activeTab}
   searchHandlers={{

@@ -1,7 +1,7 @@
 import { BsChatSquareFill } from "react-icons/bs";
 import HeadingLg from "../shared/HeadingLg";
 import Button from "../shared/button";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IoClose, IoSend } from "react-icons/io5";
 import { useParams, useSearchParams } from "next/navigation";
 import { MdInsertEmoticon } from "react-icons/md";
@@ -14,6 +14,9 @@ const ParticipantLeftSidebarOpenUI = ({ participants,messages,sendMessagePartici
   const searchParams = useSearchParams();
   const userName = searchParams.get('fullName');
   const meetingId = params.id;
+   const myEmailRef = useRef(null);
+   
+  const userrole = searchParams.get('role');
 
 
   const handleSendMessage = () => {
@@ -22,6 +25,8 @@ const ParticipantLeftSidebarOpenUI = ({ participants,messages,sendMessagePartici
         meetingId: meetingId,
         senderName: userName,
         receiverName: selectedChat.name,
+        senderEmail: myEmailRef.current,
+        receiverEmail: selectedChat.email || (selectedChat.role == 'Moderator' ? 'admin@gmail.com' : 'unkown@gmail.com'),
         message: inputMessage.trim(),
       };
 
@@ -29,6 +34,15 @@ const ParticipantLeftSidebarOpenUI = ({ participants,messages,sendMessagePartici
       setInputMessage("");
     }
   };
+
+
+
+  useEffect(() => {
+      if (typeof window != 'undefined') {
+        const email = window.localStorage.getItem('email');
+        myEmailRef.current = userrole == 'Moderator' ? 'admin@gmail.com' : email;
+      }
+  }, [])
 
   return (
     <>
@@ -85,27 +99,27 @@ const ParticipantLeftSidebarOpenUI = ({ participants,messages,sendMessagePartici
                 {messages
                   .filter(
                     (message) =>
-                      (message.senderName === selectedChat.name &&
-                        message.receiverName === userName) ||
-                      (message.senderName === userName &&
-                        message.receiverName === selectedChat.name)
+                      (message.senderEmail === (selectedChat.email || (selectedChat.role == "Moderator" ? "admin@gmail.com" : "unkown@gmail.com")) &&
+                        message.receiverEmail === myEmailRef.current) ||
+                      (message.senderEmail === myEmailRef.current &&
+                        message.receiverEmail === (selectedChat.email || (selectedChat.role == "Moderator" ? "admin@gmail.com" : "unkown@gmail.com")))
                   )
                   .map((message, index) => (
                     <div
                       key={index}
-                      className={`flex items-center gap-2 ${message.senderName === userName
+                      className={`flex items-center gap-2 ${message.senderEmail === myEmailRef.current
                         ? "justify-start"
                         : "justify-end"
                         }`}
                     >
                       <div
-                        className={`flex flex-col ${message.senderName === userName
+                        className={`flex flex-col ${message.senderEmail === myEmailRef.current
                           ? "items-start"
                           : "items-end"
                           }`}
                       >
                         <p
-                          className={`text-[12px] ${message.senderName === userName
+                          className={`text-[12px] ${message.senderEmail === myEmailRef.current
                             ? "text-blue-600"
                             : "text-green-600"
                             }`}
