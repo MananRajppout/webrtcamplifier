@@ -47,6 +47,7 @@ const page = () => {
       role: "Observer",
       passcode: formData.passcode,
       meetingId: meetingId,
+      
     });
 
     socket.on("observerJoinMeetingResponse", (response) => {
