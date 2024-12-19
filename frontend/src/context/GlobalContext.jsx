@@ -1,5 +1,7 @@
 'use client'
 
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react'
 import { io } from 'socket.io-client';
@@ -10,6 +12,7 @@ export function GlobalContextProvider({ children }) {
   const [user, setUser] = useState(null);
   const [socket, setSocket] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter()
 
   useEffect(() => {
@@ -33,12 +36,28 @@ export function GlobalContextProvider({ children }) {
     };
   }, []);
 
-  const handleLogout = () => {
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    localStorage.clear();
-    setUser(null)
-    router.push('/login')
-    // onClose();
+ 
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+    await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/logout`,
+        {},
+        { withCredentials: true }
+      );
+      localStorage.clear();
+      setUser(null);
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear local state even if server request fails
+      localStorage.clear();
+      setUser(null);
+      router.push('/login');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   useEffect(() => {

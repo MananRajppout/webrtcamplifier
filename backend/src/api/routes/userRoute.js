@@ -38,4 +38,6 @@ module.exports = function (app) {
   app.delete("/api/users/delete-by-admin/:id", controller.deleteByAdmin);
   app.post("/api/users/createAmplifyAdmin", controller.createAmplifyAdmin);
   app.get("/api/users/getAllAmplifyAdminsByAdminId", controller.getAllAmplifyAdminsByAdminId);
+  app.post("/api/users/logout", controller.logout);
+
 };
