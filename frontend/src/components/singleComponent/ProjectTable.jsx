@@ -299,6 +299,7 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
           userId={user._id}
           project={selectedProject}
           onClose={() => setIsAssignTagModalOpen(false)}
+          fetchProjects={fetchProjects}
         />
       )}
 

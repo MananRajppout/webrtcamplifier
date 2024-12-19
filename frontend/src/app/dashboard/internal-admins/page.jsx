@@ -57,7 +57,8 @@ const page = () => {
     queryFn: ()=> fetchInternalAdmins(page, searchTerm, selectedCompany),
   });
 
-  const internalAdmins = data
+
+  const internalAdmins = data?.data?.result
  
     // New function to fetch all companies
     const fetchAllCompanies = async () => {

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Button from "../shared/button";
 import CreateTag from "./CreateTag";
 
-const AssignTagModal = ({ userId, project, onClose }) => {
+const AssignTagModal = ({ userId, project, onClose, fetchProjects }) => {
   const [tags, setTags] = useState([]);
   const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
@@ -47,6 +47,7 @@ const AssignTagModal = ({ userId, project, onClose }) => {
 
       if (response.ok) {
         const data = await response.json();
+        fetchProjects(userId)
         onClose();
       } else {
         console.error('Failed to assign tags');

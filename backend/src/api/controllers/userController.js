@@ -745,8 +745,42 @@ const createAmplifyAdmin = async (req, res) => {
 const getAllAmplifyAdminsByAdminId = async (req, res) => {
   try {
     const decoded = decodeToken(req.cookies.token);
-    const data = await Contact.find({ createdBy: decoded?.id });
-    return res.status(200).json(data);
+
+    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page);
+    const search = req.query.search || "";
+    const company = req.query.company || "";
+
+    // Build the query object
+    const query = {
+      
+      createdBy: decoded?.id,
+      ...(search && {
+        $or: [
+          { firstName: { $regex: search, $options: "i" } },
+          { lastName: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { role: { $regex: search, $options: "i" } },
+        ],
+      }),
+      ...(company && { company: company }),
+    };
+    const result = await Contact
+      .find(query)
+      .limit(limit)
+      .skip(limit * (page - 1));
+
+    const totalRecords = await Contact.countDocuments({  createdBy: decoded?.id });
+
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    res.status(200).json({
+      message: "User info successfully fetched",
+      data: { result, totalRecords, totalPages },
+    });
+
+    // const data = await Contact.find({ createdBy: decoded?.id });
+    // return res.status(200).json(data);
   } catch (error) {
     console.error("error in getAllAmplifyAdminsByAdminId", error);
     return res.status(500).json({ message: error.message });
