@@ -40,7 +40,8 @@ const LeftSidebar = ({
   groupMessage,
   handleMediaUpload,
   mediaBox,
-  moveParticipantToWaitingRoom
+  moveParticipantToWaitingRoom,
+  enabledBreakoutRoom
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -251,6 +252,7 @@ const LeftSidebar = ({
               handleMediaUpload={handleMediaUpload}
               mediaBox={mediaBox}
               moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
+              enabledBreakoutRoom={enabledBreakoutRoom}
             />
           ) : (
             <LeftSidebarCloseUi

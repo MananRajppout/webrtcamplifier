@@ -53,7 +53,8 @@ const page = () => {
   const [messages, setMessages] = useState([]);
   const [groupMessage, setGroupMessage] = useState([]);
   const [mediaBox, setMediaBox] = useState([]);
-  
+  const [enabledBreakoutRoom, setEnabledBreakoutRoom] = useState(true);
+
 
   //get user email
   useEffect(() => {
@@ -82,7 +83,10 @@ const page = () => {
       { roomid: params.id, name: fullName, email,roomname },
       (socketId,meeting) => {
         socketIdRef.current = socketId;
-        console.log(meeting,'meetingdetails')
+        if(meeting){
+          setEnabledBreakoutRoom(meeting.enableBreakoutRoom);
+        }
+       
       }
     );
     socket.emit("grounp:get-message", { meetingId: params.id,roomname }, (messages) => {
@@ -293,7 +297,7 @@ const page = () => {
 
 // ? Listing participant chat response
   useSocketListen("participantChatResponse", (data) => {
-    console.log('participantChatResponse', data)
+   
     if (data.success) {
       setParticipantMessages(data.participantMessages);
       if(data.allBreakRoomsNameList){
@@ -303,8 +307,6 @@ const page = () => {
       if(selectedRoom == "main"){
         if (roomname && type == "breackout") {
           setSelectedRoom(roomname);
-        } else {
-          setSelectedRoom(response.breakoutRooms[0]);
         }
       }
     }
@@ -559,6 +561,7 @@ const page = () => {
                 groupMessage={groupMessage}
                 handleMediaUpload={handleMediaUpload}
                 mediaBox={mediaBox}
+                enabledBreakoutRoom={enabledBreakoutRoom}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
@@ -617,6 +620,7 @@ const page = () => {
                 handleMediaUpload={handleMediaUpload}
                 mediaBox={mediaBox}
                 moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
+                enabledBreakoutRoom={enabledBreakoutRoom}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -702,6 +706,7 @@ const page = () => {
                 groupMessage={groupMessage}
                 handleMediaUpload={handleMediaUpload}
                 mediaBox={mediaBox}
+                enabledBreakoutRoom={enabledBreakoutRoom}
               />
             </div>
           </>
