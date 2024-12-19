@@ -671,12 +671,14 @@ const deleteByAdmin = async (req, res) => {
   const token = req.cookies.token;
 
   const decoded = decodeToken(token);
+  console.log("decoded", decoded, "id", id)
 
   if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
   let exist = await userModel.findById(id);
+  console.log('exist', exist)
   if (decoded?.role === "AmplifyAdmin") {
     exist = await userModel.findOne({ _id: id, createdById: decoded?.id });
   }
@@ -758,8 +760,8 @@ const getAllAmplifyAdminsByAdminId = async (req, res) => {
 
     // Build the query object
     const query = {
-      
-      createdBy: decoded?.id,
+      isDeleted: false,
+      createdBy: decoded?.email,
       ...(search && {
         $or: [
           { firstName: { $regex: search, $options: "i" } },
@@ -770,12 +772,13 @@ const getAllAmplifyAdminsByAdminId = async (req, res) => {
       }),
       ...(company && { company: company }),
     };
-    const result = await Contact
+    const result = await userModel
       .find(query)
       .limit(limit)
       .skip(limit * (page - 1));
 
-    const totalRecords = await Contact.countDocuments({  createdBy: decoded?.id });
+
+    const totalRecords = await userModel.countDocuments({ isDeleted: false, createdBy: decoded?.email});
 
     const totalPages = Math.ceil(totalRecords / limit);
 

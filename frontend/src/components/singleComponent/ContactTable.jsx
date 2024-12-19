@@ -11,6 +11,7 @@ import { IoTrashBin } from "react-icons/io5";
 import Button from "../shared/button";
 import Pagination from "../shared/Pagination";
 import toast from "react-hot-toast";
+import ConfirmationModal from "../shared/ConfirmationModal";
 
 const ContactTable = ({
   contacts,
@@ -29,6 +30,8 @@ const ContactTable = ({
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [isViewContactModalOpen, setIsViewContactModalOpen] = useState(false);
   const [isEditContactModalOpen, setIsEditContactModalOpen] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState(null);
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
  
@@ -97,18 +100,11 @@ const toggleModal = (event, contact) => {
   setIsModalOpen(!isModalOpen);
 };
 
-
-
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  // const handleClickOutside = (event) => {
-  //   if (modalRef.current && !modalRef.current.contains(event.target)) {
-  //     closeModal();
-  //   }
-  // };
-
+ 
   const handleDeleteContact = async (contactId) => {
     try {
       const response = await fetch(
@@ -129,7 +125,17 @@ const toggleModal = (event, contact) => {
     } catch (error) {
       console.error("Error deleting moderator:", error);
       toast.error("Error deleting moderator.");
+    } finally {
+      setShowDeleteConfirmation(false);
+      setContactToDelete(null);
     }
+  };
+
+  // Add new function to initiate delete
+  const initiateDelete = (contact) => {
+    setContactToDelete(contact);
+    setShowDeleteConfirmation(true);
+    closeModal();
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -219,7 +225,7 @@ const toggleModal = (event, contact) => {
                       </button>
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleDeleteContact(contact._id)}
+                        onClick={() => initiateDelete(contact)}
                       >
                         <IoTrashBin className="mr-2" /> Delete
                       </button>
@@ -252,6 +258,16 @@ const toggleModal = (event, contact) => {
           onClose={handleEditContactCloseModal}
           contactToEdit={currentContact}
           isEditing={isEditing}
+        />
+      )}
+
+      {/* Add the confirmation modal */}
+      {showDeleteConfirmation && (
+        <ConfirmationModal
+          heading="Delete Contact"
+          text="Are you sure you want to delete this contact? This action cannot be undone."
+          onCancel={() => setShowDeleteConfirmation(false)}
+          onYes={() => handleDeleteContact(contactToDelete._id)}
         />
       )}
     </div>

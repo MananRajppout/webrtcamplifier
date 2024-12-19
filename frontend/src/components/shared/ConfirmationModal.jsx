@@ -7,8 +7,7 @@ const ConfirmationModal = ({onCancel, onYes, heading, text}) => {
     <div className="bg-white p-8 rounded-2xl w-[420px]">
       <h2 className="text-2xl font-semibold mb-1 text-custom-dark-blue-2">{heading}</h2>
       <p className='text-custom-gray-6 text-[11px] mb-10 '>{text}</p>
-      {/* <h2 className="text-2xl font-semibold mb-1 text-custom-dark-blue-2">Delete Account</h2>
-      <p className='text-custom-gray-6 text-[11px] mb-10 '>Are you sure you want to delete your account? All your data will be permanently deleted. This action cannot be undone.</p> */}
+      
       
       <div className='flex justify-end items-center gap-4'>
         <Button
