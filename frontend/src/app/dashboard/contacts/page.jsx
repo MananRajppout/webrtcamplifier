@@ -88,15 +88,7 @@ const page = () => {
     fetchContacts(user?._id, 1, searchTerm, filters);
   };
 
-  if(isLoading){
-    return(
-      <div className='flex flex-col justify-center items-center min-h-[60vh]'>
-        <p className="text-center  font-bold text-5xl text-custom-orange-1">
-            Loading...
-          </p>
-      </div>
-    )
-  }
+ 
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
@@ -141,7 +133,13 @@ const page = () => {
 
       {/* Body */}
       <div className="flex-grow w-full">
-        {contacts?.length > 0 ? (
+        { isLoading ? ( 
+           <div className='flex flex-col justify-center items-center min-h-[60vh]'>
+           <p className="text-center  font-bold text-5xl text-custom-orange-1">
+               Loading...
+             </p>
+         </div>
+        ) :  contacts?.length > 0 ? (
           <ContactTable
             contacts={contacts}
             setContacts={setContacts}
