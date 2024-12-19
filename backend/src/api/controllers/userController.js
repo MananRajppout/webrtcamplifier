@@ -795,6 +795,28 @@ const getAllAmplifyAdminsByAdminId = async (req, res) => {
   }
 }
 
+
+const logout = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(400).json({ message: "No active session found" });
+    }
+    // Clear the token from the user document in database
+    const decoded = decodeToken(token);
+    if (decoded?.id) {
+      await userModel.findByIdAndUpdate(decoded.id, { token: null });
+    }
+
+    // Clear the cookie
+    res.clearCookie("token");
+
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   signup,
   signin,
@@ -813,4 +835,5 @@ module.exports = {
   deleteByAdmin,
   createAmplifyAdmin,
   getAllAmplifyAdminsByAdminId,
+  logout
 };
