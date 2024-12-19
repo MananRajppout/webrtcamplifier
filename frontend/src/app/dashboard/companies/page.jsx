@@ -47,13 +47,23 @@ const page = () => {
   };
 
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['companies', searchTerm,  page],
     queryFn: ()=> fetchCompanies(page, searchTerm),
   });
 
   const companies = data?.companies
 
+
+  if(isLoading){
+    return(
+      <div className='flex flex-col justify-center items-center min-h-[60vh]'>
+        <p className="text-center  font-bold text-5xl text-custom-orange-1">
+            Loading...
+          </p>
+      </div>
+    )
+  }
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
