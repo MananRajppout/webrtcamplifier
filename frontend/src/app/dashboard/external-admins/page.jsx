@@ -82,15 +82,7 @@ const page = () => {
       return acc;
     }, []);
     
-  if(isLoading){
-    return(
-      <div className='flex flex-col justify-center items-center min-h-[60vh]'>
-        <p className="text-center  font-bold text-5xl text-custom-orange-1">
-            Loading...
-          </p>
-      </div>
-    )
-  }
+ 
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
@@ -131,23 +123,27 @@ const page = () => {
 
     {/* Body */}
     <div className="flex-grow w-full">
-      {externalAdmins?.length > 0 ? (
-        <ExternalAdminsTable
-        externalAdmins={externalAdmins}
-        page={page}
-        setPage={setPage}
-        totalPages={totalPages}
-        handlePageChange={handlePageChange}
-        currentAdmin={currentAdmin} 
-        setCurrentAdmin={setCurrentAdmin} 
-        companies={companies}
-        />
-      ) : (
-        <div className="flex-grow w-full h-full flex justify-center items-center pt-20">
-          <HeadingBlue25px>You have no external admins.</HeadingBlue25px>
-        </div>
-      )}
+  {isLoading ? (
+    <div className="flex-grow w-full h-full flex justify-center items-center pt-20">
+      <HeadingBlue25px>Loading...</HeadingBlue25px>
     </div>
+  ) : externalAdmins?.length > 0 ? (
+    <ExternalAdminsTable
+      externalAdmins={externalAdmins}
+      page={page}
+      setPage={setPage}
+      totalPages={totalPages}
+      handlePageChange={handlePageChange}
+      currentAdmin={currentAdmin} 
+      setCurrentAdmin={setCurrentAdmin} 
+      companies={companies}
+    />
+  ) : (
+    <div className="flex-grow w-full h-full flex justify-center items-center pt-20">
+      <HeadingBlue25px>You have no external admins.</HeadingBlue25px>
+    </div>
+  )}
+</div>
     {showAddExternalAdminModal && (
       <AddExternalAdminModal
         onClose={handleModalClose}

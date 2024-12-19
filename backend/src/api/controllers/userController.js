@@ -276,6 +276,7 @@ const findAll = async (req, res) => {
     const page = parseInt(req.query.page);
     const search = req.query.search || "";
     const company = req.query.company || "";
+    console.log('page',page)
 
     // Build the query object
     const query = {
@@ -296,9 +297,13 @@ const findAll = async (req, res) => {
       .limit(limit)
       .skip(limit * (page - 1));
 
-    const totalRecords = await userModel.countDocuments({ isDeleted: false });
+    const totalRecords = await userModel.countDocuments({ isDeleted: false, role: { $in: ["Admin", "Moderator", "Observer"] }, });
+    console.log('results', result.length)
 
     const totalPages = Math.ceil(totalRecords / limit);
+    // console.log('result', result)
+    console.log('totalRecords', totalRecords)
+    console.log('totalPages', totalPages)
 
     res.status(200).json({
       message: "User info successfully fetched",
