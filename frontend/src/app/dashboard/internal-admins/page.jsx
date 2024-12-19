@@ -84,15 +84,7 @@ const page = () => {
       return acc;
     }, []);
     
-    if(isLoading){
-      return(
-        <div className='flex flex-col justify-center items-center min-h-[60vh]'>
-          <p className="text-center  font-bold text-5xl text-custom-orange-1">
-              Loading...
-            </p>
-        </div>
-      )
-    }
+   
     
 
   return (
@@ -153,7 +145,13 @@ const page = () => {
 
     {/* Body */}
     <div className="flex-grow w-full">
-      {internalAdmins?.length > 0 ? (
+      {isLoading ? (
+         <div className='flex flex-col justify-center items-center min-h-[60vh]'>
+         <p className="text-center  font-bold text-5xl text-custom-orange-1">
+             Loading...
+           </p>
+       </div>
+      ) : internalAdmins?.length > 0 ? (
         <InternalAdminsTable
         internalAdmins={internalAdmins}
         page={page}
