@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const AddInternalAdminModal = ({ onClose }) => {
   const { user } = useGlobalContext();
@@ -19,6 +20,10 @@ const AddInternalAdminModal = ({ onClose }) => {
     userRole === "SuperAdmin" ? "AmplifyAdmin" : "AmplifyModerator"
   );
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+
   const queryClient = useQueryClient();
 
   const roles =
@@ -52,9 +57,9 @@ const AddInternalAdminModal = ({ onClose }) => {
       toast.error("Failed to add admin. Please try again.");
     },
   });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     // Validation
     if (!email.includes("@")) {
       setError("Invalid email address.");
@@ -149,17 +154,35 @@ const AddInternalAdminModal = ({ onClose }) => {
           <div className="flex justify-center items-center gap-3">
             <InputField
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              icon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="focus:outline-none"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              }
             />
             <InputField
               label="Confirm Password"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              icon={
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="focus:outline-none"
+                >
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              }
             />
           </div>
 
