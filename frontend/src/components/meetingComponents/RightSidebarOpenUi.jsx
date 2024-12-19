@@ -208,7 +208,7 @@ const RightSidebarOpenUi = ({
       <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4">
         {/* tabs */}
         <div className="flex justify-center items-center gap-2 pb-2 ">
-          <Button
+          {/* <Button
             children="Participants"
             variant="default"
             type="submit"
@@ -217,7 +217,7 @@ const RightSidebarOpenUi = ({
               : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
               } `}
             onClick={() => handleTabClick("observersList")}
-          />
+          /> */}
           <div className="w-full relative">
             <Button
               children="Observers"
@@ -231,7 +231,7 @@ const RightSidebarOpenUi = ({
             />
             <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
           </div>
-          {
+          {/* {
             role == "Observer" &&
             <div className="w-full relative">
               <Button
@@ -246,7 +246,7 @@ const RightSidebarOpenUi = ({
               />
               <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
             </div>
-          }
+          } */}
 
         </div>
 

@@ -666,6 +666,45 @@ const page = () => {
           </>
         ) : userRole === "Observer" && isMeetingOngoing ? (
           <>
+            <div className="h-full">
+              <LeftSidebar
+                users={participants}
+                setUsers={setUsers}
+                role={userRole}
+                isWhiteBoardOpen={isWhiteBoardOpen}
+                setIsWhiteBoardOpen={setIsWhiteBoardOpen}
+                isRecordingOpen={isRecordingOpen}
+                setIsRecordingOpen={setIsRecordingOpen}
+                isBreakoutRoom={isBreakoutRoom}
+                setIsBreakoutRoom={setIsBreakoutRoom}
+                breakoutRooms={breakoutRooms}
+                setBreakoutRooms={setBreakoutRooms}
+                handleBreakoutRoomChange={handleBreakoutRoomChange}
+                selectedRoom={selectedRoom}
+                setSelectedRoom={setSelectedRoom}
+                waitingRoom={waitingRoom}
+                acceptParticipant={acceptParticipant}
+                messages={participantMessages}
+                sendMessageParticipant={sendMessageParticipant}
+                userName={fullName}
+                meetingId={params.id}
+                removeParticipant={removeParticipant}
+                isStreaming={isStreaming}
+                setStartStreaming={handleToggleStreaming}
+                removeFromWaitingRoom={removeFromWaitingRoom}
+                admitAllFromWaitingRoom={admitAllFromWaitingRoom}
+                handleBreakoutRoom={handleBreakoutRoom}
+                handleMoveParticipant={handleMoveParticipant}
+                handleUserRename={handleUserRename}
+                sendGroupMessage={sendGroupMessage}
+                groupMessage={groupMessage}
+                handleMediaUpload={handleMediaUpload}
+                mediaBox={mediaBox}
+                moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
+                enabledBreakoutRoom={enabledBreakoutRoom}
+              />
+              
+            </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
               <MeetingView
                 role={userRole}
