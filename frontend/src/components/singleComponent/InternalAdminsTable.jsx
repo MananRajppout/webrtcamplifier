@@ -14,6 +14,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import ViewInternalAdminModal from "./ViewInternalAdminModal copy";
 import EditInternalAdminModal from "./EditInternalAdminModal";
+import ConfirmationModal from "../shared/ConfirmationModal";
 
 const InternalAdminsTable = ({
   internalAdmins,
@@ -34,6 +35,9 @@ const InternalAdminsTable = ({
   const [isEditInternalAdminModalOpen, setIsEditInternalAdminModalOpen] =
     useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState(null);
+
   const queryClient = useQueryClient();
 
   const modalRef = useRef();
@@ -109,6 +113,18 @@ const InternalAdminsTable = ({
     },
   });
 
+  const handleDeleteClick = (admin) => {
+    setAdminToDelete(admin);
+    setShowDeleteConfirmation(true);
+    closeModal();
+  };
+
+  const handleConfirmDelete = () => {
+    handleDeleteAdmin.mutate(adminToDelete._id);
+    setShowDeleteConfirmation(false);
+    setAdminToDelete(null);
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
@@ -174,7 +190,7 @@ const InternalAdminsTable = ({
                       </button>
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleDeleteAdmin.mutate(admin._id)} // Call the mutation
+                        onClick={() =>handleDeleteClick(admin)}
                       >
                         <IoTrashBin className="mr-2" /> Delete
                       </button>
@@ -209,6 +225,16 @@ const InternalAdminsTable = ({
           companies={companies}
         />
       )}
+
+{showDeleteConfirmation && (
+        <ConfirmationModal
+          heading="Delete Admin"
+          text={`Are you sure you want to delete ${adminToDelete?.firstName} ${adminToDelete?.lastName}?`}
+          onCancel={() => setShowDeleteConfirmation(false)}
+          onYes={handleConfirmDelete}
+        />
+      )}
+
     </div>
   );
 };
