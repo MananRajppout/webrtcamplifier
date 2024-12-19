@@ -28,7 +28,6 @@ const page = () => {
   
   const handlePageChange = (newPage) => {
     setPage(newPage);
-    // fetchExternalAdmins(newPage, searchTerm)
   };
   const handleAddCompanyModalClose = () => {
     setShowAddCompanyModal(false)

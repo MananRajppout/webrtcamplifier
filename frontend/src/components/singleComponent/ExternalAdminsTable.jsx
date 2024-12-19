@@ -1,12 +1,10 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import TableHead from "../shared/TableHead";
 import TableData from "../shared/TableData";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaUser } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
-import ViewContactModal from "./ViewContactModal";
-import AddContactModal from "./AddContactModal";
 import { IoTrashBin } from "react-icons/io5";
 import Button from "../shared/button";
 import Pagination from "../shared/Pagination";
@@ -51,22 +49,50 @@ const ExternalAdminsTable = ({
   const handleViewAdminCloseModal = () => {
   };
 
-  const toggleModal = (event, admin) => {
-    const { top, left } = event.currentTarget.getBoundingClientRect();
-    setModalPosition({ top, left });
-    setCurrentAdmin(admin);
-    setIsModalOpen(!isModalOpen);
+   // Add useEffect to handle click outside
+ useEffect(() => {
+  if (isModalOpen) {
+    document.addEventListener('mousedown', handleClickOutside);
+  }
+  
+  // Cleanup function to remove event listener
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
   };
+}, [isModalOpen]); 
+
+const handleClickOutside = (event) => {
+  if (modalRef.current && !modalRef.current.contains(event.target) && 
+      !event.target.closest('button')) {
+    closeModal();
+  }
+};
+
+const toggleModal = (event, admin) => {
+  const { top, left, bottom } = event.currentTarget.getBoundingClientRect();
+  const windowHeight = window.innerHeight;
+  
+  // Check if there's enough space below
+  const spaceBelow = windowHeight - bottom;
+  const modalHeight = 150; // Approximate height of modal
+  
+  // If space below is less than modal height, position above the button
+  const topPosition = spaceBelow < modalHeight ? 
+    'auto' : top;
+  const bottomPosition = spaceBelow < modalHeight ?
+    `${windowHeight - top}px` : 'auto';
+
+  setModalPosition({ top: topPosition, left, bottom: bottomPosition });
+  setCurrentAdmin(admin)
+  setIsModalOpen(!isModalOpen);
+};
+
 
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  const handleClickOutside = (event) => {
-    if (modalRef.current && !modalRef.current.contains(event.target)) {
-      closeModal();
-    }
-  };
+
 
   const deleteAdmin = async (adminId) => {
     await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/delete-by-admin/${adminId}`, { withCredentials: true });
@@ -94,11 +120,8 @@ const ExternalAdminsTable = ({
               <TableHead>First Name</TableHead>
               <TableHead>Last Name</TableHead>
               <TableHead>Email</TableHead>
-              {/* <TableHead>Company</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
-              
-            
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200 rounded-lg w-full">
@@ -118,8 +141,6 @@ const ExternalAdminsTable = ({
                 <TableData>
                   {admin.status}
                 </TableData>
-
-                
                 <td className="flex justify-between items-center gap-2 relative py-2">
                   <Button
                     variant="primary"
@@ -131,7 +152,13 @@ const ExternalAdminsTable = ({
                   {isModalOpen && currentAdmin === admin && (
                     <div
                       ref={modalRef}
-                      className="absolute top-2 right-12 z-50 bg-white shadow-lg rounded-md overflow-hidden"
+                      className=" z-50 bg-white shadow-lg rounded-md overflow-hidden"
+                      style={{
+                        position: 'fixed',
+                        top: modalPosition.top !== 'auto' ? `${modalPosition.top}px` : 'auto',
+                        left: `${modalPosition.left}px`,
+                        bottom: modalPosition.bottom,
+                      }}
                     >
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
@@ -147,8 +174,7 @@ const ExternalAdminsTable = ({
                       </button>
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleDeleteAdmin.mutate(admin._id)} // Call the mutation
->
+                        onClick={() => handleDeleteAdmin.mutate(admin._id)} >
                         <IoTrashBin className="mr-2" /> Delete
                       </button>
                     </div>

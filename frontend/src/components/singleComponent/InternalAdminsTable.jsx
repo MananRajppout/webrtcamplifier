@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import TableHead from "../shared/TableHead";
 import TableData from "../shared/TableData";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -17,42 +17,75 @@ import EditInternalAdminModal from "./EditInternalAdminModal";
 
 const InternalAdminsTable = ({
   internalAdmins,
-  page,setPage,
+  page,
+  setPage,
   totalPages,
-  handlePageChange, currentAdmin, setCurrentAdmin, companies
+  handlePageChange,
+  currentAdmin,
+  setCurrentAdmin,
+  companies,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; 
+  const itemsPerPage = 10;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
-  const [isViewInternalAdminModalOpen, setIsViewInternalAdminModalOpen] = useState(false);
-  const [isEditInternalAdminModalOpen, setIsEditInternalAdminModalOpen] = useState(false);
-  // const [currentAdmin, setCurrentAdmin] = useState(null)
+  const [isViewInternalAdminModalOpen, setIsViewInternalAdminModalOpen] =
+    useState(false);
+  const [isEditInternalAdminModalOpen, setIsEditInternalAdminModalOpen] =
+    useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const queryClient = useQueryClient(); 
+  const queryClient = useQueryClient();
 
   const modalRef = useRef();
 
   const handleEditAdminOpenModal = (admin) => {
-    setIsEditInternalAdminModalOpen(true)
+    setIsEditInternalAdminModalOpen(true);
     closeModal();
   };
 
-  const handleEditAdminCloseModal = () => {
-    
-  };
+  const handleEditAdminCloseModal = () => {};
 
   const handleViewAdminOpenModal = (admin) => {
-    setIsViewInternalAdminModalOpen(true)
+    setIsViewInternalAdminModalOpen(true);
     closeModal();
   };
 
-  const handleViewAdminCloseModal = () => {
+  // Add useEffect to handle click outside
+  useEffect(() => {
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]);
+
+  const handleClickOutside = (event) => {
+    if (
+      modalRef.current &&
+      !modalRef.current.contains(event.target) &&
+      !event.target.closest("button")
+    ) {
+      closeModal();
+    }
   };
 
   const toggleModal = (event, admin) => {
-    const { top, left } = event.currentTarget.getBoundingClientRect();
-    setModalPosition({ top, left });
+    const { top, left, bottom } = event.currentTarget.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+
+    // Check if there's enough space below
+    const spaceBelow = windowHeight - bottom;
+    const modalHeight = 150; // Approximate height of modal
+
+    // If space below is less than modal height, position above the button
+    const topPosition = spaceBelow < modalHeight ? "auto" : top;
+    const bottomPosition =
+      spaceBelow < modalHeight ? `${windowHeight - top}px` : "auto";
+
+    setModalPosition({ top: topPosition, left, bottom: bottomPosition });
     setCurrentAdmin(admin);
     setIsModalOpen(!isModalOpen);
   };
@@ -61,28 +94,23 @@ const InternalAdminsTable = ({
     setIsModalOpen(false);
   };
 
-  const handleClickOutside = (event) => {
-    if (modalRef.current && !modalRef.current.contains(event.target)) {
-      closeModal();
-    }
+  const deleteAdmin = async (adminId) => {
+    await axios.delete(
+      `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/delete-by-admin/${adminId}`,
+      { withCredentials: true }
+    );
   };
 
-  const deleteAdmin = async (adminId) => {
-    await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/delete-by-admin/${adminId}`, { withCredentials: true });
-  };
-  
   const handleDeleteAdmin = useMutation({
     mutationFn: deleteAdmin, // Use the mutation function style
     onSuccess: () => {
       toast.success("Admin Deleted Successfully.");
-      queryClient.invalidateQueries({ queryKey: ['internalAdmins'] });
+      queryClient.invalidateQueries({ queryKey: ["internalAdmins"] });
     },
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
- 
-  
 
   return (
     <div className=" px-2 md:px-10 pt-10 w-full min-h-80">
@@ -96,8 +124,6 @@ const InternalAdminsTable = ({
               {/* <TableHead>Company</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
-              
-            
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200 rounded-lg w-full">
@@ -106,19 +132,12 @@ const InternalAdminsTable = ({
                 key={admin._id}
                 className="shadow-[0px_0px_26px_#00000029] w-full "
               >
-                <TableData>
-                  {admin.firstName} 
-                </TableData>
-                <TableData>
-                   {admin.lastName}
-                </TableData>
+                <TableData>{admin.firstName}</TableData>
+                <TableData>{admin.lastName}</TableData>
                 <TableData>{admin.email}</TableData>
                 {/* <TableData>{admin.companyName}</TableData> */}
-                <TableData>
-                  {admin.status}
-                </TableData>
+                <TableData>{admin.status}</TableData>
 
-                
                 <td className="flex justify-between items-center gap-2 relative py-2">
                   <Button
                     variant="primary"
@@ -130,7 +149,16 @@ const InternalAdminsTable = ({
                   {isModalOpen && currentAdmin === admin && (
                     <div
                       ref={modalRef}
-                      className="absolute top-2 right-12 z-50 bg-white shadow-lg rounded-md overflow-hidden"
+                      className="z-50 bg-white shadow-lg rounded-md overflow-hidden"
+                      style={{
+                        position: "fixed",
+                        top:
+                          modalPosition.top !== "auto"
+                            ? `${modalPosition.top}px`
+                            : "auto",
+                        left: `${modalPosition.left}px`,
+                        bottom: modalPosition.bottom,
+                      }}
                     >
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
@@ -147,7 +175,7 @@ const InternalAdminsTable = ({
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => handleDeleteAdmin.mutate(admin._id)} // Call the mutation
->
+                      >
                         <IoTrashBin className="mr-2" /> Delete
                       </button>
                     </div>
@@ -168,7 +196,7 @@ const InternalAdminsTable = ({
       {/* View Contact Modal */}
       {isViewInternalAdminModalOpen && (
         <ViewInternalAdminModal
-          onClose={()=> setIsViewInternalAdminModalOpen(false)}
+          onClose={() => setIsViewInternalAdminModalOpen(false)}
           currentAdmin={currentAdmin}
         />
       )}
@@ -176,7 +204,7 @@ const InternalAdminsTable = ({
       {/* Edit Moderator Modal */}
       {isEditInternalAdminModalOpen && (
         <EditInternalAdminModal
-          onClose={()=> setIsEditInternalAdminModalOpen(false)}
+          onClose={() => setIsEditInternalAdminModalOpen(false)}
           currentAdmin={currentAdmin}
           companies={companies}
         />

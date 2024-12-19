@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import TableHead from "../shared/TableHead";
 import TableData from "../shared/TableData";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -44,23 +44,50 @@ const CompanyTable = ({
 
 
 
+  // Add useEffect to handle click outside
+  useEffect(() => {
+    if (isModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isModalOpen]); 
+  
+  const handleClickOutside = (event) => {
+    if (modalRef.current && !modalRef.current.contains(event.target) && 
+        !event.target.closest('button')) {
+      closeModal();
+    }
+  };
+  
   const toggleModal = (event, company) => {
-    const { top, left } = event.currentTarget.getBoundingClientRect();
-    setModalPosition({ top, left });
+    const { top, left, bottom } = event.currentTarget.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    
+    // Check if there's enough space below
+    const spaceBelow = windowHeight - bottom;
+    const modalHeight = 150; // Approximate height of modal
+    
+    // If space below is less than modal height, position above the button
+    const topPosition = spaceBelow < modalHeight ? 
+      'auto' : top;
+    const bottomPosition = spaceBelow < modalHeight ?
+      `${windowHeight - top}px` : 'auto';
+  
+    setModalPosition({ top: topPosition, left, bottom: bottomPosition });
     setCurrentCompany(company);
     setIsModalOpen(!isModalOpen);
   };
+  
 
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  const handleClickOutside = (event) => {
-    if (modalRef.current && !modalRef.current.contains(event.target)) {
-      closeModal();
-    }
-  };
-
+  
   const deleteCompany = async (companyId) => {
     await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-company/${companyId}`, { withCredentials: true });
   };
@@ -141,7 +168,13 @@ const CompanyTable = ({
                   {isModalOpen && currentCompany === company && (
                     <div
                       ref={modalRef}
-                      className="absolute top-2 right-12 z-50 bg-white shadow-lg rounded-md overflow-hidden"
+                      className="z-50 bg-white shadow-lg rounded-md overflow-hidden"
+                      style={{
+                        position: 'fixed',
+                        top: modalPosition.top !== 'auto' ? `${modalPosition.top}px` : 'auto',
+                        left: `${modalPosition.left}px`,
+                        bottom: modalPosition.bottom,
+                      }}
                     >
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
