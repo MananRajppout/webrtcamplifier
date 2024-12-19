@@ -29,7 +29,8 @@ const liveMeetingSchema = new Schema({
   observerList: [{
     name: { type: String, required: true },
     id: { type: String, required: true },
-    role: { type: String, required: true }
+    role: { type: String, required: true },
+    email: {type: String,default: null}
   }],
   ongoing: {
     type: Boolean,
@@ -47,6 +48,7 @@ const liveMeetingSchema = new Schema({
     type: String,
     default: null
   },
+  
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   breakRooms: [{

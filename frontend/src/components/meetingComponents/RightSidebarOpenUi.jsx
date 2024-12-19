@@ -121,8 +121,9 @@ const RightSidebarOpenUi = ({
         senderName: userName,
         receiverName: selectedChat.name,
         message: inputMessage.trim(),
+        senderEmail: myEmailRef.current,
+        receiverEmail: selectedChat.email || (selectedChat.role == 'Moderator' ? 'admin@gmail.com' : 'unkown@gmail.com'),
       };
-
       sendMessageObserver(newMessage);
       setInputMessage("");
     }
@@ -313,29 +314,36 @@ const RightSidebarOpenUi = ({
             {/* chat message */}
             <div className="flex flex-col gap-2 flex-grow">
               {observersMessages
+                // .filter(
+                //   (message) =>
+                //     (message.senderName === selectedChat.name &&
+                //       message.receiverName === userName) ||
+                //     (message.senderName === userName &&
+                //       message.receiverName === selectedChat.name)
+                // )
                 .filter(
                   (message) =>
-                    (message.senderName === selectedChat.name &&
-                      message.receiverName === userName) ||
-                    (message.senderName === userName &&
-                      message.receiverName === selectedChat.name)
+                    (message.senderEmail === (selectedChat.email || (selectedChat.role == "Moderator" ? "admin@gmail.com" : "unkown@gmail.com")) &&
+                      message.receiverEmail === myEmailRef.current) ||
+                    (message.senderEmail === myEmailRef.current &&
+                      message.receiverEmail === (selectedChat.email || (selectedChat.role == "Moderator" ? "admin@gmail.com" : "unkown@gmail.com")))
                 )
                 .map((message, index) => (
                   <div
                     key={index}
-                    className={`flex items-center gap-2 ${message.senderName === userName
+                    className={`flex items-center gap-2 ${message.senderEmail === myEmailRef.current
                       ? "justify-start"
                       : "justify-end"
                       }`}
                   >
                     <div
-                      className={`flex flex-col ${message.senderName === userName
+                      className={`flex flex-col ${message.senderEmail === myEmailRef.current
                         ? "items-start"
                         : "items-end"
                         }`}
                     >
                       <p
-                        className={`text-[12px] ${message.senderName === userName
+                        className={`text-[12px] ${message.senderEmail === myEmailRef.current
                           ? "text-blue-600"
                           : "text-green-600"
                           }`}
@@ -350,19 +358,7 @@ const RightSidebarOpenUi = ({
                   </div>
                 ))}
             </div>
-            {/* message input */}
-            {/* <div className="flex items-center gap-2 mt-2 bg-custom-gray-2 p-2 rounded-xl">
-              <MdInsertEmoticon className="text-custom-gray-4" />
-              <input
-                type="text"
-                placeholder="Type your message..."
-                className="flex-grow bg-transparent border-none outline-none"
-              />
-              <button className="bg-custom-teal text-white p-2 rounded-full">
-                <IoSend />
-              </button>
-            </div> */}
-            {/* send message */}
+           
             <div className="flex justify-between items-center gap-2 relative">
               <input
                 type="text"

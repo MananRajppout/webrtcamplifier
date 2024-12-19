@@ -16,6 +16,7 @@ const page = () => {
   const params = useParams();
   const meetingId = params?.id;
   const roomname = searchParams.get("roomname") || 'main';
+  
   const type = searchParams.get("type");
   const router = useRouter();
   const { user, socket } = useGlobalContext();
@@ -80,7 +81,7 @@ const page = () => {
     }
     socket.emit(
       "join-room",
-      { roomid: params.id, name: fullName, email,roomname },
+      { roomid: params.id, name: fullName, email,roomname,role:userRole },
       (socketId,meeting) => {
         socketIdRef.current = socketId;
         if(meeting){
@@ -109,16 +110,12 @@ const page = () => {
     socket.on("mediabox:on-upload", handleMediaNewUpload);
 
     getMeetingStatus(params.id);
-
-    const requestParticipantListIntervalId = setInterval(() => {
-      // getParticipantChat(params.id);
-      getObserverList(params.id);
-      getObserverChat(params.id);
-    }, 1000);
+    getObserverList(params.id);
+    getObserverChat(params.id);
+   
 
     // Clean up function to clear the interval when component unmounts or userRole changes
     return () => {
-      clearInterval(requestParticipantListIntervalId);
       socket.off("getParticipantListResponse", handleParticipantList);
       // socket.off("participantChatResponse", handleParticipantChatResponse);
       socket.off("getObserverListResponse", handleObserverListResponse);
@@ -326,6 +323,7 @@ const page = () => {
   // * get observer chat response function
   const handleObserverChatResponse = (response) => {
     if (response.success) {
+      console.log('hhhhhhhhhhhhhhhhhhhh',response.observerMessages)
       setObserversMessages(response.observerMessages);
     } else {
       console.error("Failed to get observer chat:", response.message);
@@ -341,6 +339,7 @@ const page = () => {
 
   // * get participant list
   const handleParticipantList = (response) => {
+  
     if (response.success) {
       setParticipants(response.participantList);
     } else {
@@ -360,7 +359,6 @@ const page = () => {
     setWaitingRoom(data.waitingRoom);
   });
   useSocketListen("participantList", (data) => {
-    console.log("at the meeting room participant list", data);
     setWaitingRoom(data.waitingRoom);
     setParticipants(data.participantList);
   });
@@ -460,6 +458,7 @@ const page = () => {
   useEffect(() => {
     requestParticipantList();
     requestToGetParticipantsChats();
+ 
   },[]);
 
   // ?Use effect to check if the participant is in the list and admit them

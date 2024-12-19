@@ -84,7 +84,7 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    socket.on("join-room",async ({roomid,name,email,roomname},callback) => {
+    socket.on("join-room",async ({roomid,name,email,roomname,role},callback) => {
      
       socket.join(roomid);
       // for group chat
@@ -92,7 +92,8 @@ const setupSocket = (server) => {
       usernames[socket.id] = {
         name,
         roomid,
-        email
+        email,
+        role
       };
       console.log(`User with name ${name} joined meeting ${roomid}`)
       const newname = email + roomid;
@@ -363,7 +364,7 @@ const setupSocket = (server) => {
     });
 
     socket.on("observerJoinMeeting", async (data) => {
-      const { meetingId, name, role, passcode } = data;
+      const { meetingId, name, role, passcode,email } = data;
 
       const meeting = await checkMeetingExists(meetingId, socket, "meeting-not-found");
       if (!meeting) return;
@@ -388,15 +389,27 @@ const setupSocket = (server) => {
         socket.emit("observerJoinMeetingResponse", {
           success: false,
           message: "Observer already added to the meeting",
-          meetingId: meetingId,
+          meetingId: meetingId
         });
         return;
       }
 
       const observerId = uuidv4();
 
-      liveMeeting.observerList.push({ name, role, id: observerId });
+      liveMeeting.observerList.push({ name, role, id: observerId,email });
       await liveMeeting.save();
+
+
+      const fullObserverList = [
+        liveMeeting.moderator,
+        ...liveMeeting.observerList,
+      ];
+
+      io.to(meetingId).emit("getObserverListResponse", {
+        success: true,
+        message: "Observer list retrieved successfully",
+        observersList: fullObserverList,
+      });
 
       socket.emit("observerJoinMeetingResponse", {
         success: true,
@@ -767,6 +780,140 @@ const setupSocket = (server) => {
       const media = await MediaBoxModel.find({meetingId});
       callback(media);
     });
+
+
+
+
+    //get observer list
+    socket.on("getObserverList", async (data) => {
+      ("Received getObserverList event:", data);
+      const { meetingId } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          io.to(meetingId).emit("getObserverListResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,   
+          });
+          return;
+        }
+
+        const fullObserverList = [
+          liveMeeting.moderator,
+          ...liveMeeting.observerList,
+        ];
+        
+        io.to(meetingId).emit("getObserverListResponse", {
+          success: true,
+          message: "Observer list retrieved successfully",
+          observersList: fullObserverList,
+        });
+      } catch (error) {
+        console.error("Error in getObserverList:", error);
+        io.to(meetingId).emit("getObserverListResponse", {
+          success: false, 
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+
+    //get observer chat
+    socket.on("getObserverChat", async (data) => {
+      const { meetingId } = data;
+      
+     
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
+        if (!liveMeeting) {
+          io.to(meetingId).emit("observerChatResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+
+        if (!liveMeeting.observerChat || liveMeeting.observerChat.length === 0) {
+          io.to(meetingId).emit("observerChatResponse", {
+            success: false,
+            message: "No chat messages found for this meeting",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+
+
+       
+        io.to(meetingId).emit("observerChatResponse", {
+          success: true,
+          message: "Observer chat retrieved successfully",
+          observerMessages: liveMeeting.observerChat,
+        });
+      } catch (error) {
+    
+        console.error("Error in getObserverChat:", error);
+        socket.to(meetingId).emit("observerChatResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
+
+    socket.on("sendMessageObserver", async (data) => {
+      const { meetingId, message } = data;
+      try {
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          io.to(meetingId).emit("sendMessageObserverResponse", {
+            success: false,
+            message: "Live meeting not found",
+            meetingId: meetingId,
+          });
+          return;
+        }
+
+        // Create a new ChatMessage document
+        const newChatMessage = new ChatMessage({
+          senderName: message.senderName,
+          receiverName: message.receiverName,
+          message: message.message,
+          senderEmail: message.senderEmail,
+          receiverEmail: message.receiverEmail
+        });
+
+
+        // Save the new chat message
+        const savedChatMessage = await newChatMessage.save();
+
+        // Add the saved chat message's ID to the liveMeeting's observerChat array
+        liveMeeting.observerChat.push(savedChatMessage._id);
+        await liveMeeting.save();
+
+        const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
+      
+
+        io.to(meetingId).emit("observerChatResponse", {
+          success: true,
+          message: "Message sent to observer",
+          observerMessages: updatedLiveMeeting.observerChat,
+        });
+      } catch (error) {
+        console.error("Error in sendMessageObserver:", error);
+        io.to(meetingId).emit("observerChatResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+      }
+    });
+
     
 
 // * disconnect
@@ -785,12 +932,33 @@ const setupSocket = (server) => {
       }
 
       liveMeeting.participantsList = liveMeeting.participantsList.filter(p => p.email != userDetails?.email);
+      if(userDetails?.role == "Observer"){
+        liveMeeting.observerList = liveMeeting.observerList.filter(p => p.email != userDetails?.email);
+      }
+
+
       await liveMeeting.save();
 
       const fullParticipantList = [
         liveMeeting.moderator,
         ...liveMeeting.participantsList,
       ];
+
+
+      
+      const fullObserverList = [
+        liveMeeting.moderator,
+        ...liveMeeting.observerList,
+      ];
+      
+      io.to(liveMeeting.meetingId.toString()).emit("getObserverListResponse", {
+        success: true,
+        message: "Observer list retrieved successfully",
+        observersList: fullObserverList,
+      });
+
+      
+    
 
       io.to(liveMeeting.meetingId.toString()).emit("participantList", {
         success: true,
