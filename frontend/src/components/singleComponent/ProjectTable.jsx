@@ -13,6 +13,7 @@ import { useDashboardContext } from "@/context/DashboardContext";
 import AssignTagModal from "./AssignTagModal";
 import Pagination from "../shared/Pagination";
 import axios from "axios";
+import ConfirmationModal from "../shared/ConfirmationModal";
 
 const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageChange }) => {
   const { viewProject, setViewProject } = useDashboardContext();
@@ -21,6 +22,9 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
   const [selectedProject, setSelectedProject] = useState(null);
   const [isShareProjectModalOpen, setIsShareProjectModalOpen] = useState(false);
   const [isAssignTagModalOpen, setIsAssignTagModalOpen] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState(null);
+
   const modalRef = useRef();
 
   const getRole = (project) => {
@@ -61,10 +65,16 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
-      setIsLoading(false);
+      setShowDeleteConfirmation(false);
+      setProjectToDelete(null);
     }
   }
   
+  const initiateDelete = (project) => {
+    setProjectToDelete(project);
+    setShowDeleteConfirmation(true);
+    closeModal();
+  };
 
   const getButtonVariant = (status) => {
     const actionVariants = {
@@ -283,7 +293,7 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
               (user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin") && (
                 <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleDeleteProject(selectedProject)}
+              onClick={() => initiateDelete(selectedProject)}
             >
               <FaTrash />
               <span>Delete</span>
@@ -307,6 +317,15 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
         <ShareProjectModal
           project={selectedProject}
           onClose={() => setIsShareProjectModalOpen(false)}
+        />
+      )}
+
+{showDeleteConfirmation && (
+        <ConfirmationModal
+          heading="Delete Project"
+          text="Are you sure you want to delete this project? This action cannot be undone."
+          onCancel={() => setShowDeleteConfirmation(false)}
+          onYes={() => handleDeleteProject(projectToDelete)}
         />
       )}
     </div>
