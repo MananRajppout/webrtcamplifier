@@ -13,6 +13,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import ViewCompanyModal from "./ViewCompanyModal";
 import EditCompanyModal from "./EditCompanyModal";
+import ConfirmationModal from "../shared/ConfirmationModal";
 
 const CompanyTable = ({
   companies,
@@ -25,6 +26,9 @@ const CompanyTable = ({
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [isViewCompanyModalOpen, setIsViewCompanyModalOpen] = useState(false);
   const [isEditCompanyModalOpen, setIsEditCompanyModalOpen] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState(null);
+
   
   const itemsPerPage = 10; 
   const queryClient = useQueryClient(); 
@@ -35,14 +39,10 @@ const CompanyTable = ({
     closeModal();
   };
 
-
-
   const handleViewCompanyOpenModal = (company) => {
     setIsViewCompanyModalOpen(true)
     closeModal();
   };
-
-
 
   // Add useEffect to handle click outside
   useEffect(() => {
@@ -82,23 +82,30 @@ const CompanyTable = ({
     setIsModalOpen(!isModalOpen);
   };
   
-
   const closeModal = () => {
     setIsModalOpen(false);
   };
-
   
   const deleteCompany = async (companyId) => {
     await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-company/${companyId}`, { withCredentials: true });
   };
   
   const handleDeleteCompany = useMutation({
-    mutationFn: deleteCompany, // Use the mutation function style
+    mutationFn: deleteCompany, 
     onSuccess: () => {
       toast.success("Company Deleted Successfully.");
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setShowDeleteConfirmation(false);
+      setCompanyToDelete(null);
     },
   });
+
+  // Add new function to initiate delete
+  const initiateDelete = (company) => {
+    setCompanyToDelete(company);
+    setShowDeleteConfirmation(true);
+    closeModal();
+  };
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -190,7 +197,7 @@ const CompanyTable = ({
                       </button>
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleDeleteCompany.mutate(company._id)}
+                        onClick={() => initiateDelete(company)}
 >
                         <IoTrashBin className="mr-2" /> Delete
                       </button>
@@ -222,6 +229,16 @@ const CompanyTable = ({
         <EditCompanyModal
           onClose={()=> setIsEditCompanyModalOpen(false)}
           currentCompany={currentCompany}
+        />
+      )}
+
+      {/* Add the confirmation modal */}
+      {showDeleteConfirmation && (
+        <ConfirmationModal
+          heading="Delete Company"
+          text="Are you sure you want to delete this company? This action cannot be undone."
+          onCancel={() => setShowDeleteConfirmation(false)}
+          onYes={() => handleDeleteCompany.mutate(companyToDelete._id)}
         />
       )}
     </div>
