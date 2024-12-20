@@ -808,8 +808,18 @@ const logout = async (req, res) => {
       await userModel.findByIdAndUpdate(decoded.id, { token: null });
     }
 
+    const options = {
+      expires: new Date(Date.now()), 
+      httpOnly: true,
+      secure: process.env.MODE === 'production', 
+      domain: ".hgpipeline.com"  // for production
+      // domain: "localhost"  // for development
+    };
+
+    res.cookie("token", token, options);
+
     // Clear the cookie
-    res.clearCookie("token");
+    // res.clearCookie("token");
 
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
