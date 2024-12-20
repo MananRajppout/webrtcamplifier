@@ -84,8 +84,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     media: [],
   });
   const [selectedRepositoryMeetingTab, setSelectedRepositoryMeetingTab] =
-    useState(null);
-  const [showDocAndMediaTab, setShowDocAndMediaTab] = useState(false);
+    useState("All");
+  const [showDocAndMediaTab, setShowDocAndMediaTab] = useState("Documents");
   const [selectedDocAndMediaTab, setSelectedDocAndMediaTab] = useState("");
   const [pollPage, setPollPage] = useState(1);
   const [totalPollPages, setTotalPollPages] = useState(1);
@@ -412,12 +412,13 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository-by-meeting/${meetingId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload/get/${meetingId}`,
         {
           params: { page, limit: 10 },
         }
       );
-      setRepositories(response.data.repositories);
+     
+      setRepositories(response.data.media);
       setTotalMeetingRepoPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching repositories by meeting ID:", error);
@@ -451,13 +452,13 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-repository/${projectId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload/get-project/${projectId}`,
         {
           params: { page, limit: 10 },
         }
       );
 
-      setRepositories(response.data.repositories);
+      setRepositories(response.data.media);
       setTotalAllRepoPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching projects:", error);

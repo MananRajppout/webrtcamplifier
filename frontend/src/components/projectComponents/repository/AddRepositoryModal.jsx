@@ -14,6 +14,7 @@ const AddRepositoryModal = ({ onClose, project, meetings, setLocalProjectState, 
   const [selectedMeeting, setSelectedMeeting] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress,setUploadProgress] = useState(0);
 
 
   // Handle file input change
@@ -51,19 +52,27 @@ const AddRepositoryModal = ({ onClose, project, meetings, setLocalProjectState, 
     formData.append("addedDate", new Date().toISOString());
     formData.append("meetingId", selectedMeeting);
     formData.append("projectId", project._id);
+    formData.append("email", user.email);
    
     try {
       setIsLoading(true);
       // Make the API call to upload the file
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/repository`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round(
+              (progressEvent.loaded / progressEvent.total) * 100
+            );
+            setUploadProgress(progress);
+          }
         }
       );
+      setUploadProgress(0);
       toast.success(`${response.data.message}`);
       fetchRepositories(project._id)
       onClose();
@@ -136,7 +145,7 @@ const AddRepositoryModal = ({ onClose, project, meetings, setLocalProjectState, 
             type="button"
             variant={`${isLoading ? "closed" : "save"}`}
             disabled={isLoading}
-            children={`${isLoading ? "Uploading...." : "Upload"}`}
+            children={`${isLoading ? `${uploadProgress}% Uploading` : "Upload"}`}
             className={`px-5 py-1 rounded-xl`}
             onClick={handleSave}
           />

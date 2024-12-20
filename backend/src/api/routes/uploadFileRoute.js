@@ -14,5 +14,9 @@ const upload = Multer({
 
 // POST - Upload File
 router.post('/upload', upload.single('file'), fileController.uploadFile);
+router.get('/upload/get/:meetingId', fileController.getFileByMeetingId);
+router.get('/upload/get-project/:projectId', fileController.getFileByProjectId);
+router.delete('/upload/delete/:id', fileController.deleteFile);
+router.put('/upload/rename/:id', fileController.renameFile);
 
 module.exports = router;

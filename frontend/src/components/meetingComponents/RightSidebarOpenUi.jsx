@@ -208,7 +208,7 @@ const RightSidebarOpenUi = ({
       <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4">
         {/* tabs */}
         <div className="flex justify-center items-center gap-2 pb-2 ">
-          <Button
+          {/* <Button
             children="Participants"
             variant="default"
             type="submit"
@@ -217,7 +217,7 @@ const RightSidebarOpenUi = ({
               : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
               } `}
             onClick={() => handleTabClick("observersList")}
-          />
+          /> */}
           <div className="w-full relative">
             <Button
               children="Observers"
@@ -231,7 +231,7 @@ const RightSidebarOpenUi = ({
             />
             <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
           </div>
-          {
+          {/* {
             role == "Observer" &&
             <div className="w-full relative">
               <Button
@@ -246,7 +246,7 @@ const RightSidebarOpenUi = ({
               />
               <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
             </div>
-          }
+          } */}
 
         </div>
 
@@ -440,10 +440,15 @@ const RightSidebarOpenUi = ({
           <h1 className="uppercase font-bold flex-1 text-custom-dark-blue-2">
             document hub
           </h1>
-          <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
-            {uploadProgress != 0 ? `${uploadProgress}%`: 'Upload File'}
-            <input type="file" className="hidden" onChange={handleFileUpload} />
-          </label>
+
+          {
+            role == "Moderator" && 
+            <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
+              {uploadProgress != 0 ? `${uploadProgress}%`: 'Upload File'}
+              <input type="file" className="hidden" onChange={handleFileUpload} />
+            </label>
+          }
+         
         </div>
         {/* Upload file div */}
         <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto h-[15rem]">

@@ -83,25 +83,25 @@ const LeftSidebarOpenUi = ({
   const [openMoveToRenameOpen, setMoveToOpenRenameOpen] = useState(false);
   const [groupMessageContent, setGroupMessageContent] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [showUDot,setUShowDot] = useState(false);
-  const [showCDot,setCShowDot] = useState(false);
+  const [showUDot, setUShowDot] = useState(false);
+  const [showCDot, setCShowDot] = useState(false);
   const previosMCountRef = useRef(messages.length);
   const previosCCountRef = useRef(groupMessage.length);
 
 
   useEffect(() => {
-    if(previosMCountRef.current < messages?.length){
+    if (previosMCountRef.current < messages?.length) {
       previosMCountRef.current = messages?.length;
-      if(activeTab != 'participants') setUShowDot(true);
+      if (activeTab != 'participants') setUShowDot(true);
     }
-  },[messages]);
+  }, [messages]);
 
   useEffect(() => {
-    if(previosCCountRef.current < groupMessage?.length){
+    if (previosCCountRef.current < groupMessage?.length) {
       previosCCountRef.current = groupMessage?.length;
-      if(activeTab != 'chats') setCShowDot(true);
+      if (activeTab != 'chats') setCShowDot(true);
     }
-  },[groupMessage]);
+  }, [groupMessage]);
 
   const myEmailRef = useRef(null);
 
@@ -210,7 +210,7 @@ const LeftSidebarOpenUi = ({
 
   const handleRemoveUser = (userId) => {
     const userName = users?.find((user) => user._id === userId);
-    removeParticipant(userName.name, userName.role, userName.email,  meetingId);
+    removeParticipant(userName.name, userName.role, userName.email, meetingId);
     notify("success", "Success", `${userName.name} has been removed`);
 
     // setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
@@ -266,12 +266,12 @@ const LeftSidebarOpenUi = ({
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     try {
-      if(!file) return;
-      const res = handleMediaUpload(file,setUploadProgress);
-      
+      if (!file) return;
+      const res = handleMediaUpload(file, setUploadProgress);
+
     } catch (error) {
-        toast.error(error.message);
-    }finally{
+      toast.error(error.message);
+    } finally {
       setUploadProgress(0)
     }
   };
@@ -336,7 +336,7 @@ const LeftSidebarOpenUi = ({
 
         {/* Whiteboard and local recording */}
         <div className=" lg:pt-10 px-4">
-          {role === "Moderator" && enabledBreakoutRoom &&(
+          {role === "Moderator" && enabledBreakoutRoom && (
             <Button
               children={"Create Breakout Room"}
               variant="meeting"
@@ -373,18 +373,18 @@ const LeftSidebarOpenUi = ({
         {/* chat container */}
         <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto max-h-[300px] mx-4">
           <div className="flex justify-center items-center gap-2 pb-2 ">
-          <div className="w-full relative">
-            <Button
-              children="Chats"
-              variant="default"
-              type="submit"
-              className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "chats"
-                ? "shadow-[0px_4px_6px_#1E656D4D]"
-                : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
-                }  `}
-              onClick={() => {handleTabClick("chats"); setCShowDot(false)}}
-            />
-            {
+            <div className="w-full relative">
+              <Button
+                children="Chats"
+                variant="default"
+                type="submit"
+                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "chats"
+                  ? "shadow-[0px_4px_6px_#1E656D4D]"
+                  : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
+                  }  `}
+                onClick={() => { handleTabClick("chats"); setCShowDot(false) }}
+              />
+              {
                 showCDot &&
                 <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
               }
@@ -398,7 +398,7 @@ const LeftSidebarOpenUi = ({
                   ? "shadow-[0px_4px_6px_#1E656D4D]"
                   : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
                   }  `}
-                onClick={() => {handleTabClick("participants"); setUShowDot(false)}}
+                onClick={() => { handleTabClick("participants"); setUShowDot(false) }}
               />
               {
                 showUDot &&
@@ -449,27 +449,31 @@ const LeftSidebarOpenUi = ({
                     ))
                   }
                 </ScrollToBottom>
-
                 {/* send message */}
-                <div className="flex justify-between items-center gap-2 relative">
-                  <input
-                    type="text"
-                    placeholder={`Type Message ${groupMessage.length}`}
-                    className="rounded-lg py-1 px-2 placeholder:text-[10px]"
-                    value={groupMessageContent}
-                    onChange={(e) => setGroupMessageContent(e.target.value)}
-                  // onKeyPress={(e) => e.key === "Enter" && handleGroupMessage()}
-                  />
-                  <div className="absolute right-11 cursor-pointer">
-                    <MdInsertEmoticon />
+                {
+                  role !== "Observer" &&
+                  <div className="flex justify-between items-center gap-2 relative">
+                    <input
+                      type="text"
+                      placeholder={`Type Message ${groupMessage.length}`}
+                      className="rounded-lg py-1 px-2 placeholder:text-[10px]"
+                      value={groupMessageContent}
+                      onChange={(e) => setGroupMessageContent(e.target.value)}
+                    // onKeyPress={(e) => e.key === "Enter" && handleGroupMessage()}
+                    />
+                    <div className="absolute right-11 cursor-pointer">
+                      <MdInsertEmoticon />
+                    </div>
+                    <div
+                      className="py-1.5 px-1.5 bg-custom-orange-2 rounded-[50%] text-white cursor-pointer text-sm"
+                      onClick={handleGroupMessage}
+                    >
+                      <IoSend />
+                    </div>
                   </div>
-                  <div
-                    className="py-1.5 px-1.5 bg-custom-orange-2 rounded-[50%] text-white cursor-pointer text-sm"
-                    onClick={handleGroupMessage}
-                  >
-                    <IoSend />
-                  </div>
-                </div>
+                }
+
+
               </div>
             </div>
           )}
@@ -530,7 +534,10 @@ const LeftSidebarOpenUi = ({
                 } else if (role === "Participant") {
                   // Show only moderators to participants
                   return user.role === "Moderator";
+                } else if (role === "Observer") {
+                  return user.role !== "Observer";
                 }
+
               })
               .map((user) => (
                 <div
@@ -543,10 +550,13 @@ const LeftSidebarOpenUi = ({
 
                   <div className="flex items-center gap-2">
 
+                    {
+                      role !== "Observer" &&
+                      <button onClick={() => setSelectedChat(user)} className="cursor-pointer">
+                        <BsChatSquareDotsFill />
+                      </button>
+                    }
 
-                    <button onClick={() => setSelectedChat(user)} className="cursor-pointer">
-                      <BsChatSquareDotsFill />
-                    </button>
 
                     {role === "Moderator" && (
                       <button
@@ -667,6 +677,7 @@ const LeftSidebarOpenUi = ({
                   ))}
               </div>
 
+
               {/* send message */}
               <div className="flex justify-between items-center gap-2 relative">
                 <input
@@ -687,6 +698,7 @@ const LeftSidebarOpenUi = ({
                   <IoSend />
                 </div>
               </div>
+
             </div>
           )}
         </div>
@@ -748,49 +760,54 @@ const LeftSidebarOpenUi = ({
       {
         userrole == "Participant" &&
         <div className="mb-4">
-        {/* heading */}
-        <div className="flex justify-center items-center gap-2 px-4 pb-2 ">
-          <IoIosDocument className="text-custom-dark-blue-1 text-lg" />
-          <h1 className="uppercase font-bold flex-1 text-custom-dark-blue-2">
-            document hub
-          </h1>
-          <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
-            {uploadProgress != 0 ? `${uploadProgress}%` : 'Upload File'}
-            <input type="file" className="hidden" onChange={handleFileUpload} />
-          </label>
-        </div>
-        {/* Upload file div */}
-        <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto h-[15rem]">
-          {/* title */}
-          <div className="flex justify-between items-center border-b border-solid border-custom-gray-3 pb-1">
-            <p className="text-xs text-custom-gray-3">Name</p>
-            <p className="text-xs text-custom-gray-3 mr-11">Size</p>
+          {/* heading */}
+          <div className="flex justify-center items-center gap-2 px-4 pb-2 ">
+            <IoIosDocument className="text-custom-dark-blue-1 text-lg" />
+            <h1 className="uppercase font-bold flex-1 text-custom-dark-blue-2">
+              document hub
+            </h1>
+
+            {
+              role === "Moderator" &&
+              <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
+                {uploadProgress != 0 ? `${uploadProgress}%` : 'Upload File'}
+                <input type="file" className="hidden" onChange={handleFileUpload} />
+              </label>
+            }
+
           </div>
-          {/* files */}
-          {mediaBox && mediaBox.map((media, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between bg-gray-200 py-3 rounded"
-            >
-              <div className="flex items-center space-x-2">
-                <FaFolder className="h-3 w-3 text-custom-gray-3" />
-                <a href={media?.file?.url} target="_blank" download={media?.file?.name} className="text-xs text-custom-gray-3">
-                  {media?.file?.name || "Unkown"}
-                </a>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-xs text-custom-gray-3">{bytesToMbs(media?.file?.size || 49972)} Mb</span>
-                <button
-                  className="text-red-600 hover:text-red-800"
-                // onClick={() => handleDeleteFile(file._id)}
-                >
-                  <FaTrash className="h-3 w-3" />
-                </button>
-              </div>
+          {/* Upload file div */}
+          <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto h-[15rem]">
+            {/* title */}
+            <div className="flex justify-between items-center border-b border-solid border-custom-gray-3 pb-1">
+              <p className="text-xs text-custom-gray-3">Name</p>
+              <p className="text-xs text-custom-gray-3 mr-11">Size</p>
             </div>
-          ))}
+            {/* files */}
+            {mediaBox && mediaBox.map((media, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between bg-gray-200 py-3 rounded"
+              >
+                <div className="flex items-center space-x-2">
+                  <FaFolder className="h-3 w-3 text-custom-gray-3" />
+                  <a href={media?.file?.url} target="_blank" download={media?.file?.name} className="text-xs text-custom-gray-3">
+                    {media?.file?.name || "Unkown"}
+                  </a>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-xs text-custom-gray-3">{bytesToMbs(media?.file?.size || 49972)} Mb</span>
+                  <button
+                    className="text-red-600 hover:text-red-800"
+                  // onClick={() => handleDeleteFile(file._id)}
+                  >
+                    <FaTrash className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
       }
 
       {isRemoveModalOpen && (
