@@ -11,6 +11,9 @@ const mediaBoxSchema = new mongoose.Schema({
         size: {type: Number}
     },
     timestamp: { type: Date, default: Date.now },
+    role: { type: String, required: false },
+    projectId: {type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: false},
+    addedBy: {type: String, required: false,default: 'unknown'}, 
   });
   
   const MediaBoxModel = mongoose.model('media', mediaBoxSchema);

@@ -18,7 +18,8 @@ async function handleUpload(file) {
 // POST - Upload File
 exports.uploadFile = async (req, res) => {
   try {
-    const {meetingId,email} = req.body;
+    const {meetingId,email,role,projectId,addedBy} = req.body;
+    console.log('meetingId',meetingId);
     const file = req.file;
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -33,6 +34,9 @@ exports.uploadFile = async (req, res) => {
     const newMedia = await MediaBoxModel.create({
       meetingId,
       uploaderEmail: email,
+      role,
+      projectId,
+      addedBy,
       file: {
         url: cldRes.secure_url,
         public_id: cldRes.public_id,
@@ -56,3 +60,97 @@ exports.uploadFile = async (req, res) => {
   } 
 
 };
+
+
+
+//POST - Get Files By Meeting Id
+exports.getFileByMeetingId = async (req, res) => {
+  try {
+    const {meetingId} = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    const media = await MediaBoxModel.find({meetingId}).sort({timestamp: -1}).skip(startIndex).limit(limit);
+    const totalDocument = await MediaBoxModel.countDocuments;
+    const totalPages = Math.ceil(totalDocument / limit);
+    res.status(200).json({
+      success: true,
+      media,
+      totalPages,
+      totalDocument
+    })
+  } catch (error) {
+    res.status(501).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+
+//POST - Get Files By Project Id
+exports.getFileByProjectId = async (req, res) => {
+  try {
+    const {projectId} = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    const media = await MediaBoxModel.find({projectId}).sort({timestamp: -1}).skip(startIndex).limit(limit);
+    const totalDocument = (await MediaBoxModel.find({projectId})).length;
+    const totalPages = Math.ceil(totalDocument / limit);
+    
+    res.status(200).json({
+      success: true,
+      media,
+      totalPages,
+      totalDocument
+    })
+  } catch (error) {
+    res.status(501).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+
+//DELETE - Delete File
+exports.deleteFile = async (req, res) => {
+  try {
+    const {id} = req.params;
+    const media = await MediaBoxModel.findByIdAndDelete(id);
+    const EventsEmitter = req.app.get('EventsEmitter');
+    EventsEmitter.emit('mediabox:on-delete',{media});
+    res.status(200).json({
+      success: true,
+      message: "File Deleted Successfully"
+    })
+  } catch (error) {
+    res.status(501).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+
+//PUT - Rename File
+exports.renameFile = async (req, res) => {
+  try {
+    const {id} = req.params;
+    const {fileName} = req.body;
+    const media = await MediaBoxModel.findByIdAndUpdate (id, {file: {name: fileName}});
+    const EventsEmitter = req.app.get('EventsEmitter');
+    EventsEmitter.emit('mediabox:on-update',{media});
+    res.status(200).json({
+      success: true,
+      message: "File Renamed Successfully"
+    })
+  }
+  catch (error) {
+    res.status(501).json({
+      success: false,
+      message: error.message
+    })
+  }
+}

@@ -55,6 +55,7 @@ const page = () => {
   const [groupMessage, setGroupMessage] = useState([]);
   const [mediaBox, setMediaBox] = useState([]);
   const [enabledBreakoutRoom, setEnabledBreakoutRoom] = useState(true);
+  const [projectId, setProjectId] = useState(null);
 
 
   //get user email
@@ -86,6 +87,7 @@ const page = () => {
         socketIdRef.current = socketId;
         if(meeting){
           setEnabledBreakoutRoom(meeting.enableBreakoutRoom);
+          setProjectId(meeting.projectId);
         }
        
       }
@@ -263,7 +265,7 @@ const page = () => {
     async (file, setUploadProgress) => {
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,
-        { file, meetingId: params, email: myEmail },
+        { file, meetingId: params.id, email: myEmail, role: userRole,projectId,addedBy: fullName },
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -279,7 +281,7 @@ const page = () => {
       setUploadProgress(0);
       return res;
     },
-    [myEmail, params.id]
+    [myEmail, params.id,fullName,userRole,projectId]
   );
 
   // * get observer list response function
@@ -323,7 +325,7 @@ const page = () => {
   // * get observer chat response function
   const handleObserverChatResponse = (response) => {
     if (response.success) {
-      console.log('hhhhhhhhhhhhhhhhhhhh',response.observerMessages)
+   
       setObserversMessages(response.observerMessages);
     } else {
       console.error("Failed to get observer chat:", response.message);

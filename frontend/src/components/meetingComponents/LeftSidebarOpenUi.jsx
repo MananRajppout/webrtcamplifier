@@ -449,7 +449,7 @@ const LeftSidebarOpenUi = ({
                     ))
                   }
                 </ScrollToBottom>
-                  {/* send message */}
+                {/* send message */}
                 {
                   role !== "Observer" &&
                   <div className="flex justify-between items-center gap-2 relative">
@@ -472,7 +472,7 @@ const LeftSidebarOpenUi = ({
                     </div>
                   </div>
                 }
-                
+
 
               </div>
             </div>
@@ -534,7 +534,7 @@ const LeftSidebarOpenUi = ({
                 } else if (role === "Participant") {
                   // Show only moderators to participants
                   return user.role === "Moderator";
-                }else if(role === "Observer"){
+                } else if (role === "Observer") {
                   return user.role !== "Observer";
                 }
 
@@ -556,7 +556,7 @@ const LeftSidebarOpenUi = ({
                         <BsChatSquareDotsFill />
                       </button>
                     }
-                    
+
 
                     {role === "Moderator" && (
                       <button
@@ -766,10 +766,15 @@ const LeftSidebarOpenUi = ({
             <h1 className="uppercase font-bold flex-1 text-custom-dark-blue-2">
               document hub
             </h1>
-            <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
-              {uploadProgress != 0 ? `${uploadProgress}%` : 'Upload File'}
-              <input type="file" className="hidden" onChange={handleFileUpload} />
-            </label>
+
+            {
+              role === "Moderator" &&
+              <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
+                {uploadProgress != 0 ? `${uploadProgress}%` : 'Upload File'}
+                <input type="file" className="hidden" onChange={handleFileUpload} />
+              </label>
+            }
+
           </div>
           {/* Upload file div */}
           <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto h-[15rem]">

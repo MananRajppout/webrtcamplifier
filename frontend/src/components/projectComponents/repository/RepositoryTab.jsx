@@ -46,7 +46,7 @@ const RepositoryTab = ({
       const newFileName = prompt("Enter the new file name:");
       if (!newFileName) return;
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/rename-file/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload/rename/${id}`,
         {
           fileName: newFileName,
         }
@@ -67,7 +67,7 @@ const RepositoryTab = ({
   const deleteFile = async (id) => {
     try {
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-file/${id}`
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload/delete/${id}`
       );
 
       if (response.status === 200) {
@@ -86,6 +86,9 @@ const RepositoryTab = ({
     try {
       const response = await fetch(url);
       if (!response.ok) {
+        if(typeof window !== 'undefined'){
+          window.open(url,'__blank');
+        }
         throw new Error("Failed to fetch the file");
       }
 
@@ -118,9 +121,9 @@ const RepositoryTab = ({
 
   const displayRepositories = filteredRepositories.filter((repo) => {
     if (selectedDocAndMediaTab === "Documents") {
-      return repo.type === "application/pdf";
+      return repo.file.mimetype === "application/pdf";
     } else if (selectedDocAndMediaTab === "Media") {
-      return repo.type !== "application/pdf";
+      return repo.file.mimetype !== "application/pdf";
     }
     return true;
   });
@@ -156,10 +159,10 @@ const RepositoryTab = ({
               <tbody>
                 {displayRepositories?.map((repo) => (
                   <tr key={repo._id}>
-                    <TableData>{repo.fileName}</TableData>
-                    <TableData>{repo.type}</TableData>
-                    <TableData>{repo.size}</TableData>
-                    <TableData>{repo.addedBy}</TableData>
+                    <TableData>{repo.file.name}</TableData>
+                    <TableData>{repo.file.mimetype}</TableData>
+                    <TableData>{repo.file.size}</TableData>
+                    <TableData>{repo.addedBy || 'Unkown'}</TableData>
                     <TableData>{repo.role}</TableData>
                     <TableData>
                       <div className="flex flex-col justify-center items-center gap-1">
@@ -179,7 +182,7 @@ const RepositoryTab = ({
                         ></Button>
                         <Button
                           onClick={() =>
-                            downloadFile(repo.cloudinaryLink, repo.fileName)
+                            downloadFile(repo.file.url, repo.file.name)
                           }
                           children={"Download"}
                           type="button"
@@ -206,9 +209,13 @@ const RepositoryTab = ({
     );
   };
 
+
+
+  console.log(selectedRepositoryMeetingTab,'selectedRepositoryMeetingTab',selectedDocAndMediaTab,'selectedDocAndMediaTab')
+
   return (
     <div>
-      {selectedRepositoryMeetingTab && selectedDocAndMediaTab ? (
+      {selectedRepositoryMeetingTab ? (
         renderContent()
       ) : (
         <p className="text-center pt-5 font-bold text-custom-orange-1">

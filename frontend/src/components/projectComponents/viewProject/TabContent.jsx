@@ -355,7 +355,7 @@ const TabContent = ({
               handleAllRepoPageChange={handleAllRepoPageChange}
               handleMeetingRepoPageChange={handleMeetingRepoPageChange}
               fetchRepositoriesByMeetingId={fetchRepositoriesByMeetingId}
-              projectStaus={project.status}
+              projectStaus={project?.status}
             />
           </div>
         </div>

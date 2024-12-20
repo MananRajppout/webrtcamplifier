@@ -24,8 +24,8 @@ const OngoingMeeting = () => {
   const [roomId, setRoomId] = useState(type == 'breackout' ? `${params.id}-${roomname}` : params.id);
   const videoCanvasRef = useRef(null);
   const canvasRef = useRef(null);
-  const [isMicMute, setIsMicMute] = useState(true);
-  const [isWebCamMute, setIsWebCamMute] = useState(true);
+  const [isMicMute, setIsMicMute] = useState(false);
+  const [isWebCamMute, setIsWebCamMute] = useState(false);
   const [isBlur, setIsBlur] = useState(false);
   const [selected, setSelected] = useState(0);
   const [permissionOpen, setPermisstionOpen] = useState(false);
