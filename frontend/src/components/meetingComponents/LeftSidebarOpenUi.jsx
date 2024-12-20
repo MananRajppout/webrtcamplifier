@@ -797,12 +797,16 @@ const LeftSidebarOpenUi = ({
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className="text-xs text-custom-gray-3">{bytesToMbs(media?.file?.size || 49972)} Mb</span>
-                  <button
-                    className="text-red-600 hover:text-red-800"
-                  // onClick={() => handleDeleteFile(file._id)}
-                  >
-                    <FaTrash className="h-3 w-3" />
-                  </button>
+                  {
+                    role === "Moderator" &&
+                    <button
+                      className="text-red-600 hover:text-red-800"
+                    // onClick={() => handleDeleteFile(file._id)}
+                    >
+                      <FaTrash className="h-3 w-3" />
+                    </button>
+                  }
+
                 </div>
               </div>
             ))}

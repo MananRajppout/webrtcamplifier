@@ -97,6 +97,7 @@ const page = () => {
     });
 
     socket.emit("mediabox:on-get-media", { meetingId: params.id }, (media) => {
+      console.log("media", media);
       setMediaBox([...media]);
     });
 
@@ -110,6 +111,7 @@ const page = () => {
     socket.on("getMeetingStatusResponse", handleGetMeetingStatusResponse);
     socket.on("group:receive-message", handleNewMessageReceive);
     socket.on("mediabox:on-upload", handleMediaNewUpload);
+    socket.on("mediabox:on-delete", handleMediaNewDelete);
 
     getMeetingStatus(params.id);
     getObserverList(params.id);
@@ -257,8 +259,15 @@ const page = () => {
   }, []);
 
   const handleMediaNewUpload = useCallback((media) => {
-    console.log("new media");
     setMediaBox((prev) => [...prev, media]);
+  }, []);
+
+  const handleMediaNewDelete = useCallback((media) => {
+    
+    setMediaBox((prev) => {
+      const newMedia = prev.filter((m) => m._id !== media._id);
+      return newMedia;
+    });
   }, []);
 
   const handleMediaUpload = useCallback(

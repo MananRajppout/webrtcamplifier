@@ -2,7 +2,7 @@ const MediaBoxModel = require('../models/mediaBox.js');
 const { v2:cloudinary } = require('cloudinary');
 
 
-async function handleUpload(file) {
+async function handleUpload(file,mimetype) {
   cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
@@ -11,15 +11,18 @@ async function handleUpload(file) {
 
   const res = await cloudinary.uploader.upload(file, {
     resource_type: "auto",
+    mimetype
   });
   return res;
 }
+
+
+
 
 // POST - Upload File
 exports.uploadFile = async (req, res) => {
   try {
     const {meetingId,email,role,projectId,addedBy} = req.body;
-    console.log('meetingId',meetingId);
     const file = req.file;
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -28,7 +31,7 @@ exports.uploadFile = async (req, res) => {
     //upload file on cloudinary
     const b64 = Buffer.from(req.file.buffer).toString("base64");
     let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-    const cldRes = await handleUpload(dataURI);
+    const cldRes = await handleUpload(dataURI,file.mimetype);
 
     //save on db
     const newMedia = await MediaBoxModel.create({
@@ -53,6 +56,7 @@ exports.uploadFile = async (req, res) => {
       message: "Upload Successfully"
     })
   } catch (error) {
+  
     res.status(501).json({
       success: false,
       message: error.message
@@ -117,8 +121,12 @@ exports.getFileByProjectId = async (req, res) => {
 //DELETE - Delete File
 exports.deleteFile = async (req, res) => {
   try {
+ 
     const {id} = req.params;
-    const media = await MediaBoxModel.findByIdAndDelete(id);
+    const media = await MediaBoxModel.findOne({_id: id});
+    console.log(media);
+    await MediaBoxModel.findByIdAndDelete(id);
+   
     const EventsEmitter = req.app.get('EventsEmitter');
     EventsEmitter.emit('mediabox:on-delete',{media});
     res.status(200).json({

@@ -100,3 +100,7 @@ server.listen(PORT, () => {
 EventsEmitter.on('mediabox:on-upload',({media}) => {
   io.to(media.meetingId.toString()).emit('mediabox:on-upload',media);
 });
+
+EventsEmitter.on('mediabox:on-delete',({media}) => {
+  io.to(media.meetingId.toString()).emit('mediabox:on-delete',media);
+});

@@ -6,6 +6,11 @@ import toast from "react-hot-toast";
 import Pagination from "@/components/shared/Pagination";
 import { useEffect, useState } from "react";
 
+
+export function bytesToMbs (size){
+  return (size / (1024**2)).toFixed(2);
+}
+
 const RepositoryTab = ({
   repositories,
   selectedRepositoryMeetingTab,
@@ -161,7 +166,7 @@ const RepositoryTab = ({
                   <tr key={repo._id}>
                     <TableData>{repo.file.name}</TableData>
                     <TableData>{repo.file.mimetype}</TableData>
-                    <TableData>{repo.file.size}</TableData>
+                    <TableData>{bytesToMbs(repo.file.size)} MB</TableData>
                     <TableData>{repo.addedBy || 'Unkown'}</TableData>
                     <TableData>{repo.role}</TableData>
                     <TableData>

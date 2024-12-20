@@ -103,12 +103,8 @@ const RightSidebarOpenUi = ({
   const handleDeleteFile = async (fileId) => {
     try {
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/files/${fileId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload/delete/${fileId}`
       );
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/files`
-      );
-      setFileList(response.data);
     } catch (error) {
       console.error("Error deleting file:", error);
     }
@@ -441,13 +437,10 @@ const RightSidebarOpenUi = ({
             document hub
           </h1>
 
-          {
-            role == "Moderator" && 
-            <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
+          <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
               {uploadProgress != 0 ? `${uploadProgress}%`: 'Upload File'}
               <input type="file" className="hidden" onChange={handleFileUpload} />
-            </label>
-          }
+          </label>
          
         </div>
         {/* Upload file div */}
@@ -473,7 +466,7 @@ const RightSidebarOpenUi = ({
                 <span className="text-xs text-custom-gray-3">{bytesToMbs(media?.file?.size || 49972)} Mb</span>
                 <button
                   className="text-red-600 hover:text-red-800"
-                  // onClick={() => handleDeleteFile(file._id)}
+                  onClick={() => handleDeleteFile(media._id)}
                 >
                   <FaTrash className="h-3 w-3" />
                 </button>
