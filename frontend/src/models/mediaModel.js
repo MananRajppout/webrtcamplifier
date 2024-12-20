@@ -98,26 +98,26 @@ class MediaModel {
 
         this.videoTrack = stream.getVideoTracks()[0]
         
-        if (this.videoCanvasRef.current) {
-          this.videoCanvasRef.current.srcObject = new MediaStream([this.videoTrack]);
-          this.videoCanvasRef.current.onloadedmetadata = async () => {
-            // Ensure the video is ready to play before processing frames
-            await this.videoCanvasRef.current?.play();
+        // if (this.videoCanvasRef.current) {
+        //   this.videoCanvasRef.current.srcObject = new MediaStream([this.videoTrack]);
+        //   this.videoCanvasRef.current.onloadedmetadata = async () => {
+        //     // Ensure the video is ready to play before processing frames
+        //     await this.videoCanvasRef.current?.play();
   
-            // Start the blurring process once the video is ready
-            if (this.segmenter) {
-              this.blurBackground(this.segmenter, this.isBlur ? 10 : 0);
-            }
-          };
-        }
+        //     // Start the blurring process once the video is ready
+        //     if (this.segmenter) {
+        //       this.blurBackground(this.segmenter, this.isBlur ? 10 : 0);
+        //     }
+        //   };
+        // }
 
-        if(this.canvasRef.current){
+        // if(this.canvasRef.current){
 
-          const stream = this.canvasRef.current?.captureStream(30);
-          const tracks = stream.getVideoTracks();
-          this.canvasTrack = tracks[0];
-          return this.canvasTrack
-        }
+        //   const stream = this.canvasRef.current?.captureStream(30);
+        //   const tracks = stream.getVideoTracks();
+        //   this.canvasTrack = tracks[0];
+        //   return this.canvasTrack
+        // }
 
         return this.videoTrack;
 

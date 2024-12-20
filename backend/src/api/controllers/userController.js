@@ -810,9 +810,11 @@ const logout = async (req, res) => {
 
     const options = {
       expires: new Date(Date.now()), 
+      path: "/",  
       httpOnly: true,
       secure: process.env.MODE === 'production', 
-      domain: ".hgpipeline.com"  // for production
+      domain: ".hgpipeline.com", // for production,
+      sameSite: "Lax",  
       // domain: "localhost"  // for development
     };
 

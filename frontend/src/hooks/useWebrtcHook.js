@@ -80,12 +80,12 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
 
   // on blur change
-  useEffect(() => {
+  // useEffect(() => {
    
-    if(usermediaRef.current?.segmenter){
-      usermediaRef.current?.blurBackground(usermediaRef.current.segmenter, isBlur ? 10 : 0)
-    }
-  },[isBlur])
+  //   if(usermediaRef.current?.segmenter){
+  //     usermediaRef.current?.blurBackground(usermediaRef.current.segmenter, isBlur ? 10 : 0)
+  //   }
+  // },[isBlur])
 
 
 
