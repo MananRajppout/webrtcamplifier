@@ -118,7 +118,7 @@ const OngoingMeeting = () => {
       localVideoElementRef.current.srcObject = new MediaStream([videoTrackRef.current]);
       localVideoElementRef.current.play();
     }
-  }, [videoTrackRef.current,participantsRef.current]);
+  }, [videoTrackRef.current, participantsRef.current]);
 
 
   useEffect(() => {

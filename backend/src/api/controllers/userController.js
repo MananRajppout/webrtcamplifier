@@ -146,11 +146,24 @@ const signin = async (req, res) => {
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
 
-    const options = {
-      expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
-      httpOnly: true, // Protects against XSS attacks
-      secure: process.env.MODE === 'production', // Allow over HTTP (not recommended for production)
-    };
+
+    let options;
+    if(process.env.STATUS_MODE != "production"){
+      options = {
+        expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
+        httpOnly: true, // Protects against XSS attacks
+        secure: process.env.MODE === 'production', // Allow over HTTP (not recommended for production)
+      };
+    }else{
+      options = {
+        expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
+        domain: ".hgsingalong.com", // Shared across all subdomains
+        path: "/",                  // Available across the entire domain
+        httpOnly: true,             // Prevent client-side access
+        secure: true,               // Required for HTTPS
+        sameSite: "Lax",            // Adjust as needed ("Strict", "None", or "Lax")
+      }
+    }
 
     res.cookie("token", token, options);
 
@@ -808,15 +821,24 @@ const logout = async (req, res) => {
       await userModel.findByIdAndUpdate(decoded.id, { token: null });
     }
 
-    const options = {
-      expires: new Date(Date.now()), 
-      path: "/",  
-      httpOnly: true,
-      secure: process.env.MODE === 'production', 
-      domain: ".hgpipeline.com", // for production,
-      sameSite: "Lax",  
-      // domain: "localhost"  // for development
-    };
+    let options;
+    if(process.env.STATUS_MODE != "production"){
+      options = {
+        expires: new Date(Date.now()), // 15 days
+        httpOnly: true, // Protects against XSS attacks
+        secure: process.env.MODE === 'production', // Allow over HTTP (not recommended for production)
+      };
+    }else{
+      options = {
+        expires: new Date(Date.now()),
+        domain: ".hgsingalong.com", // Shared across all subdomains
+        path: "/",                  // Available across the entire domain
+        httpOnly: true,             // Prevent client-side access
+        secure: true,               // Required for HTTPS
+        sameSite: "Lax",            // Adjust as needed ("Strict", "None", or "Lax")
+      };
+    }
+    
 
     res.cookie("token", token, options);
 
