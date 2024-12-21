@@ -110,6 +110,11 @@ const InternalAdminsTable = ({
       toast.success("Admin Deleted Successfully.");
       queryClient.invalidateQueries({ queryKey: ["internalAdmins"] });
     },
+    onError: (error) => {
+      console.log('error', error)
+      toast.error(`${error.response?.data?.message}`)
+      setError(error.response?.data?.message || "An error occurred.");
+    },
   });
 
   const handleDeleteClick = (admin) => {

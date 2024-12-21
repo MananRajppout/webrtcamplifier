@@ -640,7 +640,7 @@ const updateByAdmin = async (req, res) => {
   try {
     let user = await userModel.findById(id);
     if (decoded?.role === "AmplifyAdmin") {
-      user = await userModel.findOne({ _id: id, createdById: decoded?.id });
+      user = await userModel.findOne({ _id: id });
     }
     // Check if the user is deleted
     if (!user || user.isDeleted) {
@@ -692,13 +692,22 @@ const deleteByAdmin = async (req, res) => {
     return res.status(403).json({ message: "Access denied" });
   }
 
-  let exist = await userModel.findById(id);
-  if (decoded?.role === "AmplifyAdmin") {
-    exist = await userModel.findOne({ _id: id, createdById: decoded?.id });
-  }
+  const exist = await userModel.findById(id);
+  
+  
   if (!exist || exist.isDeleted) {
     return res.status(404).json({ message: "User not found" });
   }
+
+  // Prevent AmplifyAdmin from updating another AmplifyAdmin
+  if (decoded?.role === "AmplifyAdmin" && exist?.role === "AmplifyAdmin") {
+    return res
+      .status(403)
+      .json({
+        message: "Access denied: You cannot delete another AmplifyAdmin.",
+      });
+  }
+
   try {
     await userModel.findByIdAndUpdate(id, { isDeleted: true });
 
