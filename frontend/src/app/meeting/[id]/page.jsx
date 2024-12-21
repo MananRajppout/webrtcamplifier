@@ -56,7 +56,11 @@ const page = () => {
   const [mediaBox, setMediaBox] = useState([]);
   const [enabledBreakoutRoom, setEnabledBreakoutRoom] = useState(true);
   const [projectId, setProjectId] = useState(null);
-
+  const [isMeetingEnd, setIsMeetingEnd] = useState(false);
+  const [setting, setSetting] = useState({
+    allowScreenShare: false,
+    allowWhiteBoard: false
+  });
 
   //get user email
   useEffect(() => {
@@ -112,6 +116,7 @@ const page = () => {
     socket.on("group:receive-message", handleNewMessageReceive);
     socket.on("mediabox:on-upload", handleMediaNewUpload);
     socket.on("mediabox:on-delete", handleMediaNewDelete);
+    socket.on("endMeeting", onEndMeeting);
 
     getMeetingStatus(params.id);
     getObserverList(params.id);
@@ -127,6 +132,8 @@ const page = () => {
       socket.off("participantRemoved", handleParticipantRemoved);
       socket.off("group:receive-message", handleNewMessageReceive);
       socket.off("mediabox:on-upload", handleMediaNewUpload);
+      socket.off("mediabox:on-delete", handleMediaNewDelete);
+      socket.off("endMeeting", onEndMeeting);
     };
   }, [userRole, params.id, socket]);
 
@@ -344,7 +351,9 @@ const page = () => {
   // * handle participant removed
   const handleParticipantRemoved = (data) => {
     if (data.name === fullName && data.role === userRole) {
-      router.push("/remove-participant");
+      if(typeof window !== "undefined"){
+        window.location.href = "/remove-participant";
+      }
     }
   };
 
@@ -380,9 +389,9 @@ const page = () => {
   // ? removing participant from the meeting
   useSocketListen("participantRemoved", (data) => {
     if(data.email === userEmail){
-      router.push(
-        `/remove-participant`
-      );
+      if(typeof window !== "undefined"){
+        window.location.href = "/remove-participant";
+      }
     }
     console.log('removed participant data', data)
   });
@@ -504,26 +513,21 @@ const page = () => {
     }
   };
 
-  const startMeeting = () => {};
 
-  const participantLeft = async (name, role, meetingId) => {
-    try {
-      response = await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/live-meeting/remove-participant-from-meeting`,
-        {
-          name: name,
-          role: role,
-          meetingId: meetingId,
-        }
-      );
-    } catch (error) {
-      if (error?.response?.data?.message === "Participant not found") {
-        console.error("Participant not found");
-      } else {
-        console.error("Error:", error);
-      }
-    }
-  };
+
+
+  const onEndMeeting = useCallback(() => {
+    setIsMeetingEnd(true);
+  },[])
+
+
+
+  const endMeeting = useCallback(() => {
+    socket.emit("endMeeting", { meetingId: params.id });
+    router.push("/dashboard/project");
+  },[params.id]);
+
+
 
   return (
     <>
@@ -572,6 +576,8 @@ const page = () => {
                 handleMediaUpload={handleMediaUpload}
                 mediaBox={mediaBox}
                 enabledBreakoutRoom={enabledBreakoutRoom}
+                setting={setting} setSetting={setSetting}
+                
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
@@ -590,6 +596,9 @@ const page = () => {
                 projectStatus={projectStatus}
                 iframeLink={iframeLink}
                 meetingDetails={meetingDetails}
+                endMeeting={endMeeting}
+                isMeetingEnd={isMeetingEnd}
+                setting={setting} setSetting={setSetting}
               />
             </div>
           </>
@@ -631,6 +640,7 @@ const page = () => {
                 mediaBox={mediaBox}
                 moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
                 enabledBreakoutRoom={enabledBreakoutRoom}
+                setting={setting} setSetting={setSetting}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -649,6 +659,9 @@ const page = () => {
                 projectStatus={projectStatus}
                 iframeLink={iframeLink}
                 meetingDetails={meetingDetails}
+                endMeeting={endMeeting}
+                isMeetingEnd={isMeetingEnd}
+                setting={setting} setSetting={setSetting}
               />
             </div>
             <div className="h-full">
@@ -713,6 +726,7 @@ const page = () => {
                 mediaBox={mediaBox}
                 moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
                 enabledBreakoutRoom={enabledBreakoutRoom}
+                setting={setting} setSetting={setSetting}
               />
               
             </div>
@@ -732,6 +746,9 @@ const page = () => {
                 projectStatus={projectStatus}
                 iframeLink={iframeLink}
                 meetingDetails={meetingDetails}
+                endMeeting={endMeeting}
+                isMeetingEnd={isMeetingEnd}
+                setting={setting} setSetting={setSetting}
               />
             </div>
             <div className="h-full">

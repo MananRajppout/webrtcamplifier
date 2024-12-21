@@ -67,7 +67,10 @@ const LeftSidebarOpenUi = ({
   handleMediaUpload,
   mediaBox,
   moveParticipantToWaitingRoom,
-  enabledBreakoutRoom
+  enabledBreakoutRoom,
+  isWhiteBoardOpen,
+  setting,
+  setSetting
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -345,13 +348,18 @@ const LeftSidebarOpenUi = ({
               onClick={() => setBreakoutRoomModelOpen(true)}
             />
           )}
-          <Button
-            children="Whiteboard"
-            variant="meeting"
-            type="submit"
-            className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-            onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
-          />
+
+          {
+            (role == "Moderator" || role == "Observer" || setting.allowWhiteBoard) &&
+            <Button
+              children={isWhiteBoardOpen ? "Meeting" : "Whiteboard"}
+              variant="meeting"
+              type="submit"
+              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+              onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
+            />
+          }
+          
 
           {role === "Moderator" && (
             <Button
@@ -539,6 +547,10 @@ const LeftSidebarOpenUi = ({
                 }
 
               })
+              //only show the users who are in the same room
+              .filter((user) => role === "Moderator" ? true : user.roomName?.toLowerCase() == roomname.toLowerCase())
+              //filter out the removed and offline users
+              .filter((user) => user.status !== "removed" && user.status !== "offline")
               .map((user) => (
                 <div
                   key={user.name}

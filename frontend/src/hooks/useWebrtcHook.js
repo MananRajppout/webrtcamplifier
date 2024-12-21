@@ -518,6 +518,16 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         participantsRef.current = participantsRef.current?.filter((participant) => participant.socketId != socketId);
         delete videosElementsRef.current[socketId]
         delete audiosElementRef.current[socketId]
+
+
+        consumerTransports.current = consumerTransports.current.filter(({ socketId: consumerSocketId,consumerTransport }) => {
+          if (consumerSocketId === socketId) {
+            consumerTransport.close();
+            return false;
+          }
+          return true;
+        });
+
         forceRender((prev) => !prev);
       });
 
@@ -569,10 +579,21 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
       }
     }, []);
 
+
+
+    const handleDisconnect = useCallback(() => {
+      socketRef.current?.disconnect();
+      consumerTransports.current.forEach(({ consumerTransport }) => {
+        consumerTransport.close();
+      });
+      producerTransportRef.current?.close();
+      audioProducerRef.current?.close();
+      videoProducerRef.current?.close();
+    }, []);
     
 
     return (
-      { handleJoin, participantsRef,videosElementsRef,audiosElementRef,socketIdRef,videoTrackRef,handleMuteUnmute,remoteVideoTracksRef,handleScreenShare,displayTrackRef,remoteDisplayTracksRef,handleChangeSetting}
+      { handleJoin,handleDisconnect, participantsRef,videosElementsRef,audiosElementRef,socketIdRef,videoTrackRef,handleMuteUnmute,remoteVideoTracksRef,handleScreenShare,displayTrackRef,remoteDisplayTracksRef,handleChangeSetting}
     )
   }
 

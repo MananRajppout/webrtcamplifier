@@ -13,7 +13,7 @@ import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipa
 
 
 
-const OngoingMeeting = () => {
+const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
   const searchParams = useSearchParams();
   const params = useParams();
   const role = searchParams.get("role");
@@ -36,9 +36,7 @@ const OngoingMeeting = () => {
   const [selectedSideBar, setSelectedSide] = useState('chat');
   const [showbtn, setshowbtn] = useState(false);
   const [settingOpen, setSettingOpen] = useState(false);
-  const [setting, setSetting] = useState({
-    allowScreenShare: false,
-  });
+  
 
 
   const isMobile = false;
@@ -54,8 +52,15 @@ const OngoingMeeting = () => {
 
 
   const { audioPermisson, cameraPermisson } = useCheckPermission();
-  const { handleJoin, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting);
+  const { handleJoin,handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting);
 
+
+
+  useEffect(() => {
+    if(isMeetingEnd){
+      handleDisconnect();
+    }
+  },[isMeetingEnd])
 
 
   // on select video change
@@ -208,10 +213,20 @@ const OngoingMeeting = () => {
   const handleAllowScreen = useCallback(() => {
     if (setting.allowScreenShare) {
       setSetting(prev => ({ ...prev, allowScreenShare: false }))
-      handleChangeSetting({ setting, allowScreenShare: false })
+      handleChangeSetting({ ...setting, allowScreenShare: false })
     } else {
       setSetting(prev => ({ ...prev, allowScreenShare: true }));
-      handleChangeSetting({ setting, allowScreenShare: true });
+      handleChangeSetting({ ...setting, allowScreenShare: true });
+    }
+  }, [setting])
+
+  const handleAllowWhitebaord = useCallback(() => {
+    if (setting.allowWhiteBoard) {
+      setSetting(prev => ({ ...prev, allowWhiteBoard: false }))
+      handleChangeSetting({ ...setting, allowWhiteBoard: false })
+    } else {
+      setSetting(prev => ({ ...prev, allowWhiteBoard: true }));
+      handleChangeSetting({ ...setting, allowWhiteBoard: true });
     }
   }, [setting])
 
@@ -512,10 +527,14 @@ const OngoingMeeting = () => {
                     {
                       settingOpen &&
                       <div className='absolute -top-[21rem] left-[60%] bg-gray-800 text-white z-50  rounded-md w-[15rem] h-[20rem] overflow-y-auto'>
-                        <ul className='space-x-4 p-2'>
+                        <ul className='space-y-4 p-2'>
                           <li className='flex items-center gap-3'>
                             <input type='checkbox' checked={setting.allowScreenShare} onClick={handleAllowScreen} />
                             <p className='text-white text-xs text-left'>Allow participants to share their screen.</p>
+                          </li>
+                          <li className='flex items-center gap-3'>
+                            <input type='checkbox' checked={setting.allowWhiteBoard} onClick={handleAllowWhitebaord} />
+                            <p className='text-white text-xs text-left'>Allow participants to use whitebaord</p>
                           </li>
                         </ul>
                       </div>
@@ -534,15 +553,22 @@ const OngoingMeeting = () => {
                     }
 
 
-
-                    <a href="/" className='p-2 title-notification-container px-4 text-2xl rounded-full bg-red-600 text-white relative' title='Disconnect'>
-                      <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Disconnect</span>
-                      <PiPhoneX />
-                    </a>
+                    {
+                      role == 'Moderator' &&
+                      <button className={`p-2 title-notification-container px-4 text-2xl rounded-full bg-red-600 text-white relative`} onClick={endMeeting}>
+                        <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>End Meet</span>
+                        <PiPhoneX />
+                      </button>
+                    }
+                    {
+                      role != 'Moderator' &&
+                      <a href="/" className='p-2 title-notification-container px-4 text-2xl rounded-full bg-red-600 text-white relative' title='Disconnect'>
+                        <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Disconnect</span>
+                        <PiPhoneX />
+                      </a>
+                    }
+                    
                   </div>
-
-
-
                 </div>
               </div>
             )

@@ -1,3 +1,4 @@
+const e = require('cors');
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -20,17 +21,22 @@ const liveMeetingSchema = new Schema({
     role: { type: String, required: true }
   },
   participantsList: [{
-    name: { type: String, required: true },
-    id: { type: String, required: true },
-    role: { type: String, required: true },
-    email: {type: String, requried: true},
-    roomName: {type: String, required: false, default: "main"}
+      name: { type: String, required: true },
+      id: { type: String, required: true },
+      role: { type: String, required: true },
+      email: {type: String, requried: true},
+      roomName: {type: String, required: false, default: "main"},
+      joiningTime: {type: Date, required: false, default: Date.now},
+      leavingTime: {type: Date, required: false, default: null},
+      status: {type: String, required: false, default: "offline",enum: ['online', 'offline', 'removed']},
     }],
   observerList: [{
     name: { type: String, required: true },
     id: { type: String, required: true },
     role: { type: String, required: true },
-    email: {type: String,default: null}
+    email: {type: String,default: null},
+    joiningTime: {type: Date, required: false, default: Date.now},
+    leavingTime: {type: Date, required: false, default: null},
   }],
   ongoing: {
     type: Boolean,
@@ -47,6 +53,10 @@ const liveMeetingSchema = new Schema({
   iframeUrl: {
     type: String,
     default: null
+  },
+  isMeetindEnded: {
+    type: Boolean,
+    default: false
   },
   
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],

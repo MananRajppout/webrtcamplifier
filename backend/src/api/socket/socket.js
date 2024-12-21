@@ -99,6 +99,26 @@ const setupSocket = (server) => {
       const newname = email + roomid;
       delete userchangeroom[newname];
       const meeting = await Meeting.findById(roomid).populate("moderator");
+      if(role == "Participant"){
+        const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
+        const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == email);
+        if(participantIndex != -1 && liveMeeting.participantsList[participantIndex]){
+          liveMeeting.participantsList[participantIndex].status = "online";
+          liveMeeting.participantsList[participantIndex].joiningTime = Date.now();
+        }
+
+        const fullParticipantList = [
+          liveMeeting.moderator,
+          ...liveMeeting.participantsList,
+        ];
+  
+        io.to(liveMeeting.meetingId.toString()).emit("participantList", {
+          success: true,
+          message: "Participant added to participants list",
+          waitingRoom: liveMeeting.waitingRoom,
+          participantList: fullParticipantList,
+        });
+      }
       callback(socket.id,meeting);
     })
 
@@ -234,6 +254,7 @@ const setupSocket = (server) => {
         const participantWithId = {
           ...removedParticipant.toObject(),
           id: uuidv4(),
+          status: "online",
         };
 
         liveMeeting.participantsList.push(participantWithId);
@@ -914,6 +935,33 @@ const setupSocket = (server) => {
       }
     });
 
+
+
+
+    //end meeting
+    socket.on("endMeeting", async (data) => {
+      const {meetingId} = data;
+      console.log('endMeeting',data);
+      try {
+        const liveMeeting = checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        if (!liveMeeting) return;
+        io.to(meetingId).emit("endMeeting", {
+          success: true,
+          message: "Meeting ended successfully",
+          meetingId: meetingId,
+        });
+      } catch (error) {
+        console.error("Error in endMeeting:", error);
+        socket.emit("endMeetingResponse", {
+          success: false,
+          message: "Server error occurred",
+          meetingId: meetingId,
+        });
+        
+      }
+
+    });
+
     
 
 // * disconnect
@@ -931,9 +979,21 @@ const setupSocket = (server) => {
         return
       }
 
-      liveMeeting.participantsList = liveMeeting.participantsList.filter(p => p.email != userDetails?.email);
+
+      const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == userDetails?.email);
+      if(liveMeeting.participantsList[participantIndex]){
+        liveMeeting.participantsList[participantIndex].status = "offline";
+        liveMeeting.participantsList[participantIndex].leavingTime = Date.now();
+      }
+      
+
+      
       if(userDetails?.role == "Observer"){
-        liveMeeting.observerList = liveMeeting.observerList.filter(p => p.email != userDetails?.email);
+        const observerIndex = liveMeeting.observerList.findIndex(b => b.email == userDetails?.email);
+        if(liveMeeting.observerList[observerIndex]){
+          liveMeeting.observerList[observerIndex].leavingTime = Date.now();
+        }
+        
       }
 
 
@@ -956,8 +1016,6 @@ const setupSocket = (server) => {
         message: "Observer list retrieved successfully",
         observersList: fullObserverList,
       });
-
-      
     
 
       io.to(liveMeeting.meetingId.toString()).emit("participantList", {
@@ -966,7 +1024,6 @@ const setupSocket = (server) => {
         waitingRoom: liveMeeting.waitingRoom,
         participantList: fullParticipantList,
       });
-
 
     });
   });

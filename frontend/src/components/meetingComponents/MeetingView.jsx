@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Logo from "../shared/Logo";
 import {
   FaVideo,
@@ -26,17 +26,23 @@ const MeetingView = ({
   setBreakoutRooms,
   projectStatus,
   iframeLink, meetingDetails,
+  endMeeting,
+  isMeetingEnd,
+  setting,
+  setSetting
 }) => {
 
   const searchParams = useSearchParams();
   const roomname = searchParams.get('roomname');
   const type = searchParams.get('type');
+
   
+
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
 
     const textToCopy = `Meeting Link- ${meetingLink}`;
-  
+
 
     navigator.clipboard.writeText(textToCopy)
       .then(() => {
@@ -52,7 +58,7 @@ const MeetingView = ({
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meetingDetails._id}`;
     const meetingPassword = `${meetingDetails.meetingPasscode}`;
     const textToCopy = `Meeting Link- ${meetingLink}\nMeeting Password - ${meetingPassword}`;
-   
+
 
     navigator.clipboard.writeText(textToCopy)
       .then(() => {
@@ -93,12 +99,12 @@ const MeetingView = ({
             {
               role === "Observer" &&
               <Button
-              children={isWhiteBoardOpen ? "Close Whiteboard" : "Open Whiteboard"}
-              type="button"
-              variant={`${role !== "Moderator" ? "secondary" : "primary"}`}
-              className={`text-white py-1 px-3 rounded-xl text-sm hidden md:flex`}
-              onClick={()=>setIsWhiteBoardOpen(prev => !prev)}
-            />
+                children={isWhiteBoardOpen ? "Close Whiteboard" : "Open Whiteboard"}
+                type="button"
+                variant={`${role !== "Moderator" ? "secondary" : "primary"}`}
+                className={`text-white py-1 px-3 rounded-xl text-sm hidden md:flex`}
+                onClick={() => setIsWhiteBoardOpen(prev => !prev)}
+              />
             }
           </div>
           {/* logo */}
@@ -154,18 +160,31 @@ const MeetingView = ({
           )} */}
 
 
-          
-            <div className={`flex-1  ${isRecordingOpen ? 'block' : 'hidden'}`}>
-              <EndOFMeeting role={role} />
-            </div>
-         
-            <div className={`h-4/5 max-h-4/5 ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
-              <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen}/>
-            </div>
 
-            <div className={`flex-1  ${!isRecordingOpen && !isWhiteBoardOpen ? 'block' : 'hidden'}`}>
-              <OngoingMeeting users={users} iframeLink={iframeLink} role={role} />
+          <div className={`flex-1  ${isRecordingOpen ? 'block' : 'hidden'}`}>
+            <EndOFMeeting role={role} />
+          </div>
+
+          
+          <div className={`h-4/5 max-h-4/5 ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
+            <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen} />
+          </div>
+          
+
+          <div className={`flex-1  ${isMeetingEnd ? 'block' : 'hidden'}`}>
+            <div
+              className="rounded-md pb-10 h-[75vh] flex items-center justify-center bg-white"
+              style={{ width: "100%", position: "relative" }}
+            >
+              <p className="font-normal">This Meeting has been ended by the host</p>
             </div>
+          </div>
+
+          <div className={`flex-1  ${!isRecordingOpen && !isWhiteBoardOpen && !isMeetingEnd ? 'block' : 'hidden'}`}>
+            <OngoingMeeting users={users} iframeLink={iframeLink} role={role} endMeeting={endMeeting} isMeetingEnd={isMeetingEnd} setting={setting} setSetting={setSetting}/>
+          </div>
+
+
 
 
         </>
