@@ -8,7 +8,7 @@ const createCompany = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded?.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
@@ -18,7 +18,7 @@ const createCompany = async (req, res) => {
   if (!name || !industry || !mobile || !companyEmail || !website || !country || !officialAddress) {
     return res.status(404).send({message: "Required information not provided all."});
   }
-console.log("first if block passed")
+
 // If sameAddress is true, billingAddress is not required
 if (sameAddress && !billingAddress) {
   billingAddress = officialAddress;
@@ -61,7 +61,7 @@ const updateCompany = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded?.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
   let {  name, industry, mobile, companyEmail, website, country, officialAddress, billingAddress, sameAddress } = req.body;
@@ -110,7 +110,7 @@ const deleteCompany = async (req, res) => {
   
   const decoded = decodeToken(token);
   
-  if (decoded?.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
   try {
