@@ -146,23 +146,22 @@ const signin = async (req, res) => {
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
 
-
     let options;
-    if(process.env.STATUS_MODE != "production"){
+    if (process.env.STATUS_MODE != "production") {
       options = {
         expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
         httpOnly: true, // Protects against XSS attacks
-        secure: process.env.MODE === 'production', // Allow over HTTP (not recommended for production)
+        secure: process.env.MODE === "production", // Allow over HTTP (not recommended for production)
       };
-    }else{
+    } else {
       options = {
         expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
         domain: ".hgsingalong.com", // Shared across all subdomains
-        path: "/",                  // Available across the entire domain
-        httpOnly: true,             // Prevent client-side access
-        secure: true,               // Required for HTTPS
-        sameSite: "Lax",            // Adjust as needed ("Strict", "None", or "Lax")
-      }
+        path: "/", // Available across the entire domain
+        httpOnly: true, // Prevent client-side access
+        secure: true, // Required for HTTPS
+        sameSite: "Lax", // Adjust as needed ("Strict", "None", or "Lax")
+      };
     }
 
     res.cookie("token", token, options);
@@ -289,7 +288,7 @@ const findAll = async (req, res) => {
     const page = parseInt(req.query.page);
     const search = req.query.search || "";
     const company = req.query.company || "";
-    console.log('page',page)
+    console.log("page", page);
 
     // Build the query object
     const query = {
@@ -310,13 +309,14 @@ const findAll = async (req, res) => {
       .limit(limit)
       .skip(limit * (page - 1));
 
-    const totalRecords = await userModel.countDocuments({ isDeleted: false, role: { $in: ["Admin", "Moderator", "Observer"] }, });
-    console.log('results', result.length)
+    const totalRecords = await userModel.countDocuments({
+      isDeleted: false,
+      role: { $in: ["Admin", "Moderator", "Observer"] },
+    });
+    
 
     const totalPages = Math.ceil(totalRecords / limit);
-    // console.log('result', result)
-    console.log('totalRecords', totalRecords)
-    console.log('totalPages', totalPages)
+   
 
     res.status(200).json({
       message: "User info successfully fetched",
@@ -575,9 +575,8 @@ const userCreateByAdmin = async (req, res) => {
   if (!firstName || !lastName || !email || !companyName || !password) {
     return res.status(400).json({ message: "All fields are required." });
   }
-  
-  const userExist = await userModel.findOne({ email }).select("_id");
 
+  const userExist = await userModel.findOne({ email }).select("_id");
 
   if (userExist) {
     return res.status(400).json({ message: "Email already in use" });
@@ -641,7 +640,7 @@ const updateByAdmin = async (req, res) => {
   try {
     let user = await userModel.findById(id);
     if (decoded?.role === "AmplifyAdmin") {
-      user = await userModel.findOne({ _id: id, createdById: decoded?.id });
+      user = await userModel.findOne({ _id: id });
     }
     // Check if the user is deleted
     if (!user || user.isDeleted) {
@@ -650,7 +649,11 @@ const updateByAdmin = async (req, res) => {
 
     // Prevent AmplifyAdmin from updating another AmplifyAdmin
     if (decoded?.role === "AmplifyAdmin" && user?.role === "AmplifyAdmin") {
-      return res.status(403).json({ message: "Access denied: You cannot update another AmplifyAdmin." });
+      return res
+        .status(403)
+        .json({
+          message: "Access denied: You cannot update another AmplifyAdmin.",
+        });
     }
     // Prepare an object to hold the updates
     const updates = {};
@@ -684,20 +687,27 @@ const deleteByAdmin = async (req, res) => {
   const token = req.cookies.token;
 
   const decoded = decodeToken(token);
-  console.log("decoded", decoded, "id", id)
 
   if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
-  let exist = await userModel.findById(id);
-  console.log('exist', exist)
-  if (decoded?.role === "AmplifyAdmin") {
-    exist = await userModel.findOne({ _id: id, createdById: decoded?.id });
-  }
+  const exist = await userModel.findById(id);
+  
+  
   if (!exist || exist.isDeleted) {
     return res.status(404).json({ message: "User not found" });
   }
+
+  // Prevent AmplifyAdmin from updating another AmplifyAdmin
+  if (decoded?.role === "AmplifyAdmin" && exist?.role === "AmplifyAdmin") {
+    return res
+      .status(403)
+      .json({
+        message: "Access denied: You cannot delete another AmplifyAdmin.",
+      });
+  }
+
   try {
     await userModel.findByIdAndUpdate(id, { isDeleted: true });
 
@@ -738,7 +748,7 @@ const createAmplifyAdmin = async (req, res) => {
       isEmailVerified: false,
       termsAccepted,
       termsAcceptedTime: new Date(),
-      createdById: decoded?.id
+      createdById: decoded?.id,
     });
     // Save the new user
     const userSavedData = await newUser.save();
@@ -765,6 +775,9 @@ const createAmplifyAdmin = async (req, res) => {
 const getAllAmplifyAdminsByAdminId = async (req, res) => {
   try {
     const decoded = decodeToken(req.cookies.token);
+    if(decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin" ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
     const limit = parseInt(req.query.limit);
     const page = parseInt(req.query.page);
@@ -774,7 +787,8 @@ const getAllAmplifyAdminsByAdminId = async (req, res) => {
     // Build the query object
     const query = {
       isDeleted: false,
-      createdBy: decoded?.email,
+      // createdBy: decoded?.email,
+      role: { $in: ['AmplifyAdmin', 'AmplifyModerator', 'AmplifyObserver', 'AmplifyParticipant', 'AmplifyTechHost'] },
       ...(search && {
         $or: [
           { firstName: { $regex: search, $options: "i" } },
@@ -790,8 +804,10 @@ const getAllAmplifyAdminsByAdminId = async (req, res) => {
       .limit(limit)
       .skip(limit * (page - 1));
 
-
-    const totalRecords = await userModel.countDocuments({ isDeleted: false, createdBy: decoded?.email});
+    const totalRecords = await userModel.countDocuments({
+      isDeleted: false,
+      role: { $in: ['AmplifyAdmin', 'AmplifyModerator', 'AmplifyObserver', 'AmplifyParticipant', 'AmplifyTechHost'] },
+    });
 
     const totalPages = Math.ceil(totalRecords / limit);
 
@@ -806,8 +822,7 @@ const getAllAmplifyAdminsByAdminId = async (req, res) => {
     console.error("error in getAllAmplifyAdminsByAdminId", error);
     return res.status(500).json({ message: error.message });
   }
-}
-
+};
 
 const logout = async (req, res) => {
   try {
@@ -822,23 +837,22 @@ const logout = async (req, res) => {
     }
 
     let options;
-    if(process.env.STATUS_MODE != "production"){
+    if (process.env.STATUS_MODE != "production") {
       options = {
         expires: new Date(Date.now()), // 15 days
         httpOnly: true, // Protects against XSS attacks
-        secure: process.env.MODE === 'production', // Allow over HTTP (not recommended for production)
+        secure: process.env.MODE === "production", // Allow over HTTP (not recommended for production)
       };
-    }else{
+    } else {
       options = {
         expires: new Date(Date.now()),
         domain: ".hgsingalong.com", // Shared across all subdomains
-        path: "/",                  // Available across the entire domain
-        httpOnly: true,             // Prevent client-side access
-        secure: true,               // Required for HTTPS
-        sameSite: "Lax",            // Adjust as needed ("Strict", "None", or "Lax")
+        path: "/", // Available across the entire domain
+        httpOnly: true, // Prevent client-side access
+        secure: true, // Required for HTTPS
+        sameSite: "Lax", // Adjust as needed ("Strict", "None", or "Lax")
       };
     }
-    
 
     res.cookie("token", token, options);
 
@@ -869,5 +883,5 @@ module.exports = {
   deleteByAdmin,
   createAmplifyAdmin,
   getAllAmplifyAdminsByAdminId,
-  logout
+  logout,
 };

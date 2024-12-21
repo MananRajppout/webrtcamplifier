@@ -86,7 +86,7 @@ const DashboardSidebar = ({
               <>
                 <Link href="/dashboard/external-admins">
                   <div className="flex justify-start items-center gap-3 pt-5">
-                  <FaUserClock className="text-base text-[#6A7E88]"/>
+                    <FaUserClock className="text-base text-[#6A7E88]" />
                     <p className="text-base text-[#6A7E88] font-semibold">
                       External Admins
                     </p>
@@ -94,15 +94,15 @@ const DashboardSidebar = ({
                 </Link>
                 <Link href="/dashboard/internal-admins">
                   <div className="flex justify-start items-center gap-3 pt-5">
-                  <FaUserClock className="text-base text-[#6A7E88]"/>
+                    <FaUserClock className="text-base text-[#6A7E88]" />
                     <p className="text-base text-[#6A7E88] font-semibold">
-                    Internal Admins
+                      Internal Admins
                     </p>
                   </div>
                 </Link>
                 <Link href="/dashboard/companies">
                   <div className="flex justify-start items-center gap-3 pt-5">
-                  <MdOutlineInsertChart className="text-base text-[#6A7E88]"/>
+                    <MdOutlineInsertChart className="text-base text-[#6A7E88]" />
                     <p className="text-base text-[#6A7E88] font-semibold">
                       Companies
                     </p>
@@ -122,14 +122,23 @@ const DashboardSidebar = ({
                 className="rounded-full"
               />
               {/* name and email */}
+             
               <div>
                 <p className="text-custom-dark-blue-1 font-bold text-base">
-                  {user?.firstName} {user?.lastName}
+                  {user?.firstName && user.firstName.length > 12
+                    ? `${user.firstName.slice(0, 12)}...`
+                    : user?.firstName}{" "}
+                  {user?.lastName && user.lastName.length > 12
+                    ? `${user.lastName.slice(0, 12)}...`
+                    : user?.lastName}
                 </p>
-                <p className="text-[11px]  text-custom-dark-blue-1">
-                  {user?.email}
+                <p className="text-[11px] text-custom-dark-blue-1">
+                  {user?.email && user.email.length > 20
+                    ? `${user.email.slice(0, 20)}...`
+                    : user?.email}
                 </p>
               </div>
+
               {/* icon */}
               <BsThreeDotsVertical
                 className="text-custom-dark-blue-1 cursor-pointer"
@@ -210,7 +219,7 @@ const DashboardSidebar = ({
               <>
                 <Link href="/dashboard/external-admins">
                   <div className="flex justify-start items-center gap-3 pt-5">
-                  <FaUserClock className="text-base text-[#6A7E88]"/>
+                    <FaUserClock className="text-base text-[#6A7E88]" />
                     <p className="text-base text-[#6A7E88] font-semibold">
                       External Admins
                     </p>
@@ -218,7 +227,7 @@ const DashboardSidebar = ({
                 </Link>
                 <Link href="/dashboard/companies">
                   <div className="flex justify-start items-center gap-3 pt-5">
-                  <MdOutlineInsertChart className="text-base text-[#6A7E88]"/>
+                    <MdOutlineInsertChart className="text-base text-[#6A7E88]" />
                     <p className="text-base text-[#6A7E88] font-semibold">
                       Companies
                     </p>
@@ -242,10 +251,17 @@ const DashboardSidebar = ({
               {/* Name and Email */}
               <div>
                 <p className="text-custom-dark-blue-1 font-bold text-base">
-                  {user?.firstName} {user?.lastName}
+                  {user?.firstName && user.firstName.length > 12
+                    ? `${user.firstName.slice(0, 12)}...`
+                    : user?.firstName}{" "}
+                  {user?.lastName && user.lastName.length > 12
+                    ? `${user.lastName.slice(0, 12)}...`
+                    : user?.lastName}
                 </p>
                 <p className="text-[11px] text-custom-dark-blue-1">
-                  {user?.email}
+                  {user?.email && user.email.length > 20
+                    ? `${user.email.slice(0, 20)}...`
+                    : user?.email}
                 </p>
               </div>
               {/* Dots Icon */}

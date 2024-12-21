@@ -52,6 +52,8 @@ const EditInternalAdminModal = ({ onClose, currentAdmin, companies }) => {
       onClose();
     },
     onError: (error) => {
+      console.log('error', error)
+      toast.error(`${error.response?.data?.message}`)
       setError(error.response?.data?.message || "An error occurred.");
     },
   });

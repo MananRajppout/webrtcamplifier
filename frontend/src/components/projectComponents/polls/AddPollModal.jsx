@@ -128,6 +128,7 @@ const AddPollModal = ({ onClose, pollToEdit, project, setLocalProjectState, setP
     }
   };
 
+  console.log("new poll", newPoll)
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
@@ -154,7 +155,7 @@ const AddPollModal = ({ onClose, pollToEdit, project, setLocalProjectState, setP
           <FormDropdownLabel children="Active" className="ml-2 " />
         </div>
         <div className="bg-[#f3f3f3] -mx-6 p-6 mt-3">
-          {newPoll.questions.map((question, qIndex) => (
+          {newPoll?.questions?.map((question, qIndex) => (
             <div key={qIndex} className="mt-4 ">
               <div className="flex justify-between items-center">
                 <FormDropdownLabel
@@ -192,7 +193,7 @@ const AddPollModal = ({ onClose, pollToEdit, project, setLocalProjectState, setP
                   className="ml-2"
                 />
               </div>
-              {question.answers.map((answer, aIndex) => (
+              {question?.answers?.map((answer, aIndex) => (
                 <div
                   key={aIndex}
                   className="flex justify-between items-center mt-2 w-full"
