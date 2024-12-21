@@ -8,7 +8,6 @@ import { RiPencilFill } from "react-icons/ri";
 import { IoTrashBin } from "react-icons/io5";
 import Button from "../shared/button";
 import Pagination from "../shared/Pagination";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -106,7 +105,7 @@ const InternalAdminsTable = ({
   };
 
   const handleDeleteAdmin = useMutation({
-    mutationFn: deleteAdmin, // Use the mutation function style
+    mutationFn: deleteAdmin,
     onSuccess: () => {
       toast.success("Admin Deleted Successfully.");
       queryClient.invalidateQueries({ queryKey: ["internalAdmins"] });
@@ -190,7 +189,7 @@ const InternalAdminsTable = ({
                       </button>
                       <button
                         className="flex items-center justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() =>handleDeleteClick(admin)}
+                        onClick={() => handleDeleteClick(admin)}
                       >
                         <IoTrashBin className="mr-2" /> Delete
                       </button>
@@ -226,7 +225,7 @@ const InternalAdminsTable = ({
         />
       )}
 
-{showDeleteConfirmation && (
+      {showDeleteConfirmation && (
         <ConfirmationModal
           heading="Delete Admin"
           text={`Are you sure you want to delete ${adminToDelete?.firstName} ${adminToDelete?.lastName}?`}
@@ -234,7 +233,6 @@ const InternalAdminsTable = ({
           onYes={handleConfirmDelete}
         />
       )}
-
     </div>
   );
 };
