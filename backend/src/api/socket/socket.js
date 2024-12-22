@@ -119,6 +119,15 @@ const setupSocket = (server) => {
           participantList: fullParticipantList,
         });
       }
+      
+      if(role == "Moderator"){
+        const liveMeeting = await LiveMeeting.findOne({ meeting : roomid });
+        if(liveMeeting){
+          liveMeeting.startTime = Date.now();
+          await liveMeeting.save();
+        }
+      } 
+        
       callback(socket.id,meeting);
     })
 
@@ -945,6 +954,9 @@ const setupSocket = (server) => {
       try {
         const liveMeeting = checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
         if (!liveMeeting) return;
+        liveMeeting.isMeetindEnded = true;
+        liveMeeting.endTime = Date.now();
+        liveMeeting.duration = (((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime)))/1000)/60;
         io.to(meetingId).emit("endMeeting", {
           success: true,
           message: "Meeting ended successfully",
@@ -980,10 +992,12 @@ const setupSocket = (server) => {
       }
 
 
-      const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == userDetails?.email);
-      if(liveMeeting.participantsList[participantIndex]){
-        liveMeeting.participantsList[participantIndex].status = "offline";
-        liveMeeting.participantsList[participantIndex].leavingTime = Date.now();
+      if(userDetails?.role == "Participant"){
+        const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == userDetails?.email);
+        if(liveMeeting.participantsList[participantIndex]){
+          liveMeeting.participantsList[participantIndex].status = "offline";
+          liveMeeting.participantsList[participantIndex].leavingTime = Date.now();
+        }
       }
       
 
@@ -994,6 +1008,12 @@ const setupSocket = (server) => {
           liveMeeting.observerList[observerIndex].leavingTime = Date.now();
         }
         
+      }
+
+      if(userDetails?.role == "Moderator"){
+        liveMeeting.isMeetindEnded = true;
+        liveMeeting.endTime = Date.now();
+        liveMeeting.duration = (((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime)))/1000)/60;
       }
 
 
@@ -1016,6 +1036,9 @@ const setupSocket = (server) => {
         message: "Observer list retrieved successfully",
         observersList: fullObserverList,
       });
+
+
+      console.log(liveMeeting.endTime,liveMeeting.startTime,liveMeeting.duration)
     
 
       io.to(liveMeeting.meetingId.toString()).emit("participantList", {

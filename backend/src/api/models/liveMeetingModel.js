@@ -58,6 +58,18 @@ const liveMeetingSchema = new Schema({
     type: Boolean,
     default: false
   },
+  startTime: {
+    type: Date,
+    default: Date.now
+  },
+  endTime: {
+    type: Date,
+    default: null
+  },
+  duration: {
+    type: Number,
+    default: 0
+  },
   
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],

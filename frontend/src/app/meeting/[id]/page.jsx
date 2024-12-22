@@ -524,7 +524,9 @@ const page = () => {
 
   const endMeeting = useCallback(() => {
     socket.emit("endMeeting", { meetingId: params.id });
-    router.push("/dashboard/project");
+    if(typeof window !== "undefined"){
+      window.location.href = "/dashboard/project";
+    }
   },[params.id]);
 
 
