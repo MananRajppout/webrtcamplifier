@@ -313,10 +313,8 @@ const findAll = async (req, res) => {
       isDeleted: false,
       role: { $in: ["Admin", "Moderator", "Observer"] },
     });
-    
 
     const totalPages = Math.ceil(totalRecords / limit);
-   
 
     res.status(200).json({
       message: "User info successfully fetched",
@@ -566,7 +564,7 @@ const userCreateByAdmin = async (req, res) => {
 
   const decoded = decodeToken(token);
 
-  if (decoded.role !== "SuperAdmin") {
+  if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
     return res.status(403).json({ message: "Access denied" });
   }
 
@@ -595,6 +593,7 @@ const userCreateByAdmin = async (req, res) => {
     createdBy: decoded.email,
     termsAccepted: true,
     termsAcceptedTime: new Date(),
+    isEmailVerified: true,
   });
   const userSavedData = await newUser.save();
 
@@ -649,11 +648,9 @@ const updateByAdmin = async (req, res) => {
 
     // Prevent AmplifyAdmin from updating another AmplifyAdmin
     if (decoded?.role === "AmplifyAdmin" && user?.role === "AmplifyAdmin") {
-      return res
-        .status(403)
-        .json({
-          message: "Access denied: You cannot update another AmplifyAdmin.",
-        });
+      return res.status(403).json({
+        message: "Access denied: You cannot update another AmplifyAdmin.",
+      });
     }
     // Prepare an object to hold the updates
     const updates = {};
@@ -693,19 +690,16 @@ const deleteByAdmin = async (req, res) => {
   }
 
   const exist = await userModel.findById(id);
-  
-  
+
   if (!exist || exist.isDeleted) {
     return res.status(404).json({ message: "User not found" });
   }
 
   // Prevent AmplifyAdmin from updating another AmplifyAdmin
   if (decoded?.role === "AmplifyAdmin" && exist?.role === "AmplifyAdmin") {
-    return res
-      .status(403)
-      .json({
-        message: "Access denied: You cannot delete another AmplifyAdmin.",
-      });
+    return res.status(403).json({
+      message: "Access denied: You cannot delete another AmplifyAdmin.",
+    });
   }
 
   try {
@@ -745,10 +739,11 @@ const createAmplifyAdmin = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      isEmailVerified: false,
+      isEmailVerified: true,
       termsAccepted,
       termsAcceptedTime: new Date(),
       createdById: decoded?.id,
+
     });
     // Save the new user
     const userSavedData = await newUser.save();
@@ -775,7 +770,7 @@ const createAmplifyAdmin = async (req, res) => {
 const getAllAmplifyAdminsByAdminId = async (req, res) => {
   try {
     const decoded = decodeToken(req.cookies.token);
-    if(decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin" ) {
+    if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -788,7 +783,15 @@ const getAllAmplifyAdminsByAdminId = async (req, res) => {
     const query = {
       isDeleted: false,
       // createdBy: decoded?.email,
-      role: { $in: ['AmplifyAdmin', 'AmplifyModerator', 'AmplifyObserver', 'AmplifyParticipant', 'AmplifyTechHost'] },
+      role: {
+        $in: [
+          "AmplifyAdmin",
+          "AmplifyModerator",
+          "AmplifyObserver",
+          "AmplifyParticipant",
+          "AmplifyTechHost",
+        ],
+      },
       ...(search && {
         $or: [
           { firstName: { $regex: search, $options: "i" } },
@@ -806,7 +809,15 @@ const getAllAmplifyAdminsByAdminId = async (req, res) => {
 
     const totalRecords = await userModel.countDocuments({
       isDeleted: false,
-      role: { $in: ['AmplifyAdmin', 'AmplifyModerator', 'AmplifyObserver', 'AmplifyParticipant', 'AmplifyTechHost'] },
+      role: {
+        $in: [
+          "AmplifyAdmin",
+          "AmplifyModerator",
+          "AmplifyObserver",
+          "AmplifyParticipant",
+          "AmplifyTechHost",
+        ],
+      },
     });
 
     const totalPages = Math.ceil(totalRecords / limit);
