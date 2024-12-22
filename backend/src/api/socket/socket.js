@@ -98,13 +98,14 @@ const setupSocket = (server) => {
       console.log(`User with name ${name} joined meeting ${roomid}`)
       const newname = email + roomid;
       delete userchangeroom[newname];
-      const meeting = await Meeting.findById(roomid).populate("moderator");
+      
       if(role == "Participant"){
         const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
         const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == email);
         if(participantIndex != -1 && liveMeeting.participantsList[participantIndex]){
           liveMeeting.participantsList[participantIndex].status = "online";
           liveMeeting.participantsList[participantIndex].joiningTime = Date.now();
+          await liveMeeting.save();
         }
 
         const fullParticipantList = [
@@ -121,13 +122,30 @@ const setupSocket = (server) => {
       }
       
       if(role == "Moderator"){
-        const liveMeeting = await LiveMeeting.findOne({ meeting : roomid });
+        const liveMeeting = await LiveMeeting.findOne({ meetingId : roomid });
         if(liveMeeting){
           liveMeeting.startTime = Date.now();
+          liveMeeting.moderator.joiningTime = Date.now();
+          liveMeeting.moderator.status = "online";
           await liveMeeting.save();
+          
+          const fullParticipantList = [
+            liveMeeting.moderator,
+            ...liveMeeting.participantsList,
+          ];
+          
+          io.to(liveMeeting.meetingId.toString()).emit("participantList", {
+            success: true,
+            message: "Participant added to participants list",
+            waitingRoom: liveMeeting.waitingRoom,
+            participantList: fullParticipantList,
+          });
         }
-      } 
+      
         
+      }
+
+      const meeting = await Meeting.findById(roomid).populate("moderator");
       callback(socket.id,meeting);
     })
 
@@ -545,10 +563,10 @@ const setupSocket = (server) => {
             ...liveMeeting.participantsList,
           ];
 
-          io.emit("participantMovedToWaitingRoom", { name, role, email });
+          io.to(meetingId).emit("participantMovedToWaitingRoom", { name, role, email });
 
                    
-          io.emit("participantList", {
+          io.to(meetingId).emit("participantList", {
             success: true,
             message: "Participant list retrieved",
             participantList: fullParticipantList,
@@ -1014,6 +1032,8 @@ const setupSocket = (server) => {
         liveMeeting.isMeetindEnded = true;
         liveMeeting.endTime = Date.now();
         liveMeeting.duration = (((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime)))/1000)/60;
+        liveMeeting.moderator.endTime = Date.now();
+        liveMeeting.moderator.status = "offline";
       }
 
 
@@ -1036,9 +1056,6 @@ const setupSocket = (server) => {
         message: "Observer list retrieved successfully",
         observersList: fullObserverList,
       });
-
-
-      console.log(liveMeeting.endTime,liveMeeting.startTime,liveMeeting.duration)
     
 
       io.to(liveMeeting.meetingId.toString()).emit("participantList", {

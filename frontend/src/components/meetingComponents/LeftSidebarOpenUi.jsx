@@ -548,7 +548,7 @@ const LeftSidebarOpenUi = ({
 
               })
               //only show the users who are in the same room
-              .filter((user) => role === "Moderator" ? true : user.roomName?.toLowerCase() == roomname.toLowerCase())
+              .filter((user) => role === "Moderator" ? true : (user.roomName?.toLowerCase() == roomname.toLowerCase() || user.role == "Moderator"))
               //filter out the removed and offline users
               .filter((user) => user.status !== "removed" && user.status !== "offline")
               .map((user) => (

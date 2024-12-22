@@ -18,7 +18,10 @@ const liveMeetingSchema = new Schema({
   moderator: {
     name: { type: String, required: true },
     id: { type: String, required: true },
-    role: { type: String, required: true }
+    role: { type: String, required: true },
+    joiningTime: {type: Date, required: false, default: Date.now},
+    leavingTime: {type: Date, required: false, default: null},
+    status: {type: String, required: false, default: "offline",enum: ['online', 'offline']},
   },
   participantsList: [{
       name: { type: String, required: true },

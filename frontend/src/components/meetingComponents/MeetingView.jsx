@@ -29,7 +29,8 @@ const MeetingView = ({
   endMeeting,
   isMeetingEnd,
   setting,
-  setSetting
+  setSetting,
+  handleMediaUpload
 }) => {
 
   const searchParams = useSearchParams();
@@ -167,7 +168,7 @@ const MeetingView = ({
 
           
           <div className={`h-4/5 max-h-4/5 ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
-            <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen} />
+            <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen} handleMediaUpload={handleMediaUpload}/>
           </div>
           
 

@@ -2,6 +2,19 @@ const MediaBoxModel = require('../models/mediaBox.js');
 const { v2:cloudinary } = require('cloudinary');
 
 
+function calculateBase64Size(base64String) {
+ 
+  const base64Header = /^data:image\/\w+;base64,/;
+  const cleanedBase64 = base64String.replace(base64Header, '');
+
+  // Calculate padding (if any)
+  const padding = (cleanedBase64.endsWith('==') ? 2 : cleanedBase64.endsWith('=') ? 1 : 0);
+
+  // Calculate size in bytes
+  const sizeInBytes = (cleanedBase64.length * 3) / 4 - padding;
+  return sizeInBytes;
+}
+
 async function handleUpload(file,mimetype) {
   cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_NAME, 
@@ -22,16 +35,32 @@ async function handleUpload(file,mimetype) {
 // POST - Upload File
 exports.uploadFile = async (req, res) => {
   try {
-    const {meetingId,email,role,projectId,addedBy} = req.body;
-    const file = req.file;
-    if (!file) {
+    const {meetingId,email,role,projectId,addedBy,filename,filebase64} = req.body;
+    let file = req.file;
+    if (!file && !filebase64) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
   
     //upload file on cloudinary
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-    const cldRes = await handleUpload(dataURI,file.mimetype);
+    let cldRes;
+    if(file){
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+      let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+      cldRes = await handleUpload(dataURI,file.mimetype);
+    }
+
+    if(filebase64){
+      let dataURI = "data:" + '' + ";base64," + filebase64;
+      file = {
+        mimetype: 'image/png',
+        originalname: filename,
+        size: calculateBase64Size(dataURI)
+      }
+    
+      cldRes = await handleUpload(dataURI,file.mimetype);
+    }
+
+    
 
     //save on db
     const newMedia = await MediaBoxModel.create({
@@ -43,9 +72,9 @@ exports.uploadFile = async (req, res) => {
       file: {
         url: cldRes.secure_url,
         public_id: cldRes.public_id,
-        name: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
+        name: file?.originalname,
+        mimetype: file?.mimetype,
+        size: file?.size
       }
     });
 

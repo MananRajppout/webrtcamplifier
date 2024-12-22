@@ -10,6 +10,9 @@ import { HiOutlineMinus } from 'react-icons/hi';
 import { RiGalleryFill } from 'react-icons/ri';
 import { CgColorPicker } from 'react-icons/cg';
 import { useParams, useSearchParams } from 'next/navigation';
+import SaveWhiteBoardImageModel from '../singleComponent/SaveWhiteboardImageModal';
+import { IoIosCloudUpload } from 'react-icons/io';
+import toast from "react-hot-toast";
 
 
 
@@ -43,7 +46,7 @@ let myHeight = window.innerHeight;
 let myZoom = 1;
 let zoomPoint = { x: 0, y: 0 }
 let userId = null;
-const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
+const WhiteBoard = ({ users,isWhiteBoardOpen,handleMediaUpload }) => {
   const params = useParams();
   const searchParams = useSearchParams();
 
@@ -64,6 +67,9 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
   const canvasContainerRef = useRef(null);
   const [myId, setMyId] = useState('');
   const [data, setData] = useState([]);
+  const [openSaveModel, setOpenSaveModel] = useState(false);
+  const [filename, setFilename] = useState();
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [room, setRoom] = useState(null);
   const serverUrl = process.env.NEXT_PUBLIC_WHITEBOARD_SERVER_URL;
@@ -437,10 +443,22 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
     return () => {
       document.removeEventListener('keydown',deleteSelectedObject);
     }
-  },[])
+  },[]);
+
+
+
+  const handleSaved = useCallback(async () => {
+    let filebase64 = canvasRef.current?.toDataURL('image/png');
+    filebase64 = filebase64.split('base64,')[1];
+    await handleMediaUpload(null,setUploadProgress,filename,filebase64);
+    toast.success("File Upload Successfully");
+    setOpenSaveModel(false);
+  },[filename,canvasRef.current]);
+
 
 
   return (
+    <>
     <div className="bg-white board-container flex justify-start items-center  w-full h-full rounded-xl relative">
       <div id="sketch" className="sketch absolute border-2 border-black overflow-auto" ref={canvasContainerRef}>
 
@@ -477,20 +495,8 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
               onClick={handelPencil}
             ><BsEraser />
             </button>
-            {/* {
-              strokeActive &&
-              <div className='stroke_box flex_d_col'>
-                <label >
-                  Stroke Width
-                </label>
-                <input type='text' placeholder='stroke width' list='size' value={strokeBoxSize} onChange={handleStroke} />
-                <datalist id='size'>
-                  {
-                    sizeList.map((size, i) => <Fragment key={i}><option value={size} /></Fragment>)
-                  }
-                </datalist>
-              </div>
-            } */}
+            
+
             <button onClick={() => setColorBoxOpen(!colorBoxOpen)}><CgColorPicker /></button>
             {
               colorBoxOpen &&
@@ -500,6 +506,9 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
             }
             <input type='file' style={{ display: 'none' }} id='chooseFile' onChange={onUpload} />
             <button><label htmlFor='chooseFile' ><RiGalleryFill /></label></button>
+
+            <button onClick={() => setOpenSaveModel(true)}><IoIosCloudUpload /></button>
+
           </nav>
           <canvas
             id="canvas"
@@ -512,6 +521,13 @@ const WhiteBoard = ({ users,isWhiteBoardOpen }) => {
 
       </div>
     </div>
+
+
+    {
+      openSaveModel &&
+      <SaveWhiteBoardImageModel onClose={() => setOpenSaveModel(false)} name={filename} setName={setFilename} handleSaved={handleSaved} uploadProgress={uploadProgress}/>
+    }
+    </>
   );
 };
 

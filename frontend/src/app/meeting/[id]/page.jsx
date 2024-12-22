@@ -278,10 +278,10 @@ const page = () => {
   }, []);
 
   const handleMediaUpload = useCallback(
-    async (file, setUploadProgress) => {
+    async (file, setUploadProgress, filename,filebase64) => {
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,
-        { file, meetingId: params.id, email: myEmail, role: userRole,projectId,addedBy: fullName },
+        { file, meetingId: params.id, email: myEmail, role: userRole,projectId,addedBy: fullName,filename,filebase64 },
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -397,14 +397,13 @@ const page = () => {
   });
   // ? moving participant from the meeting to the waiting room
   useSocketListen("participantMovedToWaitingRoom", (data) => {
-    if(data.email === userEmail){
-      router.push(
+    if(data.email === userEmail && typeof window != 'undefined'){
+      window.location.href = 
         `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
         fullName
         )}&email=${encodeURIComponent(
           userEmail
-        )}&role=Participant`
-      );
+        )}&role=Participant`;
     }
   });
 
@@ -517,6 +516,7 @@ const page = () => {
 
 
   const onEndMeeting = useCallback(() => {
+    socket.disconnect();
     setIsMeetingEnd(true);
   },[])
 
@@ -601,6 +601,7 @@ const page = () => {
                 endMeeting={endMeeting}
                 isMeetingEnd={isMeetingEnd}
                 setting={setting} setSetting={setSetting}
+                handleMediaUpload={handleMediaUpload}
               />
             </div>
           </>
@@ -664,6 +665,7 @@ const page = () => {
                 endMeeting={endMeeting}
                 isMeetingEnd={isMeetingEnd}
                 setting={setting} setSetting={setSetting}
+                handleMediaUpload={handleMediaUpload}
               />
             </div>
             <div className="h-full">
@@ -751,6 +753,7 @@ const page = () => {
                 endMeeting={endMeeting}
                 isMeetingEnd={isMeetingEnd}
                 setting={setting} setSetting={setSetting}
+                handleMediaUpload={handleMediaUpload}
               />
             </div>
             <div className="h-full">
