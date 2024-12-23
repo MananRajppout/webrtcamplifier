@@ -25,7 +25,11 @@ const RepositoryTab = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(totalAllRepoPages);
 
-  const fetchRepositoriesData = async (page) => {
+  const fetchRepositoriesData = async (page,isPageChange) => {
+    if(!isPageChange){
+      setCurrentPage(1);
+      page = 1;
+    }
     if (selectedRepositoryMeetingTab === "All") {
       const response = await fetchRepositories(projectId, page);
       setTotalPages(totalAllRepoPages);
@@ -39,10 +43,11 @@ const RepositoryTab = ({
   };
 
   useEffect(() => {
-    fetchRepositoriesData(currentPage);
-  }, [currentPage, selectedRepositoryMeetingTab]);
+    fetchRepositoriesData(currentPage,false);
+  }, [selectedRepositoryMeetingTab]);
 
   const handlePageChange = (page) => {
+    fetchRepositoriesData(page,true);
     setCurrentPage(page);
   };
 
@@ -216,7 +221,6 @@ const RepositoryTab = ({
 
 
 
-  console.log(selectedRepositoryMeetingTab,'selectedRepositoryMeetingTab',selectedDocAndMediaTab,'selectedDocAndMediaTab')
 
   return (
     <div>
