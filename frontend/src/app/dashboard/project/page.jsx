@@ -98,7 +98,9 @@ const Page = () => {
             </div>
             {/* right div */}
             <div className="flex justify-end items-center gap-2">
-              <Button
+             {
+              (user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator") && (
+                <Button
                 children="Add new Project"
                 type="submit"
                 variant="default"
@@ -106,6 +108,10 @@ const Page = () => {
                 className="rounded-xl text-center shadow-[0px_3px_6px_#2976a54d] hidden md:flex w-[200px] py-3"
                 onClick={() => router.push(`/dashboard/create-project`)}
               />
+              )
+             }
+             {
+              (user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator") && (
               <Button
                 children=""
                 type="submit"
@@ -113,7 +119,7 @@ const Page = () => {
                 icon={<MdAdd />}
                 className="rounded-xl text-center py-3 mr-2 shadow-[0px_3px_6px_#2976a54d] md:hidden block pr-2 pl-3"
                 onClick={() => router.push(`/dashboard/create-project`)}
-              />
+              />)}
             </div>
           </div>
         </div>
