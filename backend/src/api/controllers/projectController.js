@@ -28,6 +28,14 @@ const createProject = async (req, res) => {
       return;
     }
 
+    if(user.role === "AmplifyTechHost" || user.role === "AmplifyModerator"){
+      res.status(403).json({
+        message: "You are not allowed to create a project.",
+      });
+      return;
+    }
+
+
     // Step 1: Create the project
     const newProject = new Project({
       name: formData.name,
