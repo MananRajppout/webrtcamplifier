@@ -20,6 +20,7 @@ const Page = () => {
   });
   const { setUser:setGlobalUser } = useGlobalContext();
 
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -29,7 +30,7 @@ const Page = () => {
             params: { id },
           }
         );
-        setUser(response.data.result);
+        setUser(response.data.data);
       } catch (error) {
         console.error("Error fetching user data:", error);
         // Optionally redirect to registration page if user not found
@@ -57,7 +58,7 @@ const Page = () => {
         user
       );
        // Update user in global context
-    setGlobalUser(response.data);
+    setGlobalUser(response.data.data);
 
     // Update token in cookies
     document.cookie = `token=${response.data.accessToken}; path=/; max-age=86400;`;
@@ -122,9 +123,9 @@ const Page = () => {
             />
             <div className="flex-grow">
               <h1 className="text-3xl font-semibold text-custom-teal text-center md:text-left">
-                {user.firstName} {user.lastName}
+                {user?.firstName} {user?.lastName}
               </h1>
-              <p className="text-center text-gray-400 md:text-left">ADMIN</p>
+              <p className="text-center text-gray-400 md:text-left">{user?.role}</p>
             </div>
           </div>
           {/* personal details */}
@@ -136,19 +137,19 @@ const Page = () => {
               <InputField
                 label="First Name"
                 name="firstName"
-                value={user.firstName}
+                value={user?.firstName}
                 onChange={handleInputChange}
               />
               <InputField
                 label="Last Name"
                 name="lastName"
-                value={user.lastName}
+                value={user?.lastName}
                 onChange={handleInputChange}
               />
               <InputField
                 label="Email"
                 name="email"
-                value={user.email}
+                value={user?.email}
                 onChange={handleInputChange}
               />
             </div>

@@ -40,7 +40,7 @@ const DashboardNavbar = ({ children }) => {
             className="rounded-xl w-[200px] text-center py-3  shadow-[0px_3px_6px_#FF66004D]"
           />
           <div className="rounded-xl bg-[#f3f4f5] text-black p-4">
-            <FaBell className="h-5 w-5" />
+            {/* <FaBell className="h-5 w-5" /> */}
           </div>
         </div>
       </div>
