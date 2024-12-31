@@ -782,8 +782,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           {isUploadResultsModalOpen && (
             <UploadResultsModal
               onClose={closeUploadResultsModal}
-              successResults={uploadResults} // Pass the success results to the modal
-              rejectedData={rejectedData} // Pass the rejected data to the modal
+              successResults={uploadResults} 
+              rejectedData={rejectedData} 
             />
           )}
         </div>

@@ -2,6 +2,7 @@ const Poll = require('../models/pollModel');
 
 // Create a new poll
 const createPoll = async (req, res) => {
+  console.log('req.body', req.body)
   try {
     const poll = await Poll.create(req.body)
     return res.status(201).json(poll);
@@ -46,7 +47,10 @@ const updatePoll = async (req, res) => {
   try {
     const poll = await Poll.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!poll) return res.status(404).json({ message: 'Poll not found.' });
-    return res.status(200).json(poll);
+
+    const polls = await Poll.find({ projectId: poll.projectId }).populate("createdById", "firstName lastName email").populate("projectId", "name description").limit(10);;
+
+    return res.status(200).json(polls);
   } catch (error) {
     return res.status(400).json({ message: error.message });
   }

@@ -9,7 +9,7 @@ import { GoPlus } from "react-icons/go";
 const MatchingPollModal = ({ onClose, onSave, project, user }) => {
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState([
-    { question: "", type: "Rank Order", matching: [{ option: "", answer: "" }] },
+    { question: "", type: "Matching", matching: [{ option: "", answer: "" }] },
   ]);
   
 
