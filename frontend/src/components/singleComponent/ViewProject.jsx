@@ -1,23 +1,17 @@
 "use client";
-import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
-import HeadingLg from "@/components/shared/HeadingLg";
-import { TbArrowsShuffle } from "react-icons/tb";
 import React, { useEffect, useState } from "react";
 import ParagraphBlue2 from "../shared/ParagraphBlue2";
 import axios from "axios";
-import MeetingTab from "../projectComponents/meetings/MeetingTab";
 import AddMeetingModal from "../projectComponents/meetings/AddMeetingModal";
 import EditProjectModal from "../projectComponents/EditProjectModal";
 import toast from "react-hot-toast";
 import MemberTabAddMember from "../projectComponents/members/MemberTabAddMember";
-import MembersTab from "../projectComponents/members/MembersTab";
 import MemberBulkUpdate from "../projectComponents/members/MemberBulkUpdate";
 import PollsTab from "../projectComponents/polls/PollsTab";
 import AddPollModal from "../projectComponents/polls/AddPollModal";
 import Button from "../shared/button";
 import AddRepositoryModal from "../projectComponents/repository/AddRepositoryModal";
 import RepositoryTab from "../projectComponents/repository/RepositoryTab";
-import Search from "./Search";
 import { MdBarChart, MdOutlineRadioButtonChecked } from "react-icons/md";
 import { FaCheckSquare, FaStarHalfAlt } from "react-icons/fa";
 import { HiMiniBars2, HiMiniBars4 } from "react-icons/hi2";
@@ -621,7 +615,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     totalPollPages,
     handlePollPageChange,
     handleOpenPollDropdown,
-    isPollDropdownOpen
+    isPollDropdownOpen,
+    fetchPolls
   }}
   repositoryData={{
     repositories,

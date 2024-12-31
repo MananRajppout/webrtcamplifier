@@ -62,6 +62,7 @@ const TabContent = ({
     handlePollPageChange,
     handleOpenPollDropdown,
     isPollDropdownOpen,
+    fetchPolls
   } = pollsData;
 
   const {
@@ -262,6 +263,7 @@ const TabContent = ({
               pollPage={pollPage}
               totalPollPages={totalPollPages}
               onPageChange={handlePollPageChange}
+              fetchPolls={fetchPolls}
             />
           </div>
         </div>

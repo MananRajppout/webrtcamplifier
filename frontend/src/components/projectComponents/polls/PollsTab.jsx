@@ -12,7 +12,7 @@ import Pagination from "@/components/shared/Pagination";
 
 const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
   totalPollPages,
-  onPageChange  }) => {
+  onPageChange, fetchPolls  }) => {
   const [selectedPoll, setSelectedPoll] = useState(null);
   const [isViewPollModalOpen, setIsViewPollModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +72,9 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
 
       if (response.status === 200) {
         toast.success(response.data.message);
-        setPolls(response.data.polls);
+        
+        fetchPolls()
+        // setPolls(response.data.polls);
       }
     } catch (error) {
       console.error("Error deleting poll:", error);
