@@ -155,6 +155,41 @@ const getPollResults = async (req, res) => {
   }
 };
 
+const changeActiveStatus = async (req, res) => {
+  try {
+    const { isActive } = req.body; 
+    const pollId = req.params.id;
+
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ message: 'Invalid status value.' });
+    }
+
+    const poll = await Poll.findByIdAndUpdate(
+      pollId,
+      { status: isActive },
+      { new: true }
+    ).populate('createdById', 'firstName lastName email').populate('projectId', 'name description');
+
+    if (!poll) {
+      return res.status(404).json({ message: 'Poll not found.' });
+    }
+
+    // Fetch updated polls for the same project to send updated data back to the frontend
+    const updatedPolls = await Poll.find({ projectId: poll.projectId }).populate(
+      'createdById',
+      'firstName lastName email'
+    ).populate('projectId', 'name description');
+
+    return res.status(200).json({
+      message: 'Poll status updated successfully.',
+      polls: updatedPolls,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+
 module.exports = {
   createPoll,
   getAllPolls,
@@ -163,4 +198,5 @@ module.exports = {
   deletePoll,
   submitPollResponse,
   getPollResults,
+  changeActiveStatus,
 };

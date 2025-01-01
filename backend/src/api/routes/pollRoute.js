@@ -7,4 +7,5 @@ module.exports = function (app) {
   app.put("/api/update-poll/:id", controller.updatePoll);
   app.delete("/api/delete/poll/:id", controller.deletePoll);
   app.post("/api/answer-poll", controller.submitPollResponse);
+  app.patch('/api/change-active-status/:id', controller.changeActiveStatus);
 };
