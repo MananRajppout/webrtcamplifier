@@ -3,7 +3,6 @@ const Company = require("../models/companyModel"); // Adjust the path as necessa
 
 // Create a new company
 const createCompany = async (req, res) => {
-  console.log("req.", req.body)
   const token = req.cookies.token;
   
   const decoded = decodeToken(token);
@@ -25,12 +24,10 @@ if (sameAddress && !billingAddress) {
 } else if (!sameAddress && !billingAddress) {
   return res.status(404).send({message: "Billing address is required when sameAddress is false."});
 }
-console.log("second if block passed")
 
   try {
 
     const isExist = await Company.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
-    console.log('is exist', isExist)
     if (isExist) {
       return res.status(400).send({message: "Company name already exists."});
     }
@@ -45,7 +42,6 @@ console.log("second if block passed")
       billingAddress, 
       sameAddress, 
     });
-    console.log("new companny", newCompany)
     await newCompany.save();
     res.status(201).send({message: "Company created successfully.", data: newCompany});
   } catch (error) {

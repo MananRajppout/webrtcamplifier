@@ -52,7 +52,6 @@ const Login = () => {
 
       if(typeof window !== 'undefined'){
         window.localStorage.setItem("user", JSON.stringify(response.data.data));
-        console.log(response.data.data,'ssss')
       }
 
      

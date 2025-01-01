@@ -288,7 +288,6 @@ const findAll = async (req, res) => {
     const page = parseInt(req.query.page);
     const search = req.query.search || "";
     const company = req.query.company || "";
-    console.log("page", page);
 
     // Build the query object
     const query = {

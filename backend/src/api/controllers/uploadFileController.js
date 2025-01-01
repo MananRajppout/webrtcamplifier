@@ -153,7 +153,6 @@ exports.deleteFile = async (req, res) => {
  
     const {id} = req.params;
     const media = await MediaBoxModel.findOne({_id: id});
-    console.log(media);
     await MediaBoxModel.findByIdAndDelete(id);
    
     const EventsEmitter = req.app.get('EventsEmitter');

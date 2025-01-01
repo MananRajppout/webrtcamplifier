@@ -17,7 +17,6 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
   const [isViewPollModalOpen, setIsViewPollModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false); 
-  console.log("polls", polls)
 
   const handleViewPoll = (poll) => {
     setSelectedPoll(poll);
@@ -30,15 +29,12 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
   };
 
   const handleStatusChange = async (poll, newStatus) => {
-    console.log("poll", poll)
-    console.log("newStatus", newStatus)
     setIsLoading(true);
     try {
       const response = await axios.patch(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/change-active-status/${poll._id}`,
         { isActive: newStatus }
       );
-console.log('active status response', response)
       if (response.status === 200) {
         toast.success(response.data.message);
         setPolls(response.data.polls);

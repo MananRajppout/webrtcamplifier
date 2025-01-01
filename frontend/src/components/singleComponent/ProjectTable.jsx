@@ -60,7 +60,6 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
     try {
       const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete/project/${project._id}`);
-     console.log("Deleted project", response.data)
      fetchProjects()
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -118,7 +117,6 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
   };
 
   const handleView = (project) => {
-    console.log('handle view clicked', project)
     setSelectedProject(project);
     setViewProject(true);
     closeModal();

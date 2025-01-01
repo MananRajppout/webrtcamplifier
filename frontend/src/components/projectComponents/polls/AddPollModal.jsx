@@ -30,7 +30,6 @@ const AddPollModal = ({
     ],
   });
 
-  // console.log("poll to edit", pollToEdit);
 
   useEffect(() => {
     if (pollToEdit) {
@@ -210,7 +209,6 @@ const AddPollModal = ({
   };
 
   const handleSave = async () => {
-    console.log("handleSave triggered");
 
     try {
       const dataToSend = {
@@ -313,7 +311,6 @@ const AddPollModal = ({
       };
       
        // Log the data being sent to the backend
-    console.log("Data being sent to the backend:", dataToSend);
 
       // if (pollToEdit) {
       //   const response = await axios.put(
@@ -344,7 +341,6 @@ const AddPollModal = ({
     }
   };
 
-  // console.log("new poll", newPoll);
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">

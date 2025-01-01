@@ -47,8 +47,7 @@ const page = () => {
     queryFn:() => fetchContacts(user._id, page, searchTerm)
   })
 
-  console.log('contacts', contacts)
-  console.log('totalPages', totalPages)
+  
 
   // useEffect(() => {
   //   if (user?._id) {

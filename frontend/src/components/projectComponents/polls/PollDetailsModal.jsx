@@ -1,7 +1,6 @@
 import Button from "@/components/shared/button";
 
 const PollDetailsModal = ({ poll, onClose }) => {
-  console.log("poll", poll);
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center ">
       <div className="bg-white p-6 rounded-lg shadow-lg w-2/3 lg:w-1/2">
