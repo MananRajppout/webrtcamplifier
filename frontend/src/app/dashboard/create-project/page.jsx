@@ -10,11 +10,13 @@ import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/context/GlobalContext";
 import Button from "@/components/shared/button";
 import toast from "react-hot-toast";
+import Step3 from "@/components/createProjectFormComponent/Step3";
 
 const Page = () => {
   const router = useRouter();
   const { user } = useGlobalContext();
-
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [paymentId, setPaymentId] = useState('')
   const [contacts, setContacts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -114,6 +116,11 @@ const Page = () => {
 
       // Handle success response
       if (response.status === 201) {
+        await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-payment`, {
+          paymentId,
+          projectId: response.data.projectId,
+        });
+        
         toast.success("Project created successfully!");
         router.push("/dashboard/project");
       }
@@ -150,15 +157,14 @@ const Page = () => {
             fetchContacts={fetchContacts}
           />
         );
-      // case 3:
-      //   return (
-      //     <Step3
-      //       formData={formData}
-      //       setFormData={setFormData}
-      //       contacts={contacts}
-      //       setContacts={setContacts}
-      //     />
-      //   );
+      case 3:
+        return (
+          <Step3
+          userId={user._id}
+          setPaymentId={setPaymentId}
+          setPaymentStatus={setPaymentStatus}
+          />
+        );
 
       default:
         return null;
@@ -247,7 +253,7 @@ const Page = () => {
               Back
             </Button>
           )}
-          {currentStep < 2 && (
+          {currentStep < 3 && (
             <Button
               onClick={nextStep}
               variant="save"
@@ -256,7 +262,7 @@ const Page = () => {
               Next
             </Button>
           )}
-          {currentStep === 2 && (
+          {(currentStep === 3 && paymentStatus === "succeeded") && (
             <Button
               variant="save"
               type="button"
