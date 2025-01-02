@@ -196,7 +196,7 @@ const RightSidebarOpenUi = ({
         <div className="bg-custom-black flex justify-center items-center gap-1 px-2 py-1 rounded-xl">
           <FaEye className="text-custom-orange-1" />
           <p className="text-xs text-white">Viewers</p>
-          <p className="text-xs text-white">{observers.length}</p>
+          <p className="text-xs text-white">{observers?.filter((observer) => (observer.status == "online" && observer.role !== "Moderator"))?.length}</p>
         </div>
       </div>
 
@@ -278,7 +278,9 @@ const RightSidebarOpenUi = ({
           !selectedChat &&
           observers
             .filter((observer) => observer.name !== userName)
+            .filter((observer) => observer.status == "online")
             .filter((observer) => (role == "Moderator" ? true : observer.role == "Moderator"))
+           
             .map((observer) => (
               <div
                 key={observer.id}

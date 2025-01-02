@@ -46,7 +46,7 @@ let myHeight = window.innerHeight;
 let myZoom = 1;
 let zoomPoint = { x: 0, y: 0 }
 let userId = null;
-const WhiteBoard = ({ users,isWhiteBoardOpen,handleMediaUpload }) => {
+const WhiteBoard = ({ users,isWhiteBoardOpen,handleMediaUpload,setting,setSetting }) => {
   const params = useParams();
   const searchParams = useSearchParams();
 
@@ -465,7 +465,7 @@ const WhiteBoard = ({ users,isWhiteBoardOpen,handleMediaUpload }) => {
         <div className='box' onMouseMove={() => onDraw()} ref={boxRef} onScroll={onScroll}>
 
 
-          <nav className={`top_nav ${role === "Observer" ? "!hidden" : ""}`}>
+          <nav className={`top_nav ${role === "Observer" || (role == "Participant" && !setting.allowEditWhiteBaord) ? "!hidden" : ""}`}>
             <button
               id="rectangle"
               onClick={() => toolHandler("rectangle")}

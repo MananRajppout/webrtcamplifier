@@ -43,6 +43,7 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
 
   const timeoutref = useRef(null);
   const localVideoElementRef = useRef(null);
+  const myEmailRef = useRef(null);
 
 
 
@@ -52,7 +53,7 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
 
 
   const { audioPermisson, cameraPermisson } = useCheckPermission();
-  const { handleJoin,handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting);
+  const { handleJoin,handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting,myEmailRef);
 
 
 
@@ -60,7 +61,14 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
     if(isMeetingEnd){
       handleDisconnect();
     }
-  },[isMeetingEnd])
+  },[isMeetingEnd]);
+
+  useEffect(() => {
+      if (typeof window != 'undefined') {
+        const email = window.localStorage.getItem('email');
+        myEmailRef.current = role == 'Moderator' ? 'admin@gmail.com' : email;
+      }
+  }, []);
 
 
   // on select video change
@@ -129,7 +137,7 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
   useEffect(() => {
     // calling only one time this function
     if (!handleJoinCallRef.current) {
-      handleJoin();
+      handleJoin(myEmailRef.current);
       handleJoinCallRef.current = true;
     }
   }, []);
@@ -229,6 +237,16 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
       handleChangeSetting({ ...setting, allowWhiteBoard: true });
     }
   }, [setting])
+
+  const handleAllowWhiteEditbaord = useCallback(() => {
+    if (setting.allowEditWhiteBaord) {
+      setSetting(prev => ({ ...prev, allowEditWhiteBaord: false }))
+      handleChangeSetting({ ...setting, allowEditWhiteBaord: false })
+    } else {
+      setSetting(prev => ({ ...prev, allowEditWhiteBaord: true }));
+      handleChangeSetting({ ...setting, allowEditWhiteBaord: true });
+    }
+  }, [setting]);
 
 
 
@@ -534,7 +552,11 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
                           </li>
                           <li className='flex items-center gap-3'>
                             <input type='checkbox' checked={setting.allowWhiteBoard} onClick={handleAllowWhitebaord} />
-                            <p className='text-white text-xs text-left'>Allow participants to use whitebaord</p>
+                            <p className='text-white text-xs text-left'>Allow participants to View whitebaord</p>
+                          </li>
+                          <li className='flex items-center gap-3'>
+                            <input type='checkbox' checked={setting.allowEditWhiteBaord} onClick={handleAllowWhiteEditbaord} />
+                            <p className='text-white text-xs text-left'>Allow participants to Edit whitebaord</p>
                           </li>
                         </ul>
                       </div>

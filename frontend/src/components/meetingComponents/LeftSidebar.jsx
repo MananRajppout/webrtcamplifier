@@ -43,7 +43,12 @@ const LeftSidebar = ({
   moveParticipantToWaitingRoom,
   enabledBreakoutRoom,
   setting,
-  setSetting
+  setSetting,
+  fetchPolls,
+  polls,
+  totalPages,
+  currentPollPage,
+  setCurrentPollPage,
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,7 +59,7 @@ const LeftSidebar = ({
 
   const [selectedChat, setSelectedChat] = useState(null);
 
-  
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -178,9 +183,8 @@ const LeftSidebar = ({
   return (
     <div>
       <div
-        className={`flex ${
-          isSidebarOpen ? "w-80" : "w-8 bg-custom-meet-bg md:bg-white md:w-24"
-        } transition-width duration-300 md:bg-white h-screen md:rounded-r-xl relative `}
+        className={`flex ${isSidebarOpen ? "w-80" : "w-8 bg-custom-meet-bg md:bg-white md:w-24"
+          } transition-width duration-300 md:bg-white h-screen md:rounded-r-xl relative `}
       >
         {isSidebarOpen ? (
           <>
@@ -255,6 +259,10 @@ const LeftSidebar = ({
               enabledBreakoutRoom={enabledBreakoutRoom}
               isWhiteBoardOpen={isWhiteBoardOpen}
               setting={setting} setSetting={setSetting}
+              fetchPolls={fetchPolls}
+                polls={polls}
+                totalPages={totalPages}
+                currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
             />
           ) : (
             <LeftSidebarCloseUi

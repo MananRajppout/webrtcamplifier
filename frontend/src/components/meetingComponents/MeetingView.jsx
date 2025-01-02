@@ -168,7 +168,7 @@ const MeetingView = ({
 
           
           <div className={`h-4/5 max-h-4/5 ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
-            <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen} handleMediaUpload={handleMediaUpload}/>
+            <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen} handleMediaUpload={handleMediaUpload} setting={setting} setSetting={setSetting}/>
           </div>
           
 
