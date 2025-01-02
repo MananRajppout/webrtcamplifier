@@ -30,7 +30,7 @@ const RightSidebarCloseUi = ({
         <div className="bg-custom-black flex justify-center items-center gap-1 px-2 py-1 rounded-xl text-[10px]">
           <FaEye className="text-custom-orange-1" />
           <p className=" text-white">Viewers</p>
-          <p className=" text-white">{observers.length}</p>
+          <p className=" text-white">{observers?.filter((observer) => (observer.status == "online" && observer.role !== "Moderator"))?.length}</p>
         </div>
         <BsChatSquareFill className="text-custom-dark-blue-1" />
       </div>

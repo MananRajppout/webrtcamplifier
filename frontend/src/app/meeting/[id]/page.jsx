@@ -16,7 +16,7 @@ const page = () => {
   const params = useParams();
   const meetingId = params?.id;
   const roomname = searchParams.get("roomname") || 'main';
-  
+
   const type = searchParams.get("type");
   const router = useRouter();
   const { user, socket } = useGlobalContext();
@@ -57,9 +57,13 @@ const page = () => {
   const [enabledBreakoutRoom, setEnabledBreakoutRoom] = useState(true);
   const [projectId, setProjectId] = useState(null);
   const [isMeetingEnd, setIsMeetingEnd] = useState(false);
+  const [polls, setPolls] = useState();
+  const [totalPages, setTotalPollPages] = useState();
+  const [currentPollPage, setCurrentPollPage] = useState(1);
   const [setting, setSetting] = useState({
     allowScreenShare: false,
-    allowWhiteBoard: false
+    allowWhiteBoard: false,
+    allowEditWhiteBaord: false
   });
 
   //get user email
@@ -86,24 +90,30 @@ const page = () => {
     }
     socket.emit(
       "join-room",
-      { roomid: params.id, name: fullName, email,roomname,role:userRole },
-      (socketId,meeting) => {
+      { roomid: params.id, name: fullName, email, roomname, role: userRole },
+      (socketId, meeting) => {
         socketIdRef.current = socketId;
-        if(meeting){
+        if (meeting) {
           setEnabledBreakoutRoom(meeting.enableBreakoutRoom);
           setProjectId(meeting.projectId);
         }
-       
+
+        socket.emit("mediabox:on-get-media", { meetingId: params.id, projectId: meeting.projectId }, (media) => {
+          setMediaBox([...media]);
+        });
+
       }
     );
-    socket.emit("grounp:get-message", { meetingId: params.id,roomname }, (messages) => {
+    socket.emit("grounp:get-message", { meetingId: params.id, roomname }, (messages) => {
       setGroupMessage([...messages]);
     });
 
-    socket.emit("mediabox:on-get-media", { meetingId: params.id }, (media) => {
-      console.log("media", media);
-      setMediaBox([...media]);
-    });
+    // polling feature needs to be handled, here we are just reciving the data
+    //starting
+
+    
+    //ending
+
 
     socket.on("change-room", handleChangeRoom);
     socket.on("getParticipantListResponse", handleParticipantList);
@@ -121,7 +131,7 @@ const page = () => {
     getMeetingStatus(params.id);
     getObserverList(params.id);
     getObserverChat(params.id);
-   
+
 
     // Clean up function to clear the interval when component unmounts or userRole changes
     return () => {
@@ -172,7 +182,7 @@ const page = () => {
       socket.emit(
         "create-breakout-room",
         { meetingId: params.id, breakroomname, participants },
-        ({ fullParticipantList, breakroomname,breakoutsRooms }, err) => {
+        ({ fullParticipantList, breakroomname, breakoutsRooms }, err) => {
           if (err) return console.log(err);
           setBreakoutRooms(breakoutsRooms);
           setParticipants(fullParticipantList);
@@ -258,7 +268,7 @@ const page = () => {
         roomname
       });
     },
-    [myEmail, params.id, participants,roomname]
+    [myEmail, params.id, participants, roomname]
   );
 
   const handleNewMessageReceive = useCallback((newMessage) => {
@@ -270,7 +280,7 @@ const page = () => {
   }, []);
 
   const handleMediaNewDelete = useCallback((media) => {
-    
+
     setMediaBox((prev) => {
       const newMedia = prev.filter((m) => m._id !== media._id);
       return newMedia;
@@ -278,10 +288,10 @@ const page = () => {
   }, []);
 
   const handleMediaUpload = useCallback(
-    async (file, setUploadProgress, filename,filebase64) => {
+    async (file, setUploadProgress, filename, filebase64) => {
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,
-        { file, meetingId: params.id, email: myEmail, role: userRole,projectId,addedBy: fullName,filename,filebase64 },
+        { file, meetingId: params.id, email: myEmail, role: userRole, projectId, addedBy: fullName, filename, filebase64 },
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -297,7 +307,7 @@ const page = () => {
       setUploadProgress(0);
       return res;
     },
-    [myEmail, params.id,fullName,userRole,projectId]
+    [myEmail, params.id, fullName, userRole, projectId]
   );
 
   // * get observer list response function
@@ -310,16 +320,16 @@ const page = () => {
   };
 
 
-// ? Listing participant chat response
+  // ? Listing participant chat response
   useSocketListen("participantChatResponse", (data) => {
-   
+
     if (data.success) {
       setParticipantMessages(data.participantMessages);
-      if(data.allBreakRoomsNameList){
+      if (data.allBreakRoomsNameList) {
         setBreakoutRooms(data.allBreakRoomsNameList);
       }
 
-      if(selectedRoom == "main"){
+      if (selectedRoom == "main") {
         if (roomname && type == "breackout") {
           setSelectedRoom(roomname);
         }
@@ -341,7 +351,7 @@ const page = () => {
   // * get observer chat response function
   const handleObserverChatResponse = (response) => {
     if (response.success) {
-   
+
       setObserversMessages(response.observerMessages);
     } else {
       console.error("Failed to get observer chat:", response.message);
@@ -351,7 +361,7 @@ const page = () => {
   // * handle participant removed
   const handleParticipantRemoved = (data) => {
     if (data.name === fullName && data.role === userRole) {
-      if(typeof window !== "undefined"){
+      if (typeof window !== "undefined") {
         window.location.href = "/remove-participant";
       }
     }
@@ -359,7 +369,7 @@ const page = () => {
 
   // * get participant list
   const handleParticipantList = (response) => {
-  
+
     if (response.success) {
       setParticipants(response.participantList);
     } else {
@@ -388,8 +398,8 @@ const page = () => {
   });
   // ? removing participant from the meeting
   useSocketListen("participantRemoved", (data) => {
-    if(data.email === userEmail){
-      if(typeof window !== "undefined"){
+    if (data.email === userEmail) {
+      if (typeof window !== "undefined") {
         window.location.href = "/remove-participant";
       }
     }
@@ -397,10 +407,10 @@ const page = () => {
   });
   // ? moving participant from the meeting to the waiting room
   useSocketListen("participantMovedToWaitingRoom", (data) => {
-    if(data.email === userEmail && typeof window != 'undefined'){
-      window.location.href = 
+    if (data.email === userEmail && typeof window != 'undefined') {
+      window.location.href =
         `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
-        fullName
+          fullName
         )}&email=${encodeURIComponent(
           userEmail
         )}&role=Participant`;
@@ -477,8 +487,8 @@ const page = () => {
   useEffect(() => {
     requestParticipantList();
     requestToGetParticipantsChats();
- 
-  },[]);
+
+  }, []);
 
   // ?Use effect to check if the participant is in the list and admit them
   useEffect(() => {
@@ -518,18 +528,49 @@ const page = () => {
   const onEndMeeting = useCallback(() => {
     socket.disconnect();
     setIsMeetingEnd(true);
-  },[])
+  }, [])
 
 
 
   const endMeeting = useCallback(() => {
     socket.emit("endMeeting", { meetingId: params.id });
-    if(typeof window !== "undefined"){
+    if (typeof window !== "undefined") {
       window.location.href = "/dashboard/project";
     }
-  },[params.id]);
+  }, [params.id]);
 
 
+  const fetchPolls = useCallback(async (page = 1) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/poll/${projectId}`,
+        {
+          params: { page, limit: 10,status: "active" },
+        }
+      );
+      setPolls(response.data.polls);
+      setTotalPollPages(response.data.totalPages);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  }, [projectId]);
+
+
+  //fetch polls
+  useEffect(() => {
+    if(projectId){
+      fetchPolls();
+    }
+  },[projectId]);
+
+
+  // polling feature needs to be handled, 
+  //starting
+
+    
+  //ending
+
+  
 
   return (
     <>
@@ -579,7 +620,10 @@ const page = () => {
                 mediaBox={mediaBox}
                 enabledBreakoutRoom={enabledBreakoutRoom}
                 setting={setting} setSetting={setSetting}
-                
+                fetchPolls={fetchPolls}
+                polls={polls}
+                totalPages={totalPages}
+                currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
@@ -644,6 +688,10 @@ const page = () => {
                 moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
                 enabledBreakoutRoom={enabledBreakoutRoom}
                 setting={setting} setSetting={setSetting}
+                fetchPolls={fetchPolls}
+                polls={polls}
+                totalPages={totalPages}
+                currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -731,8 +779,12 @@ const page = () => {
                 moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
                 enabledBreakoutRoom={enabledBreakoutRoom}
                 setting={setting} setSetting={setSetting}
+                fetchPolls={fetchPolls}
+                polls={polls}
+                totalPages={totalPages}
+                currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
               />
-              
+
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
               <MeetingView

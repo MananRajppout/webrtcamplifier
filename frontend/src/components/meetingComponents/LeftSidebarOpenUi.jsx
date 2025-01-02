@@ -8,7 +8,7 @@ import {
 } from "react-icons/bs";
 import HeadingLg from "../shared/HeadingLg";
 import Search from "../singleComponent/Search";
-import { IoIosDocument, IoMdMic } from "react-icons/io";
+import { IoIosDocument, IoMdMic, IoMdMicOff } from "react-icons/io";
 import { IoClose, IoRemoveCircle, IoSend } from "react-icons/io5";
 import { MdInsertEmoticon, MdMoveDown } from "react-icons/md";
 import RemoveUserModal from "../singleComponent/RemoveUserModal";
@@ -24,6 +24,7 @@ import { BiEditAlt } from "react-icons/bi";
 import UserRename from "../singleComponent/UserRenameModal";
 import ScrollToBottom from 'react-scroll-to-bottom';
 import { bytesToMbs } from "./RightSidebarOpenUi";
+import ViewPollModel from "../singleComponent/ViewPollModel";
 
 const LeftSidebarOpenUi = ({
   users,
@@ -70,7 +71,12 @@ const LeftSidebarOpenUi = ({
   enabledBreakoutRoom,
   isWhiteBoardOpen,
   setting,
-  setSetting
+  setSetting,
+  fetchPolls,
+  polls,
+  totalPages,
+  currentPollPage,
+  setCurrentPollPage,
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -88,8 +94,14 @@ const LeftSidebarOpenUi = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showUDot, setUShowDot] = useState(false);
   const [showCDot, setCShowDot] = useState(false);
+  const [suggestion, setSuggestion] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [unreadMessage, setUnreadMessage] = useState(0);
   const previosMCountRef = useRef(messages.length);
   const previosCCountRef = useRef(groupMessage.length);
+  const previosGroupCountRef = useRef(groupMessage.length);
+  const [participantsMicMuted, setParticipantsMicMuted] = useState({});
+  const [isPollModelOpen, setIsPollModelOpen] = useState(false);
 
 
   useEffect(() => {
@@ -99,12 +111,22 @@ const LeftSidebarOpenUi = ({
     }
   }, [messages]);
 
+  const handlePollPageChange = useCallback((page) => {
+    setCurrentPollPage(page);
+    fetchPolls(page);
+  }, []);
+
   useEffect(() => {
+    if(activeTab != "chats"){
+      setUnreadMessage(prev => prev+1);
+    }
     if (previosCCountRef.current < groupMessage?.length) {
       previosCCountRef.current = groupMessage?.length;
-      if (activeTab != 'chats') setCShowDot(true);
+      if (activeTab != 'chats'){
+        setCShowDot(true);
+      }
     }
-  }, [groupMessage]);
+  }, [groupMessage,activeTab]);
 
   const myEmailRef = useRef(null);
 
@@ -280,6 +302,57 @@ const LeftSidebarOpenUi = ({
   };
 
 
+
+  const handleGroupChatMessageChange = useCallback((e) => {
+    const value = e.target.value;
+    setGroupMessageContent(value);
+
+    const atIndex = value.lastIndexOf("@");
+    if (atIndex !== -1) {
+      const query = value.substring(atIndex + 1).toLowerCase();
+      const filterUser = users.map((p) => {
+        if(p.role == "Moderator"){
+          p.name = "Moderator"
+        }
+
+        return p;
+      })
+      let filteredSuggestions = filterUser.filter((p) =>
+        p.name.toLowerCase().startsWith(query)
+      );
+      
+      setSuggestions(filteredSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+
+  },[users]);
+
+
+  const handleSuggestionClick = useCallback((name) => {
+    const atIndex = groupMessageContent.lastIndexOf("@");
+    const newInput =
+    groupMessageContent.substring(0, atIndex + 1) + name + " " + groupMessageContent.substring(atIndex);
+    setGroupMessageContent(`@${newInput}`);
+    setSuggestions([]);
+  },[]);
+
+  const handleMicMuteUnmute = useCallback((type,email) => {
+    const audioElement = document.getElementById(email);
+    if(type == "mute"){
+      setParticipantsMicMuted(prev => ({...prev,[email]:false}));
+      if(audioElement){
+        audioElement.muted = false;
+      }
+    }else{
+      setParticipantsMicMuted(prev => ({...prev,[email]:true}));
+      if(audioElement){
+        audioElement.muted = true;
+      }
+    }
+    
+  },[]);
+
   return (
     <>
       <div className=" md:pt-0 pt-16">
@@ -370,6 +443,16 @@ const LeftSidebarOpenUi = ({
               onClick={() => setStartStreaming(meetingId)}
             />
           )}
+
+          {role != "Participant" && (
+            <Button
+              children={"View Polls"}
+              variant="meeting"
+              type="submit"
+              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+              onClick={() => setIsPollModelOpen(true)}
+            />
+          )}
         </div>
 
         {/* Backroom chat and icon */}
@@ -390,11 +473,14 @@ const LeftSidebarOpenUi = ({
                   ? "shadow-[0px_4px_6px_#1E656D4D]"
                   : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
                   }  `}
-                onClick={() => { handleTabClick("chats"); setCShowDot(false) }}
+                onClick={() => { handleTabClick("chats"); setCShowDot(false); setUnreadMessage(0); }}
               />
               {
                 showCDot &&
-                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 text-xs grid text-center text-white rounded-full  bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]">
+                  {unreadMessage < 10 ? unreadMessage : '9+'}
+
+                </div>
               }
             </div>
             <div className="w-full relative">
@@ -447,7 +533,16 @@ const LeftSidebarOpenUi = ({
                             <span className="font-bold">
                               {message.name}:
                             </span>{" "}
-                            {message.content}
+                            {message.content?.split(' ').map(text => (
+                              <>
+                                {
+                                  text.startsWith('@') ?
+                                  <span className="text-red-500">{text}{" "}</span>
+                                  :
+                                  <span>{text}{" "}</span>
+                                }
+                              </>
+                            ))}
                           </p>
                           <p className="text-[#1a1a1a] text-[10px]">
                             {new Date(message.timestamp).toLocaleTimeString()}
@@ -466,9 +561,24 @@ const LeftSidebarOpenUi = ({
                       placeholder={`Type Message ${groupMessage.length}`}
                       className="rounded-lg py-1 px-2 placeholder:text-[10px]"
                       value={groupMessageContent}
-                      onChange={(e) => setGroupMessageContent(e.target.value)}
+                      onChange={handleGroupChatMessageChange}
                     // onKeyPress={(e) => e.key === "Enter" && handleGroupMessage()}
                     />
+
+                  {suggestions.length > 0 && (
+                    <div className="sugesstions absolute -top-[11rem] left-0 h-[10rem] w-[12rem] bg-white z-50 rounded-md p-2 overflow-y-auto">
+                      <ul className="suggestions space-y-2">
+                        {suggestions.map((s) => (
+                          <li key={s.email} onClick={() => handleSuggestionClick(s.name)} className="cursor-pointer text-red-500">
+                            @{s.name}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                    
+
+
                     <div className="absolute right-11 cursor-pointer">
                       <MdInsertEmoticon />
                     </div>
@@ -561,6 +671,22 @@ const LeftSidebarOpenUi = ({
                   </div>
 
                   <div className="flex items-center gap-2">
+
+                    {
+                      (role == "Observer" || role == "Moderator") &&
+                      <>
+                        {
+                          participantsMicMuted[user.email] ?
+                          <button onClick={() => handleMicMuteUnmute("mute",user.email)} className="cursor-pointer">
+                            <IoMdMicOff size={20}/>
+                          </button>
+                          :
+                          <button onClick={() => handleMicMuteUnmute("unmute",user.email)} className="cursor-pointer">
+                            <IoMdMic size={20}/>
+                          </button>
+                        }
+                      </>
+                    }
 
                     {
                       role !== "Observer" &&
@@ -768,62 +894,9 @@ const LeftSidebarOpenUi = ({
         <ChatDashboard  receiverId={selectedReceiverId} users={users}/>
       )} */}
 
-      {/* document hub */}
       {
-        userrole == "Participant" &&
-        <div className="mb-4">
-          {/* heading */}
-          <div className="flex justify-center items-center gap-2 px-4 pb-2 ">
-            <IoIosDocument className="text-custom-dark-blue-1 text-lg" />
-            <h1 className="uppercase font-bold flex-1 text-custom-dark-blue-2">
-              document hub
-            </h1>
-
-            {
-              role === "Moderator" &&
-              <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
-                {uploadProgress != 0 ? `${uploadProgress}%` : 'Upload File'}
-                <input type="file" className="hidden" onChange={handleFileUpload} />
-              </label>
-            }
-
-          </div>
-          {/* Upload file div */}
-          <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto h-[15rem]">
-            {/* title */}
-            <div className="flex justify-between items-center border-b border-solid border-custom-gray-3 pb-1">
-              <p className="text-xs text-custom-gray-3">Name</p>
-              <p className="text-xs text-custom-gray-3 mr-11">Size</p>
-            </div>
-            {/* files */}
-            {mediaBox && mediaBox.map((media, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-gray-200 py-3 rounded"
-              >
-                <div className="flex items-center space-x-2">
-                  <FaFolder className="h-3 w-3 text-custom-gray-3" />
-                  <a href={media?.file?.url} target="_blank" download={media?.file?.name} className="text-xs text-custom-gray-3">
-                    {media?.file?.name || "Unkown"}
-                  </a>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-xs text-custom-gray-3">{bytesToMbs(media?.file?.size || 49972)} Mb</span>
-                  {
-                    role === "Moderator" &&
-                    <button
-                      className="text-red-600 hover:text-red-800"
-                    // onClick={() => handleDeleteFile(file._id)}
-                    >
-                      <FaTrash className="h-3 w-3" />
-                    </button>
-                  }
-
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        isPollModelOpen &&
+        <ViewPollModel onClose={() => setIsPollModelOpen(false)} polls={polls} onPageChange={handlePollPageChange} pollPage={currentPollPage} totalPollPages={totalPages}/>
       }
 
       {isRemoveModalOpen && (

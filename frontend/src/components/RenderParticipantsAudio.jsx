@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
 
-const RenderParticipantsAudio = ({socketId,audiosElementRef}) => {
+const RenderParticipantsAudio = ({socketId,audiosElementRef,email}) => {
     const audioRef = useRef(null);
     const setAudioRefs = (ref) => {   
         audioRef.current = ref; 
@@ -9,7 +9,7 @@ const RenderParticipantsAudio = ({socketId,audiosElementRef}) => {
         }
       };
   return (
-    <audio ref={setAudioRefs} autoPlay></audio>
+    <audio ref={setAudioRefs} autoPlay id={email}></audio>
   )
 }
 

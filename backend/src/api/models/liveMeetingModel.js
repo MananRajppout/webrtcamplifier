@@ -40,6 +40,7 @@ const liveMeetingSchema = new Schema({
     email: {type: String,default: null},
     joiningTime: {type: Date, required: false, default: Date.now},
     leavingTime: {type: Date, required: false, default: null},
+    status: {type: String, required: false, default: "offline",enum: ['online', 'offline']},
   }],
   ongoing: {
     type: Boolean,

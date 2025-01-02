@@ -31,17 +31,18 @@ class createMediasoupListener {
         const connection = this._io;
         connection.on('connection', (socket) => {
             console.log('user connect ', socket.id);
-            socket.on(JOIN_ROOM, async ({ room_id, username,isMicMute,isWebCamMute,role = "participant",settings={}  }, callback) => {
+            socket.on(JOIN_ROOM, async ({ room_id, username,isMicMute,isWebCamMute,email,role = "participant",settings={}  }, callback) => {
                 console.log(settings);
                 socket.join(room_id);
                 const router = await this.createRoom(room_id, socket.id,settings,role);
                 const isAdmin = rooms.get(room_id) ? false : true;
-                const newPeer: PeerService = new PeerService(socket.id, isAdmin, username, room_id,isWebCamMute,isMicMute,false,role);
+                
+                const newPeer: PeerService = new PeerService(socket.id, isAdmin, username, room_id,isWebCamMute,isMicMute,false,email,role);
 
                 peers.set(socket.id, newPeer);
                 const rtpCapabilities: mediasoup.types.RtpCapabilities = router.rtpCapabilities;
                 
-
+               
 
                 const participants: PeerService[] = [];
                 peers.forEach((peer: PeerService) => {
@@ -50,11 +51,13 @@ class createMediasoupListener {
                     }
                 })
 
-                console.log(rtpCapabilities,participants,socket.id)
+                
+
+                
                 const roomSettings:ISetting = rooms.get(room_id)?.settings;
                 callback(socket.id, rtpCapabilities, participants,roomSettings);
                 // connection.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute });
-                socket.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute,role });
+                socket.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute,role,email });
             });
 
 

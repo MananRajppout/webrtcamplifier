@@ -16,8 +16,17 @@ const getAllPolls = async (req, res) => {
   try {
     const limit = parseInt(req.query?.limit) || 10;
     const page = parseInt(req.query?.page) || 0;
-    const polls = await Poll.find({ projectId: req.params.projectId }).populate("createdById", "firstName lastName email").populate("projectId", "name description").skip((page - 1) * limit).limit(limit);;
-    const totalDocuments = await Poll.countDocuments({ projectId: req.params.projectId});
+    const status = req.query.status;
+
+    const query = { projectId: req.params.projectId };
+
+    if(status == "active"){
+      query.status = true;
+    }
+    
+
+    const polls = await Poll.find(query).populate("createdById", "firstName lastName email").populate("projectId", "name description").skip((page - 1) * limit).limit(limit);;
+    const totalDocuments = await Poll.countDocuments(query);
     const totalPages = Math.ceil(totalDocuments / limit);
     return res.status(200).json({
       page,

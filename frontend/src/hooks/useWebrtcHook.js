@@ -32,7 +32,7 @@ let params = {
 
 
 
-const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role,setting,setSetting) => {
+const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role,setting,setSetting,myEmailRef) => {
   const [socketId, setSocketId] = useState(null);
   const [, forceRender] = useState(false);
 
@@ -318,15 +318,15 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
 
     // functions
-    const handleJoin = useCallback(async () => {
+    const handleJoin = useCallback(async (email) => {
       
-
+      
       if(handleJoinCallAlreadyExist.current){
         return
       }
 
       handleJoinCallAlreadyExist.current = true;
-      socketRef.current?.emit(JOIN_ROOM, { room_id, username,isMicMute:isMicMuteRef.current,isWebCamMute:isWebCamMuteRef.current,role,settings:role == "Moderator" ? setting: {} }, async (socketId, rtpCapabilities, participants,roomSettings) => {
+      socketRef.current?.emit(JOIN_ROOM, { room_id, username,isMicMute:isMicMuteRef.current,isWebCamMute:isWebCamMuteRef.current,role,email,settings:role == "Moderator" ? setting: {} }, async (socketId, rtpCapabilities, participants,roomSettings) => {
         setSocketId(socketId);
         socketIdRef.current = socketId;
         rtpCapabilitiesRef.current = rtpCapabilities;
@@ -382,15 +382,16 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         }
 
         //add own self in  participants
-        const newParticipant = new ParticipantModel(username, socketId,isWebCamMuteRef.current,isMicMuteRef.current, isScreenShareRef.current,role);
+        const newParticipant = new ParticipantModel(username, socketId,isWebCamMuteRef.current,isMicMuteRef.current, isScreenShareRef.current,role, myEmailRef.current);
         newParticipant.audioTrack =  audioParamsRef.current;
         newParticipant.videoTrack =  videoParamsRef.current;
 
         participantsRef.current = [...participantsRef.current, newParticipant];
 
         //add others participants
+        
         participants.forEach(participant => {
-          const newPartcipant = new ParticipantModel(participant.username, participant.socketId,participant.isWebCamMute,participant.isMicMuteRef,participant.isShareScreen,participant.role);
+          const newPartcipant = new ParticipantModel(participant.username, participant.socketId,participant.isWebCamMute,participant.isMicMuteRef,participant.isShareScreen,participant.role,participant.email);
           participantsRef.current = [...participantsRef.current, newPartcipant];
         });
 
@@ -501,14 +502,14 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
     // events listners 
     useEffect(() => {
-      socketRef.current?.on(NEW_PARTCIPANT_JOIN, ({ socketId, username,isMicMute,isWebCamMute,role }) => {
+      socketRef.current?.on(NEW_PARTCIPANT_JOIN, ({ socketId, username,isMicMute,isWebCamMute,role,email }) => {
         const partcipantExist = participantsRef.current.find((participant) => participant.socketId == socketId);
         if (partcipantExist) return
 
 
 
 
-        const newParticipant = new ParticipantModel(username, socketId,isWebCamMute,isMicMute,false,role);
+        const newParticipant = new ParticipantModel(username, socketId,isWebCamMute,isMicMute,false,role,email);
 
         participantsRef.current = [...participantsRef.current, newParticipant];
         forceRender((prev) => !prev);

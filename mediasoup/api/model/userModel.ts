@@ -9,9 +9,10 @@ class UserModel {
     public isMicMute: boolean;
     public isWebCamMute: boolean;
     public isShareScreen: boolean;
+    public email: string;
     public role: "modirator" | "participant" | "observer" = "participant";
 
-    constructor(socketId:string,isModirator:boolean,username:string,room_id:string,isWebCamMute:boolean=true,isMicMute:boolean=true,isShareScreen:boolean=false,role: "modirator" | "participant" | "observer" = "participant"){
+    constructor(socketId:string,isModirator:boolean,username:string,room_id:string,isWebCamMute:boolean=true,isMicMute:boolean=true,isShareScreen:boolean=false,email:string,role: "modirator" | "participant" | "observer" = "participant",){
         this.socketId = socketId;
         this.username = username;
         this.isModirator = isModirator;
@@ -20,6 +21,7 @@ class UserModel {
         this.isWebCamMute = isWebCamMute;
         this.role = role;
         this.isShareScreen = isShareScreen;
+        this.email = email;
     }
 
 }
