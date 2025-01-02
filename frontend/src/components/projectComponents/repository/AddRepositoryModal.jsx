@@ -78,7 +78,7 @@ const AddRepositoryModal = ({ onClose, project, meetings, setLocalProjectState, 
       onClose();
     } catch (error) {
       console.error("Error uploading file:", error);
-      toast.error(`${error.response.data.error}`);
+      toast.error(`${error.response.data.message}`);
     } finally {
       setIsLoading(false);
     }
