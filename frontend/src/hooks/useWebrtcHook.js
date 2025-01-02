@@ -32,7 +32,7 @@ let params = {
 
 
 
-const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role,setting,setSetting,myEmailRef) => {
+const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role,setting,setSetting,myEmailRef,allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks) => {
   const [socketId, setSocketId] = useState(null);
   const [, forceRender] = useState(false);
 
@@ -62,6 +62,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
   const remoteVideoTracksRef = useRef({});
   const remoteDisplayTracksRef = useRef({});
   const handleJoinCallAlreadyExist = useRef(false);
+ 
 
 
 
@@ -143,8 +144,8 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         if (params.kind == 'audio') {
           
           participantRef.audioTrack = track;
-          console.log(track,'track coming audio')
-          
+          allPaericipantsAudioTracksRef.current.push({track,socket_id: socketId});
+          setAllParticipantsAudioTracks(prev => [...prev, {track,socket_id: socketId}]);
           if(audiosElementRef.current[socketId]){
             audiosElementRef.current[socketId].srcObject = new MediaStream([track])
             audiosElementRef.current[socketId].play().catch(error => {
@@ -169,7 +170,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
           }
         }
       }
-      console.log('audio',audiosElementRef.current[socketId])
+      
       socketRef.current?.emit(CONSUME_RESUME, { serverConsumerId: params.serverConsumerId });
       setSuperForceRender(Math.random() * 1000);
       forceRender(prev => !prev);
@@ -363,6 +364,9 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
 
         videoTrackRef.current = userMedia[0];
         audioTrackRef.current = userMedia[1];
+        allPaericipantsAudioTracksRef.current.push({track: audioTrackRef.current,socket_id: socketId})
+        setAllParticipantsAudioTracks(prev => [...prev, {track: audioTrackRef.current,socket_id: socketId}]);
+        
 
 
         if(remoteVideoTracksRef.current[socketId]){

@@ -4,12 +4,15 @@ import MeetingView from "@/components/meetingComponents/MeetingView";
 import RightSidebar from "@/components/meetingComponents/RightSidebar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import userImage from "../../../../public/user.jpg";
-import axios from "axios";
+import axios, { all } from "axios";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import io from "socket.io-client";
 import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
 import useSocketListen from "@/hooks/useSocketListen";
+import { addAudioTrackToStream } from "@/utils/mixAudio";
+import { RecordingServerConnector } from "@/utils/connectToRecordingServer";
+import fixWebmDuration from 'webm-duration-fix';
 
 const page = () => {
   const searchParams = useSearchParams();
@@ -36,7 +39,9 @@ const page = () => {
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [isAdmitted, setIsAdmitted] = useState(false);
   const socketIdRef = useRef(null);
+
   // const [socket, setSocket] = useState(null);
+
 
   const meetingStatus = "Ongoing";
   const projectStatus = "Open";
@@ -66,7 +71,161 @@ const page = () => {
     allowEditWhiteBaord: false
   });
 
-  //get user email
+  //recording feauture
+  const mixAudioDestinationRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const allPaericipantsAudioTracksRef = useRef([]);
+  const gdmStreamRef = useRef(null);
+  const recordingStreamRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const startRecordingRef = useRef(false);
+  const recordingServerConnectorRef = useRef(null);
+  const [allParticipantsAudioTracks, setAllParticipantsAudioTracks] = useState([]);
+  const [startRecording, setStartRecording] = useState(false);
+  const recordingChunksRef = useRef([]);
+
+
+
+
+  const handleStopRecording = useCallback(async () => {
+    const chunks = recordingChunksRef.current;
+    recordingChunksRef.current = [];
+    const blob = await fixWebmDuration(new Blob(chunks, { type: 'video/webm' }));
+    const url = URL.createObjectURL(blob);
+
+    // Trigger a direct download
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'recording.webm';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Clean up
+    URL.revokeObjectURL(url);
+  }, [recordingChunksRef.current]);
+
+
+  const handleMediaRecorer = useCallback((stream) => {
+
+    mediaRecorderRef.current = new MediaRecorder(stream, {
+      mimeType: 'video/webm;codecs=vp8',
+      videoBitsPerSecond: 2500000,
+    });
+
+    mediaRecorderRef.current.addEventListener('dataavailable', (e) => {
+      recordingChunksRef.current.push(e.data);
+      // if (e.data.size > 0) {
+      //   const reader = new FileReader();
+      //   reader.onloadend = () => {
+      //     const base64Data = reader.result.split('base64,')[1];
+      //     const data = {
+      //       type: "media",
+      //       payload: base64Data,
+      //     }
+
+      //     recordingServerConnectorRef.current.send(JSON.stringify(data));
+      //   };
+      //   reader.readAsDataURL(e.data);
+      // }
+    });
+
+    mediaRecorderRef.current.addEventListener('stop', () => {
+      if (startRecordingRef.current) {
+        return;
+      }
+
+      // const data = {
+      //   type: "stop"
+      // }
+
+      // recordingServerConnectorRef.current.send(JSON.stringify(data));
+
+      handleStopRecording();
+    });
+
+    mediaRecorderRef.current.start(1000);
+  }, [startRecording]);
+
+
+  const handleCombineStreams = useCallback((stream) => {
+    audioContextRef.current = new AudioContext();
+    mixAudioDestinationRef.current = audioContextRef.current.createMediaStreamDestination();
+    allPaericipantsAudioTracksRef.current.forEach((audio) => {
+      addAudioTrackToStream(audioContextRef.current, mixAudioDestinationRef.current, audio.track);
+    });
+    recordingStreamRef.current = new MediaStream([stream.getVideoTracks()[0], ...mixAudioDestinationRef.current.stream.getAudioTracks() || []]);
+    handleMediaRecorer(recordingStreamRef.current);
+  }, [allPaericipantsAudioTracksRef.current, allParticipantsAudioTracks]);
+
+
+  //const handleRecording
+  const handleRecording = useCallback(() => {
+    if (!startRecording) {
+      if (typeof window !== "undefined") {
+        const options = {
+          video: {
+            displaySurface: 'browser',
+            frameRate: 30
+          },
+          audio: false,
+          preferCurrentTab: true
+        }
+
+        const gdmStream = navigator.mediaDevices.getDisplayMedia(options);
+        gdmStream.then((stream) => {
+          // recordingServerConnectorRef.current = new RecordingServerConnector(params.id,projectId);
+          setStartRecording(true);
+          startRecordingRef.current = true;
+          gdmStreamRef.current = stream;
+          gdmStreamRef.current.onended = handleRecording;
+          handleCombineStreams(gdmStreamRef.current);
+        });
+      }
+
+    } else {
+      audioContextRef.current.close();
+      gdmStreamRef.current.getTracks().forEach((track) => track.stop());
+      gdmStreamRef.current = null;
+      mixAudioDestinationRef.current = null;
+      recordingStreamRef.current = null;
+      mediaRecorderRef.current?.stop();
+      setStartRecording(false);
+      startRecordingRef.current = false;
+    }
+
+  }, [allParticipantsAudioTracks, allPaericipantsAudioTracksRef.current, startRecording,projectId,params.id]);
+
+
+  //when new user add duration recording this use effect called
+  useEffect(() => {
+    if (!startRecording) {
+      return;
+    }
+    mediaRecorderRef.current?.stop();
+    handleCombineStreams(gdmStreamRef.current);
+  }, [allParticipantsAudioTracks]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const email = window.localStorage.getItem("email");
@@ -111,7 +270,7 @@ const page = () => {
     // polling feature needs to be handled, here we are just reciving the data
     //starting
 
-    
+
     //ending
 
 
@@ -545,7 +704,7 @@ const page = () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/poll/${projectId}`,
         {
-          params: { page, limit: 10,status: "active" },
+          params: { page, limit: 10, status: "active" },
         }
       );
       setPolls(response.data.polls);
@@ -558,22 +717,23 @@ const page = () => {
 
   //fetch polls
   useEffect(() => {
-    if(projectId){
+    if (projectId) {
       fetchPolls();
     }
-  },[projectId]);
+  }, [projectId]);
 
 
   // polling feature needs to be handled, 
   //starting
 
-    
+
   //ending
 
-  
+
 
   return (
     <>
+
       <div className="flex justify-between min-h-screen max-h-screen meeting_bg ">
         {userRole === "Participant" && !isAdmitted ? (
           <div className="flex items-center justify-center w-full min-h-screen bg-white ">
@@ -624,6 +784,8 @@ const page = () => {
                 polls={polls}
                 totalPages={totalPages}
                 currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
+                startRecording={startRecording} setStartRecording={setStartRecording}
+                handleRecording={handleRecording}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
@@ -646,6 +808,8 @@ const page = () => {
                 isMeetingEnd={isMeetingEnd}
                 setting={setting} setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
+                allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
+                setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
               />
             </div>
           </>
@@ -692,6 +856,8 @@ const page = () => {
                 polls={polls}
                 totalPages={totalPages}
                 currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
+                startRecording={startRecording} setStartRecording={setStartRecording}
+                handleRecording={handleRecording}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -714,6 +880,8 @@ const page = () => {
                 isMeetingEnd={isMeetingEnd}
                 setting={setting} setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
+                allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
+                setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
               />
             </div>
             <div className="h-full">
@@ -783,6 +951,8 @@ const page = () => {
                 polls={polls}
                 totalPages={totalPages}
                 currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
+                startRecording={startRecording} setStartRecording={setStartRecording}
+                handleRecording={handleRecording}
               />
 
             </div>
@@ -806,6 +976,8 @@ const page = () => {
                 isMeetingEnd={isMeetingEnd}
                 setting={setting} setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
+                allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
+                setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
               />
             </div>
             <div className="h-full">

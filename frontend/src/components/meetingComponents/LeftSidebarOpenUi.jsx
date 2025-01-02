@@ -77,6 +77,7 @@ const LeftSidebarOpenUi = ({
   totalPages,
   currentPollPage,
   setCurrentPollPage,
+  startRecording, setStartRecording, handleRecording
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -117,16 +118,16 @@ const LeftSidebarOpenUi = ({
   }, []);
 
   useEffect(() => {
-    if(activeTab != "chats"){
-      setUnreadMessage(prev => prev+1);
+    if (activeTab != "chats") {
+      setUnreadMessage(prev => prev + 1);
     }
     if (previosCCountRef.current < groupMessage?.length) {
       previosCCountRef.current = groupMessage?.length;
-      if (activeTab != 'chats'){
+      if (activeTab != 'chats') {
         setCShowDot(true);
       }
     }
-  }, [groupMessage,activeTab]);
+  }, [groupMessage, activeTab]);
 
   const myEmailRef = useRef(null);
 
@@ -311,7 +312,7 @@ const LeftSidebarOpenUi = ({
     if (atIndex !== -1) {
       const query = value.substring(atIndex + 1).toLowerCase();
       const filterUser = users.map((p) => {
-        if(p.role == "Moderator"){
+        if (p.role == "Moderator") {
           p.name = "Moderator"
         }
 
@@ -320,38 +321,38 @@ const LeftSidebarOpenUi = ({
       let filteredSuggestions = filterUser.filter((p) =>
         p.name.toLowerCase().startsWith(query)
       );
-      
+
       setSuggestions(filteredSuggestions);
     } else {
       setSuggestions([]);
     }
 
-  },[users]);
+  }, [users]);
 
 
   const handleSuggestionClick = useCallback((name) => {
     const atIndex = groupMessageContent.lastIndexOf("@");
     const newInput =
-    groupMessageContent.substring(0, atIndex + 1) + name + " " + groupMessageContent.substring(atIndex);
+      groupMessageContent.substring(0, atIndex + 1) + name + " " + groupMessageContent.substring(atIndex);
     setGroupMessageContent(`@${newInput}`);
     setSuggestions([]);
-  },[]);
+  }, []);
 
-  const handleMicMuteUnmute = useCallback((type,email) => {
+  const handleMicMuteUnmute = useCallback((type, email) => {
     const audioElement = document.getElementById(email);
-    if(type == "mute"){
-      setParticipantsMicMuted(prev => ({...prev,[email]:false}));
-      if(audioElement){
+    if (type == "mute") {
+      setParticipantsMicMuted(prev => ({ ...prev, [email]: false }));
+      if (audioElement) {
         audioElement.muted = false;
       }
-    }else{
-      setParticipantsMicMuted(prev => ({...prev,[email]:true}));
-      if(audioElement){
+    } else {
+      setParticipantsMicMuted(prev => ({ ...prev, [email]: true }));
+      if (audioElement) {
         audioElement.muted = true;
       }
     }
-    
-  },[]);
+
+  }, []);
 
   return (
     <>
@@ -412,6 +413,7 @@ const LeftSidebarOpenUi = ({
 
         {/* Whiteboard and local recording */}
         <div className=" lg:pt-10 px-4">
+
           {role === "Moderator" && enabledBreakoutRoom && (
             <Button
               children={"Create Breakout Room"}
@@ -419,6 +421,17 @@ const LeftSidebarOpenUi = ({
               type="submit"
               className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
               onClick={() => setBreakoutRoomModelOpen(true)}
+            />
+          )}
+        
+
+          {role === "Moderator" && (
+            <Button
+              children={startRecording ? "Stop Recording" : "Start Recording"}
+              variant="meeting"
+              type="submit"
+              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+              onClick={handleRecording}
             />
           )}
 
@@ -432,7 +445,7 @@ const LeftSidebarOpenUi = ({
               onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
             />
           }
-          
+
 
           {role === "Moderator" && (
             <Button
@@ -537,9 +550,9 @@ const LeftSidebarOpenUi = ({
                               <>
                                 {
                                   text.startsWith('@') ?
-                                  <span className="text-red-500">{text}{" "}</span>
-                                  :
-                                  <span>{text}{" "}</span>
+                                    <span className="text-red-500">{text}{" "}</span>
+                                    :
+                                    <span>{text}{" "}</span>
                                 }
                               </>
                             ))}
@@ -565,18 +578,18 @@ const LeftSidebarOpenUi = ({
                     // onKeyPress={(e) => e.key === "Enter" && handleGroupMessage()}
                     />
 
-                  {suggestions.length > 0 && (
-                    <div className="sugesstions absolute -top-[11rem] left-0 h-[10rem] w-[12rem] bg-white z-50 rounded-md p-2 overflow-y-auto">
-                      <ul className="suggestions space-y-2">
-                        {suggestions.map((s) => (
-                          <li key={s.email} onClick={() => handleSuggestionClick(s.name)} className="cursor-pointer text-red-500">
-                            @{s.name}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                    
+                    {suggestions.length > 0 && (
+                      <div className="sugesstions absolute -top-[11rem] left-0 h-[10rem] w-[12rem] bg-white z-50 rounded-md p-2 overflow-y-auto">
+                        <ul className="suggestions space-y-2">
+                          {suggestions.map((s) => (
+                            <li key={s.email} onClick={() => handleSuggestionClick(s.name)} className="cursor-pointer text-red-500">
+                              @{s.name}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
 
 
                     <div className="absolute right-11 cursor-pointer">
@@ -677,13 +690,13 @@ const LeftSidebarOpenUi = ({
                       <>
                         {
                           participantsMicMuted[user.email] ?
-                          <button onClick={() => handleMicMuteUnmute("mute",user.email)} className="cursor-pointer">
-                            <IoMdMicOff size={20}/>
-                          </button>
-                          :
-                          <button onClick={() => handleMicMuteUnmute("unmute",user.email)} className="cursor-pointer">
-                            <IoMdMic size={20}/>
-                          </button>
+                            <button onClick={() => handleMicMuteUnmute("mute", user.email)} className="cursor-pointer">
+                              <IoMdMicOff size={20} />
+                            </button>
+                            :
+                            <button onClick={() => handleMicMuteUnmute("unmute", user.email)} className="cursor-pointer">
+                              <IoMdMic size={20} />
+                            </button>
                         }
                       </>
                     }
@@ -896,7 +909,7 @@ const LeftSidebarOpenUi = ({
 
       {
         isPollModelOpen &&
-        <ViewPollModel onClose={() => setIsPollModelOpen(false)} polls={polls} onPageChange={handlePollPageChange} pollPage={currentPollPage} totalPollPages={totalPages}/>
+        <ViewPollModel onClose={() => setIsPollModelOpen(false)} polls={polls} onPageChange={handlePollPageChange} pollPage={currentPollPage} totalPollPages={totalPages} />
       }
 
       {isRemoveModalOpen && (
