@@ -45,6 +45,7 @@ async function checkMeetingExists(meetingId, socket, event) {
 
   return existingMeeting;
 }
+
 async function checkLiveMeetingExists(meetingId, socket, event) {
   const existingMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
 
@@ -372,7 +373,6 @@ const setupSocket = (server) => {
       }
     });
 
-
     socket.on("removeFromWaitingRoom", async (data) => {
       const { meetingId, participant } = data;
       try {
@@ -558,7 +558,6 @@ const setupSocket = (server) => {
       }
     });
 
-
     socket.on("moveParticipantToWaitingRoom", async (data) => {
       const { meetingId, name, role, email } = data;
       console.log('moveParticipantToWaitingRoom', data)
@@ -630,7 +629,6 @@ const setupSocket = (server) => {
         });
       }
     });
-
 
     //get all previous chat when medirator joined
     socket.on("getParticipantsChat", async (data) => {
@@ -758,7 +756,6 @@ const setupSocket = (server) => {
       socket.to(meetingId).emit('change-room', { participantList: participants, roomName: breakroomname });
     });
 
-
     socket.on("user-move", async ({ meetingId, breakroomname, participants }, callback) => {
       const existingMeeting = await Meeting.findById(meetingId);
       if (!existingMeeting) {
@@ -797,8 +794,6 @@ const setupSocket = (server) => {
       callback({ fullParticipantList, breakroomname }, null);
       socket.to(meetingId).emit('change-room', { participantList: participants, roomName: breakroomname });
     });
-
-
 
     //rename user name
     socket.on("change-participant-name", async ({ meetingId, newname, userid }, callback) => {
@@ -859,9 +854,6 @@ const setupSocket = (server) => {
       callback(media);
     });
 
-
-
-
     //get observer list
     socket.on("getObserverList", async (data) => {
       ("Received getObserverList event:", data);
@@ -897,12 +889,9 @@ const setupSocket = (server) => {
       }
     });
 
-
     //get observer chat
     socket.on("getObserverChat", async (data) => {
       const { meetingId } = data;
-
-
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
         if (!liveMeeting) {
@@ -942,7 +931,6 @@ const setupSocket = (server) => {
         });
       }
     });
-
 
     socket.on("sendMessageObserver", async (data) => {
       const { meetingId, message } = data;
@@ -992,9 +980,6 @@ const setupSocket = (server) => {
       }
     });
 
-
-
-
     //end meeting
     socket.on("endMeeting", async (data) => {
       const { meetingId } = data;
@@ -1021,8 +1006,6 @@ const setupSocket = (server) => {
       }
 
     });
-
-
 
     //polling feature needs to be handled, here we are just sending the data to all the clients
     //starting

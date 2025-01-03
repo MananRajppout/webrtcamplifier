@@ -4,8 +4,14 @@ import HeadingBlue25px from "../shared/HeadingBlue25px";
 import InputField from "../shared/InputField";
 import { FaCircle } from "react-icons/fa";
 import { generatePasscode } from "@/utils/generatePasscode";
+import toast from "react-hot-toast";
 
 const Step1 = ({ formData, setFormData }) => {
+  const today = new Date().toISOString().split("T")[0];
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() + 5); // Add 5 years to the current year
+  const maxDateString = maxDate.toISOString().split("T")[0]; 
+
   // Function to refresh the passcode
   const refreshPasscode = () => {
     const newPasscode = generatePasscode();
@@ -21,6 +27,18 @@ const Step1 = ({ formData, setFormData }) => {
       refreshPasscode();
     }
   }, [formData.endDate]);
+
+    // Handle invalid date selection
+    const handleInvalidDate = (selectedDate, fieldName) => {
+      if (selectedDate < today) {
+        toast.error(`${fieldName} cannot be earlier than today!`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return true;
+      }
+      return false;
+    };
 
   return (
     <div className="px-5">
@@ -55,9 +73,14 @@ const Step1 = ({ formData, setFormData }) => {
             <input
               type="date"
               value={formData.startDate}
-              onChange={(e) =>
-                setFormData({ ...formData, startDate: e.target.value })
-              }
+              min={today} // Disable earlier dates
+              max={maxDateString}
+              onChange={(e) => {
+                const selectedDate = e.target.value;
+                if (!handleInvalidDate(selectedDate, "Start Date")) {
+                  setFormData({ ...formData, startDate: selectedDate });
+                }
+              }}
               className="w-full px-4 py-2 border-[0.5px] rounded-lg focus:outline-none border-black"
             />
           </div>

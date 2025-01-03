@@ -28,6 +28,11 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
   const [contacts, setContacts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const today = new Date().toISOString().split("T")[0];
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() + 5); // Add 5 years to the current year
+  const maxDateString = maxDate.toISOString().split("T")[0]; 
+
   // Populate form data if editing
   useEffect(() => {
     if (isEditing && meetingToEdit) {
@@ -172,6 +177,18 @@ if (!formData.duration) {
     }
   };
 
+  // Handle invalid date selection
+  const handleInvalidDate = (selectedDate, fieldName) => {
+    if (selectedDate < today) {
+      toast.error(`${fieldName} cannot be earlier than today!`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return true;
+    }
+    return false;
+  };
+
   return (
     <div className="fixed top-0 inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 ">
       <div className="bg-white rounded-lg w-[600px] max-w-2xl  ">
@@ -230,7 +247,14 @@ if (!formData.duration) {
                     type="date"
                     name="startDate"
                     value={formData.startDate}
-                    onChange={handleInputChange}
+                    min={today} // Disable earlier dates
+              max={maxDateString}
+              onChange={(e) => {
+                const selectedDate = e.target.value;
+                if (!handleInvalidDate(selectedDate, "Start Date")) {
+                  setFormData({ ...formData, startDate: selectedDate });
+                }
+              }}
                     className="w-full px-4 py-2 border-[0.5px] rounded-lg focus:outline-none border-black"
                   />
                   <input
