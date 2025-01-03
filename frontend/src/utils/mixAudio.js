@@ -6,9 +6,8 @@ const mixAudio = async (context,destination,stream) => {
 
 
 export const addAudioTrackToStream = async (context,destination,track) => {
-    if (track && destination) {
+    if (track && destination && track.readyState === 'live') {
         const stream = new MediaStream([ track ]);
-
         mixAudio(context,destination,stream);
     }
 }

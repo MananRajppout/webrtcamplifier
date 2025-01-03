@@ -148,6 +148,34 @@ const startMeeting = async (req, res) => {
 };
 
 
+//add recording url here
+const addRecordingLink = async (req, res) => {
+  try {
+    const { meetingId, recordingUrl } = req.body;
+    console.log(meetingId,recordingUrl)
+    const liveMeeting = await LiveMeeting.findOne({meetingId});
+    if(!liveMeeting){
+      throw new Error('meeting not found');
+    }
+    liveMeeting.recordings.push({
+      url: recordingUrl
+    });
+
+    await liveMeeting.save();
+
+    res.status(201).json({
+      message: "recording save successfull",
+      success: false
+    });
+
+  } catch (error) {
+    res.status(501).json({
+      message: error.message,
+      success: false
+    })
+  }
+}
+
 const joinMeetingParticipant = async (req, res) => {
   const { name, role, meetingId } = req.body;
 
@@ -747,5 +775,5 @@ const getStreamingStatus = async (req, res) => {
 
 
 module.exports = {
-  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting, getWebRtcMeetingId, getIframeLink,participantLeaveFromMeeting, getRemovedParticipantsList, startMeetingStreaming, getStreamingStatus
+  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting, getWebRtcMeetingId, getIframeLink,participantLeaveFromMeeting, getRemovedParticipantsList, startMeetingStreaming, getStreamingStatus, addRecordingLink
 }

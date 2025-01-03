@@ -8,6 +8,7 @@ import HeadingLg from "../shared/HeadingLg";
 import ParagraphLg from "../shared/ParagraphLg";
 import axios from "axios";
 import Button from "../shared/button";
+import toast from "react-hot-toast";
 
 const BreakoutRoomModal = ({ onClose, formData, setFormData, roomToEdit, users, handleBreakoutRoom }) => {
   const [newRoom, setNewRoom] = useState({
@@ -17,6 +18,7 @@ const BreakoutRoomModal = ({ onClose, formData, setFormData, roomToEdit, users, 
     interpreterName: "",
     interpreterEmail: "",
     interpreterLanguage: "English",
+    duration: 0,
   });
 
   const addParticipantToRoom = (participant) => {
@@ -39,7 +41,11 @@ const BreakoutRoomModal = ({ onClose, formData, setFormData, roomToEdit, users, 
 
   const handleSave = async () => {
     try {
-      handleBreakoutRoom(newRoom.name,newRoom.participants);
+      if(newRoom.duration == 0){
+        toast.error("Duration must be greater than 0.");
+        return;
+      }
+      handleBreakoutRoom(newRoom.name,newRoom.participants, newRoom.duration);
       onClose();
     } catch (error) {
       console.error("Error creating breakout room:", error);
@@ -60,11 +66,17 @@ const BreakoutRoomModal = ({ onClose, formData, setFormData, roomToEdit, users, 
             value={newRoom.name}
             onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
           />
+          <InputField
+            label="Room Duration In Minutes"
+            type="number"
+            value={newRoom.duration}
+            onChange={(e) => setNewRoom({ ...newRoom, duration: e.target.value })}
+          />
         </div>
         <div className="w-full">
           <FormDropdownLabel children="Participants" />
           <Dropdown
-            options={users.filter(u => u.role == "Participant").map(u => u.name)}
+            options={users.filter(u => u.role == "Participant" && u.status == "online").map(u => u.name)}
             selectedOption="Select Participant"
             onSelect={(option) => {
               const participant = users?.find(
