@@ -5,6 +5,8 @@ const { v4: uuidv4 } = require("uuid");
 const ChatMessage = require("../models/chatModel");
 const GroupMessage = require('../models/groupMessage');
 const MediaBoxModel = require('../models/mediaBox.js');
+const ActivePoll = require("../models/activePollModel.js");
+const Poll = require("../models/pollModel.js");
 
 let messageBatch = [];
 const FLUSH_INTERVAL = 10000;
@@ -1009,7 +1011,115 @@ const setupSocket = (server) => {
 
     //polling feature needs to be handled, here we are just sending the data to all the clients
     //starting
+    socket.on("start-poll", async ({ meetingId, pollId, endTime }, callback) => {
+      try {
 
+           // Fetch the poll details
+    const poll = await Poll.findById(pollId).lean();
+    if (!poll) {
+      return callback({
+        success: false,
+        message: "Poll not found",
+      });
+    }
+
+        // Check if the meeting exists
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          return callback({
+            success: false,
+            message: "Live meeting not found",
+          });
+        }
+    
+        // Create an active poll
+        const activePoll = new ActivePoll({
+          meetingId,
+          pollId,
+          status: "Active",
+          startTime: new Date(),
+          endTime: new Date(endTime),
+        });
+    
+        await activePoll.save();
+    
+        // Update the live meeting with the current poll
+        liveMeeting.currentPoll = activePoll._id;
+        await liveMeeting.save();
+    console.log('poll question', poll.questions)
+        // Notify all participants about the active poll
+        io.to(meetingId).emit("poll-started", {
+          success: true,
+          message: "Poll started successfully",
+          pollId,
+          pollQuestions: poll.questions,
+        });
+    
+        callback({
+          success: true,
+          message: "Poll started and broadcasted to participants",
+          activePoll,
+        });
+    
+        // Schedule the poll to automatically end at the specified time
+        setTimeout(async () => {
+          const now = new Date();
+          if (now >= new Date(endTime)) {
+            await endPoll(meetingId, pollId);
+          }
+        }, new Date(endTime) - new Date());
+    
+      } catch (error) {
+        console.error("Error starting poll:", error);
+        callback({
+          success: false,
+          message: "Failed to start poll",
+          error,
+        });
+      }
+    });
+    
+    // Function to end a poll
+    const endPoll = async (meetingId, pollId) => {
+      try {
+        const activePoll = await ActivePoll.findOne({ meetingId, pollId, status: "Active" });
+        if (!activePoll) return;
+    
+        // Mark the poll as ended
+        activePoll.status = "Ended";
+        await activePoll.save();
+    
+        // Fetch poll results (placeholder logic for calculating results)
+        const pollResults = await PollResponse.find({ activePollId: activePoll._id });
+    
+        // Notify participants about poll results
+        io.to(meetingId).emit("poll-ended", {
+          success: true,
+          message: "Poll has ended",
+          pollId,
+          results: pollResults,
+        });
+      } catch (error) {
+        console.error("Error ending poll:", error);
+      }
+    };
+    
+    // Scheduled end for poll
+    socket.on("poll-schedule-check", async (meetingId) => {
+      try {
+        const activePolls = await ActivePoll.find({ meetingId, status: "Active" });
+        const now = new Date();
+    
+        activePolls.forEach((poll) => {
+          if (new Date(poll.endTime) <= now) {
+            endPoll(meetingId, poll.pollId);
+          }
+        });
+      } catch (error) {
+        console.error("Error in poll-schedule-check:", error);
+      }
+    });
+    
     
     //ending
 

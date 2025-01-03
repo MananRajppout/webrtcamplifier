@@ -4,34 +4,38 @@ import Button from "@/components/shared/button";
 import { CgClose } from "react-icons/cg";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const EnablePollModal = ({ onClose, poll, meetingId }) => {
   const [endTime, setEndTime] = useState("");
+  const { socket } = useGlobalContext();
 
   const handleStartPoll = async () => {
-    try {
+    if (!endTime) return alert("Please select an end time for the poll");
 
-      const currentDate = new Date();
-      const [hours, minutes] = endTime.split(":");
-      const endDateTime = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate(),
-        parseInt(hours, 10),
-        parseInt(minutes, 10)
-      );
+    const currentDate = new Date();
+    const [hours, minutes] = endTime.split(":");
+    const endDateTime = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate(),
+      parseInt(hours, 10),
+      parseInt(minutes, 10)
+    );
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/start-poll`, {
-        meetingId,
-        pollId: poll._id,
-        endTime:endDateTime.toISOString(),
-      });
-      toast.success(`${response.data.message}`)
-      onClose();
-    } catch (error) {
-      console.error("Error starting poll:", error);
-      toast.error(`${error.response.data.message}`)
-    }
+    socket.emit(
+      "start-poll",
+      { meetingId, pollId: poll._id, endTime:endDateTime.toISOString() },
+      (response) => {
+        if (response.success) {
+          toast.success(`${response.message}`)
+          onClose();
+        } else {
+          console.error(response.message);
+          toast.error(`${response.message}`)
+        }
+      }
+    );
   };
 
   return (

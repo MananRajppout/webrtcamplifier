@@ -201,45 +201,6 @@ const changeActiveStatus = async (req, res) => {
   }
 };
 
-const startPoll = async (req, res) => {
-  const session = await mongoose.startSession();
-
-  try {
-    const { meetingId, pollId, endTime } = req.body;
-
-    session.startTransaction();
-
-    // Create the active poll
-    const activePoll = await ActivePoll.create(
-      [
-        {
-          meetingId,
-          pollId,
-          endTime,
-        },
-      ],
-      { session }
-    );
-
-    // Update the live meeting with the current poll
-    await LiveMeeting.findByIdAndUpdate(
-      meetingId,
-      { currentPoll: activePoll[0]._id },
-      { session }
-    );
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(200).json({ message: "Poll started successfully", activePoll: activePoll[0] });
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-
-    console.error("Error starting poll:", error);
-    res.status(500).json({ message: "Failed to start poll", error });
-  }
-};
 
 
 
@@ -251,6 +212,5 @@ module.exports = {
   deletePoll,
   submitPollResponse,
   getPollResults,
-  changeActiveStatus,
-  startPoll
+  changeActiveStatus
 };

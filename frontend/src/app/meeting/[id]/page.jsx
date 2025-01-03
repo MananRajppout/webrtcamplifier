@@ -63,6 +63,7 @@ const page = () => {
   const [projectId, setProjectId] = useState(null);
   const [isMeetingEnd, setIsMeetingEnd] = useState(false);
   const [polls, setPolls] = useState();
+  const [pollData, setPollData] = useState(null);
   const [totalPages, setTotalPollPages] = useState();
   const [currentPollPage, setCurrentPollPage] = useState(1);
   const [setting, setSetting] = useState({
@@ -209,23 +210,6 @@ const page = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   useEffect(() => {
     if (typeof window !== "undefined") {
       const email = window.localStorage.getItem("email");
@@ -269,7 +253,15 @@ const page = () => {
 
     // polling feature needs to be handled, here we are just reciving the data
     //starting
-
+    socket.on("poll-started", (data) => {
+      console.log('data when poll started', data)
+      if (data.success) {
+        setPollData({
+          pollId: data.pollId,
+          pollQuestions: data.pollQuestions,
+        });
+      }
+    });
 
     //ending
 
@@ -303,9 +295,12 @@ const page = () => {
       socket.off("mediabox:on-upload", handleMediaNewUpload);
       socket.off("mediabox:on-delete", handleMediaNewDelete);
       socket.off("endMeeting", onEndMeeting);
+      socket.off("poll-started");
     };
   }, [userRole, params.id, socket]);
 
+
+  // console.log('poll data', pollData)
   // * function to request streaming status
   const getMeetingStatus = async (meetingId) => {
     socket.emit("getMeetingStatus", { meetingId });
@@ -389,7 +384,6 @@ const page = () => {
       email = window.localStorage.getItem("email");
     }
 
-    console.log("participantList", participantList);
     const find = participantList.some((p) => p.email == email);
 
     if (find) {
@@ -810,6 +804,8 @@ const page = () => {
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
+                pollData={pollData}
+                setPollData={setPollData}
               />
             </div>
           </>
@@ -882,6 +878,8 @@ const page = () => {
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
+                pollData={pollData}
+                setPollData={setPollData}
               />
             </div>
             <div className="h-full">
@@ -978,6 +976,8 @@ const page = () => {
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
+                pollData={pollData}
+                setPollData={setPollData}
               />
             </div>
             <div className="h-full">

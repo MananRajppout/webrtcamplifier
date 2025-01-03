@@ -11,6 +11,7 @@ import EndOFMeeting from "./EndOFMeeting";
 import Button from "../shared/button";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
+import ParticipantPollModal from "./ParticipantPollModal";
 
 const MeetingView = ({
   role,
@@ -32,9 +33,11 @@ const MeetingView = ({
   setSetting,
   handleMediaUpload,
   allPaericipantsAudioTracksRef,
-  setAllParticipantsAudioTracks
+  setAllParticipantsAudioTracks,
+  pollData,
+  setPollData
 }) => {
-
+console.log("inmeeitng view role", role, "poll data", pollData)
   const searchParams = useSearchParams();
   const roomname = searchParams.get('roomname');
   const type = searchParams.get('type');
@@ -185,7 +188,8 @@ const MeetingView = ({
             </div>
 
             <div className={`flex-1  ${!isRecordingOpen && !isWhiteBoardOpen && !isMeetingEnd ? 'block' : 'hidden'}`}>
-              <OngoingMeeting users={users} iframeLink={iframeLink} role={role} endMeeting={endMeeting} setAllParticipantsAudioTracks={setAllParticipantsAudioTracks} allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef} isMeetingEnd={isMeetingEnd} setting={setting} setSetting={setSetting} />
+              <OngoingMeeting users={users} iframeLink={iframeLink} role={role} endMeeting={endMeeting} setAllParticipantsAudioTracks={setAllParticipantsAudioTracks} allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef} isMeetingEnd={isMeetingEnd} setting={setting} setSetting={setSetting}  pollData={pollData}
+  setPollData={setPollData} />
             </div>
 
 
@@ -198,6 +202,15 @@ const MeetingView = ({
           </div>
         )}
       </div>
+      {
+        (role === "Participant" && pollData)  && (
+          <ParticipantPollModal
+          pollId={pollData.pollId}
+          pollQuestions={pollData.pollQuestions}
+          onClose={()=>setPollData(null)}
+          />
+        )
+      }
     </div>
   );
 };
