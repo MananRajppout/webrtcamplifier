@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { forwardRef, useState } from "react";
 import Logo from "../shared/Logo";
 import {
   FaVideo,
@@ -30,14 +30,16 @@ const MeetingView = ({
   isMeetingEnd,
   setting,
   setSetting,
-  handleMediaUpload
+  handleMediaUpload,
+  allPaericipantsAudioTracksRef,
+  setAllParticipantsAudioTracks
 }) => {
 
   const searchParams = useSearchParams();
   const roomname = searchParams.get('roomname');
   const type = searchParams.get('type');
 
-  
+
 
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
@@ -73,7 +75,7 @@ const MeetingView = ({
 
 
   return (
-    <div className="px-5 sm:py-5  flex-col justify-between items-between h-full  meeting_bg">
+    <div className="px-5 sm:py-5  flex-col justify-between items-between h-full  meeting_bg relative">
       <div className="md:h-1/7 h-auto py-2">
         {/* First ------ nav bar */}
         <div className="flex justify-between items-center pb-2">
@@ -144,9 +146,10 @@ const MeetingView = ({
       </div>
 
       {/*Third ---------- meeting stream */}
-      {meetingStatus ? (
-        <>
-          {/* {isRecordingOpen ? (
+      <div className="h-auto relative">
+        {meetingStatus ? (
+          <>
+            {/* {isRecordingOpen ? (
             <div className="flex-1 h-full">
               <EndOFMeeting role={role} />
             </div>
@@ -162,38 +165,39 @@ const MeetingView = ({
 
 
 
-          <div className={`flex-1  ${isRecordingOpen ? 'block' : 'hidden'}`}>
+            <div className={`flex-1  ${isRecordingOpen ? 'block' : 'hidden'}`}>
+              <EndOFMeeting role={role} />
+            </div>
+
+
+            <div className={` ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
+              <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen} handleMediaUpload={handleMediaUpload} setting={setting} setSetting={setSetting} />
+            </div>
+
+
+            <div className={`flex-1  ${isMeetingEnd ? 'block' : 'hidden'}`}>
+              <div
+                className="rounded-md pb-10 h-[75vh] flex items-center justify-center bg-white"
+                style={{ width: "100%", position: "relative" }}
+              >
+                <p className="font-normal">This Meeting has been ended by the host</p>
+              </div>
+            </div>
+
+            <div className={`flex-1  ${!isRecordingOpen && !isWhiteBoardOpen && !isMeetingEnd ? 'block' : 'hidden'}`}>
+              <OngoingMeeting users={users} iframeLink={iframeLink} role={role} endMeeting={endMeeting} setAllParticipantsAudioTracks={setAllParticipantsAudioTracks} allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef} isMeetingEnd={isMeetingEnd} setting={setting} setSetting={setSetting} />
+            </div>
+
+
+
+
+          </>
+        ) : (
+          <div className="flex-1 h-full">
             <EndOFMeeting role={role} />
           </div>
-
-          
-          <div className={`h-4/5 max-h-4/5 ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
-            <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen} handleMediaUpload={handleMediaUpload} setting={setting} setSetting={setSetting}/>
-          </div>
-          
-
-          <div className={`flex-1  ${isMeetingEnd ? 'block' : 'hidden'}`}>
-            <div
-              className="rounded-md pb-10 h-[75vh] flex items-center justify-center bg-white"
-              style={{ width: "100%", position: "relative" }}
-            >
-              <p className="font-normal">This Meeting has been ended by the host</p>
-            </div>
-          </div>
-
-          <div className={`flex-1  ${!isRecordingOpen && !isWhiteBoardOpen && !isMeetingEnd ? 'block' : 'hidden'}`}>
-            <OngoingMeeting users={users} iframeLink={iframeLink} role={role} endMeeting={endMeeting} isMeetingEnd={isMeetingEnd} setting={setting} setSetting={setSetting}/>
-          </div>
-
-
-
-
-        </>
-      ) : (
-        <div className="flex-1 h-full">
-          <EndOFMeeting role={role} />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

@@ -49,6 +49,7 @@ const LeftSidebar = ({
   totalPages,
   currentPollPage,
   setCurrentPollPage,
+  startRecording, setStartRecording, handleRecording
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -260,9 +261,11 @@ const LeftSidebar = ({
               isWhiteBoardOpen={isWhiteBoardOpen}
               setting={setting} setSetting={setSetting}
               fetchPolls={fetchPolls}
-                polls={polls}
-                totalPages={totalPages}
-                currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
+              polls={polls}
+              totalPages={totalPages}
+              currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
+              startRecording={startRecording} setStartRecording={setStartRecording}
+              handleRecording={handleRecording}
             />
           ) : (
             <LeftSidebarCloseUi

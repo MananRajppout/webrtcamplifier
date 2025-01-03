@@ -13,7 +13,7 @@ import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipa
 
 
 
-const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
+const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting,allPaericipantsAudioTracksRef,setAllParticipantsAudioTracks}) => {
   const searchParams = useSearchParams();
   const params = useParams();
   const role = searchParams.get("role");
@@ -53,7 +53,7 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting}) => {
 
 
   const { audioPermisson, cameraPermisson } = useCheckPermission();
-  const { handleJoin,handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting,myEmailRef);
+  const { handleJoin,handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting,myEmailRef,allPaericipantsAudioTracksRef,setAllParticipantsAudioTracks);
 
 
 
