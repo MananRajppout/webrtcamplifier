@@ -806,6 +806,7 @@ const page = () => {
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
                 pollData={pollData}
                 setPollData={setPollData}
+                meetingId={meetingId}
               />
             </div>
           </>
@@ -880,6 +881,7 @@ const page = () => {
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
                 pollData={pollData}
                 setPollData={setPollData}
+                meetingId={meetingId}
               />
             </div>
             <div className="h-full">
@@ -978,6 +980,7 @@ const page = () => {
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
                 pollData={pollData}
                 setPollData={setPollData}
+                meetingId={meetingId}
               />
             </div>
             <div className="h-full">

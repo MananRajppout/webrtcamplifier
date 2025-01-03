@@ -35,13 +35,13 @@ const MeetingView = ({
   allPaericipantsAudioTracksRef,
   setAllParticipantsAudioTracks,
   pollData,
-  setPollData
+  setPollData, meetingId
 }) => {
 console.log("inmeeitng view role", role, "poll data", pollData)
   const searchParams = useSearchParams();
   const roomname = searchParams.get('roomname');
   const type = searchParams.get('type');
-
+  const userEmail = searchParams.get("email");
 
 
   const handleCopyParticipantLink = () => {
@@ -208,6 +208,8 @@ console.log("inmeeitng view role", role, "poll data", pollData)
           pollId={pollData.pollId}
           pollQuestions={pollData.pollQuestions}
           onClose={()=>setPollData(null)}
+          meetingId={meetingId}
+          email={userEmail}
           />
         )
       }
