@@ -3,8 +3,8 @@ const Meeting = require("../models/meetingModel");
 const LiveMeeting = require("../models/liveMeetingModel");
 const { v4: uuidv4 } = require("uuid");
 const ChatMessage = require("../models/chatModel");
-const GroupMessage = require('../models/groupMessage');
-const MediaBoxModel = require('../models/mediaBox.js');
+const GroupMessage = require("../models/groupMessage");
+const MediaBoxModel = require("../models/mediaBox.js");
 const ActivePoll = require("../models/activePollModel.js");
 const Poll = require("../models/pollModel.js");
 const PollResponse = require("../models/pollResponseModel.js");
@@ -15,7 +15,6 @@ const FLUSH_INTERVAL = 10000;
 function addMessageToBatch(message) {
   messageBatch.push(message);
 }
-
 
 async function flushMessages() {
   if (messageBatch.length === 0) {
@@ -29,7 +28,7 @@ async function flushMessages() {
     await GroupMessage.insertMany(batchToInsert);
     console.log(`Successfully inserted ${batchToInsert.length} messages`);
   } catch (error) {
-    console.error('Failed to insert messages:', error);
+    console.error("Failed to insert messages:", error);
     messageBatch.push(...batchToInsert);
   }
 }
@@ -64,18 +63,16 @@ async function checkLiveMeetingExists(meetingId, socket, event) {
   return existingMeeting;
 }
 
-
 setInterval(flushMessages, FLUSH_INTERVAL);
 
 async function getGroupMessage(meetingId) {
-  const noAddedMessage = messageBatch.filter(m => m.meetingId == meetingId);
+  const noAddedMessage = messageBatch.filter((m) => m.meetingId == meetingId);
   const addedMessage = await GroupMessage.find({ meetingId });
-  return [...addedMessage, ...noAddedMessage]
+  return [...addedMessage, ...noAddedMessage];
 }
 
 const usernames = {};
 const userchangeroom = {};
-
 
 const setupSocket = (server) => {
   const io = new Server(server, {
@@ -88,50 +85,38 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    socket.on("join-room", async ({ roomid, name, email, roomname, role }, callback) => {
+    socket.on(
+      "join-room",
+      async ({ roomid, name, email, roomname, role }, callback) => {
+        socket.join(roomid);
+        // for group chat
+        socket.join(`${roomid}-${roomname}`);
+        usernames[socket.id] = {
+          name,
+          roomid,
+          email,
+          role,
+        };
+        console.log(
+          `User with name ${name} joined meeting ${roomid} role ${role}`
+        );
+        const newname = email + roomid;
+        delete userchangeroom[newname];
 
-      socket.join(roomid);
-      // for group chat
-      socket.join(`${roomid}-${roomname}`);
-      usernames[socket.id] = {
-        name,
-        roomid,
-        email,
-        role
-      };
-      console.log(`User with name ${name} joined meeting ${roomid} role ${role}`)
-      const newname = email + roomid;
-      delete userchangeroom[newname];
-
-      if (role == "Participant") {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
-        const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == email);
-        if (participantIndex != -1 && liveMeeting.participantsList[participantIndex]) {
-          liveMeeting.participantsList[participantIndex].status = "online";
-          liveMeeting.participantsList[participantIndex].joiningTime = Date.now();
-          await liveMeeting.save();
-        }
-
-        const fullParticipantList = [
-          liveMeeting.moderator,
-          ...liveMeeting.participantsList,
-        ];
-
-        io.to(liveMeeting.meetingId.toString()).emit("participantList", {
-          success: true,
-          message: "Participant added to participants list",
-          waitingRoom: liveMeeting.waitingRoom,
-          participantList: fullParticipantList,
-        });
-      }
-
-      if (role == "Moderator") {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
-        if (liveMeeting) {
-          liveMeeting.startTime = Date.now();
-          liveMeeting.moderator.joiningTime = Date.now();
-          liveMeeting.moderator.status = "online";
-          await liveMeeting.save();
+        if (role == "Participant") {
+          const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
+          const participantIndex = liveMeeting.participantsList.findIndex(
+            (p) => p.email == email
+          );
+          if (
+            participantIndex != -1 &&
+            liveMeeting.participantsList[participantIndex]
+          ) {
+            liveMeeting.participantsList[participantIndex].status = "online";
+            liveMeeting.participantsList[participantIndex].joiningTime =
+              Date.now();
+            await liveMeeting.save();
+          }
 
           const fullParticipantList = [
             liveMeeting.moderator,
@@ -146,49 +131,72 @@ const setupSocket = (server) => {
           });
         }
 
-
-      }
-
-
-
-      if (role == "Observer") {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
-        if (liveMeeting) {
-          const observerIndex = liveMeeting.observerList.findIndex(b => b.email == email);
-          console.log(observerIndex)
-          if (liveMeeting.observerList[observerIndex]) {
-            liveMeeting.observerList[observerIndex].joiningTime = Date.now();
-            liveMeeting.observerList[observerIndex].status = "online";
-
+        if (role == "Moderator") {
+          const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
+          if (liveMeeting) {
+            liveMeeting.startTime = Date.now();
+            liveMeeting.moderator.joiningTime = Date.now();
+            liveMeeting.moderator.status = "online";
             await liveMeeting.save();
 
-
-            const fullObserverList = [
+            const fullParticipantList = [
               liveMeeting.moderator,
-              ...liveMeeting.observerList,
+              ...liveMeeting.participantsList,
             ];
 
-            io.to(liveMeeting.meetingId.toString()).emit("getObserverListResponse", {
+            io.to(liveMeeting.meetingId.toString()).emit("participantList", {
               success: true,
-              message: "Observer list retrieved successfully",
-              observersList: fullObserverList,
+              message: "Participant added to participants list",
+              waitingRoom: liveMeeting.waitingRoom,
+              participantList: fullParticipantList,
             });
           }
         }
 
+        if (role == "Observer") {
+          const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
+          if (liveMeeting) {
+            const observerIndex = liveMeeting.observerList.findIndex(
+              (b) => b.email == email
+            );
+            console.log(observerIndex);
+            if (liveMeeting.observerList[observerIndex]) {
+              liveMeeting.observerList[observerIndex].joiningTime = Date.now();
+              liveMeeting.observerList[observerIndex].status = "online";
 
+              await liveMeeting.save();
+
+              const fullObserverList = [
+                liveMeeting.moderator,
+                ...liveMeeting.observerList,
+              ];
+
+              io.to(liveMeeting.meetingId.toString()).emit(
+                "getObserverListResponse",
+                {
+                  success: true,
+                  message: "Observer list retrieved successfully",
+                  observersList: fullObserverList,
+                }
+              );
+            }
+          }
+        }
+
+        const meeting = await Meeting.findById(roomid).populate("moderator");
+        callback(socket.id, meeting);
       }
-
-      const meeting = await Meeting.findById(roomid).populate("moderator");
-      callback(socket.id, meeting);
-    })
+    );
 
     socket.on("startMeeting", async (data) => {
       const { meetingId, user } = data;
 
-      const existingMeeting = await checkMeetingExists(meetingId, socket, "meeting-not-found");
+      const existingMeeting = await checkMeetingExists(
+        meetingId,
+        socket,
+        "meeting-not-found"
+      );
       if (!existingMeeting) return;
-
 
       const liveMeeting = await LiveMeeting.findOne({ meetingId });
 
@@ -231,16 +239,17 @@ const setupSocket = (server) => {
         message: "Live meeting started successfully",
         liveMeeting: newLiveMeeting,
       });
-
     });
 
     socket.on("participantWantToJoin", async (data) => {
       const { meetingId, name, role, email } = data;
 
-      let liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+      let liveMeeting = await checkLiveMeetingExists(
+        meetingId,
+        socket,
+        "meeting-not-found"
+      );
       if (!liveMeeting) return;
-
-
 
       const isInWaitingRoom = liveMeeting.waitingRoom.some(
         (participant) => participant.email === email
@@ -287,10 +296,12 @@ const setupSocket = (server) => {
       try {
         console.log(io.sockets.adapter.rooms);
 
-
-        let liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        let liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
-
 
         const participantIndex = liveMeeting.waitingRoom.findIndex(
           (p) => p.email === participant.email
@@ -309,8 +320,6 @@ const setupSocket = (server) => {
           participantIndex,
           1
         );
-
-
 
         const participantWithId = {
           ...removedParticipant.toObject(),
@@ -331,7 +340,6 @@ const setupSocket = (server) => {
           waitingRoom: liveMeeting.waitingRoom,
           participantList: fullParticipantList,
         });
-
       } catch (error) {
         console.error("Error in acceptFromWaitingRoom:", error);
         socket.emit("acceptFromWaitingRoomResponse", {
@@ -345,17 +353,20 @@ const setupSocket = (server) => {
     socket.on("getParticipantList", async (data) => {
       const { meetingId } = data;
       try {
-
-        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
-
 
         const fullParticipantList = [
           liveMeeting.moderator,
           ...liveMeeting.participantsList,
         ];
 
-        let breakoutRooms = liveMeeting.breakRooms?.map((r) => r.roomName) || [];
+        let breakoutRooms =
+          liveMeeting.breakRooms?.map((r) => r.roomName) || [];
         breakoutRooms = ["Main", ...breakoutRooms];
 
         io.to(meetingId).emit("participantList", {
@@ -364,8 +375,6 @@ const setupSocket = (server) => {
           waitingRoom: liveMeeting.waitingRoom,
           participantList: fullParticipantList,
         });
-
-
       } catch (error) {
         console.error("Error in getParticipantList:", error);
         socket.emit("getParticipantListResponse", {
@@ -379,9 +388,12 @@ const setupSocket = (server) => {
     socket.on("removeFromWaitingRoom", async (data) => {
       const { meetingId, participant } = data;
       try {
-        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
-
 
         // Remove the participant from the waiting room
         liveMeeting.waitingRoom = liveMeeting.waitingRoom.filter(
@@ -389,15 +401,16 @@ const setupSocket = (server) => {
         );
         await liveMeeting.save();
 
-
-
         // Notify the removed participant
-        io.emit("participantRemovedFromWaiting", { name: participant.name, role: participant.role, email: participant.email });
+        io.emit("participantRemovedFromWaiting", {
+          name: participant.name,
+          role: participant.role,
+          email: participant.email,
+        });
 
         io.to(meetingId).emit("participantWaiting", {
           waitingRoom: liveMeeting.waitingRoom,
         });
-
       } catch (error) {
         console.error("Error in removeFromWaitingRoom:", error);
         socket.emit("removeFromWaitingRoomResponse", {
@@ -411,27 +424,30 @@ const setupSocket = (server) => {
     socket.on("toggleStreaming", async (data) => {
       const { meetingId } = data;
       try {
-
-        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
-
-
 
         liveMeeting.isStreaming = !liveMeeting.isStreaming;
         await liveMeeting.save();
 
         socket.emit("getStreamingStatusResponse", {
           success: true,
-          message: `Streaming ${liveMeeting.isStreaming ? "started" : "stopped"} successfully`,
+          message: `Streaming ${
+            liveMeeting.isStreaming ? "started" : "stopped"
+          } successfully`,
           isStreaming: liveMeeting.isStreaming,
         });
 
         // Notify observers based on streaming status
         if (liveMeeting.isStreaming) {
-          console.log('navigateToMeeting')
+          console.log("navigateToMeeting");
           io.emit("navigateToMeeting", { meetingId });
         } else {
-          console.log('navigateToObserverWaitingRoom')
+          console.log("navigateToObserverWaitingRoom");
           io.emit("navigateToObserverWaitingRoom", { meetingId });
         }
       } catch (error) {
@@ -447,9 +463,12 @@ const setupSocket = (server) => {
     socket.on("observerJoinMeeting", async (data) => {
       const { meetingId, name, role, passcode, email } = data;
 
-      const meeting = await checkMeetingExists(meetingId, socket, "meeting-not-found");
+      const meeting = await checkMeetingExists(
+        meetingId,
+        socket,
+        "meeting-not-found"
+      );
       if (!meeting) return;
-
 
       if (meeting.meetingPasscode !== passcode) {
         socket.emit("observerJoinMeetingResponse", {
@@ -460,7 +479,11 @@ const setupSocket = (server) => {
         return;
       }
 
-      let liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+      let liveMeeting = await checkLiveMeetingExists(
+        meetingId,
+        socket,
+        "meeting-not-found"
+      );
       if (!liveMeeting) return;
 
       const isInObserverList = liveMeeting.observerList.some(
@@ -470,7 +493,7 @@ const setupSocket = (server) => {
         socket.emit("observerJoinMeetingResponse", {
           success: false,
           message: "Observer already added to the meeting",
-          meetingId: meetingId
+          meetingId: meetingId,
         });
         return;
       }
@@ -479,7 +502,6 @@ const setupSocket = (server) => {
 
       liveMeeting.observerList.push({ name, role, id: observerId, email });
       await liveMeeting.save();
-
 
       const fullObserverList = [
         liveMeeting.moderator,
@@ -502,11 +524,14 @@ const setupSocket = (server) => {
 
     socket.on("removeParticipantFromMeeting", async (data) => {
       const { meetingId, name, role, email } = data;
-      console.log('removeParticipantFromMeeting', data)
+      console.log("removeParticipantFromMeeting", data);
 
       try {
-
-        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
 
         if (role === "Participant") {
@@ -517,7 +542,7 @@ const setupSocket = (server) => {
             (participant) => participant.email === email
           );
 
-          console.log('participantToRemove', participantToRemove)
+          console.log("participantToRemove", participantToRemove);
 
           liveMeeting.participantsList = liveMeeting.participantsList.filter(
             (participant) => participant.email !== email
@@ -527,7 +552,7 @@ const setupSocket = (server) => {
           liveMeeting.removedParticipants.push({
             name: name,
             role: role,
-            email: participantToRemove.email
+            email: participantToRemove.email,
           });
           await liveMeeting.save();
 
@@ -548,7 +573,7 @@ const setupSocket = (server) => {
             success: true,
             message: "Participant list retrieved",
             participantList: fullParticipantList,
-            waitingRoom: liveMeeting.waitingRoom
+            waitingRoom: liveMeeting.waitingRoom,
           });
         }
       } catch (error) {
@@ -563,20 +588,21 @@ const setupSocket = (server) => {
 
     socket.on("moveParticipantToWaitingRoom", async (data) => {
       const { meetingId, name, role, email } = data;
-      console.log('moveParticipantToWaitingRoom', data)
+      console.log("moveParticipantToWaitingRoom", data);
 
       try {
-
-        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
 
         if (role === "Participant") {
-
           // Remove the participant from participantsList
           const participantToRemove = liveMeeting.participantsList.find(
             (participant) => participant.email === email
           );
-
 
           liveMeeting.participantsList = liveMeeting.participantsList.filter(
             (participant) => participant.email !== email
@@ -586,7 +612,7 @@ const setupSocket = (server) => {
           liveMeeting.waitingRoom.push({
             name: name,
             role: role,
-            email: participantToRemove.email
+            email: participantToRemove.email,
           });
           await liveMeeting.save();
 
@@ -595,27 +621,32 @@ const setupSocket = (server) => {
             ...liveMeeting.participantsList,
           ];
 
-          io.to(meetingId).emit("participantMovedToWaitingRoom", { name, role, email });
-
+          io.to(meetingId).emit("participantMovedToWaitingRoom", {
+            name,
+            role,
+            email,
+          });
 
           io.to(meetingId).emit("participantList", {
             success: true,
             message: "Participant list retrieved",
             participantList: fullParticipantList,
-            waitingRoom: liveMeeting.waitingRoom
+            waitingRoom: liveMeeting.waitingRoom,
           });
         }
       } catch (error) {
         console.error("Error in participantMovedToWaitingRoom:", error);
-
       }
     });
 
     socket.on("getMeetingStatus", async (data) => {
       const { meetingId } = data;
       try {
-
-        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
 
         socket.emit("getMeetingStatusResponse", {
@@ -637,17 +668,24 @@ const setupSocket = (server) => {
     socket.on("getParticipantsChat", async (data) => {
       const { meetingId } = data;
       try {
-
-        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
 
-        const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
-        const allBreakRoomsNameList = updatedLiveMeeting.breakRooms.map((room) => room.roomName).filter(name => !!name);
+        const updatedLiveMeeting = await LiveMeeting.findOne({
+          meetingId,
+        }).populate("participantChat");
+        const allBreakRoomsNameList = updatedLiveMeeting.breakRooms
+          .map((room) => room.roomName)
+          .filter((name) => !!name);
         io.emit("participantChatResponse", {
           success: true,
           message: "Message sent to participant",
           participantMessages: updatedLiveMeeting.participantChat,
-          allBreakRoomsNameList
+          allBreakRoomsNameList,
         });
       } catch (error) {
         console.error("Error in participantSendMessage:", error);
@@ -662,8 +700,11 @@ const setupSocket = (server) => {
     socket.on("participantSendMessage", async (data) => {
       const { meetingId, message } = data;
       try {
-
-        const liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = await checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
 
         // Create a new ChatMessage document
@@ -672,18 +713,18 @@ const setupSocket = (server) => {
           receiverName: message.receiverName,
           message: message.message,
           senderEmail: message.senderEmail,
-          receiverEmail: message.receiverEmail
+          receiverEmail: message.receiverEmail,
         });
 
         // Save the new chat message
         const savedChatMessage = await newChatMessage.save();
 
-
         liveMeeting.participantChat.push(savedChatMessage._id);
         await liveMeeting.save();
 
-        const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
-
+        const updatedLiveMeeting = await LiveMeeting.findOne({
+          meetingId,
+        }).populate("participantChat");
 
         io.emit("participantChatResponse", {
           success: true,
@@ -700,166 +741,198 @@ const setupSocket = (server) => {
       }
     });
 
-    socket.on("create-breakout-room", async ({ meetingId, breakroomname, participants }, callback) => {
-      const existingMeeting = await Meeting.findById(meetingId);
-      if (!existingMeeting) {
-        callback(null, "Meeting Not Exist.");
-        return
-      }
-
-      const liveMeeting = await LiveMeeting.findOne({ meetingId });
-      if (!liveMeeting) {
-        callback(null, "Live Meeting Not Exist.");
-        return
-      }
-
-
-      for (let index = 0; index < participants.length; index++) {
-        const element = participants[index];
-        const name = element.email + meetingId;
-        userchangeroom[name] = true;
-      }
-
-
-      const newRoom = [];
-      const isMainRoomExist = liveMeeting.breakRooms.some(room => room.roomName == 'main');
-      console.log('main room not exist', isMainRoomExist);
-      if (!isMainRoomExist) {
-        newRoom.push({ roomName: "main" });
-      }
-
-      newRoom.push({ roomName: breakroomname });
-
-      liveMeeting.breakRooms = [...liveMeeting.breakRooms, ...newRoom];
-      liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
-
-        const participant = participants.find(part => part.email == p.email);
-        if (participant) {
-          p.roomName = breakroomname;
+    socket.on(
+      "create-breakout-room",
+      async ({ meetingId, breakroomname, participants }, callback) => {
+        const existingMeeting = await Meeting.findById(meetingId);
+        if (!existingMeeting) {
+          callback(null, "Meeting Not Exist.");
+          return;
         }
-        return p;
-      });
 
-
-      await liveMeeting.save();
-      const fullParticipantList = [
-        liveMeeting.moderator,
-        ...liveMeeting.participantsList,
-      ];
-
-
-      for (let index = 0; index < participants.length; index++) {
-        const element = participants[index];
-        const name = element.email + meetingId;
-        userchangeroom[name] = true;
-      }
-
-      const allBreakRoomsNameList = liveMeeting.breakRooms.map((room) => room.roomName).filter(name => !!name);
-      callback({ fullParticipantList, breakroomname, breakoutsRooms: allBreakRoomsNameList }, null);
-      socket.to(meetingId).emit('change-room', { participantList: participants, roomName: breakroomname });
-    });
-
-    socket.on("user-move", async ({ meetingId, breakroomname, participants }, callback) => {
-      const existingMeeting = await Meeting.findById(meetingId);
-      if (!existingMeeting) {
-        callback(null, "Meeting Not Exist.");
-        return
-      }
-
-      const liveMeeting = await LiveMeeting.findOne({ meetingId });
-      if (!liveMeeting) {
-        callback(null, "Live Meeting Not Exist.");
-        return
-      }
-
-      for (let index = 0; index < participants.length; index++) {
-        const element = participants[index];
-        const name = element.email + meetingId;
-        userchangeroom[name] = true;
-      }
-
-
-      liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
-        const participant = participants.find(part => part.email == p.email);
-        if (participant) {
-          p.roomName = breakroomname;
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          callback(null, "Live Meeting Not Exist.");
+          return;
         }
-        return p;
-      });
 
+        for (let index = 0; index < participants.length; index++) {
+          const element = participants[index];
+          const name = element.email + meetingId;
+          userchangeroom[name] = true;
+        }
 
-      await liveMeeting.save();
-      const fullParticipantList = [
-        liveMeeting.moderator,
-        ...liveMeeting.participantsList,
-      ];
+        const newRoom = [];
+        const isMainRoomExist = liveMeeting.breakRooms.some(
+          (room) => room.roomName == "main"
+        );
+        console.log("main room not exist", isMainRoomExist);
+        if (!isMainRoomExist) {
+          newRoom.push({ roomName: "main" });
+        }
 
-      callback({ fullParticipantList, breakroomname }, null);
-      socket.to(meetingId).emit('change-room', { participantList: participants, roomName: breakroomname });
-    });
+        newRoom.push({ roomName: breakroomname });
+
+        liveMeeting.breakRooms = [...liveMeeting.breakRooms, ...newRoom];
+        liveMeeting.participantsList = liveMeeting.participantsList.map((p) => {
+          const participant = participants.find(
+            (part) => part.email == p.email
+          );
+          if (participant) {
+            p.roomName = breakroomname;
+          }
+          return p;
+        });
+
+        await liveMeeting.save();
+        const fullParticipantList = [
+          liveMeeting.moderator,
+          ...liveMeeting.participantsList,
+        ];
+
+        for (let index = 0; index < participants.length; index++) {
+          const element = participants[index];
+          const name = element.email + meetingId;
+          userchangeroom[name] = true;
+        }
+
+        const allBreakRoomsNameList = liveMeeting.breakRooms
+          .map((room) => room.roomName)
+          .filter((name) => !!name);
+        callback(
+          {
+            fullParticipantList,
+            breakroomname,
+            breakoutsRooms: allBreakRoomsNameList,
+          },
+          null
+        );
+        socket
+          .to(meetingId)
+          .emit("change-room", {
+            participantList: participants,
+            roomName: breakroomname,
+          });
+      }
+    );
+
+    socket.on(
+      "user-move",
+      async ({ meetingId, breakroomname, participants }, callback) => {
+        const existingMeeting = await Meeting.findById(meetingId);
+        if (!existingMeeting) {
+          callback(null, "Meeting Not Exist.");
+          return;
+        }
+
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          callback(null, "Live Meeting Not Exist.");
+          return;
+        }
+
+        for (let index = 0; index < participants.length; index++) {
+          const element = participants[index];
+          const name = element.email + meetingId;
+          userchangeroom[name] = true;
+        }
+
+        liveMeeting.participantsList = liveMeeting.participantsList.map((p) => {
+          const participant = participants.find(
+            (part) => part.email == p.email
+          );
+          if (participant) {
+            p.roomName = breakroomname;
+          }
+          return p;
+        });
+
+        await liveMeeting.save();
+        const fullParticipantList = [
+          liveMeeting.moderator,
+          ...liveMeeting.participantsList,
+        ];
+
+        callback({ fullParticipantList, breakroomname }, null);
+        socket
+          .to(meetingId)
+          .emit("change-room", {
+            participantList: participants,
+            roomName: breakroomname,
+          });
+      }
+    );
 
     //rename user name
-    socket.on("change-participant-name", async ({ meetingId, newname, userid }, callback) => {
-      const existingMeeting = await Meeting.findById(meetingId);
-      if (!existingMeeting) {
-        callback(null, "Meeting Not Exist.");
-        return
-      }
-
-      const liveMeeting = await LiveMeeting.findOne({ meetingId });
-      if (!liveMeeting) {
-        callback(null, "Live Meeting Not Exist.");
-        return
-      }
-
-
-
-
-      liveMeeting.participantsList = liveMeeting.participantsList.map(p => {
-        if (p?.id?.toString() == userid?.toString()) {
-          p.name = newname;
+    socket.on(
+      "change-participant-name",
+      async ({ meetingId, newname, userid }, callback) => {
+        const existingMeeting = await Meeting.findById(meetingId);
+        if (!existingMeeting) {
+          callback(null, "Meeting Not Exist.");
+          return;
         }
-        return p;
-      });
 
+        const liveMeeting = await LiveMeeting.findOne({ meetingId });
+        if (!liveMeeting) {
+          callback(null, "Live Meeting Not Exist.");
+          return;
+        }
 
-      await liveMeeting.save();
-      const fullParticipantList = [
-        liveMeeting.moderator,
-        ...liveMeeting.participantsList,
-      ];
+        liveMeeting.participantsList = liveMeeting.participantsList.map((p) => {
+          if (p?.id?.toString() == userid?.toString()) {
+            p.name = newname;
+          }
+          return p;
+        });
 
-      callback({ fullParticipantList }, null);
-    });
+        await liveMeeting.save();
+        const fullParticipantList = [
+          liveMeeting.moderator,
+          ...liveMeeting.participantsList,
+        ];
 
-    socket.on('grounp:send-message', ({ meetingId, email, content, name, roomname }) => {
-      const id = `${meetingId}-${roomname}`;
-      const newMessage = {
-        meetingId: id,
-        senderEmail: email,
-        content,
-        name,
-        timestamp: Date.now()
+        callback({ fullParticipantList }, null);
       }
-      addMessageToBatch(newMessage);
-      socket.to(id).emit('group:receive-message', newMessage);
-    });
+    );
 
-    socket.on('grounp:get-message', async ({ meetingId, roomname }, callback) => {
-      const id = `${meetingId}-${roomname}`;
-      const messages = await getGroupMessage(id);
+    socket.on(
+      "grounp:send-message",
+      ({ meetingId, email, content, name, roomname }) => {
+        const id = `${meetingId}-${roomname}`;
+        const newMessage = {
+          meetingId: id,
+          senderEmail: email,
+          content,
+          name,
+          timestamp: Date.now(),
+        };
+        addMessageToBatch(newMessage);
+        socket.to(id).emit("group:receive-message", newMessage);
+      }
+    );
 
-      callback(messages);
-    })
+    socket.on(
+      "grounp:get-message",
+      async ({ meetingId, roomname }, callback) => {
+        const id = `${meetingId}-${roomname}`;
+        const messages = await getGroupMessage(id);
 
-    socket.on('mediabox:on-get-media', async ({ meetingId,projectId }, callback) => {
-      const media = await MediaBoxModel.find({ projectId });
-      callback(media);
-    });
+        callback(messages);
+      }
+    );
+
+    socket.on(
+      "mediabox:on-get-media",
+      async ({ meetingId, projectId }, callback) => {
+        const media = await MediaBoxModel.find({ projectId });
+        callback(media);
+      }
+    );
 
     //get observer list
     socket.on("getObserverList", async (data) => {
-      ("Received getObserverList event:", data);
+      "Received getObserverList event:", data;
       const { meetingId } = data;
       try {
         const liveMeeting = await LiveMeeting.findOne({ meetingId });
@@ -896,7 +969,9 @@ const setupSocket = (server) => {
     socket.on("getObserverChat", async (data) => {
       const { meetingId } = data;
       try {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
+        const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate(
+          "observerChat"
+        );
         if (!liveMeeting) {
           io.to(meetingId).emit("observerChatResponse", {
             success: false,
@@ -906,8 +981,10 @@ const setupSocket = (server) => {
           return;
         }
 
-
-        if (!liveMeeting.observerChat || liveMeeting.observerChat.length === 0) {
+        if (
+          !liveMeeting.observerChat ||
+          liveMeeting.observerChat.length === 0
+        ) {
           io.to(meetingId).emit("observerChatResponse", {
             success: false,
             message: "No chat messages found for this meeting",
@@ -916,16 +993,12 @@ const setupSocket = (server) => {
           return;
         }
 
-
-
-
         io.to(meetingId).emit("observerChatResponse", {
           success: true,
           message: "Observer chat retrieved successfully",
           observerMessages: liveMeeting.observerChat,
         });
       } catch (error) {
-
         console.error("Error in getObserverChat:", error);
         socket.to(meetingId).emit("observerChatResponse", {
           success: false,
@@ -954,9 +1027,8 @@ const setupSocket = (server) => {
           receiverName: message.receiverName,
           message: message.message,
           senderEmail: message.senderEmail,
-          receiverEmail: message.receiverEmail
+          receiverEmail: message.receiverEmail,
         });
-
 
         // Save the new chat message
         const savedChatMessage = await newChatMessage.save();
@@ -965,8 +1037,9 @@ const setupSocket = (server) => {
         liveMeeting.observerChat.push(savedChatMessage._id);
         await liveMeeting.save();
 
-        const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
-
+        const updatedLiveMeeting = await LiveMeeting.findOne({
+          meetingId,
+        }).populate("observerChat");
 
         io.to(meetingId).emit("observerChatResponse", {
           success: true,
@@ -986,13 +1059,20 @@ const setupSocket = (server) => {
     //end meeting
     socket.on("endMeeting", async (data) => {
       const { meetingId } = data;
-      console.log('endMeeting', data);
+      console.log("endMeeting", data);
       try {
-        const liveMeeting = checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
+        const liveMeeting = checkLiveMeetingExists(
+          meetingId,
+          socket,
+          "meeting-not-found"
+        );
         if (!liveMeeting) return;
         liveMeeting.isMeetindEnded = true;
         liveMeeting.endTime = Date.now();
-        liveMeeting.duration = (((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime))) / 1000) / 60;
+        liveMeeting.duration =
+          (new Date(liveMeeting.endTime) - new Date(liveMeeting.startTime)) /
+          1000 /
+          60;
         io.to(meetingId).emit("endMeeting", {
           success: true,
           message: "Meeting ended successfully",
@@ -1005,167 +1085,190 @@ const setupSocket = (server) => {
           message: "Server error occurred",
           meetingId: meetingId,
         });
-
       }
-
     });
 
     //polling feature needs to be handled, here we are just sending the data to all the clients
     //starting
-    socket.on("start-poll", async ({ meetingId, pollId, endTime }, callback) => {
-      try {
+    socket.on(
+      "start-poll",
+      async ({ meetingId, pollId, endTime }, callback) => {
+        try {
+          // Fetch the poll details
+          const poll = await Poll.findById(pollId).lean();
+          if (!poll) {
+            return callback({
+              success: false,
+              message: "Poll not found",
+            });
+          }
 
-           // Fetch the poll details
-    const poll = await Poll.findById(pollId).lean();
-    if (!poll) {
-      return callback({
-        success: false,
-        message: "Poll not found",
-      });
-    }
+          // Check if the meeting exists
+          const liveMeeting = await LiveMeeting.findOne({ meetingId });
+          if (!liveMeeting) {
+            return callback({
+              success: false,
+              message: "Live meeting not found",
+            });
+          }
 
-        // Check if the meeting exists
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          return callback({
+          // Create an active poll
+          const activePoll = new ActivePoll({
+            meetingId,
+            pollId,
+            status: "Active",
+            startTime: new Date(),
+            endTime: new Date(endTime),
+          });
+
+          await activePoll.save();
+
+          // Update the live meeting with the current poll
+          liveMeeting.currentPoll = activePoll._id;
+          await liveMeeting.save();
+          // Notify all participants about the active poll
+          io.to(meetingId).emit("poll-started", {
+            success: true,
+            message: "Poll started successfully",
+            pollId,
+            pollQuestions: poll.questions,
+          });
+
+          callback({
+            success: true,
+            message: "Poll started and broadcasted to participants",
+            activePoll,
+          });
+
+          // Schedule the poll to automatically end at the specified time
+          setTimeout(async () => {
+            const now = new Date();
+            if (now >= new Date(endTime)) {
+              await endPoll(meetingId, pollId);
+            }
+          }, new Date(endTime) - new Date());
+        } catch (error) {
+          console.error("Error starting poll:", error);
+          callback({
             success: false,
-            message: "Live meeting not found",
+            message: "Failed to start poll",
+            error,
           });
         }
-    
-        // Create an active poll
-        const activePoll = new ActivePoll({
-          meetingId,
-          pollId,
-          status: "Active",
-          startTime: new Date(),
-          endTime: new Date(endTime),
-        });
-    
-        await activePoll.save();
-    
-        // Update the live meeting with the current poll
-        liveMeeting.currentPoll = activePoll._id;
-        await liveMeeting.save();
-        // Notify all participants about the active poll
-        io.to(meetingId).emit("poll-started", {
-          success: true,
-          message: "Poll started successfully",
-          pollId,
-          pollQuestions: poll.questions,
-        });
-    
-        callback({
-          success: true,
-          message: "Poll started and broadcasted to participants",
-          activePoll,
-        });
-    
-        // Schedule the poll to automatically end at the specified time
-        setTimeout(async () => {
-          const now = new Date();
-          if (now >= new Date(endTime)) {
-            await endPoll(meetingId, pollId);
+      }
+    );
+
+    socket.on(
+      "submit-poll-response",
+      async ({ meetingId, pollId, responses, participantEmail }) => {
+        try {
+          // Validate required fields
+          if (!meetingId || !pollId || !responses || !participantEmail) {
+            return socket.emit("poll-response-error", {
+              message: "Invalid poll response data",
+            });
           }
-        }, new Date(endTime) - new Date());
-    
-      } catch (error) {
-        console.error("Error starting poll:", error);
-        callback({
-          success: false,
-          message: "Failed to start poll",
-          error,
-        });
-      }
-    });
 
-    socket.on("submit-poll-response", async ({ meetingId, pollId, responses,  participantEmail }) => {
-      try {
-        console.log('submit poll', meetingId, pollId, responses, participantEmail)
-        // Validate required fields
-        if (!meetingId || !pollId || !responses || !participantEmail) {
-          return socket.emit("poll-response-error", { message: "Invalid poll response data" });
-        }
-    
-        // Check if the poll is active
-        const activePoll = await ActivePoll.findOne({ pollId, meetingId, status: "Active" });
-        if (!activePoll) {
-          return socket.emit("poll-response-error", { message: "Poll is no longer active" });
-        }
-    
-        // Find the participant ID based on participantEmail in LiveMeeting
-        const liveMeeting = await LiveMeeting.findOne({ meetingId });
-        if (!liveMeeting) {
-          return socket.emit("poll-response-error", { message: "Live meeting not found" });
-        }
-    
-        const participant = liveMeeting.participantsList.find(
-          (p) => p.email === participantEmail && p.status === "online"
-        );
+          // Check if the poll is active
+          const activePoll = await ActivePoll.findOne({
+            pollId,
+            meetingId,
+            status: "Active",
+          });
+          if (!activePoll) {
+            return socket.emit("poll-response-error", {
+              message: "Poll is no longer active",
+            });
+          }
 
-        console.log('participant', participant)
-    
-        if (!participant) {
-          return socket.emit("poll-response-error", { message: "Participant not found or not online" });
+          // Find the participant ID based on participantEmail in LiveMeeting
+          const liveMeeting = await LiveMeeting.findOne({ meetingId });
+          if (!liveMeeting) {
+            return socket.emit("poll-response-error", {
+              message: "Live meeting not found",
+            });
+          }
+
+          const participant = liveMeeting.participantsList.find(
+            (p) => p.email === participantEmail && p.status === "online"
+          );
+
+          if (!participant) {
+            return socket.emit("poll-response-error", {
+              message: "Participant not found or not online",
+            });
+          }
+
+          // Save the response in PollResponse
+          const pollResponse = new PollResponse({
+            activePollId: activePoll._id,
+            meetingId,
+            participantId: participant.id,
+            participantEmail,
+            responses: Object.entries(responses).map(
+              ([questionId, answer]) => ({
+                questionId,
+                answer,
+              })
+            ),
+          });
+
+          await pollResponse.save();
+          // Notify the participant about the successful submission
+          socket.emit("poll-response-success", {
+            message: "Response submitted successfully",
+          });
+
+          // Optionally notify the moderator or others in the meeting
+          io.to(meetingId).emit("poll-update", {
+            pollId,
+            participantId: participant.id,
+          });
+        } catch (error) {
+          console.error("Error handling poll response:", error);
+          socket.emit("poll-response-error", {
+            message: "Failed to handle poll response",
+          });
         }
-    
-        // Save the response in PollResponse
-        const pollResponse = new PollResponse({
-          activePollId: activePoll._id,
-          meetingId,
-          participantId: participant.id,
-          participantEmail,
-          responses: Object.entries(responses).map(([questionId, answer]) => ({
-            questionId,
-            answer,
-          })),
-        });
-    
-        await pollResponse.save();
-    console.log('poll response', pollResponse)
-        // Notify the participant about the successful submission
-        socket.emit("poll-response-success", { message: "Response submitted successfully" });
-    
-        // Optionally notify the moderator or others in the meeting
-        io.to(meetingId).emit("poll-update", { pollId, participantId: participant.id });
-      } catch (error) {
-        console.error("Error handling poll response:", error);
-        socket.emit("poll-response-error", { message: "Failed to handle poll response" });
       }
-    });
-    
-    
+    );
+
     // Function to end a poll
     const endPoll = async (meetingId, pollId) => {
       try {
-        const activePoll = await ActivePoll.findOne({ meetingId, pollId, status: "Active" });
-        if (!activePoll) return;
-    
-        // Mark the poll as ended
-        activePoll.status = "Ended";
-        await activePoll.save();
-    
-        // Fetch poll results (placeholder logic for calculating results)
-        const pollResults = await PollResponse.find({ activePollId: activePoll._id });
-    
-        // Notify participants about poll results
+        const activePoll = await ActivePoll.findOneAndUpdate(
+          { meetingId, pollId, status: "Active" },
+          { status: "Ended" },
+          { new: true }
+        );
+
+        if (!activePoll) {
+          console.log("Poll not found or already ended");
+          return;
+        }
+
+        // Notify participants that the poll has ended
         io.to(meetingId).emit("poll-ended", {
           success: true,
           message: "Poll has ended",
           pollId,
-          results: pollResults,
         });
+
+        console.log(`Poll ${pollId} has ended for meeting ${meetingId}`);
       } catch (error) {
         console.error("Error ending poll:", error);
       }
     };
-    
+
     // Scheduled end for poll
     socket.on("poll-schedule-check", async (meetingId) => {
       try {
-        const activePolls = await ActivePoll.find({ meetingId, status: "Active" });
+        const activePolls = await ActivePoll.find({
+          meetingId,
+          status: "Active",
+        });
         const now = new Date();
-    
+
         activePolls.forEach((poll) => {
           if (new Date(poll.endTime) <= now) {
             endPoll(meetingId, poll.pollId);
@@ -1175,8 +1278,7 @@ const setupSocket = (server) => {
         console.error("Error in poll-schedule-check:", error);
       }
     });
-    
-    
+
     //ending
 
     // * disconnect
@@ -1185,44 +1287,49 @@ const setupSocket = (server) => {
       const userDetails = usernames[socket.id] || {};
       const newname = userDetails?.email + userDetails?.roomid;
       const isMoveByModerator = userchangeroom[newname];
-      console.log(isMoveByModerator)
+      console.log(isMoveByModerator);
       if (isMoveByModerator) {
-        return
+        return;
       }
-      const liveMeeting = await LiveMeeting.findOne({ meetingId: userDetails?.roomid });
+      const liveMeeting = await LiveMeeting.findOne({
+        meetingId: userDetails?.roomid,
+      });
       if (!liveMeeting) {
-        return
+        return;
       }
-
 
       if (userDetails?.role == "Participant") {
-        const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == userDetails?.email);
+        const participantIndex = liveMeeting.participantsList.findIndex(
+          (p) => p.email == userDetails?.email
+        );
         if (liveMeeting.participantsList[participantIndex]) {
           liveMeeting.participantsList[participantIndex].status = "offline";
-          liveMeeting.participantsList[participantIndex].leavingTime = Date.now();
+          liveMeeting.participantsList[participantIndex].leavingTime =
+            Date.now();
         }
       }
 
-
-
       if (userDetails?.role == "Observer") {
-        const observerIndex = liveMeeting.observerList.findIndex(b => b.email == userDetails?.email);
-        console.log('diconnet',userDetails.name)
+        const observerIndex = liveMeeting.observerList.findIndex(
+          (b) => b.email == userDetails?.email
+        );
+        console.log("diconnet", userDetails.name);
         if (liveMeeting.observerList[observerIndex]) {
           liveMeeting.observerList[observerIndex].leavingTime = Date.now();
           liveMeeting.observerList[observerIndex].status = "offline";
         }
-
       }
 
       if (userDetails?.role == "Moderator") {
         liveMeeting.isMeetindEnded = true;
         liveMeeting.endTime = Date.now();
-        liveMeeting.duration = (((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime))) / 1000) / 60;
+        liveMeeting.duration =
+          (new Date(liveMeeting.endTime) - new Date(liveMeeting.startTime)) /
+          1000 /
+          60;
         liveMeeting.moderator.endTime = Date.now();
         liveMeeting.moderator.status = "offline";
       }
-
 
       await liveMeeting.save();
 
@@ -1230,8 +1337,6 @@ const setupSocket = (server) => {
         liveMeeting.moderator,
         ...liveMeeting.participantsList,
       ];
-
-
 
       const fullObserverList = [
         liveMeeting.moderator,
@@ -1244,14 +1349,12 @@ const setupSocket = (server) => {
         observersList: fullObserverList,
       });
 
-
       io.to(liveMeeting.meetingId.toString()).emit("participantList", {
         success: true,
         message: "Participant added to participants list",
         waitingRoom: liveMeeting.waitingRoom,
         participantList: fullParticipantList,
       });
-
     });
   });
 

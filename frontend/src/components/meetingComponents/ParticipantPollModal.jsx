@@ -1,12 +1,28 @@
 'use client';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGlobalContext } from "@/context/GlobalContext";
 import Button from "../shared/button";
+import toast from "react-hot-toast";
 
 const ParticipantPollModal = ({ onClose, pollQuestions, pollId, meetingId, email }) => {
   const { socket } = useGlobalContext();
   const [responses, setResponses] = useState({});
   console.log('meeting id', meetingId)
+
+  useEffect(() => {
+    // Listen for the poll-ended event
+    socket.on("poll-ended", (data) => {
+      if (data.pollId === pollId) {
+        toast.error(`${data.message}`); // Optional: Show an alert or notification
+        onClose(); // Close the modal
+      }
+    });
+
+    // Cleanup listener when the component unmounts
+    return () => {
+      socket.off("poll-ended");
+    };
+  }, [pollId, socket, onClose]);
 
 const handleInputChange = (questionId, value) => {
   setResponses((prev) => ({
@@ -14,6 +30,7 @@ const handleInputChange = (questionId, value) => {
     [questionId]: value,
   }));
 };
+
 
 const handleMultipleChoiceChange = (questionId, option, isChecked) => {
   setResponses((prev) => {
