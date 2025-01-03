@@ -74,7 +74,7 @@ const liveMeetingSchema = new Schema({
     type: Number,
     default: 0
   },
-  
+  currentPoll: { type: mongoose.Schema.Types.ObjectId, ref: 'ActivePoll', default: null },
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   breakRooms: [{

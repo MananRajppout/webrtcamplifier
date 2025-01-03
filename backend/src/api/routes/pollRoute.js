@@ -8,4 +8,5 @@ module.exports = function (app) {
   app.delete("/api/delete/poll/:id", controller.deletePoll);
   app.post("/api/answer-poll", controller.submitPollResponse);
   app.patch('/api/change-active-status/:id', controller.changeActiveStatus);
+  app.post("/api/start-poll", controller.startPoll)
 };

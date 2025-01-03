@@ -198,6 +198,11 @@ const changeActiveStatus = async (req, res) => {
   }
 };
 
+const startPoll = async (req, res) => {
+  
+}
+
+
 
 module.exports = {
   createPoll,
@@ -208,4 +213,5 @@ module.exports = {
   submitPollResponse,
   getPollResults,
   changeActiveStatus,
+  startPoll
 };
