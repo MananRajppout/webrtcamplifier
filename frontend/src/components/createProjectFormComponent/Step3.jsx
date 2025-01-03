@@ -21,7 +21,7 @@ const Step3 = ({ userId, setPaymentId, setPaymentStatus }) => {
       try {
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create-payment-intent`,
-          { amount: 1 } // $1 payment
+          { amount: 1 } 
         );
         if (response.status === 201) {
           setClientSecret(response.data.clientSecret);
@@ -53,6 +53,7 @@ const Step3 = ({ userId, setPaymentId, setPaymentStatus }) => {
           userId={userId}
           setPaymentId={setPaymentId}
           setPaymentStatus={setPaymentStatus}
+          amount={1}
           />
         </Elements>
       )}

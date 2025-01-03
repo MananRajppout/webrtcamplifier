@@ -1,6 +1,10 @@
+import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import axios from "axios";
+import toast from "react-hot-toast";
+
 const { useState } = require("react");
 
-const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus }) => {
+const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amount, projectId = null }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,27 +30,32 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus }) =
         }
       );
       if (error) {
-         // Save failed payment to the backend
-         await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/save-payment`, {
+          // Save failed payment to the backend
+        const failedPaymentData = {
           userId,
-      
-          amount: 1, // $1 in cents
+          amount,
           status: "Failed",
-          paymentIntent: null, // No paymentIntent since it failed
-        });
+          paymentIntent: null,
+        };
+        if (projectId) failedPaymentData.projectId = projectId; // Add projectId if present
+
+        await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/save-payment`, failedPaymentData);
+
 
         toast.error(`Payment failed: ${error.message}`);
       } else if (paymentIntent.status === "succeeded") {
-         // Save successful payment to the backend
-         const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/save-payment`, {
+        const successfulPaymentData = {
           userId,
-         
-          amount: 1, // $1 in cents
+          amount,
           status: "Completed",
-          paymentIntent: paymentIntent
-        });
+          paymentIntent: paymentIntent,
+        };
+        if (projectId) successfulPaymentData.projectId = projectId; // Add projectId if present
 
-        console.log('response', response)
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/save-payment`,
+          successfulPaymentData
+        );
 
         setPaymentId(response.data.payment._id)
         setPaymentStatus("succeeded")
@@ -68,7 +77,7 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus }) =
         disabled={!stripe || isProcessing}
         className="px-4 py-2 bg-custom-teal text-white rounded-lg"
       >
-        {isProcessing ? "Processing..." : "Pay $1"}
+        {isProcessing ? "Processing..." : `Pay ${amount}`}
       </button>
     </form>
   );

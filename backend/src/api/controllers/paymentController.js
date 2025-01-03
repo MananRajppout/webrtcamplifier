@@ -79,7 +79,39 @@ const updatePaymentProjectId = async (req, res) => {
   }
 };
 
+const getPaymentDataByUserId = async(req, res) => {
+  const { id } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  if (!id) {
+    return res.status(400).json({ message: "UserId is required" });
+  }
+
+  try {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Fetch payments with pagination
+    const payments = await Payment.find({ userId: id })
+      .populate('projectId')
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Count total documents for pagination
+    const totalDocuments = await Payment.countDocuments({ userId: id });
+    const totalPages = Math.ceil(totalDocuments / limit);
+
+    res.status(200).json({
+      page: parseInt(page),
+      totalPages,
+      totalDocuments,
+      payments,
+    });
+  } catch (error) {
+    console.error("Error fetching payment data:", error);
+    res.status(500).json({ message: "Failed to fetch payment data", error });
+  }
+}
 
 module.exports = {
-  createPaymentIntent, savePayment, updatePaymentProjectId 
+  createPaymentIntent, savePayment, updatePaymentProjectId, getPaymentDataByUserId 
 }

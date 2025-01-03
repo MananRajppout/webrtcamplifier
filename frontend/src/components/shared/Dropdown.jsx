@@ -27,8 +27,9 @@ const Dropdown = ({ options, selectedOption, onSelect, className = "" }) => {
       </button>
       {isOpen && (
         <ul
-          className={`absolute z-50 left-0 text-xs bg-white rounded-lg shadow-[0px_3px_6px_#00000029] text-custom-dark-blue-1 font-semibold ${defaultWidthClass} `}
-        >
+        className={`absolute z-50 left-0 text-xs bg-white rounded-lg shadow-[0px_3px_6px_#00000029] text-custom-dark-blue-1 font-semibold ${defaultWidthClass}`}
+        style={{ maxHeight: "200px", overflowY: "auto" }} // Added fixed height and scroll
+      >
           {options?.map((option, index) => (
             <li
               key={index}

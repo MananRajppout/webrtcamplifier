@@ -74,11 +74,20 @@ const DashboardSidebar = ({
                 </p>
               </div>
             </Link>
+            
             <Link href="/dashboard/contacts">
               <div className="flex justify-start items-center gap-3 pt-5">
                 <MdOutlinePets className="text-base text-[#6A7E88]" />
                 <p className="text-base text-[#6A7E88] font-semibold">
                   Contacts
+                </p>
+              </div>
+            </Link>
+            <Link href="/dashboard/payment">
+              <div className="flex justify-start items-center gap-3 pt-5">
+                <MdOutlinePets className="text-base text-[#6A7E88]" />
+                <p className="text-base text-[#6A7E88] font-semibold">
+                  Payment
                 </p>
               </div>
             </Link>

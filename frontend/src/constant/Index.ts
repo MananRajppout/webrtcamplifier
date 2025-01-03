@@ -135,3 +135,10 @@ export const moderatorList = [
     email: 'e@b.com'
    },
   ]
+
+  export const packages = [
+    { hours: 25, rate: 150, total: 3500 },
+    { hours: 100, rate: 140, total: 13500 },
+    { hours: 250, rate: 135, total: 32500 },
+    { hours: 500, rate: 130, total: 60000 },
+  ];
