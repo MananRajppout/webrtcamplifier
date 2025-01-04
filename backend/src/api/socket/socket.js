@@ -1095,6 +1095,7 @@ const setupSocket = (server) => {
       async ({ meetingId, pollId, endTime }, callback) => {
         try {
           // Fetch the poll details
+          console.log('poll id in start poll', pollId)
           const poll = await Poll.findById(pollId).lean();
           if (!poll) {
             return callback({
@@ -1145,6 +1146,8 @@ const setupSocket = (server) => {
             const now = new Date();
             if (now >= new Date(endTime)) {
               await endPoll(meetingId, pollId);
+              // Emit event to notify moderator about poll end
+    io.to(meetingId).emit("poll-ended", { pollId });
             }
           }, new Date(endTime) - new Date());
         } catch (error) {
@@ -1161,6 +1164,7 @@ const setupSocket = (server) => {
     socket.on(
       "submit-poll-response",
       async ({ meetingId, pollId, responses, participantEmail }) => {
+        console.log('poll id in submit-poll-response', pollId)
         try {
           // Validate required fields
           if (!meetingId || !pollId || !responses || !participantEmail) {
@@ -1235,6 +1239,7 @@ const setupSocket = (server) => {
 
     // Function to end a poll
     const endPoll = async (meetingId, pollId) => {
+      console.log('poll id in end poll', pollId)
       try {
         const activePoll = await ActivePoll.findOneAndUpdate(
           { meetingId, pollId, status: "Active" },
@@ -1246,7 +1251,7 @@ const setupSocket = (server) => {
           console.log("Poll not found or already ended");
           return;
         }
-
+        console.log('poll ended poll id', pollId)
         // Notify participants that the poll has ended
         io.to(meetingId).emit("poll-ended", {
           success: true,
@@ -1260,24 +1265,52 @@ const setupSocket = (server) => {
       }
     };
 
-    // Scheduled end for poll
-    socket.on("poll-schedule-check", async (meetingId) => {
+    socket.on("get-poll-results", async ({ pollId }, callback) => {
       try {
-        const activePolls = await ActivePoll.find({
-          meetingId,
-          status: "Active",
-        });
-        const now = new Date();
+        // Fetch all responses for the given pollId
+          // Fetch the ActivePoll document using pollId
+    const activePoll = await ActivePoll.findOne({ pollId });
+    if (!activePoll) {
+      return callback({
+        success: false,
+        message: "Active poll not found",
+      });
+    }
 
-        activePolls.forEach((poll) => {
-          if (new Date(poll.endTime) <= now) {
-            endPoll(meetingId, poll.pollId);
-          }
+    console.log("active poll", activePoll)
+        console.log('poll id in get-poll-results', pollId)
+        const pollResponses = await PollResponse.find({ activePollId: activePoll._id }).populate('participantId');
+
+        console.log('poll responses', pollResponses)
+    
+        if (!pollResponses || pollResponses.length === 0) {
+          return callback({
+            success: false,
+            message: "No responses found for this poll",
+          });
+        }
+    
+        // Group responses by participant
+        const results = pollResponses.map((response) => ({
+          participantId: response.participantId,
+          participantEmail: response.participantEmail,
+          responses: response.responses, 
+        }));
+    
+        callback({
+          success: true,
+          results,
         });
       } catch (error) {
-        console.error("Error in poll-schedule-check:", error);
+        console.error("Error fetching poll results:", error);
+        callback({
+          success: false,
+          message: "Failed to fetch poll results",
+          error,
+        });
       }
     });
+    
 
     //ending
 

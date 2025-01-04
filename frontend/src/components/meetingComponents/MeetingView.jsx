@@ -12,6 +12,7 @@ import Button from "../shared/button";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 import ParticipantPollModal from "./ParticipantPollModal";
+import PollResultModal from "./PollResultModal";
 
 const MeetingView = ({
   role,
@@ -35,9 +36,11 @@ const MeetingView = ({
   allPaericipantsAudioTracksRef,
   setAllParticipantsAudioTracks,
   pollData,
-  setPollData, meetingId
+  setPollData, meetingId, pollResult,
+  isPollResultModalOpen,
+  setIsPollResultModalOpen,
+  projectId,
 }) => {
-console.log("inmeeitng view role", role, "poll data", pollData)
   const searchParams = useSearchParams();
   const roomname = searchParams.get('roomname');
   const type = searchParams.get('type');
@@ -210,6 +213,17 @@ console.log("inmeeitng view role", role, "poll data", pollData)
           onClose={()=>setPollData(null)}
           meetingId={meetingId}
           email={userEmail}
+          />
+        )
+      }
+      {
+        (role === "Moderator" && isPollResultModalOpen) && (
+          <PollResultModal
+          setIsPollResultModalOpen={setIsPollResultModalOpen}
+          pollResult={pollResult}
+          uploaderEmail={userEmail}
+          meetingId={meetingId}
+          projectId={projectId}
           />
         )
       }

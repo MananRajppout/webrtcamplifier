@@ -64,6 +64,8 @@ const page = () => {
   const [isMeetingEnd, setIsMeetingEnd] = useState(false);
   const [polls, setPolls] = useState();
   const [pollData, setPollData] = useState(null);
+  const [pollResult, setPollResult] = useState([])
+  const [isPollResultModalOpen, setIsPollResultModalOpen] = useState(false)
   const [totalPages, setTotalPollPages] = useState();
   const [currentPollPage, setCurrentPollPage] = useState(1);
   const [setting, setSetting] = useState({
@@ -254,13 +256,17 @@ const page = () => {
     // polling feature needs to be handled, here we are just reciving the data
     //starting
     socket.on("poll-started", (data) => {
-      console.log('data when poll started', data)
       if (data.success) {
         setPollData({
           pollId: data.pollId,
           pollQuestions: data.pollQuestions,
         });
       }
+    });
+
+    socket.on("poll-ended", ({ pollId }) => {
+      console.log('pool ended poll Id', pollId)
+      fetchPollResults(pollId);
     });
 
     //ending
@@ -296,11 +302,11 @@ const page = () => {
       socket.off("mediabox:on-delete", handleMediaNewDelete);
       socket.off("endMeeting", onEndMeeting);
       socket.off("poll-started");
+      socket.off("poll-ended");
     };
-  }, [userRole, params.id, socket]);
+  }, [userRole, params.id, socket, pollData]);
 
 
-  // console.log('poll data', pollData)
   // * function to request streaming status
   const getMeetingStatus = async (meetingId) => {
     socket.emit("getMeetingStatus", { meetingId });
@@ -492,7 +498,6 @@ const page = () => {
 
   // * participant send message function
   const sendMessageParticipant = async (message) => {
-    console.log('send message', message)
     socket.emit("participantSendMessage", { message, meetingId: params.id });
   };
 
@@ -556,7 +561,6 @@ const page = () => {
         window.location.href = "/remove-participant";
       }
     }
-    console.log('removed participant data', data)
   });
   // ? moving participant from the meeting to the waiting room
   useSocketListen("participantMovedToWaitingRoom", (data) => {
@@ -719,7 +723,16 @@ const page = () => {
 
   // polling feature needs to be handled, 
   //starting
-
+  const fetchPollResults = (pollId) => {
+    socket.emit("get-poll-results", { pollId }, (response) => {
+      if (response.success) {
+        setPollResult(response.results);
+        setIsPollResultModalOpen(true);
+      } else {
+        toast.error(`${response.message}`);
+      }
+    });
+  };
 
   //ending
 
@@ -807,6 +820,10 @@ const page = () => {
                 pollData={pollData}
                 setPollData={setPollData}
                 meetingId={meetingId}
+                pollResult={pollResult}
+                isPollResultModalOpen={isPollResultModalOpen}
+                setIsPollResultModalOpen={setIsPollResultModalOpen}
+                projectId={projectId}
               />
             </div>
           </>
@@ -882,6 +899,10 @@ const page = () => {
                 pollData={pollData}
                 setPollData={setPollData}
                 meetingId={meetingId}
+                pollResult={pollResult}
+                isPollResultModalOpen={isPollResultModalOpen}
+                setIsPollResultModalOpen={setIsPollResultModalOpen}
+                projectId={projectId}
               />
             </div>
             <div className="h-full">
@@ -981,6 +1002,10 @@ const page = () => {
                 pollData={pollData}
                 setPollData={setPollData}
                 meetingId={meetingId}
+                pollResult={pollResult}
+                isPollResultModalOpen={isPollResultModalOpen}
+                setIsPollResultModalOpen={setIsPollResultModalOpen}
+                projectId={projectId}
               />
             </div>
             <div className="h-full">
