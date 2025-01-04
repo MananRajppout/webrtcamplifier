@@ -1,11 +1,28 @@
 import React from 'react'
 import Button from '../shared/button'
+import { useGlobalContext } from '@/context/GlobalContext';
+import toast from 'react-hot-toast';
 
 const PollResultModal = ({setIsPollResultModalOpen, pollResult, uploaderEmail,
   meetingId, projectId}) => {
-  const handleSubmit = () => {
-    
-  }
+    const { socket } = useGlobalContext();
+
+    const handleSubmit = () => {
+      socket.emit(
+        'save-poll-results-csv',
+        { pollResult, uploaderEmail, meetingId, projectId, role: 'Moderator', addedBy: uploaderEmail },
+        (response) => {
+          if (response.success) {
+            toast.success(`${response.message}`);
+            console.log('response.file',response.file)
+            setIsPollResultModalOpen(false);
+          } else {
+            toast.error(`${response.message}`);
+          }
+        }
+      );
+    };
+  
   
   console.log('pollResult', pollResult, "uploaderEmail", uploaderEmail, "meetingId", meetingId, "projectId", projectId)
   return (

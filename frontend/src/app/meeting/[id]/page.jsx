@@ -41,7 +41,7 @@ const page = () => {
   const socketIdRef = useRef(null);
 
   // const [socket, setSocket] = useState(null);
-
+console.log('user', user)
 
   const meetingStatus = "Ongoing";
   const projectStatus = "Open";
@@ -824,6 +824,7 @@ const page = () => {
                 isPollResultModalOpen={isPollResultModalOpen}
                 setIsPollResultModalOpen={setIsPollResultModalOpen}
                 projectId={projectId}
+                user={user}
               />
             </div>
           </>
@@ -903,6 +904,7 @@ const page = () => {
                 isPollResultModalOpen={isPollResultModalOpen}
                 setIsPollResultModalOpen={setIsPollResultModalOpen}
                 projectId={projectId}
+                user={user}
               />
             </div>
             <div className="h-full">
@@ -1006,6 +1008,7 @@ const page = () => {
                 isPollResultModalOpen={isPollResultModalOpen}
                 setIsPollResultModalOpen={setIsPollResultModalOpen}
                 projectId={projectId}
+                user={user}
               />
             </div>
             <div className="h-full">

@@ -1,4 +1,6 @@
 const { Server } = require("socket.io");
+const dotenv = require("dotenv");
+dotenv.config();
 const Meeting = require("../models/meetingModel");
 const LiveMeeting = require("../models/liveMeetingModel");
 const { v4: uuidv4 } = require("uuid");
@@ -8,6 +10,27 @@ const MediaBoxModel = require("../models/mediaBox.js");
 const ActivePoll = require("../models/activePollModel.js");
 const Poll = require("../models/pollModel.js");
 const PollResponse = require("../models/pollResponseModel.js");
+const AWS = require('aws-sdk');
+const { Parser } = require('json2csv');
+// Configure AWS S3
+const s3 = new AWS.S3({
+  accessKeyId: process.env.S3_ACCESS_KEY,
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+});
+
+// Helper: Upload to S3
+const  uploadToS3 = async (buffer, mimetype, fileName) => {
+  const uniqueFileName = `${Date.now()}-${fileName}`;
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `mediabox/${uniqueFileName}`,
+    Body: buffer,
+    ContentType: mimetype,
+  };
+
+  const data = await s3.upload(params).promise();
+  return { url: data.Location, key: params.Key };
+}
 
 let messageBatch = [];
 const FLUSH_INTERVAL = 10000;
@@ -1330,6 +1353,67 @@ const setupSocket = (server) => {
           message: "Failed to fetch poll results",
           error,
         });
+      }
+    });
+
+    socket.on('save-poll-results-csv', async ({ pollResult, uploaderEmail, meetingId, projectId, role, addedBy }, callback) => {
+      try {
+        console.log('data received in the save poll', pollResult, uploaderEmail, meetingId, projectId, role, addedBy);
+    
+        // Flatten the poll results
+        const flattenedResults = pollResult.flatMap(participant =>
+          participant.responses.map(response => ({
+            participantEmail: participant.participantEmail,
+            question: response.question,
+            answer: response.answer.join(', '), // Join multiple answers with a comma
+          }))
+        );
+    
+        console.log('Flattened Results:', flattenedResults);
+    
+        // Convert to CSV
+        const fields = ['participantEmail', 'question', 'answer'];
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(flattenedResults);
+    
+        // Convert CSV to Buffer
+        const buffer = Buffer.from(csv, 'utf-8');
+    
+        // Upload CSV to S3
+        const filename = `poll_results_${Date.now()}.csv`;
+        console.log('csv file name', filename);
+        const s3Response = await uploadToS3(buffer, 'text/csv', filename);
+        console.log('s3 response', s3Response);
+    
+        // Save metadata in MediaBoxModel
+        const newMedia = await MediaBoxModel.create({
+          meetingId,
+          uploaderEmail,
+          role,
+          projectId,
+          addedBy,
+          file: {
+            url: s3Response.url,
+            public_id: s3Response.Key,
+            name: filename,
+            mimetype: 'text/csv',
+            size: buffer.length,
+          },
+        });
+    
+        console.log('new media', newMedia);
+    
+        // Emit upload event
+        io.to(meetingId).emit('poll-results-saved', {
+          success: true,
+          message: 'Poll results saved and uploaded successfully.',
+          file: newMedia,
+        });
+    
+        callback({ success: true, message: 'Poll results uploaded successfully.' });
+      } catch (error) {
+        console.error('Error saving poll results as CSV:', error);
+        callback({ success: false, message: 'Failed to save poll results.' });
       }
     });
 

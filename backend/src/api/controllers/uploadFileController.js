@@ -8,7 +8,7 @@ const s3 = new AWS.S3({
 });
 
 // Helper: Upload to S3
-async function uploadToS3(buffer, mimetype, fileName) {
+const  uploadToS3 = async (buffer, mimetype, fileName) => {
   const uniqueFileName = `${Date.now()}-${fileName}`;
   const params = {
     Bucket: process.env.S3_BUCKET_NAME,
@@ -213,7 +213,7 @@ exports.renameFile = async (req, res) => {
   }
 };
 
-
+// module.exports = { s3, uploadToS3 };
 
 // POST - Upload File
 // exports.uploadFile = async (req, res) => {

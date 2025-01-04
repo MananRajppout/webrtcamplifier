@@ -40,12 +40,13 @@ const MeetingView = ({
   isPollResultModalOpen,
   setIsPollResultModalOpen,
   projectId,
+  user
 }) => {
   const searchParams = useSearchParams();
   const roomname = searchParams.get('roomname');
   const type = searchParams.get('type');
   const userEmail = searchParams.get("email");
-console.log('poll data in the meeting view', pollData)
+console.log('user email', userEmail)
 
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
@@ -221,7 +222,7 @@ console.log('poll data in the meeting view', pollData)
           <PollResultModal
           setIsPollResultModalOpen={setIsPollResultModalOpen}
           pollResult={pollResult}
-          uploaderEmail={userEmail}
+          uploaderEmail={user.email}
           meetingId={meetingId}
           projectId={projectId}
           />
