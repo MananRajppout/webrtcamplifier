@@ -258,15 +258,15 @@ const page = () => {
     socket.on("poll-started", (data) => {
       if (data.success) {
         setPollData({
-          pollId: data.pollId,
+          pollId: data.activePollId,
           pollQuestions: data.pollQuestions,
         });
       }
     });
 
-    socket.on("poll-ended", ({ pollId }) => {
-      console.log('pool ended poll Id', pollId)
-      fetchPollResults(pollId);
+    socket.on("poll-ended", ({ activePollId }) => {
+      console.log("Active poll ended with ID:", activePollId);
+      fetchPollResults(activePollId); // Use `activePollId` instead of `pollId`
     });
 
     //ending
@@ -723,8 +723,8 @@ const page = () => {
 
   // polling feature needs to be handled, 
   //starting
-  const fetchPollResults = (pollId) => {
-    socket.emit("get-poll-results", { pollId }, (response) => {
+  const fetchPollResults = (activePollId) => {
+    socket.emit("get-poll-results", { activePollId }, (response) => {
       if (response.success) {
         setPollResult(response.results);
         setIsPollResultModalOpen(true);

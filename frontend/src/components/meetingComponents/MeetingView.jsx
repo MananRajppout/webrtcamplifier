@@ -45,7 +45,7 @@ const MeetingView = ({
   const roomname = searchParams.get('roomname');
   const type = searchParams.get('type');
   const userEmail = searchParams.get("email");
-
+console.log('poll data in the meeting view', pollData)
 
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
@@ -208,7 +208,7 @@ const MeetingView = ({
       {
         (role === "Participant" && pollData)  && (
           <ParticipantPollModal
-          pollId={pollData.pollId}
+          activePollId={pollData.pollId}
           pollQuestions={pollData.pollQuestions}
           onClose={()=>setPollData(null)}
           meetingId={meetingId}

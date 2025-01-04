@@ -4,15 +4,14 @@ import { useGlobalContext } from "@/context/GlobalContext";
 import Button from "../shared/button";
 import toast from "react-hot-toast";
 
-const ParticipantPollModal = ({ onClose, pollQuestions, pollId, meetingId, email }) => {
+const ParticipantPollModal = ({ onClose, pollQuestions, activePollId, meetingId, email }) => {
   const { socket } = useGlobalContext();
   const [responses, setResponses] = useState({});
-  console.log('meeting id', meetingId)
 
   useEffect(() => {
     // Listen for the poll-ended event
     socket.on("poll-ended", (data) => {
-      if (data.pollId === pollId) {
+      if (data.activePollId === activePollId) {
         toast.error(`${data.message}`); // Optional: Show an alert or notification
         onClose(); // Close the modal
       }
@@ -22,7 +21,7 @@ const ParticipantPollModal = ({ onClose, pollQuestions, pollId, meetingId, email
     return () => {
       socket.off("poll-ended");
     };
-  }, [pollId, socket, onClose]);
+  }, [activePollId, socket, onClose]);
 
 const handleInputChange = (questionId, value) => {
   setResponses((prev) => ({
@@ -55,12 +54,12 @@ const handleSubmit = () => {
     return;
   }
 
-  console.log('poll answer response at the fe', responses)
+  console.log('poll answer response at the fe', responses, "active poll id", activePollId)
 
   // Emit the responses to the backend
   socket.emit("submit-poll-response", {
     meetingId,
-    pollId,
+    activePollId,
     responses,
     participantEmail: email
   });

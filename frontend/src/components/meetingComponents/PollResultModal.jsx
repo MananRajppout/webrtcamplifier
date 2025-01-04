@@ -26,11 +26,11 @@ const PollResultModal = ({setIsPollResultModalOpen, pollResult, uploaderEmail,
                           <span className="font-semibold">
                             Question:{" "}
                           </span>
-                          {response.questionId}
+                          {response.question}
                         </p>
                         <p>
                           <span className="font-semibold">Answer: </span>
-                          {response.answer}
+                          {response.answer.join(', ')}
                         </p>
                       </div>
                     ))}
