@@ -5,6 +5,7 @@ import Button from "../shared/button";
 
 // EditProjectModal Component
 const EditProjectModal = ({ onClose, project, onSave }) => {
+  console.log("edit project", project)
   const [formData, setFormData] = useState({
     name: project?.name || "",
     description: project?.description || "",

@@ -5,7 +5,6 @@ import TableHead from "../shared/TableHead";
 import TableData from "../shared/TableData";
 import { BsFillEnvelopeAtFill, BsThreeDotsVertical } from "react-icons/bs";
 import { FaShareAlt, FaTrash, FaUser } from "react-icons/fa";
-import { RiPencilFill } from "react-icons/ri";
 import ViewProject from "./ViewProject";
 import ShareProjectModal from "../projectComponents/ShareProjectModal";
 import Button from "../shared/button";

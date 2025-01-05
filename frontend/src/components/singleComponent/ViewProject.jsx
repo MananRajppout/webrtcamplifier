@@ -7,15 +7,8 @@ import EditProjectModal from "../projectComponents/EditProjectModal";
 import toast from "react-hot-toast";
 import MemberTabAddMember from "../projectComponents/members/MemberTabAddMember";
 import MemberBulkUpdate from "../projectComponents/members/MemberBulkUpdate";
-import PollsTab from "../projectComponents/polls/PollsTab";
 import AddPollModal from "../projectComponents/polls/AddPollModal";
-import Button from "../shared/button";
 import AddRepositoryModal from "../projectComponents/repository/AddRepositoryModal";
-import RepositoryTab from "../projectComponents/repository/RepositoryTab";
-import { MdBarChart, MdOutlineRadioButtonChecked } from "react-icons/md";
-import { FaCheckSquare, FaStarHalfAlt } from "react-icons/fa";
-import { HiMiniBars2, HiMiniBars4 } from "react-icons/hi2";
-import { IoRemoveOutline } from "react-icons/io5";
 import AddSingleChoicePollModal from "../projectComponents/polls/PollModal/AddSingleChoicePollModal";
 import MultipleChoicePollModal from "../projectComponents/polls/PollModal/MultipleChoicePollModal";
 import MatchingPollModal from "../projectComponents/polls/PollModal/MatchingPollModal";
@@ -29,6 +22,7 @@ import ViewProjectNavbar from "../projectComponents/viewProject/ViewProjectNavba
 import ProjectStatusChange from "../projectComponents/viewProject/ProjectStatusChange";
 import TabNavigation from "../projectComponents/viewProject/TabNavigation";
 import TabContent from "../projectComponents/viewProject/TabContent";
+import { useGlobalContext } from "@/context/GlobalContext";
 const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   // *Shared State
   const [localProjectState, setLocalProjectState] = useState(project);
@@ -100,6 +94,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   //* Function related to edit project
 
   const handleEditModal = () => {
+    if(user._id !== project.createdBy){
+      toast.error("Your are not allowed to edit this project.")
+      return;
+    }
     setIsEditModalOpen(true);
   };
 
