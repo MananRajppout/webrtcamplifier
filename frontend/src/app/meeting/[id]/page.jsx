@@ -567,6 +567,7 @@ const page = () => {
 
   // ? Using took to get waiting room data
   useSocketListen("participantWaiting", (data) => {
+    console.log('waiting room data', data)
     setWaitingRoom(data.waitingRoom);
   });
   useSocketListen("participantList", (data) => {

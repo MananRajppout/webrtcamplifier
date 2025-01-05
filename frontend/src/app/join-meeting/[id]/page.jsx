@@ -16,8 +16,11 @@ import useSocketListen from "@/hooks/useSocketListen";
 const Page = () => {
   const [formData, setFormData] = useState({
     fullName: "",
-    email: ""
+    email: "",
+    image: null,
   });
+  const [imagePreview, setImagePreview] = useState(null); 
+
   const { socket } = useGlobalContext();
 
   const params = useParams();
@@ -41,6 +44,17 @@ const Page = () => {
     }));
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        image: file,
+      }));
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   useSocketListen("meeting-not-found", ()=> {
     toast.error("Live Meeting not found");
   })
@@ -56,12 +70,21 @@ const Page = () => {
     if(typeof window !== 'undefined'){
       window.localStorage.setItem('email',formData.email);
     }
-    socket.emit("participantWantToJoin", {
-      name: formData.fullName,
-      email: formData.email,
-      role: role, 
-      meetingId: meetingId,
-    });
+    
+    // Prepare the image in Base64 format if it exists
+  let imageData = null;
+  if (formData.image) {
+    imageData = await convertImageToBase64(formData.image);
+  }
+
+  // Emit socket event
+  socket.emit("participantWantToJoin", {
+    name: formData.fullName,
+    email: formData.email,
+    image: imageData, // Include the image in the expected format
+    role: role,
+    meetingId: meetingId,
+  });
 
     
     // Listen for the response from the socket
@@ -101,7 +124,23 @@ const Page = () => {
 };
 
  
- 
+ // Helper function to convert the image to Base64
+const convertImageToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve({
+        fileBase64: reader.result, // Base64 string including MIME type
+        fileName: file.name, // Original file name
+      });
+    };
+    reader.onerror = (error) => {
+      reject(error);
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
   return (
     <div>
       <div className="bg-white lg:flex lg:justify-center lg:items-center">
@@ -134,6 +173,28 @@ const Page = () => {
                 value={formData.email}
                 onChange={handleChange}
               />
+            </div>
+            <div className=" w-full">
+              <label className="block text-sm font-semibold mb-2 text-black">
+                Upload Image (Optional)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="w-full px-4 py-2 border-[0.5px] rounded-xl focus:outline-none border-black"
+              />
+              {imagePreview && (
+                <div className="mt-4">
+                  <Image
+                    src={imagePreview}
+                    alt="Uploaded Preview"
+                    height={100}
+                    width={100}
+                    className="rounded-lg"
+                  />
+                </div>
+              )}
             </div>
             <div className="w-full lg:pt-2 min-h-[60vh]">
               <Button

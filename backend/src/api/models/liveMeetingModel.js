@@ -8,11 +8,13 @@ const liveMeetingSchema = new Schema({
     name: { type: String, required: true },
     role: { type: String, required: true },
     email: { type: String, required: true },
+    image: { type: String, default: null },
   }],
   removedParticipants: [{
     name: { type: String, required: true },
     role: { type: String, required: true },
     email: { type: String, required: true },
+    image: { type: String, default: null },
     
   }],
   moderator: {
@@ -28,6 +30,7 @@ const liveMeetingSchema = new Schema({
       id: { type: String, required: true },
       role: { type: String, required: true },
       email: {type: String, requried: true},
+      image: { type: String, default: null },
       roomName: {type: String, required: false, default: "main"},
       joiningTime: {type: Date, required: false, default: Date.now},
       leavingTime: {type: Date, required: false, default: null},

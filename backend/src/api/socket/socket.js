@@ -5,6 +5,29 @@ const { v4: uuidv4 } = require("uuid");
 const ChatMessage = require("../models/chatModel");
 const GroupMessage = require('../models/groupMessage');
 const MediaBoxModel = require('../models/mediaBox.js');
+const AWS = require('aws-sdk');
+const dotenv = require("dotenv");
+dotenv.config();
+
+// Configure AWS S3
+const s3 = new AWS.S3({
+  accessKeyId: process.env.S3_ACCESS_KEY,
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+});
+
+// Helper: Upload to S3
+async function uploadToS3(buffer, mimetype, fileName) {
+  const uniqueFileName = `${Date.now()}-${fileName}`;
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `mediabox/${uniqueFileName}`,
+    Body: buffer,
+    ContentType: mimetype,
+  };
+
+  const data = await s3.upload(params).promise();
+  return { url: data.Location, key: params.Key };
+}
 
 let messageBatch = [];
 const FLUSH_INTERVAL = 10000;
@@ -246,7 +269,7 @@ const setupSocket = (server) => {
     });
 
     socket.on("participantWantToJoin", async (data) => {
-      const { meetingId, name, role, email } = data;
+      const { meetingId, name, role, email, image } = data;
 
       let liveMeeting = await checkLiveMeetingExists(meetingId, socket, "meeting-not-found");
       if (!liveMeeting) return;
@@ -278,13 +301,35 @@ const setupSocket = (server) => {
         return;
       }
 
-      liveMeeting.waitingRoom.push({ name, role, email });
+      let imageUrl = null;
+
+      // If the participant sent an image, upload it to S3
+      if (image) {
+        try {
+          const { fileName, fileBase64 } = image; // Assuming `image` has these fields
+          const base64Data = fileBase64.split(";base64,").pop();
+          const buffer = Buffer.from(base64Data, "base64");
+          const mimetype = "image/png"; // Default MIME type, adjust based on input
+          const s3Response = await uploadToS3(buffer, mimetype, fileName);
+          imageUrl = s3Response.url; // URL of the uploaded image
+        } catch (error) {
+          console.error("Error uploading image to S3:", error);
+          socket.emit("participantJoinMeetingResponse", {
+            success: false,
+            message: "Error uploading image",
+            meetingId: meetingId,
+          });
+          return;
+        }
+      }
+
+      liveMeeting.waitingRoom.push({ name, role, email, image: imageUrl });
       await liveMeeting.save();
 
       socket.emit("participantJoinMeetingResponse", {
         success: true,
         message: "Participant added to waiting room",
-        participant: { name, role, email },
+        participant: { name, role, email,  image: imageUrl },
       });
 
       // Broadcast the updated waiting room list to all clients in the meeting room
