@@ -70,6 +70,18 @@ async function getGroupMessage(meetingId) {
   return [...addedMessage, ...noAddedMessage]
 }
 
+
+function callAfterMin(min, callback) {
+  if (typeof min !== 'number' || min <= 0) {
+    throw new Error('The "min" parameter should be a positive number.');
+  }
+  if (typeof callback !== 'function') {
+    throw new Error('The "callback" parameter should be a function.');
+  }
+
+  setTimeout(callback, min * 60 * 1000);
+}
+
 const usernames = {};
 const userchangeroom = {};
 
@@ -106,6 +118,8 @@ const setupSocket = (server) => {
         if (participantIndex != -1 && liveMeeting.participantsList[participantIndex]) {
           liveMeeting.participantsList[participantIndex].status = "online";
           liveMeeting.participantsList[participantIndex].joiningTime = Date.now();
+          liveMeeting.participantsList[participantIndex].roomName = roomname;
+
           await liveMeeting.save();
         }
 
@@ -697,7 +711,7 @@ const setupSocket = (server) => {
       }
     });
 
-    socket.on("create-breakout-room", async ({ meetingId, breakroomname, participants }, callback) => {
+    socket.on("create-breakout-room", async ({ meetingId, breakroomname, participants, duration }, callback) => {
       const existingMeeting = await Meeting.findById(meetingId);
       if (!existingMeeting) {
         callback(null, "Meeting Not Exist.");
@@ -720,7 +734,7 @@ const setupSocket = (server) => {
 
       const newRoom = [];
       const isMainRoomExist = liveMeeting.breakRooms.some(room => room.roomName == 'main');
-      console.log('main room not exist', isMainRoomExist);
+      
       if (!isMainRoomExist) {
         newRoom.push({ roomName: "main" });
       }
@@ -754,6 +768,18 @@ const setupSocket = (server) => {
       const allBreakRoomsNameList = liveMeeting.breakRooms.map((room) => room.roomName).filter(name => !!name);
       callback({ fullParticipantList, breakroomname, breakoutsRooms: allBreakRoomsNameList }, null);
       socket.to(meetingId).emit('change-room', { participantList: participants, roomName: breakroomname });
+
+      //set timer
+      console.log('duration',duration)
+      if(duration){
+        callAfterMin(Number(duration),async () => {
+          const liveMeeting = await LiveMeeting.findOne({ meetingId });
+          liveMeeting.breakRooms = liveMeeting.breakRooms.filter(room => room.roomName !== breakroomname);
+          const allBreakRoomsNameList = liveMeeting.breakRooms.map((room) => room.roomName).filter(name => !!name);
+          await liveMeeting.save()
+          io.to(meetingId).emit('break-out-room-closed', { breakoutsRooms: allBreakRoomsNameList, roomName: breakroomname });
+        })
+      }
     });
 
     socket.on("user-move", async ({ meetingId, breakroomname, participants }, callback) => {

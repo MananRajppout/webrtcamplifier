@@ -17,6 +17,7 @@ module.exports = function(app) {
   app.put("/api/live-meeting/participant-left-from-meeting", controller.participantLeaveFromMeeting);
   app.get("/api/live-meeting/get-webrtc-meeting-id/:meetingId", controller.getWebRtcMeetingId);
   app.get("/api/live-meeting/get-iframe-link/:meetingId", controller.getIframeLink);
+  app.post("/api/live-meeting/add-recordings", controller.addRecordingLink);
   // app.get("/api/live-meeting/get-removed-participants-list/:meetingId", controller.getRemovedParticipantsList);
   // app.put("/api/live-meeting/start-streaming", controller.startMeetingStreaming);
   // app.get("/api/live-meeting/get-streaming-status/:meetingId", controller.getStreamingStatus);

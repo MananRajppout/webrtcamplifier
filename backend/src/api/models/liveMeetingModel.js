@@ -74,6 +74,9 @@ const liveMeetingSchema = new Schema({
     type: Number,
     default: 0
   },
+  recordings: [{
+    url: String
+  }],
   
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],

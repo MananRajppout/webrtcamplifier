@@ -14,7 +14,7 @@ import { MdInsertEmoticon, MdMoveDown } from "react-icons/md";
 import RemoveUserModal from "../singleComponent/RemoveUserModal";
 import MoveToWaitingRoomModal from "../singleComponent/MoveToWaitingRoomModal";
 import notify from "@/utils/notify";
-import { PiCirclesFourFill } from "react-icons/pi";
+import { PiCirclesFourFill, PiPlusCircle } from "react-icons/pi";
 import Button from "../shared/button";
 import BreakoutRoomModal from "../singleComponent/BreakoutRoomModal";
 import { useParams, useSearchParams } from "next/navigation";
@@ -25,6 +25,7 @@ import UserRename from "../singleComponent/UserRenameModal";
 import ScrollToBottom from 'react-scroll-to-bottom';
 import { bytesToMbs } from "./RightSidebarOpenUi";
 import ViewPollModel from "../singleComponent/ViewPollModel";
+import BreakoutRoomMoveModel from "../singleComponent/BreakoutRoomMoveModel";
 
 const LeftSidebarOpenUi = ({
   users,
@@ -77,7 +78,11 @@ const LeftSidebarOpenUi = ({
   totalPages,
   currentPollPage,
   setCurrentPollPage,
-  startRecording, setStartRecording, handleRecording
+  startRecording, setStartRecording, handleRecording,
+  breakoutRoomPopUpOpen,
+  setBreakoutRoomPopUpOpen,
+  breakoutRoomDetails,
+  setBreakoutRoomDetails
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -354,6 +359,20 @@ const LeftSidebarOpenUi = ({
 
   }, []);
 
+
+  const handleJoinParticipantsJoinBreakoutRoom = useCallback((roomName) => {
+    let url = "";
+    if (roomName?.toLowerCase() == "main") {
+      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}`;
+    } else {
+      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
+    }
+
+    if(typeof window !== 'undefined'){
+      window.open(url, "_self");
+    }
+  }, [id,userrole,fullName]);
+
   return (
     <>
       <div className=" md:pt-0 pt-16">
@@ -370,8 +389,11 @@ const LeftSidebarOpenUi = ({
               <div className="flex justify-end items-center gap-1">
                 <PiCirclesFourFill className="text-custom-orange-1 text-xs" />
                 <h1 className="text-xs font-bold">
-                  {users.filter(u => u.roomName?.toLowerCase() == selectedRoom.toLowerCase())?.length || 0}
+                  {users.filter(u => u.roomName?.toLowerCase() == selectedRoom.toLowerCase() && u.status == "online")?.length || 0}
                 </h1>
+                <Button variant="plain" onClick={() => setBreakoutRoomModelOpen(true)}>
+                  <PiPlusCircle/>
+                </Button>
               </div>
             </div>
 
@@ -423,7 +445,7 @@ const LeftSidebarOpenUi = ({
               onClick={() => setBreakoutRoomModelOpen(true)}
             />
           )}
-        
+
 
           {role === "Moderator" && (
             <Button
@@ -466,6 +488,19 @@ const LeftSidebarOpenUi = ({
               onClick={() => setIsPollModelOpen(true)}
             />
           )}
+
+
+          {
+            role == "Participant" && breakoutRoomDetails && (
+              <Button
+                children={`Join Breakout`}
+                variant="meeting"
+                type="submit"
+                className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+                onClick={() => handleJoinParticipantsJoinBreakoutRoom(breakoutRoomDetails?.name)}
+              />
+            )
+          }
         </div>
 
         {/* Backroom chat and icon */}
@@ -906,6 +941,16 @@ const LeftSidebarOpenUi = ({
       {/* {selectedReceiverId && (
         <ChatDashboard  receiverId={selectedReceiverId} users={users}/>
       )} */}
+
+
+      {
+        breakoutRoomPopUpOpen &&
+        <BreakoutRoomMoveModel
+          onClose={() => setBreakoutRoomPopUpOpen(false)}
+          handleMove={() => handleJoinParticipantsJoinBreakoutRoom(breakoutRoomDetails.name)}
+          roomDetails={breakoutRoomDetails}
+        />
+      }
 
       {
         isPollModelOpen &&

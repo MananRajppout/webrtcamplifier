@@ -71,6 +71,13 @@ const page = () => {
     allowEditWhiteBaord: false
   });
 
+  //breakout room popup
+  const [breakoutRoomPopUpOpen, setBreakoutRoomPopUpOpen] = useState(false);
+  const [breakoutRoomDetails, setBreakoutRoomDetails] = useState(null);
+
+
+
+
   //recording feauture
   const mixAudioDestinationRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -82,71 +89,57 @@ const page = () => {
   const recordingServerConnectorRef = useRef(null);
   const [allParticipantsAudioTracks, setAllParticipantsAudioTracks] = useState([]);
   const [startRecording, setStartRecording] = useState(false);
-  const recordingChunksRef = useRef([]);
+  const recordingCountRef = useRef(0);
 
 
 
 
-  const handleStopRecording = useCallback(async () => {
-    const chunks = recordingChunksRef.current;
-    recordingChunksRef.current = [];
-    const blob = await fixWebmDuration(new Blob(chunks, { type: 'video/webm' }));
-    const url = URL.createObjectURL(blob);
+  const handleMediaRecorer = useCallback(() => {
+    recordingCountRef.current = recordingCountRef.current+1;
+    const id = recordingCountRef.current.toString();
+    const data = {
+      type: "change-file",
+      fileName: `${recordingCountRef.current}`,
+      id: id
+    }
+    
+    recordingServerConnectorRef.current.send(JSON.stringify(data));
 
-    // Trigger a direct download
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = 'recording.webm';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    // Clean up
-    URL.revokeObjectURL(url);
-  }, [recordingChunksRef.current]);
+    mediaRecorderRef.current?.stop();
 
 
-  const handleMediaRecorer = useCallback((stream) => {
-
-    mediaRecorderRef.current = new MediaRecorder(stream, {
-      mimeType: 'video/webm;codecs=vp8',
-      videoBitsPerSecond: 2500000,
-    });
-
+    mediaRecorderRef.current = new MediaRecorder(recordingStreamRef.current);
     mediaRecorderRef.current.addEventListener('dataavailable', (e) => {
-      recordingChunksRef.current.push(e.data);
-      // if (e.data.size > 0) {
-      //   const reader = new FileReader();
-      //   reader.onloadend = () => {
-      //     const base64Data = reader.result.split('base64,')[1];
-      //     const data = {
-      //       type: "media",
-      //       payload: base64Data,
-      //     }
-
-      //     recordingServerConnectorRef.current.send(JSON.stringify(data));
-      //   };
-      //   reader.readAsDataURL(e.data);
-      // }
+      if (e.data.size > 0) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Data = reader.result.split('base64,')[1];
+          const data = {
+            type: "media",
+            payload: base64Data,
+            id: id
+          }
+          recordingServerConnectorRef.current.send(JSON.stringify(data));
+        };
+        reader.readAsDataURL(e.data);
+      }
     });
 
     mediaRecorderRef.current.addEventListener('stop', () => {
       if (startRecordingRef.current) {
         return;
       }
-
-      // const data = {
-      //   type: "stop"
-      // }
-
-      // recordingServerConnectorRef.current.send(JSON.stringify(data));
-
-      handleStopRecording();
+      
+      const data = {
+        type: "stop"
+      }
+      recordingServerConnectorRef.current.send(JSON.stringify(data));
     });
 
+    
+
     mediaRecorderRef.current.start(1000);
-  }, [startRecording]);
+  }, [startRecording,recordingStreamRef.current,recordingCountRef.current]);
 
 
   const handleCombineStreams = useCallback((stream) => {
@@ -157,7 +150,7 @@ const page = () => {
     });
     recordingStreamRef.current = new MediaStream([stream.getVideoTracks()[0], ...mixAudioDestinationRef.current.stream.getAudioTracks() || []]);
     handleMediaRecorer(recordingStreamRef.current);
-  }, [allPaericipantsAudioTracksRef.current, allParticipantsAudioTracks]);
+  }, [allPaericipantsAudioTracksRef.current, allParticipantsAudioTracks,mediaRecorderRef.current]);
 
 
   //const handleRecording
@@ -174,12 +167,18 @@ const page = () => {
         }
 
         const gdmStream = navigator.mediaDevices.getDisplayMedia(options);
-        gdmStream.then((stream) => {
-          // recordingServerConnectorRef.current = new RecordingServerConnector(params.id,projectId);
+        gdmStream.then(async (stream) => {
+          try {
+            recordingServerConnectorRef.current = new RecordingServerConnector(params.id,projectId);
+            await recordingServerConnectorRef.current.waitForConnection();
+          } catch (error) {
+            toast.error("Failed To connect Recording server");
+          }
+          
           setStartRecording(true);
           startRecordingRef.current = true;
           gdmStreamRef.current = stream;
-          gdmStreamRef.current.onended = handleRecording;
+          gdmStreamRef.current.onended = () => handleRecording();
           handleCombineStreams(gdmStreamRef.current);
         });
       }
@@ -191,6 +190,8 @@ const page = () => {
       mixAudioDestinationRef.current = null;
       recordingStreamRef.current = null;
       mediaRecorderRef.current?.stop();
+      mediaRecorderRef.current = null;
+      recordingCountRef.current = 0;
       setStartRecording(false);
       startRecordingRef.current = false;
     }
@@ -203,7 +204,7 @@ const page = () => {
     if (!startRecording) {
       return;
     }
-    mediaRecorderRef.current?.stop();
+    
     handleCombineStreams(gdmStreamRef.current);
   }, [allParticipantsAudioTracks]);
 
@@ -237,6 +238,26 @@ const page = () => {
     const room = breakoutRooms?.find((room) => room.roomName === roomName);
     setSelectedRoom(room);
   };
+
+
+  const handleBreakoutClosed = useCallback(({ breakoutsRooms, roomName }) => {
+    setBreakoutRooms(breakoutsRooms);
+    if (roomname === roomName) {
+      toast.success(`The Breakout Room "${roomName}" has been closed`);
+      let url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}`;
+      window.open(url, "_self");
+    }
+
+    if(breakoutRoomDetails?.name == roomName){
+      setBreakoutRoomDetails(null);
+      setBreakoutRoomPopUpOpen(false);
+      toast.success(`The Breakout Room "${roomName}" has been closed`);
+    }
+
+    if(userRole == "Moderator"){
+      toast.success(`The Breakout Room "${roomName}" has been closed`);
+    }
+  },[roomname]);
 
   //! Use effect for getting waiting list
   useEffect(() => {
@@ -274,6 +295,7 @@ const page = () => {
     //ending
 
 
+    socket.on("break-out-room-closed", handleBreakoutClosed);
     socket.on("change-room", handleChangeRoom);
     socket.on("getParticipantListResponse", handleParticipantList);
     // socket.on("participantChatResponse", handleParticipantChatResponse);
@@ -303,6 +325,7 @@ const page = () => {
       socket.off("mediabox:on-upload", handleMediaNewUpload);
       socket.off("mediabox:on-delete", handleMediaNewDelete);
       socket.off("endMeeting", onEndMeeting);
+      socket.off("break-out-room-closed", handleBreakoutClosed);
     };
   }, [userRole, params.id, socket]);
 
@@ -335,12 +358,12 @@ const page = () => {
   };
 
   const handleBreakoutRoom = useCallback(
-    (breakroomname, participants) => {
+    (breakroomname, participants, duration) => {
       if (breakoutRooms.includes(breakroomname))
         return toast.error("This room name is already exist.");
       socket.emit(
         "create-breakout-room",
-        { meetingId: params.id, breakroomname, participants },
+        { meetingId: params.id, breakroomname, participants, duration },
         ({ fullParticipantList, breakroomname, breakoutsRooms }, err) => {
           if (err) return console.log(err);
           setBreakoutRooms(breakoutsRooms);
@@ -392,14 +415,13 @@ const page = () => {
     console.log("participantList", participantList);
     const find = participantList.some((p) => p.email == email);
 
+
+    
+
+
     if (find) {
-      let url = "";
-      if (roomName?.toLowerCase() == "main") {
-        url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}`;
-      } else {
-        url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}&type=breackout&roomname=${roomName}`;
-      }
-      window.open(url, "_self");
+      setBreakoutRoomDetails({name: roomName});
+      setBreakoutRoomPopUpOpen(true);
     }
   }, []);
 
@@ -786,6 +808,10 @@ const page = () => {
                 currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording} setStartRecording={setStartRecording}
                 handleRecording={handleRecording}
+                breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
+                setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
+                breakoutRoomDetails={breakoutRoomDetails}
+                setBreakoutRoomDetails={setBreakoutRoomDetails}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
@@ -858,6 +884,10 @@ const page = () => {
                 currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording} setStartRecording={setStartRecording}
                 handleRecording={handleRecording}
+                breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
+                setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
+                breakoutRoomDetails={breakoutRoomDetails}
+                setBreakoutRoomDetails={setBreakoutRoomDetails}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -953,6 +983,10 @@ const page = () => {
                 currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording} setStartRecording={setStartRecording}
                 handleRecording={handleRecording}
+                breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
+                setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
+                breakoutRoomDetails={breakoutRoomDetails}
+                setBreakoutRoomDetails={setBreakoutRoomDetails}
               />
 
             </div>

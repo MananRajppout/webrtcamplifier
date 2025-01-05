@@ -26,6 +26,10 @@
 /whiteboard-server/node_modules
 /whiteboard-server/package-lock.json
 
+/recording-server/node_modules
+/recording-server/package-lock.json
+/recording-server/.env
+
 # env 
 /frontend/.env.local
 /backend/.env

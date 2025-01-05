@@ -13,12 +13,13 @@ import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipa
 
 
 
-const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting,allPaericipantsAudioTracksRef,setAllParticipantsAudioTracks}) => {
+const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks }) => {
   const searchParams = useSearchParams();
   const params = useParams();
   const role = searchParams.get("role");
   const type = searchParams.get('type') || 'main';
   const roomname = searchParams.get('roomname') || null;
+  const roomName = searchParams.get('roomname') || 'main';
   const [breakRoomID, setRoomBreakID] = useState(null);
   const [fullName, setFullName] = useState(searchParams.get("fullName") || "Guest");
   const [roomId, setRoomId] = useState(type == 'breackout' ? `${params.id}-${roomname}` : params.id);
@@ -36,7 +37,8 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting,allPaericip
   const [selectedSideBar, setSelectedSide] = useState('chat');
   const [showbtn, setshowbtn] = useState(false);
   const [settingOpen, setSettingOpen] = useState(false);
-  
+  const [endCallOptionOpen, setEndCallOptionOpen] = useState(false);
+
 
 
   const isMobile = false;
@@ -53,21 +55,21 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting,allPaericip
 
 
   const { audioPermisson, cameraPermisson } = useCheckPermission();
-  const { handleJoin,handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting,myEmailRef,allPaericipantsAudioTracksRef,setAllParticipantsAudioTracks);
+  const { handleJoin, handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting, myEmailRef, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks);
 
 
 
   useEffect(() => {
-    if(isMeetingEnd){
+    if (isMeetingEnd) {
       handleDisconnect();
     }
-  },[isMeetingEnd]);
+  }, [isMeetingEnd]);
 
   useEffect(() => {
-      if (typeof window != 'undefined') {
-        const email = window.localStorage.getItem('email');
-        myEmailRef.current = role == 'Moderator' ? 'admin@gmail.com' : email;
-      }
+    if (typeof window != 'undefined') {
+      const email = window.localStorage.getItem('email');
+      myEmailRef.current = role == 'Moderator' ? 'admin@gmail.com' : email;
+    }
   }, []);
 
 
@@ -247,6 +249,17 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting,allPaericip
       handleChangeSetting({ ...setting, allowEditWhiteBaord: true });
     }
   }, [setting]);
+
+
+
+  const handleJoinMainRoom = useCallback(() => {
+      let url = `/meeting/${params.id}?fullName=${fullName}&role=${role}`;
+     
+  
+      if(typeof window !== 'undefined'){
+        window.open(url, "_self");
+      }
+    }, [params,role,fullName]);
 
 
 
@@ -582,14 +595,37 @@ const OngoingMeeting = ({endMeeting,isMeetingEnd, setting,setSetting,allPaericip
                         <PiPhoneX />
                       </button>
                     }
+
                     {
-                      role != 'Moderator' &&
+                      role != 'Moderator' && roomName == "main" &&
                       <a href="/" className='p-2 title-notification-container px-4 text-2xl rounded-full bg-red-600 text-white relative' title='Disconnect'>
                         <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Disconnect</span>
                         <PiPhoneX />
                       </a>
                     }
-                    
+
+
+
+                    {
+                      endCallOptionOpen &&
+                      <div className='absolute -top-[5rem] left-[50%] bg-white shadow-md  z-50  rounded-md w-[10rem] px-3 py-3 overflow-y-auto'>
+                        <a href="/" className='text-sm text-white px-6 py-2 rounded-3xl bg-red-700 w-[8rem] block text-center font-normal'>
+                          End Call
+                        </a>
+                        <button className='text-sm text-black px-6 py-2 rounded-3xl bg-gray-200 mt-2 w-[8rem] block text-center font-normal' onClick={handleJoinMainRoom}>
+                          Join Main
+                        </button>
+                      </div>
+                    }
+
+                    {
+                      role != 'Moderator' && roomName != "main" &&
+                      <button className='p-2 title-notification-container px-4 text-2xl rounded-full bg-red-600 text-white relative' title='Disconnect Option' onClick={() => setEndCallOptionOpen(prev => !prev)}>
+                        <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Disconnect Option</span>
+                        <PiPhoneX />
+                      </button>
+                    }
+
                   </div>
                 </div>
               </div>
