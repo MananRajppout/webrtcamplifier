@@ -200,30 +200,30 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
                   </TableData>
 
                   {/* Display Status */}
-                  <TableData>{renderStatus(project.status)}</TableData>
+                  <TableData>{renderStatus(project?.status)}</TableData>
 
                   {/* Display Roles */}
                   <TableData>{getRole(project)}</TableData>
 
                   {/* Display Start Date and Time */}
                   <TableData>
-                    {new Date(project.startDate).toLocaleDateString()}{" "}
+                    {new Date(project?.startDate)?.toLocaleDateString()}{" "}
                     {project.startTime}
                   </TableData>
 
                   {/* Display End Date */}
                   <TableData>
-                    {new Date(project.endDate).toLocaleDateString()}
+                    {new Date(project?.endDate)?.toLocaleDateString()}
                   </TableData>
                   <TableData>
-                    {project.cumulativeMinutes.toFixed(0)}
+                    {project?.cumulativeMinutes?.toFixed(0)}
                   </TableData>
 
                   <td className="flex justify-between items-center gap-2 relative">
                     <Button
-                      variant={getButtonVariant(project.status).variant}
+                      variant={getButtonVariant(project?.status).variant}
                       className="w-20 text-center text-[12px] rounded-xl py-1"
-                      onClick={() => handleAction(project.status, project)}
+                      onClick={() => handleAction(project?.status, project)}
                     >
                       {getButtonVariant(project.status).label}
                     </Button>

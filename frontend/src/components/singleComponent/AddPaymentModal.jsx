@@ -21,11 +21,8 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState("pending");
   const [paymentId, setPaymentId] = useState("");
-  console.log("client secret", clientSecret);
-  console.log("selectedPackage", selectedPackage);
-  console.log("selectedPackage", selectedPackage?.total);
+  
 
-  // console.log("projects", projects)
 
   useEffect(() => {
     if (userId) {
@@ -68,7 +65,6 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
       return;
     }
 
-    console.log("Selected package:", selectedPkg); // Ensure the correct package is selected
     setSelectedPackage(selectedPkg); // Update selected package state
 
     // Create a payment intent for the selected package

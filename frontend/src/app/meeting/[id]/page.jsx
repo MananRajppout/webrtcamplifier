@@ -412,7 +412,6 @@ const page = () => {
       email = window.localStorage.getItem("email");
     }
 
-    console.log("participantList", participantList);
     const find = participantList.some((p) => p.email == email);
 
 
@@ -520,7 +519,6 @@ const page = () => {
 
   // * participant send message function
   const sendMessageParticipant = async (message) => {
-    console.log('send message', message)
     socket.emit("participantSendMessage", { message, meetingId: params.id });
   };
 
@@ -567,7 +565,6 @@ const page = () => {
 
   // ? Using took to get waiting room data
   useSocketListen("participantWaiting", (data) => {
-    console.log('waiting room data', data)
     setWaitingRoom(data.waitingRoom);
   });
   useSocketListen("participantList", (data) => {

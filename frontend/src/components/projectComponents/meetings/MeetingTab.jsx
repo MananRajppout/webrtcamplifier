@@ -15,6 +15,7 @@ import Pagination from "@/components/shared/Pagination";
 import Button from "@/components/shared/button";
 import ConfirmationModal from "@/components/shared/ConfirmationModal";
 import useSocketListen from "@/hooks/useSocketListen";
+import MeetingParticipantModal from "./MeetingParticipantModal";
 
 const MeetingTab = ({
   meetings,
@@ -37,6 +38,9 @@ const MeetingTab = ({
   const [meetingToEdit, setMeetingToEdit] = useState(null);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState(null);
+  const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
+  const [participantData, setParticipantData] = useState([]);
+  const [modalTitle, setModalTitle] = useState("");
   const router = useRouter();
 
   const toggleModal = (event, meeting) => {
@@ -44,6 +48,25 @@ const MeetingTab = ({
     setModalPosition({ top, left });
     setSelectedMeeting(meeting);
     setIsModalOpen(!isModalOpen);
+  };
+
+  const handleParticipantClick = (participants, title) => {
+    setModalTitle(`Participants of ${title}`);
+    setParticipantData(participants);
+    setIsParticipantModalOpen(true);
+  };
+
+  const handleModeratorClick = (moderators, title) => {
+    setModalTitle(`Moderators of ${title}`);
+    setParticipantData(
+      moderators.map((moderator) => ({
+        name: moderator.name,
+        email: moderator.email,
+        joiningTime: moderator.joiningTime,
+        leavingTime: moderator.leavingTime,
+      }))
+    );
+    setIsParticipantModalOpen(true);
   };
 
 
@@ -328,7 +351,10 @@ const MeetingTab = ({
               <TableHead>Start Date & Time</TableHead>
               <TableHead>Time Zone</TableHead>
               <TableHead>Moderator</TableHead>
+              <TableHead>Participant Count</TableHead>
+              <TableHead>Moderator Count</TableHead>
               <TableHead>Action</TableHead>
+              <TableHead>Meeting Minutes</TableHead>
             </tr>
           </thead>
           <tbody>
@@ -344,8 +370,33 @@ const MeetingTab = ({
                 })} ${convertTo12HourFormat(meeting?.startTime)}`}</td>
                 <TableData>{meeting?.timeZone}</TableData>
                 <td className="px-3 py-1 text-left text-[12px]  font-medium text-custom-dark-blue-1">
-                  {meeting?.moderator.map((mod) => mod.firstName).join(", ")}
+                  {meeting?.liveMeetings[0]?.moderator?.name}
                 </td>
+                <td
+                className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
+                onClick={() =>
+                  handleParticipantClick(
+                    meeting?.liveMeetings[0]?.participantsList,
+                    meeting?.title
+                  )
+                }
+              >
+                {meeting?.liveMeetings[0]?.participantsList?.length}
+              </td>
+                <td
+                className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
+                onClick={() =>
+                  handleParticipantClick(
+                    meeting?.liveMeetings[0]?.observerList,
+                    meeting?.title
+                  )
+                }
+              >
+                {meeting?.liveMeetings[0]?.observerList.length}
+              </td>
+                {/* <TableData>
+                  {meeting?.liveMeetings[0].observerList.length}
+                </TableData> */}
                 <TableData>
                   <div className="flex flex-col justify-center items-center gap-2">
                     <button
@@ -373,6 +424,9 @@ const MeetingTab = ({
                       className="cursor-pointer"
                     />
                   </div>
+                </TableData>
+                <TableData>
+                  {meeting?.liveMeetings[0]?.duration.toFixed(0)}
                 </TableData>
               </tr>
             ))}
@@ -536,6 +590,16 @@ const MeetingTab = ({
         />
       )}
 
+       {/* Participant or Moderator Modal */}
+       {isParticipantModalOpen && (
+        <MeetingParticipantModal
+          title={modalTitle}
+          data={participantData}
+          onClose={() => setIsParticipantModalOpen(false)}
+        />
+      )}
+
+
       {/* Pagination */}
       {meetings.length >= 10 && (
         <div className="flex justify-end py-3">
@@ -546,6 +610,8 @@ const MeetingTab = ({
           />
         </div>
       )}
+
+
     </div>
   );
 };

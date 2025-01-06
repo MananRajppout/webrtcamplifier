@@ -3,6 +3,7 @@ const Meeting = require("../models/meetingModel");
 const Contact = require("../models/contactModel");
 const XLSX = require("xlsx");
 const fs = require("fs");
+const LiveMeeting = require("../models/liveMeetingModel");
 // Controller to create a new project
 const createMeeting = async (req, res) => {
   const meetingData = req.body;
@@ -56,7 +57,7 @@ const getAllMeetings = async (req, res) => {
     }
     if (search) {
       query.$or = [
-        { status: { $regex: search, $options: "i" } }, // Case-insensitive search
+        { status: { $regex: search, $options: "i" } }, 
         { title: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
@@ -66,6 +67,17 @@ const getAllMeetings = async (req, res) => {
       .populate("moderator")
       .skip(skip)
       .limit(limit);
+
+    // Fetch LiveMeetings for each meeting and add them
+    const meetingsWithLiveMeetings = await Promise.all(
+      meetings.map(async (meeting) => {
+        const liveMeetings = await LiveMeeting.find({ meetingId: meeting._id });
+        return {
+          ...meeting.toObject(),
+          liveMeetings,
+        };
+      })
+    );
 
     // Count total documents matching the projectId
     const totalDocuments = await Meeting.countDocuments(query);
@@ -85,7 +97,7 @@ const getAllMeetings = async (req, res) => {
       page: parseInt(page),
       totalPages,
       totalDocuments,
-      meetings,
+      meetings: meetingsWithLiveMeetings,
     });
   } catch (error) {
     console.error("Error retrieving meetings:", error);

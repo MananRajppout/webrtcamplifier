@@ -20,7 +20,6 @@ const Page = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const { user } = useGlobalContext();
-  console.log('projects', projects)
 
   const fetchProjects = async (
     userId,

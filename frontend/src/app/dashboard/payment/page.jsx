@@ -14,7 +14,6 @@ const Payment = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
-  console.log('payment', payments)
   useEffect(() => {
     if (user?._id) {
       fetchPaymentData(page);

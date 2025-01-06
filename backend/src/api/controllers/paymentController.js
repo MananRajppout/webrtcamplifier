@@ -6,14 +6,12 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 const createPaymentIntent = async (req, res) => {
   const {amount } = req.body;
-  console.log('amount in payment', amount)
     // Validate amount
     if (!amount || typeof amount !== "number" || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount" });
     }
 
   const price = Math.round(amount * 100);
-  console.log("price in payment", price)
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
@@ -21,7 +19,6 @@ const createPaymentIntent = async (req, res) => {
       currency: "usd",
       payment_method_types: ["card"],
     });
-  console.log('payment intent', paymentIntent)
     res.status(201).json({
       message: "Payment intent created successfully",
       clientSecret: paymentIntent.client_secret,

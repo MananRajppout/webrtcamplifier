@@ -152,7 +152,6 @@ const startMeeting = async (req, res) => {
 const addRecordingLink = async (req, res) => {
   try {
     const { meetingId, recordingUrl } = req.body;
-    console.log(meetingId,recordingUrl)
     const liveMeeting = await LiveMeeting.findOne({meetingId});
     if(!liveMeeting){
       throw new Error('meeting not found');

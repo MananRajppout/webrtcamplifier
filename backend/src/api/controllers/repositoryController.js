@@ -37,7 +37,6 @@ const deleteFileFromS3 = async (bucketName, key) => {
 
   try {
     await s3.deleteObject(params).promise();
-    console.log('File deleted successfully from S3');
   } catch (error) {
     console.error('Error deleting file from S3:', error);
     throw new Error('Failed to delete file from S3.');
@@ -93,68 +92,7 @@ const createRepository = async (req, res) => {
 };
 
 
-// const createRepository = async (req, res) => {
-//   let filePath = req.file ? req.file.path : null;
-//   try {
 
-
-//     // Check if file and meeting ID are provided
-//     if (!req.file || !req.body.meetingId) {
-//       return res.status(400).json({ error: 'File and meeting ID are required.' });
-//     }
-
-//     // Extract information from request
-//     const { originalname: fileName, mimetype: type, size } = req.file;
-//     const { meetingId, projectId, addedBy, role } = req.body;
-
-
-
-//     // Optional: Upload file to Cloudinary and get the URL
-//     let cloudinaryLink = '';
-//     try {
-//       const result = await cloudinary.uploader.upload(filePath, {
-//         resource_type: 'auto', // Automatically determine file type (image, video, etc.)
-//         folder: 'repository_files', // Cloudinary folder for uploads
-//       });
-//       cloudinaryLink = result.secure_url;
-//     } catch (uploadError) {
-//       console.error('Error uploading to Cloudinary:', uploadError);
-//       return res.status(500).json({ error: 'Failed to upload file to Cloudinary.' });
-//     }
-
-//     // Create a new repository document
-//     const repository = new Repository({
-//       fileName,
-//       type,
-//       size,
-//       addedBy,
-//       role,
-//       meetingId,
-//       projectId,
-//       cloudinaryLink,
-//     });
-
-//     // Save the repository document to MongoDB
-//     await repository.save();
-
-//     // Return success response
-//     return res.status(201).json({ message: 'File uploaded successfully.', repository });
-//   } catch (error) {
-//     console.error('Error in createRepository:', error);
-//     return res.status(500).json({ error: 'Internal server error.' });
-//   } finally {
-//     // Delete the file from the server
-//     if (filePath) {
-//       fs.unlink(filePath, (err) => {
-//         if (err) {
-//           console.error('Error deleting file:', err);
-//         } else {
-//           console.log('File deleted successfully:', filePath);
-//         }
-//       });
-//     }
-//   }
-// }
 
 const getRepositoryByProjectId = async (req, res) => {
   try {
