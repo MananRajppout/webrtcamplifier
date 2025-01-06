@@ -94,8 +94,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   //* Function related to edit project
 
   const handleEditModal = () => {
-    if(user._id !== project.createdBy){
-      toast.error("Your are not allowed to edit this project.")
+    if (user._id !== project.createdBy) {
+      toast.error("Your are not allowed to edit this project.");
       return;
     }
     setIsEditModalOpen(true);
@@ -409,7 +409,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           params: { page, limit: 10 },
         }
       );
-     
+
       setRepositories(response.data.media);
       setTotalMeetingRepoPages(response.data.totalPages);
     } catch (error) {
@@ -573,77 +573,76 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           />
 
           {/* tab content */}
-          
-          <TabContent
-  activeTab={activeTab}
-  searchHandlers={{
-    handleMeetingSearch,
-    handleBulkAddDropdownToggle,
-    isBulkAddDropdownOpen,
-    handleDownloadFormat,
-    handleFileUpload,
-  }}
-  meetingHandlers={{
-    handleAddMeetingModal,
-    meetings,
-    fetchMeetings,
-    project,
-    meetingPage,
-    totalMeetingPages,
-    handleMeetingPageChange,
-    handleBulkUpdateModal
-  }}
-  modalStates={{
-    setIsSingleChoiceModalOpen,
-    setIsMultipleChoiceModalOpen,
-    setIsMatchingModalOpen,
-    setIsRankOrderModalOpen,
-    setIsShortAnswerModalOpen,
-    setIsLongAnswerModalOpen,
-    setIsBlankModalOpen,
-    setIsRatingModalOpen,
-  }}
-  projectTeam={{
-    handleOpenAddContactModal
-  }}
-  pollsData={{
-    polls,
-    setPolls,
-    pollPage,
-    totalPollPages,
-    handlePollPageChange,
-    handleOpenPollDropdown,
-    isPollDropdownOpen,
-    fetchPolls
-  }}
-  repositoryData={{
-    repositories,
-    fetchRepositories,
-    allRepoPage,
-    totalAllRepoPages,
-    meetingRepoPage,
-    totalMeetingRepoPages,
-    handleAllRepoPageChange,
-    handleMeetingRepoPageChange,
-    fetchRepositoriesByMeetingId,
-  }}
-  additionalHandlers={{
-    handleOpenAddRepositoryModal,
-    selectedRepositoryMeetingTab,
-    setSelectedRepositoryMeetingTab,
-    setSelectedDocAndMediaTab,
-    setShowDocAndMediaTab,
-    handleRepositoryMeetingTabChange,
-    showDocAndMediaTab,
-    handleDocAndMediaTabChange,
-    selectedDocAndMediaTab,
-  }}
-  localProjectStateHandlers={{
-    localProjectState,
-    setLocalProjectState,
-  }}
-/>
 
+          <TabContent
+            activeTab={activeTab}
+            searchHandlers={{
+              handleMeetingSearch,
+              handleBulkAddDropdownToggle,
+              isBulkAddDropdownOpen,
+              handleDownloadFormat,
+              handleFileUpload,
+            }}
+            meetingHandlers={{
+              handleAddMeetingModal,
+              meetings,
+              fetchMeetings,
+              project,
+              meetingPage,
+              totalMeetingPages,
+              handleMeetingPageChange,
+              handleBulkUpdateModal,
+            }}
+            modalStates={{
+              setIsSingleChoiceModalOpen,
+              setIsMultipleChoiceModalOpen,
+              setIsMatchingModalOpen,
+              setIsRankOrderModalOpen,
+              setIsShortAnswerModalOpen,
+              setIsLongAnswerModalOpen,
+              setIsBlankModalOpen,
+              setIsRatingModalOpen,
+            }}
+            projectTeam={{
+              handleOpenAddContactModal,
+            }}
+            pollsData={{
+              polls,
+              setPolls,
+              pollPage,
+              totalPollPages,
+              handlePollPageChange,
+              handleOpenPollDropdown,
+              isPollDropdownOpen,
+              fetchPolls,
+            }}
+            repositoryData={{
+              repositories,
+              fetchRepositories,
+              allRepoPage,
+              totalAllRepoPages,
+              meetingRepoPage,
+              totalMeetingRepoPages,
+              handleAllRepoPageChange,
+              handleMeetingRepoPageChange,
+              fetchRepositoriesByMeetingId,
+            }}
+            additionalHandlers={{
+              handleOpenAddRepositoryModal,
+              selectedRepositoryMeetingTab,
+              setSelectedRepositoryMeetingTab,
+              setSelectedDocAndMediaTab,
+              setShowDocAndMediaTab,
+              handleRepositoryMeetingTabChange,
+              showDocAndMediaTab,
+              handleDocAndMediaTabChange,
+              selectedDocAndMediaTab,
+            }}
+            localProjectStateHandlers={{
+              localProjectState,
+              setLocalProjectState,
+            }}
+          />
 
           {isAddMeetingModalOpen && (
             <AddMeetingModal
@@ -775,8 +774,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
           {isUploadResultsModalOpen && (
             <UploadResultsModal
               onClose={closeUploadResultsModal}
-              successResults={uploadResults} 
-              rejectedData={rejectedData} 
+              successResults={uploadResults}
+              rejectedData={rejectedData}
             />
           )}
         </div>

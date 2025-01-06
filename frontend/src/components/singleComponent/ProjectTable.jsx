@@ -168,6 +168,7 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
                 <TableHead>Role</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
+                <TableHead>Cummulative Minutes Used</TableHead>
                 <TableHead>Actions</TableHead>
               </tr>
             </thead>
@@ -213,6 +214,9 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
                   {/* Display End Date */}
                   <TableData>
                     {new Date(project.endDate).toLocaleDateString()}
+                  </TableData>
+                  <TableData>
+                    {project.cumulativeMinutes.toFixed(0)}
                   </TableData>
 
                   <td className="flex justify-between items-center gap-2 relative">

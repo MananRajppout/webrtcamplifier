@@ -142,6 +142,29 @@ const getAllProjects = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
+      // Calculate cumulative minutes for each project
+    const projectsWithMinutes = await Promise.all(
+      projects.map(async (project) => {
+        // Find related meetings
+        const meetings = await Meeting.find({ projectId: project._id });
+
+        // Find associated live meetings and calculate cumulative duration
+        const liveMeetings = await LiveMeeting.find({
+          meetingId: { $in: meetings.map((meeting) => meeting._id) }
+        });
+
+        const cumulativeMinutes = liveMeetings.reduce(
+          (acc, liveMeeting) => acc + (liveMeeting.duration || 0),
+          0
+        );
+
+        return {
+          ...project.toObject(),
+          cumulativeMinutes,
+        };
+      })
+    );
+
     const totalDocuments = await Project.countDocuments(searchQuery); // Total number of documents matching the criteria
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
 
@@ -149,7 +172,7 @@ const getAllProjects = async (req, res) => {
       page: parseInt(page),
       totalPages,
       totalDocuments,
-      projects,
+      projects: projectsWithMinutes,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
