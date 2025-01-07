@@ -13,7 +13,7 @@ import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipa
 
 
 
-const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks }) => {
+const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks, pollData, setPollData }) => {
   const searchParams = useSearchParams();
   const params = useParams();
   const role = searchParams.get("role");

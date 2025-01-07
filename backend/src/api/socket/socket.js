@@ -1078,10 +1078,317 @@ const setupSocket = (server) => {
 
     });
 
-    //polling feature needs to be handled, here we are just sending the data to all the clients
-    //starting
 
+   //polling feature needs to be handled, here we are just sending the data to all the clients
+    //starting
+    socket.on(
+      "start-poll",
+      async ({ meetingId, pollId, endTime }, callback) => {
+        try {
+          // Fetch the poll details
+          // console.log("poll id in start poll", pollId);
+          const poll = await Poll.findById(pollId).lean();
+          if (!poll) {
+            return callback({
+              success: false,
+              message: "Poll not found",
+            });
+          }
+
+          // Check if the meeting exists
+          const liveMeeting = await LiveMeeting.findOne({ meetingId });
+          if (!liveMeeting) {
+            return callback({
+              success: false,
+              message: "Live meeting not found",
+            });
+          }
+
+          // Create an active poll
+          const activePoll = new ActivePoll({
+            meetingId,
+            pollId,
+            status: "Active",
+            startTime: new Date(),
+            endTime: new Date(endTime),
+          });
+
+          await activePoll.save();
+          console.log("Active Poll during poll start:", activePoll);
+
+          // Update the live meeting with the current poll
+          liveMeeting.currentPoll = activePoll._id;
+          await liveMeeting.save();
+          // Notify all participants about the active poll
+          io.to(meetingId).emit("poll-started", {
+            success: true,
+            message: "Poll started successfully",
+            activePollId: activePoll._id,
+            pollQuestions: poll.questions,
+          });
+
+          callback({
+            success: true,
+            message: "Poll started and broadcasted to participants",
+            activePoll,
+          });
+          const activePollId = activePoll._id;
+          // Schedule the poll to automatically end at the specified time
+          setTimeout(async () => {
+            const now = new Date();
+            if (now >= new Date(endTime)) {
+              await endPoll(meetingId, activePollId);
+              // Emit event to notify moderator about poll end
+              io.to(meetingId).emit("poll-ended", { activePollId });
+            }
+          }, new Date(endTime) - new Date());
+        } catch (error) {
+          console.error("Error starting poll:", error);
+          callback({
+            success: false,
+            message: "Failed to start poll",
+            error,
+          });
+        }
+      }
+    );
+
+    socket.on(
+      "submit-poll-response",
+      async ({ meetingId, activePollId, responses, participantEmail }) => {
+        console.log("poll id in submit-poll-response", activePollId, 'response', responses);
+        try {
+          // Validate required fields
+          if (!meetingId || !activePollId || !responses || !participantEmail) {
+            return socket.emit("poll-response-error", {
+              message: "Invalid poll response data",
+            });
+          }
+
+          // Check if the poll is active
+          const activePoll = await ActivePoll.findOne({
+            _id: activePollId,
+            meetingId,
+            status: "Active",
+          });
+          if (!activePoll) {
+            return socket.emit("poll-response-error", {
+              message: "Poll is no longer active",
+            });
+          }
+
+          console.log("Active Poll during response save:", activePoll);
+
+          // Find the participant ID based on participantEmail in LiveMeeting
+          const liveMeeting = await LiveMeeting.findOne({ meetingId });
+          if (!liveMeeting) {
+            return socket.emit("poll-response-error", {
+              message: "Live meeting not found",
+            });
+          }
+
+          const participant = liveMeeting.participantsList.find(
+            (p) => p.email === participantEmail && p.status === "online"
+          );
+
+          if (!participant) {
+            return socket.emit("poll-response-error", {
+              message: "Participant not found or not online",
+            });
+          }
+
+          // Save the response in PollResponse
+          const pollResponse = new PollResponse({
+            activePollId,
+            meetingId,
+            participantId: participant.id,
+            participantEmail,
+            responses: Object.entries(responses).map(
+              ([questionId, answer]) => ({
+                questionId,
+                answer,
+              })
+            ),
+          });
+
+          await pollResponse.save();
+          console.log('poll response saved', pollResponse)
+          // Notify the participant about the successful submission
+          socket.emit("poll-response-success", {
+            message: "Response submitted successfully",
+          });
+
+          // Optionally notify the moderator or others in the meeting
+          io.to(meetingId).emit("poll-update", {
+            activePollId,
+            participantId: participant.id,
+          });
+        } catch (error) {
+          console.error("Error handling poll response:", error);
+          socket.emit("poll-response-error", {
+            message: "Failed to handle poll response",
+          });
+        }
+      }
+    );
+
+    // Function to end a poll
+    const endPoll = async (meetingId, activePollId) => {
+      console.log("activePollId id in end poll", activePollId);
+      try {
+        const activePoll = await ActivePoll.findOneAndUpdate(
+          { meetingId, _id: activePollId, status: "Active" },
+          { status: "Ended" },
+          { new: true }
+        );
+        console.log("poll ended poll id", activePoll);
+
+        if (!activePoll) {
+          console.log("Poll not found or already ended");
+          return;
+        }
+        // Notify participants that the poll has ended
+        io.to(meetingId).emit("poll-ended", {
+          success: true,
+          message: "Poll has ended",
+          activePollId,
+        });
+
+        console.log(`Poll ${activePollId} has ended for meeting ${meetingId}`);
+      } catch (error) {
+        console.error("Error ending poll:", error);
+      }
+    };
+
+    socket.on("get-poll-results", async ({ activePollId }, callback) => {
+      try {
+        console.log("get-poll-results activePollId",   activePollId     )
+        // Fetch the ActivePoll document using pollId
+        const activePoll = await ActivePoll.findOne({ _id:activePollId });
+        if (!activePoll) {
+          return callback({
+            success: false,
+            message: "Active poll not found",
+          });
+        }
+
+        console.log("active poll duirng get-poll result", activePoll);
+
+        // Fetch the poll details
+        const poll = await Poll.findById(activePoll.pollId).lean();
+        if (!poll) {
+          return callback({
+            success: false,
+            message: "Poll not found",
+          });
+        }
+        // console.log('poll', poll)
+
+        const pollResponses = await PollResponse.find({
+          activePollId,
+        });
+        console.log("pollResponses", pollResponses);
+
+        if (!pollResponses || pollResponses.length === 0) {
+          return callback({
+            success: false,
+            message: "No responses found for this poll",
+          });
+        }
+
+        // Group responses by participant
+        const results = pollResponses.map((response) => ({
+          participantId: response.participantId,
+          participantEmail: response.participantEmail,
+          responses: response.responses.map((res) => {
+            const question = poll.questions.find(
+              (q) => q._id.toString() === res.questionId.toString()
+            );
+            return {
+              question: question ? question.question : "Question not found",
+              answer: res.answer,
+            };
+          }),
+        }));
+
+        console.log("result", results);
+        console.log(JSON.stringify(results, null, 2));
+
+        callback({
+          success: true,
+          results,
+        });
+      } catch (error) {
+        console.error("Error fetching poll results:", error);
+        callback({
+          success: false,
+          message: "Failed to fetch poll results",
+          error,
+        });
+      }
+    });
+
+    socket.on('save-poll-results-csv', async ({ pollResult, uploaderEmail, meetingId, projectId, role, addedBy }, callback) => {
+      try {
+        console.log('data received in the save poll', pollResult, uploaderEmail, meetingId, projectId, role, addedBy);
     
+        // Flatten the poll results
+        const flattenedResults = pollResult.flatMap(participant =>
+          participant.responses.map(response => ({
+            participantEmail: participant.participantEmail,
+            question: response.question,
+            answer: response.answer.join(', '), // Join multiple answers with a comma
+          }))
+        );
+    
+        console.log('Flattened Results:', flattenedResults);
+    
+        // Convert to CSV
+        const fields = ['participantEmail', 'question', 'answer'];
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(flattenedResults);
+    
+        // Convert CSV to Buffer
+        const buffer = Buffer.from(csv, 'utf-8');
+    
+        // Upload CSV to S3
+        const filename = `poll_results_${Date.now()}.csv`;
+        console.log('csv file name', filename);
+        const s3Response = await uploadToS3(buffer, 'text/csv', filename);
+        console.log('s3 response', s3Response);
+    
+        // Save metadata in MediaBoxModel
+        const newMedia = await MediaBoxModel.create({
+          meetingId,
+          uploaderEmail,
+          role,
+          projectId,
+          addedBy,
+          file: {
+            url: s3Response.url,
+            public_id: s3Response.Key,
+            name: filename,
+            mimetype: 'text/csv',
+            size: buffer.length,
+          },
+        });
+    
+        console.log('new media', newMedia);
+    
+        // Emit upload event
+        io.to(meetingId).emit('poll-results-saved', {
+          success: true,
+          message: 'Poll results saved and uploaded successfully.',
+          file: newMedia,
+        });
+    
+        callback({ success: true, message: 'Poll results uploaded successfully.' });
+      } catch (error) {
+        console.error('Error saving poll results as CSV:', error);
+        callback({ success: false, message: 'Failed to save poll results.' });
+      }
+    });
+
     //ending
 
     // * disconnect
@@ -1099,7 +1406,6 @@ const setupSocket = (server) => {
         return
       }
 
-
       if (userDetails?.role == "Participant") {
         const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == userDetails?.email);
         if (liveMeeting.participantsList[participantIndex]) {
@@ -1107,8 +1413,6 @@ const setupSocket = (server) => {
           liveMeeting.participantsList[participantIndex].leavingTime = Date.now();
         }
       }
-
-
 
       if (userDetails?.role == "Observer") {
         const observerIndex = liveMeeting.observerList.findIndex(b => b.email == userDetails?.email);

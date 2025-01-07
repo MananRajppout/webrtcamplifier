@@ -12,13 +12,13 @@ import toast from "react-hot-toast";
 import useSocketListen from "@/hooks/useSocketListen";
 import { addAudioTrackToStream } from "@/utils/mixAudio";
 import { RecordingServerConnector } from "@/utils/connectToRecordingServer";
-import fixWebmDuration from 'webm-duration-fix';
+import fixWebmDuration from "webm-duration-fix";
 
 const page = () => {
   const searchParams = useSearchParams();
   const params = useParams();
   const meetingId = params?.id;
-  const roomname = searchParams.get("roomname") || 'main';
+  const roomname = searchParams.get("roomname") || "main";
 
   const type = searchParams.get("type");
   const router = useRouter();
@@ -42,7 +42,6 @@ const page = () => {
 
   // const [socket, setSocket] = useState(null);
 
-
   const meetingStatus = "Ongoing";
   const projectStatus = "Open";
 
@@ -63,20 +62,19 @@ const page = () => {
   const [projectId, setProjectId] = useState(null);
   const [isMeetingEnd, setIsMeetingEnd] = useState(false);
   const [polls, setPolls] = useState();
+  const [isPollResultModalOpen, setIsPollResultModalOpen] = useState(false);
+  const [pollResult, setPollResult] = useState([]);
   const [totalPages, setTotalPollPages] = useState();
   const [currentPollPage, setCurrentPollPage] = useState(1);
   const [setting, setSetting] = useState({
     allowScreenShare: false,
     allowWhiteBoard: false,
-    allowEditWhiteBaord: false
+    allowEditWhiteBaord: false,
   });
 
   //breakout room popup
   const [breakoutRoomPopUpOpen, setBreakoutRoomPopUpOpen] = useState(false);
   const [breakoutRoomDetails, setBreakoutRoomDetails] = useState(null);
-
-
-
 
   //recording feauture
   const mixAudioDestinationRef = useRef(null);
@@ -87,71 +85,80 @@ const page = () => {
   const mediaRecorderRef = useRef(null);
   const startRecordingRef = useRef(false);
   const recordingServerConnectorRef = useRef(null);
-  const [allParticipantsAudioTracks, setAllParticipantsAudioTracks] = useState([]);
+  const [allParticipantsAudioTracks, setAllParticipantsAudioTracks] = useState(
+    []
+  );
   const [startRecording, setStartRecording] = useState(false);
   const recordingCountRef = useRef(0);
 
-
-
-
   const handleMediaRecorer = useCallback(() => {
-    recordingCountRef.current = recordingCountRef.current+1;
+    recordingCountRef.current = recordingCountRef.current + 1;
     const id = recordingCountRef.current.toString();
     const data = {
       type: "change-file",
       fileName: `${recordingCountRef.current}`,
-      id: id
-    }
-    
+      id: id,
+    };
+
     recordingServerConnectorRef.current.send(JSON.stringify(data));
 
     mediaRecorderRef.current?.stop();
 
-
     mediaRecorderRef.current = new MediaRecorder(recordingStreamRef.current);
-    mediaRecorderRef.current.addEventListener('dataavailable', (e) => {
+    mediaRecorderRef.current.addEventListener("dataavailable", (e) => {
       if (e.data.size > 0) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          const base64Data = reader.result.split('base64,')[1];
+          const base64Data = reader.result.split("base64,")[1];
           const data = {
             type: "media",
             payload: base64Data,
-            id: id
-          }
+            id: id,
+          };
           recordingServerConnectorRef.current.send(JSON.stringify(data));
         };
         reader.readAsDataURL(e.data);
       }
     });
 
-    mediaRecorderRef.current.addEventListener('stop', () => {
+    mediaRecorderRef.current.addEventListener("stop", () => {
       if (startRecordingRef.current) {
         return;
       }
-      
+
       const data = {
-        type: "stop"
-      }
+        type: "stop",
+      };
       recordingServerConnectorRef.current.send(JSON.stringify(data));
     });
 
-    
-
     mediaRecorderRef.current.start(1000);
-  }, [startRecording,recordingStreamRef.current,recordingCountRef.current]);
+  }, [startRecording, recordingStreamRef.current, recordingCountRef.current]);
 
-
-  const handleCombineStreams = useCallback((stream) => {
-    audioContextRef.current = new AudioContext();
-    mixAudioDestinationRef.current = audioContextRef.current.createMediaStreamDestination();
-    allPaericipantsAudioTracksRef.current.forEach((audio) => {
-      addAudioTrackToStream(audioContextRef.current, mixAudioDestinationRef.current, audio.track);
-    });
-    recordingStreamRef.current = new MediaStream([stream.getVideoTracks()[0], ...mixAudioDestinationRef.current.stream.getAudioTracks() || []]);
-    handleMediaRecorer(recordingStreamRef.current);
-  }, [allPaericipantsAudioTracksRef.current, allParticipantsAudioTracks,mediaRecorderRef.current]);
-
+  const handleCombineStreams = useCallback(
+    (stream) => {
+      audioContextRef.current = new AudioContext();
+      mixAudioDestinationRef.current =
+        audioContextRef.current.createMediaStreamDestination();
+      allPaericipantsAudioTracksRef.current.forEach((audio) => {
+        addAudioTrackToStream(
+          audioContextRef.current,
+          mixAudioDestinationRef.current,
+          audio.track
+        );
+      });
+      recordingStreamRef.current = new MediaStream([
+        stream.getVideoTracks()[0],
+        ...(mixAudioDestinationRef.current.stream.getAudioTracks() || []),
+      ]);
+      handleMediaRecorer(recordingStreamRef.current);
+    },
+    [
+      allPaericipantsAudioTracksRef.current,
+      allParticipantsAudioTracks,
+      mediaRecorderRef.current,
+    ]
+  );
 
   //const handleRecording
   const handleRecording = useCallback(() => {
@@ -159,22 +166,25 @@ const page = () => {
       if (typeof window !== "undefined") {
         const options = {
           video: {
-            displaySurface: 'browser',
-            frameRate: 30
+            displaySurface: "browser",
+            frameRate: 30,
           },
           audio: false,
-          preferCurrentTab: true
-        }
+          preferCurrentTab: true,
+        };
 
         const gdmStream = navigator.mediaDevices.getDisplayMedia(options);
         gdmStream.then(async (stream) => {
           try {
-            recordingServerConnectorRef.current = new RecordingServerConnector(params.id,projectId);
+            recordingServerConnectorRef.current = new RecordingServerConnector(
+              params.id,
+              projectId
+            );
             await recordingServerConnectorRef.current.waitForConnection();
           } catch (error) {
             toast.error("Failed To connect Recording server");
           }
-          
+
           setStartRecording(true);
           startRecordingRef.current = true;
           gdmStreamRef.current = stream;
@@ -182,7 +192,6 @@ const page = () => {
           handleCombineStreams(gdmStreamRef.current);
         });
       }
-
     } else {
       audioContextRef.current.close();
       gdmStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -195,37 +204,22 @@ const page = () => {
       setStartRecording(false);
       startRecordingRef.current = false;
     }
-
-  }, [allParticipantsAudioTracks, allPaericipantsAudioTracksRef.current, startRecording,projectId,params.id]);
-
+  }, [
+    allParticipantsAudioTracks,
+    allPaericipantsAudioTracksRef.current,
+    startRecording,
+    projectId,
+    params.id,
+  ]);
 
   //when new user add duration recording this use effect called
   useEffect(() => {
     if (!startRecording) {
       return;
     }
-    
+
     handleCombineStreams(gdmStreamRef.current);
   }, [allParticipantsAudioTracks]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -239,25 +233,27 @@ const page = () => {
     setSelectedRoom(room);
   };
 
+  const handleBreakoutClosed = useCallback(
+    ({ breakoutsRooms, roomName }) => {
+      setBreakoutRooms(breakoutsRooms);
+      if (roomname === roomName) {
+        toast.success(`The Breakout Room "${roomName}" has been closed`);
+        let url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}`;
+        window.open(url, "_self");
+      }
 
-  const handleBreakoutClosed = useCallback(({ breakoutsRooms, roomName }) => {
-    setBreakoutRooms(breakoutsRooms);
-    if (roomname === roomName) {
-      toast.success(`The Breakout Room "${roomName}" has been closed`);
-      let url = `/meeting/${params.id}?fullName=${fullName}&role=${userRole}`;
-      window.open(url, "_self");
-    }
+      if (breakoutRoomDetails?.name == roomName) {
+        setBreakoutRoomDetails(null);
+        setBreakoutRoomPopUpOpen(false);
+        toast.success(`The Breakout Room "${roomName}" has been closed`);
+      }
 
-    if(breakoutRoomDetails?.name == roomName){
-      setBreakoutRoomDetails(null);
-      setBreakoutRoomPopUpOpen(false);
-      toast.success(`The Breakout Room "${roomName}" has been closed`);
-    }
-
-    if(userRole == "Moderator"){
-      toast.success(`The Breakout Room "${roomName}" has been closed`);
-    }
-  },[roomname]);
+      if (userRole == "Moderator") {
+        toast.success(`The Breakout Room "${roomName}" has been closed`);
+      }
+    },
+    [roomname]
+  );
 
   //! Use effect for getting waiting list
   useEffect(() => {
@@ -278,22 +274,27 @@ const page = () => {
           setProjectId(meeting.projectId);
         }
 
-        socket.emit("mediabox:on-get-media", { meetingId: params.id, projectId: meeting.projectId }, (media) => {
-          setMediaBox([...media]);
-        });
-
+        socket.emit(
+          "mediabox:on-get-media",
+          { meetingId: params.id, projectId: meeting.projectId },
+          (media) => {
+            setMediaBox([...media]);
+          }
+        );
       }
     );
-    socket.emit("grounp:get-message", { meetingId: params.id, roomname }, (messages) => {
-      setGroupMessage([...messages]);
-    });
+    socket.emit(
+      "grounp:get-message",
+      { meetingId: params.id, roomname },
+      (messages) => {
+        setGroupMessage([...messages]);
+      }
+    );
 
     // polling feature needs to be handled, here we are just reciving the data
     //starting
 
-
     //ending
-
 
     socket.on("break-out-room-closed", handleBreakoutClosed);
     socket.on("change-room", handleChangeRoom);
@@ -313,7 +314,6 @@ const page = () => {
     getObserverList(params.id);
     getObserverChat(params.id);
 
-
     // Clean up function to clear the interval when component unmounts or userRole changes
     return () => {
       socket.off("getParticipantListResponse", handleParticipantList);
@@ -327,7 +327,7 @@ const page = () => {
       socket.off("endMeeting", onEndMeeting);
       socket.off("break-out-room-closed", handleBreakoutClosed);
     };
-  }, [userRole, params.id, socket]);
+  }, [userRole, params.id, socket, pollData]);
 
   // * function to request streaming status
   const getMeetingStatus = async (meetingId) => {
@@ -377,7 +377,6 @@ const page = () => {
     [params.id, selectedRoom]
   );
 
-
   const handleUserRename = useCallback(
     (newname, user) => {
       socket.emit(
@@ -414,12 +413,8 @@ const page = () => {
 
     const find = participantList.some((p) => p.email == email);
 
-
-    
-
-
     if (find) {
-      setBreakoutRoomDetails({name: roomName});
+      setBreakoutRoomDetails({ name: roomName });
       setBreakoutRoomPopUpOpen(true);
     }
   }, []);
@@ -445,7 +440,7 @@ const page = () => {
         email: myEmail,
         content,
         name,
-        roomname
+        roomname,
       });
     },
     [myEmail, params.id, participants, roomname]
@@ -460,7 +455,6 @@ const page = () => {
   }, []);
 
   const handleMediaNewDelete = useCallback((media) => {
-
     setMediaBox((prev) => {
       const newMedia = prev.filter((m) => m._id !== media._id);
       return newMedia;
@@ -471,7 +465,16 @@ const page = () => {
     async (file, setUploadProgress, filename, filebase64) => {
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/upload`,
-        { file, meetingId: params.id, email: myEmail, role: userRole, projectId, addedBy: fullName, filename, filebase64 },
+        {
+          file,
+          meetingId: params.id,
+          email: myEmail,
+          role: userRole,
+          projectId,
+          addedBy: fullName,
+          filename,
+          filebase64,
+        },
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -499,10 +502,8 @@ const page = () => {
     }
   };
 
-
   // ? Listing participant chat response
   useSocketListen("participantChatResponse", (data) => {
-
     if (data.success) {
       setParticipantMessages(data.participantMessages);
       if (data.allBreakRoomsNameList) {
@@ -530,7 +531,6 @@ const page = () => {
   // * get observer chat response function
   const handleObserverChatResponse = (response) => {
     if (response.success) {
-
       setObserversMessages(response.observerMessages);
     } else {
       console.error("Failed to get observer chat:", response.message);
@@ -548,7 +548,6 @@ const page = () => {
 
   // * get participant list
   const handleParticipantList = (response) => {
-
     if (response.success) {
       setParticipants(response.participantList);
     } else {
@@ -582,17 +581,14 @@ const page = () => {
         window.location.href = "/remove-participant";
       }
     }
-    console.log('removed participant data', data)
+    console.log("removed participant data", data);
   });
   // ? moving participant from the meeting to the waiting room
   useSocketListen("participantMovedToWaitingRoom", (data) => {
-    if (data.email === userEmail && typeof window != 'undefined') {
-      window.location.href =
-        `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
-          fullName
-        )}&email=${encodeURIComponent(
-          userEmail
-        )}&role=Participant`;
+    if (data.email === userEmail && typeof window != "undefined") {
+      window.location.href = `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
+        fullName
+      )}&email=${encodeURIComponent(userEmail)}&role=Participant`;
     }
   });
 
@@ -604,7 +600,7 @@ const page = () => {
   // get participants chats
   const requestToGetParticipantsChats = () => {
     socket.emit("getParticipantsChat", { meetingId: params.id });
-  }
+  };
 
   // *accept participant from waiting list
   const acceptParticipant = async (participant) => {
@@ -613,11 +609,21 @@ const page = () => {
 
   // * request function for removing participant  from meeting
   const removeParticipant = async (name, role, email, meetingId) => {
-    socket.emit("removeParticipantFromMeeting", { name, role, email, meetingId });
+    socket.emit("removeParticipantFromMeeting", {
+      name,
+      role,
+      email,
+      meetingId,
+    });
   };
   // * request function for moving participant  from meeting to waiting room
   const moveParticipantToWaitingRoom = async (name, role, email, meetingId) => {
-    socket.emit("moveParticipantToWaitingRoom", { name, role, email, meetingId });
+    socket.emit("moveParticipantToWaitingRoom", {
+      name,
+      role,
+      email,
+      meetingId,
+    });
   };
 
   // *get observer list request function
@@ -661,12 +667,10 @@ const page = () => {
     }
   }, [userRole, params.id, isAdmitted]);
 
-
   //get participants list when modirator joined
   useEffect(() => {
     requestParticipantList();
     requestToGetParticipantsChats();
-
   }, []);
 
   // ?Use effect to check if the participant is in the list and admit them
@@ -701,15 +705,10 @@ const page = () => {
     }
   };
 
-
-
-
   const onEndMeeting = useCallback(() => {
     socket.disconnect();
     setIsMeetingEnd(true);
-  }, [])
-
-
+  }, []);
 
   const endMeeting = useCallback(() => {
     socket.emit("endMeeting", { meetingId: params.id });
@@ -718,22 +717,23 @@ const page = () => {
     }
   }, [params.id]);
 
-
-  const fetchPolls = useCallback(async (page = 1) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/poll/${projectId}`,
-        {
-          params: { page, limit: 10, status: "active" },
-        }
-      );
-      setPolls(response.data.polls);
-      setTotalPollPages(response.data.totalPages);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    }
-  }, [projectId]);
-
+  const fetchPolls = useCallback(
+    async (page = 1) => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/poll/${projectId}`,
+          {
+            params: { page, limit: 10, status: "active" },
+          }
+        );
+        setPolls(response.data.polls);
+        setTotalPollPages(response.data.totalPages);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    },
+    [projectId]
+  );
 
   //fetch polls
   useEffect(() => {
@@ -742,18 +742,38 @@ const page = () => {
     }
   }, [projectId]);
 
-
-  // polling feature needs to be handled, 
+  // polling feature needs to be handled,
   //starting
 
+  const fetchPollResults = (activePollId) => {
+    socket.emit("get-poll-results", { activePollId }, (response) => {
+      if (response.success) {
+        setPollResult(response.results);
+        setIsPollResultModalOpen(true);
+      } else {
+        toast.error(`${response.message}`);
+      }
+    });
+  };
+  
+  socket.on("poll-started", (data) => {
+    if (data.success) {
+      setPollData({
+        pollId: data.activePollId,
+        pollQuestions: data.pollQuestions,
+      });
+    }
+  });
+
+  socket.on("poll-ended", ({ activePollId }) => {
+    console.log("Active poll ended with ID:", activePollId);
+    fetchPollResults(activePollId); // Use `activePollId` instead of `pollId`
+  });
 
   //ending
 
-
-
   return (
     <>
-
       <div className="flex justify-between min-h-screen max-h-screen meeting_bg ">
         {userRole === "Participant" && !isAdmitted ? (
           <div className="flex items-center justify-center w-full min-h-screen bg-white ">
@@ -799,12 +819,15 @@ const page = () => {
                 handleMediaUpload={handleMediaUpload}
                 mediaBox={mediaBox}
                 enabledBreakoutRoom={enabledBreakoutRoom}
-                setting={setting} setSetting={setSetting}
+                setting={setting}
+                setSetting={setSetting}
                 fetchPolls={fetchPolls}
                 polls={polls}
                 totalPages={totalPages}
-                currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
-                startRecording={startRecording} setStartRecording={setStartRecording}
+                currentPollPage={currentPollPage}
+                setCurrentPollPage={setCurrentPollPage}
+                startRecording={startRecording}
+                setStartRecording={setStartRecording}
                 handleRecording={handleRecording}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
@@ -830,10 +853,19 @@ const page = () => {
                 meetingDetails={meetingDetails}
                 endMeeting={endMeeting}
                 isMeetingEnd={isMeetingEnd}
-                setting={setting} setSetting={setSetting}
+                setting={setting}
+                setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
+                pollData={pollData}
+                setPollData={setPollData}
+                meetingId={meetingId}
+                pollResult={pollResult}
+                isPollResultModalOpen={isPollResultModalOpen}
+                setIsPollResultModalOpen={setIsPollResultModalOpen}
+                projectId={projectId}
+                user={user}
               />
             </div>
           </>
@@ -875,12 +907,15 @@ const page = () => {
                 mediaBox={mediaBox}
                 moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
                 enabledBreakoutRoom={enabledBreakoutRoom}
-                setting={setting} setSetting={setSetting}
+                setting={setting}
+                setSetting={setSetting}
                 fetchPolls={fetchPolls}
                 polls={polls}
                 totalPages={totalPages}
-                currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
-                startRecording={startRecording} setStartRecording={setStartRecording}
+                currentPollPage={currentPollPage}
+                setCurrentPollPage={setCurrentPollPage}
+                startRecording={startRecording}
+                setStartRecording={setStartRecording}
                 handleRecording={handleRecording}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
@@ -906,10 +941,19 @@ const page = () => {
                 meetingDetails={meetingDetails}
                 endMeeting={endMeeting}
                 isMeetingEnd={isMeetingEnd}
-                setting={setting} setSetting={setSetting}
+                setting={setting}
+                setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
+                pollData={pollData}
+                setPollData={setPollData}
+                meetingId={meetingId}
+                pollResult={pollResult}
+                isPollResultModalOpen={isPollResultModalOpen}
+                setIsPollResultModalOpen={setIsPollResultModalOpen}
+                projectId={projectId}
+                user={user}
               />
             </div>
             <div className="h-full">
@@ -974,19 +1018,21 @@ const page = () => {
                 mediaBox={mediaBox}
                 moveParticipantToWaitingRoom={moveParticipantToWaitingRoom}
                 enabledBreakoutRoom={enabledBreakoutRoom}
-                setting={setting} setSetting={setSetting}
+                setting={setting}
+                setSetting={setSetting}
                 fetchPolls={fetchPolls}
                 polls={polls}
                 totalPages={totalPages}
-                currentPollPage={currentPollPage} setCurrentPollPage={setCurrentPollPage}
-                startRecording={startRecording} setStartRecording={setStartRecording}
+                currentPollPage={currentPollPage}
+                setCurrentPollPage={setCurrentPollPage}
+                startRecording={startRecording}
+                setStartRecording={setStartRecording}
                 handleRecording={handleRecording}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
                 setBreakoutRoomDetails={setBreakoutRoomDetails}
               />
-
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
               <MeetingView
@@ -1006,10 +1052,19 @@ const page = () => {
                 meetingDetails={meetingDetails}
                 endMeeting={endMeeting}
                 isMeetingEnd={isMeetingEnd}
-                setting={setting} setSetting={setSetting}
+                setting={setting}
+                setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
+                pollData={pollData}
+                setPollData={setPollData}
+                meetingId={meetingId}
+                pollResult={pollResult}
+                isPollResultModalOpen={isPollResultModalOpen}
+                setIsPollResultModalOpen={setIsPollResultModalOpen}
+                projectId={projectId}
+                user={user}
               />
             </div>
             <div className="h-full">

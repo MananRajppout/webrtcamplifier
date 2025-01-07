@@ -80,7 +80,7 @@ const liveMeetingSchema = new Schema({
   recordings: [{
     url: String
   }],
-  
+  currentPoll: { type: mongoose.Schema.Types.ObjectId, ref: 'ActivePoll', default: null },
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   breakRooms: [{

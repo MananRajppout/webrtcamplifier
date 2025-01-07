@@ -954,7 +954,7 @@ const LeftSidebarOpenUi = ({
 
       {
         isPollModelOpen &&
-        <ViewPollModel onClose={() => setIsPollModelOpen(false)} polls={polls} onPageChange={handlePollPageChange} pollPage={currentPollPage} totalPollPages={totalPages} />
+        <ViewPollModel onClose={() => setIsPollModelOpen(false)} polls={polls} onPageChange={handlePollPageChange} pollPage={currentPollPage} totalPollPages={totalPages} meetingId={meetingId} />
       }
 
       {isRemoveModalOpen && (

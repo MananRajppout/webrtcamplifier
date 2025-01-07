@@ -1,8 +1,6 @@
 import React, { forwardRef, useState } from "react";
 import Logo from "../shared/Logo";
-import {
-  FaVideo,
-} from "react-icons/fa";
+import { FaVideo } from "react-icons/fa";
 import HeadingBlue25px from "../shared/HeadingBlue25px";
 import { IoLogOutSharp } from "react-icons/io5";
 import WhiteBoard from "./WhiteBoard";
@@ -11,6 +9,8 @@ import EndOFMeeting from "./EndOFMeeting";
 import Button from "../shared/button";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
+import ParticipantPollModal from "./ParticipantPollModal";
+import PollResultModal from "./PollResultModal";
 
 const MeetingView = ({
   role,
@@ -25,29 +25,35 @@ const MeetingView = ({
   breakoutRooms,
   setBreakoutRooms,
   projectStatus,
-  iframeLink, meetingDetails,
+  iframeLink,
+  meetingDetails,
   endMeeting,
   isMeetingEnd,
   setting,
   setSetting,
   handleMediaUpload,
   allPaericipantsAudioTracksRef,
-  setAllParticipantsAudioTracks
+  setAllParticipantsAudioTracks,
+  pollData,
+  setPollData,
+  meetingId,
+  pollResult,
+  isPollResultModalOpen,
+  setIsPollResultModalOpen,
+  projectId,
+  user,
 }) => {
-
   const searchParams = useSearchParams();
-  const roomname = searchParams.get('roomname');
-  const type = searchParams.get('type');
-
-
+  const roomname = searchParams.get("roomname");
+  const type = searchParams.get("type");
 
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
 
     const textToCopy = `Meeting Link- ${meetingLink}`;
 
-
-    navigator.clipboard.writeText(textToCopy)
+    navigator.clipboard
+      .writeText(textToCopy)
       .then(() => {
         toast.success("Meeting link and password copied to clipboard!");
       })
@@ -62,8 +68,8 @@ const MeetingView = ({
     const meetingPassword = `${meetingDetails.meetingPasscode}`;
     const textToCopy = `Meeting Link- ${meetingLink}\nMeeting Password - ${meetingPassword}`;
 
-
-    navigator.clipboard.writeText(textToCopy)
+    navigator.clipboard
+      .writeText(textToCopy)
       .then(() => {
         toast.success("Meeting link and password copied to clipboard!");
       })
@@ -72,7 +78,6 @@ const MeetingView = ({
         toast.error("Failed to copy meeting link and password");
       });
   };
-
 
   return (
     <div className="px-5 sm:py-5  flex-col justify-between items-between h-full  meeting_bg relative">
@@ -99,16 +104,17 @@ const MeetingView = ({
               variant={`${role !== "Moderator" ? "secondary" : "primary"}`}
               className={`text-white py-1 px-3 rounded-xl text-sm hidden md:flex`}
             />
-            {
-              role === "Observer" &&
+            {role === "Observer" && (
               <Button
-                children={isWhiteBoardOpen ? "Close Whiteboard" : "Open Whiteboard"}
+                children={
+                  isWhiteBoardOpen ? "Close Whiteboard" : "Open Whiteboard"
+                }
                 type="button"
                 variant={`${role !== "Moderator" ? "secondary" : "primary"}`}
                 className={`text-white py-1 px-3 rounded-xl text-sm hidden md:flex`}
-                onClick={() => setIsWhiteBoardOpen(prev => !prev)}
+                onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
               />
-            }
+            )}
           </div>
           {/* logo */}
           <Logo />
@@ -116,10 +122,13 @@ const MeetingView = ({
 
         {/* Second ---------- name bar */}
         <div className="flex justify-between items-center pb-4 ">
-          <HeadingBlue25px children={`${meetingDetails?.projectTitle} ${type == 'breackout' && roomname ? `- ${roomname}` : ''}`} />
+          <HeadingBlue25px
+            children={`${meetingDetails?.projectTitle} ${
+              type == "breackout" && roomname ? `- ${roomname}` : ""
+            }`}
+          />
 
-          {
-            role === "Moderator" &&
+          {role === "Moderator" && (
             <div className="flex justify-between items-center gap-3">
               <Button
                 children="Copy Link for Participants"
@@ -134,7 +143,7 @@ const MeetingView = ({
                 onClick={handleCopyObserverLink}
               />
             </div>
-          }
+          )}
           {/* <Button
             children="Leave"
             type="submit"
@@ -163,34 +172,53 @@ const MeetingView = ({
             </div>
           )} */}
 
-
-
-            <div className={`flex-1  ${isRecordingOpen ? 'block' : 'hidden'}`}>
+            <div className={`flex-1  ${isRecordingOpen ? "block" : "hidden"}`}>
               <EndOFMeeting role={role} />
             </div>
 
-
-            <div className={` ${isWhiteBoardOpen ? 'block' : 'hidden'}`}>
-              <WhiteBoard role={role} users={users} isWhiteBoardOpen={isWhiteBoardOpen} handleMediaUpload={handleMediaUpload} setting={setting} setSetting={setSetting} />
+            <div className={` ${isWhiteBoardOpen ? "block" : "hidden"}`}>
+              <WhiteBoard
+                role={role}
+                users={users}
+                isWhiteBoardOpen={isWhiteBoardOpen}
+                handleMediaUpload={handleMediaUpload}
+                setting={setting}
+                setSetting={setSetting}
+              />
             </div>
 
-
-            <div className={`flex-1  ${isMeetingEnd ? 'block' : 'hidden'}`}>
+            <div className={`flex-1  ${isMeetingEnd ? "block" : "hidden"}`}>
               <div
                 className="rounded-md pb-10 h-[75vh] flex items-center justify-center bg-white"
                 style={{ width: "100%", position: "relative" }}
               >
-                <p className="font-normal">This Meeting has been ended by the host</p>
+                <p className="font-normal">
+                  This Meeting has been ended by the host
+                </p>
               </div>
             </div>
 
-            <div className={`flex-1  ${!isRecordingOpen && !isWhiteBoardOpen && !isMeetingEnd ? 'block' : 'hidden'}`}>
-              <OngoingMeeting users={users} iframeLink={iframeLink} role={role} endMeeting={endMeeting} setAllParticipantsAudioTracks={setAllParticipantsAudioTracks} allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef} isMeetingEnd={isMeetingEnd} setting={setting} setSetting={setSetting} />
+            <div
+              className={`flex-1  ${
+                !isRecordingOpen && !isWhiteBoardOpen && !isMeetingEnd
+                  ? "block"
+                  : "hidden"
+              }`}
+            >
+              <OngoingMeeting
+                users={users}
+                iframeLink={iframeLink}
+                role={role}
+                endMeeting={endMeeting}
+                setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
+                allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
+                isMeetingEnd={isMeetingEnd}
+                setting={setting}
+                setSetting={setSetting}
+                pollData={pollData}
+                setPollData={setPollData}
+              />
             </div>
-
-
-
-
           </>
         ) : (
           <div className="flex-1 h-full">
@@ -198,6 +226,24 @@ const MeetingView = ({
           </div>
         )}
       </div>
+      {role === "Participant" && pollData && (
+        <ParticipantPollModal
+          activePollId={pollData.pollId}
+          pollQuestions={pollData.pollQuestions}
+          onClose={() => setPollData(null)}
+          meetingId={meetingId}
+          email={userEmail}
+        />
+      )}
+      {role === "Moderator" && isPollResultModalOpen && (
+        <PollResultModal
+          setIsPollResultModalOpen={setIsPollResultModalOpen}
+          pollResult={pollResult}
+          uploaderEmail={user.email}
+          meetingId={meetingId}
+          projectId={projectId}
+        />
+      )}
     </div>
   );
 };
