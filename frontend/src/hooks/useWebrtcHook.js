@@ -331,15 +331,9 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         setSocketId(socketId);
         socketIdRef.current = socketId;
         rtpCapabilitiesRef.current = rtpCapabilities;
-        if(role != 'Moderator'){
-          setSetting(roomSettings)
-        }
-
-
-        
-
-
-       
+     
+        setSetting(roomSettings)
+      
 
 
         //create device

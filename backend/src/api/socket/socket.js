@@ -5,6 +5,10 @@ const { v4: uuidv4 } = require("uuid");
 const ChatMessage = require("../models/chatModel");
 const GroupMessage = require('../models/groupMessage');
 const MediaBoxModel = require('../models/mediaBox.js');
+const ActivePoll = require("../models/activePollModel.js");
+const Poll = require("../models/pollModel.js");
+const PollResponse = require("../models/pollResponseModel.js");
+const { Parser } = require('json2csv');
 const AWS = require('aws-sdk');
 const dotenv = require("dotenv");
 dotenv.config();
@@ -120,7 +124,7 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    socket.on("join-room", async ({ roomid, name, email, roomname, role }, callback) => {
+    socket.on("join-room", async ({ roomid, name, email, roomname, role,isTechHost }, callback) => {
 
       socket.join(roomid);
       // for group chat
@@ -129,13 +133,14 @@ const setupSocket = (server) => {
         name,
         roomid,
         email,
-        role
+        role,
+        isTechHost
       };
       console.log(`User with name ${name} joined meeting ${roomid} role ${role}`)
       const newname = email + roomid;
       delete userchangeroom[newname];
 
-      if (role == "Participant") {
+      if (role == "Participant" || isTechHost) {
         const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
         const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == email);
         if (participantIndex != -1 && liveMeeting.participantsList[participantIndex]) {
@@ -159,7 +164,7 @@ const setupSocket = (server) => {
         });
       }
 
-      if (role == "Moderator") {
+      if (role == "Moderator" && !isTechHost) {
         const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
         if (liveMeeting) {
           liveMeeting.startTime = Date.now();
@@ -218,7 +223,8 @@ const setupSocket = (server) => {
     })
 
     socket.on("startMeeting", async (data) => {
-      const { meetingId, user } = data;
+      const { meetingId, user, moderator } = data;
+      console.log(moderator)
 
       const existingMeeting = await checkMeetingExists(meetingId, socket, "meeting-not-found");
       if (!existingMeeting) return;
@@ -227,6 +233,22 @@ const setupSocket = (server) => {
       const liveMeeting = await LiveMeeting.findOne({ meetingId });
 
       if (liveMeeting) {
+        if (user.isTechHost) {
+          const isExistAlready = liveMeeting.participantsList.findIndex(p => p.email == user.email);
+          if(isExistAlready !== -1){
+            liveMeeting.participantsList[isExistAlready].status = "online";
+          }else{
+            liveMeeting.participantsList.push({
+              name: user.fullName,
+              email: user.email,
+              role: "Moderator",
+              id: uuidv4(),
+              status: "online",
+            })
+          }
+          await liveMeeting.save();
+        }
+
         if (liveMeeting.ongoing) {
           socket.emit("startMeetingResponse", {
             success: false,
@@ -243,22 +265,50 @@ const setupSocket = (server) => {
             liveMeeting: liveMeeting,
           });
         }
+
       }
 
       const moderatorId = uuidv4();
+      let newLiveMeeting = undefined;
+      if (user.isTechHost) {
+        newLiveMeeting = new LiveMeeting({
+          meetingId: meetingId,
+          ongoing: true,
+          webRtcRoomId: meetingId,
+          participantsList: [
+            {
+              name: user.fullName,
+              email: user.email,
+              role: "Moderator",
+              id: uuidv4(),
+              status: "online",
+            }
+          ],
+          moderator: {
+            name: `${moderator.firstName} ${moderator.lastName}`,
+            id: moderatorId,
+            role: "Moderator",
+            email: moderator.email,
+            status: "offline",
+          },
+        });
+      } else {
+        newLiveMeeting = new LiveMeeting({
+          meetingId: meetingId,
+          ongoing: true,
+          webRtcRoomId: meetingId,
+          moderator: {
+            name: user.fullName,
+            id: moderatorId,
+            role: "Moderator",
+            email: user.email,
+            status: "online",
+          },
+        });
+      }
 
-      const newLiveMeeting = new LiveMeeting({
-        meetingId: meetingId,
-        ongoing: true,
-        webRtcRoomId: meetingId,
-        moderator: {
-          name: user.fullName,
-          id: moderatorId,
-          role: "Moderator",
-        },
-      });
 
-      await newLiveMeeting.save();
+      await newLiveMeeting?.save();
 
       socket.emit("startMeetingResponse", {
         success: true,
@@ -329,7 +379,7 @@ const setupSocket = (server) => {
       socket.emit("participantJoinMeetingResponse", {
         success: true,
         message: "Participant added to waiting room",
-        participant: { name, role, email,  image: imageUrl },
+        participant: { name, role, email, image: imageUrl },
       });
 
       // Broadcast the updated waiting room list to all clients in the meeting room
@@ -779,7 +829,7 @@ const setupSocket = (server) => {
 
       const newRoom = [];
       const isMainRoomExist = liveMeeting.breakRooms.some(room => room.roomName == 'main');
-      
+
       if (!isMainRoomExist) {
         newRoom.push({ roomName: "main" });
       }
@@ -815,9 +865,9 @@ const setupSocket = (server) => {
       socket.to(meetingId).emit('change-room', { participantList: participants, roomName: breakroomname });
 
       //set timer
-      console.log('duration',duration)
-      if(duration){
-        callAfterMin(Number(duration),async () => {
+      console.log('duration', duration)
+      if (duration) {
+        callAfterMin(Number(duration), async () => {
           const liveMeeting = await LiveMeeting.findOne({ meetingId });
           liveMeeting.breakRooms = liveMeeting.breakRooms.filter(room => room.roomName !== breakroomname);
           const allBreakRoomsNameList = liveMeeting.breakRooms.map((room) => room.roomName).filter(name => !!name);
@@ -920,7 +970,7 @@ const setupSocket = (server) => {
       callback(messages);
     })
 
-    socket.on('mediabox:on-get-media', async ({ meetingId,projectId }, callback) => {
+    socket.on('mediabox:on-get-media', async ({ meetingId, projectId }, callback) => {
       const media = await MediaBoxModel.find({ projectId });
       callback(media);
     });
@@ -1079,7 +1129,7 @@ const setupSocket = (server) => {
     });
 
 
-   //polling feature needs to be handled, here we are just sending the data to all the clients
+    //polling feature needs to be handled, here we are just sending the data to all the clients
     //starting
     socket.on(
       "start-poll",
@@ -1262,9 +1312,9 @@ const setupSocket = (server) => {
 
     socket.on("get-poll-results", async ({ activePollId }, callback) => {
       try {
-        console.log("get-poll-results activePollId",   activePollId     )
+        console.log("get-poll-results activePollId", activePollId)
         // Fetch the ActivePoll document using pollId
-        const activePoll = await ActivePoll.findOne({ _id:activePollId });
+        const activePoll = await ActivePoll.findOne({ _id: activePollId });
         if (!activePoll) {
           return callback({
             success: false,
@@ -1331,7 +1381,7 @@ const setupSocket = (server) => {
     socket.on('save-poll-results-csv', async ({ pollResult, uploaderEmail, meetingId, projectId, role, addedBy }, callback) => {
       try {
         console.log('data received in the save poll', pollResult, uploaderEmail, meetingId, projectId, role, addedBy);
-    
+
         // Flatten the poll results
         const flattenedResults = pollResult.flatMap(participant =>
           participant.responses.map(response => ({
@@ -1340,23 +1390,23 @@ const setupSocket = (server) => {
             answer: response.answer.join(', '), // Join multiple answers with a comma
           }))
         );
-    
+
         console.log('Flattened Results:', flattenedResults);
-    
+
         // Convert to CSV
         const fields = ['participantEmail', 'question', 'answer'];
         const json2csvParser = new Parser({ fields });
         const csv = json2csvParser.parse(flattenedResults);
-    
+
         // Convert CSV to Buffer
         const buffer = Buffer.from(csv, 'utf-8');
-    
+
         // Upload CSV to S3
         const filename = `poll_results_${Date.now()}.csv`;
         console.log('csv file name', filename);
         const s3Response = await uploadToS3(buffer, 'text/csv', filename);
         console.log('s3 response', s3Response);
-    
+
         // Save metadata in MediaBoxModel
         const newMedia = await MediaBoxModel.create({
           meetingId,
@@ -1372,16 +1422,16 @@ const setupSocket = (server) => {
             size: buffer.length,
           },
         });
-    
+
         console.log('new media', newMedia);
-    
+
         // Emit upload event
         io.to(meetingId).emit('poll-results-saved', {
           success: true,
           message: 'Poll results saved and uploaded successfully.',
           file: newMedia,
         });
-    
+
         callback({ success: true, message: 'Poll results uploaded successfully.' });
       } catch (error) {
         console.error('Error saving poll results as CSV:', error);
@@ -1406,7 +1456,7 @@ const setupSocket = (server) => {
         return
       }
 
-      if (userDetails?.role == "Participant") {
+      if (userDetails?.role == "Participant" || userDetails.isTechHost) {
         const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == userDetails?.email);
         if (liveMeeting.participantsList[participantIndex]) {
           liveMeeting.participantsList[participantIndex].status = "offline";
@@ -1416,7 +1466,7 @@ const setupSocket = (server) => {
 
       if (userDetails?.role == "Observer") {
         const observerIndex = liveMeeting.observerList.findIndex(b => b.email == userDetails?.email);
-        console.log('diconnet',userDetails.name)
+        console.log('diconnet', userDetails.name)
         if (liveMeeting.observerList[observerIndex]) {
           liveMeeting.observerList[observerIndex].leavingTime = Date.now();
           liveMeeting.observerList[observerIndex].status = "offline";
@@ -1424,7 +1474,7 @@ const setupSocket = (server) => {
 
       }
 
-      if (userDetails?.role == "Moderator") {
+      if (userDetails?.role == "Moderator" && !userDetails.isTechHost) {
         liveMeeting.isMeetindEnded = true;
         liveMeeting.endTime = Date.now();
         liveMeeting.duration = (((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime))) / 1000) / 60;

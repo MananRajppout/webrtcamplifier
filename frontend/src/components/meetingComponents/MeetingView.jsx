@@ -46,6 +46,7 @@ const MeetingView = ({
   const searchParams = useSearchParams();
   const roomname = searchParams.get("roomname");
   const type = searchParams.get("type");
+  const userEmail = searchParams.get("email");
 
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;

@@ -108,6 +108,8 @@ const LeftSidebarOpenUi = ({
   const previosGroupCountRef = useRef(groupMessage.length);
   const [participantsMicMuted, setParticipantsMicMuted] = useState({});
   const [isPollModelOpen, setIsPollModelOpen] = useState(false);
+  
+
 
 
   useEffect(() => {
@@ -145,6 +147,7 @@ const LeftSidebarOpenUi = ({
   const userrole = searchParams.get('role');
   const fullName = searchParams.get('fullName');
   const roomname = searchParams.get('roomname') || 'main'
+  const ModeratorType = searchParams.get("ModeratorType");
   const id = params.id;
   // this for handling the message input
   const handleSendMessage = () => {
@@ -154,10 +157,10 @@ const LeftSidebarOpenUi = ({
         senderName: userName,
         receiverName: selectedChat.name,
         senderEmail: myEmailRef.current,
-        receiverEmail: selectedChat.email || (selectedChat.role == 'Moderator' ? 'admin@gmail.com' : 'unkown@gmail.com'),
+        receiverEmail: selectedChat.email || 'unkown@gmail.com',
         message: inputMessage.trim(),
       };
-
+      
       sendMessageParticipant(newMessage);
       setInputMessage("");
     }
@@ -167,7 +170,7 @@ const LeftSidebarOpenUi = ({
   useEffect(() => {
     if (typeof window != 'undefined') {
       const email = window.localStorage.getItem('email');
-      myEmailRef.current = userrole == 'Moderator' ? 'admin@gmail.com' : email;
+      myEmailRef.current = email
     }
   }, [])
 
@@ -825,10 +828,10 @@ const LeftSidebarOpenUi = ({
                 {messages
                   .filter(
                     (message) =>
-                      (message.senderEmail === (selectedChat.email || (selectedChat.role == "Moderator" ? "admin@gmail.com" : "unkown@gmail.com")) &&
+                      (message.senderEmail === (selectedChat.email || "unkown@gmail.com") &&
                         message.receiverEmail === myEmailRef.current) ||
                       (message.senderEmail === myEmailRef.current &&
-                        message.receiverEmail === (selectedChat.email || (selectedChat.role == "Moderator" ? "admin@gmail.com" : "unkown@gmail.com")))
+                        message.receiverEmail === (selectedChat.email || "unkown@gmail.com"))
                   )
                   .map((message, index) => (
                     <div

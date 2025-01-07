@@ -24,6 +24,7 @@ const liveMeetingSchema = new Schema({
     joiningTime: {type: Date, required: false, default: Date.now},
     leavingTime: {type: Date, required: false, default: null},
     status: {type: String, required: false, default: "offline",enum: ['online', 'offline']},
+    email: {type: String, requried: true},
   },
   participantsList: [{
       name: { type: String, required: true },
@@ -35,6 +36,7 @@ const liveMeetingSchema = new Schema({
       joiningTime: {type: Date, required: false, default: Date.now},
       leavingTime: {type: Date, required: false, default: null},
       status: {type: String, required: false, default: "offline",enum: ['online', 'offline', 'removed']},
+      isTechHost: {type: Boolean,default: false},
     }],
   observerList: [{
     name: { type: String, required: true },

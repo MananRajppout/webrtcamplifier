@@ -73,7 +73,7 @@ const handleSubmit = () => {
         <div className="mt-4 space-y-4">
         {pollQuestions.map((question) => (
   <div key={question._id}>
-    <label className="block text-sm font-medium">{question.question}</label>
+    <label className="block text-sm font-medium">{question.question}{question.type}</label>
     {question.type === "Single Choice" && (
       <select
         className="w-full border border-gray-300 rounded-md px-2 py-1"

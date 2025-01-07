@@ -27,6 +27,7 @@ const EnablePollModal = ({ onClose, poll, meetingId }) => {
       "start-poll",
       { meetingId, pollId: poll._id, endTime:endDateTime.toISOString() },
       (response) => {
+      
         if (response.success) {
           toast.success(`${response.message}`)
           onClose();

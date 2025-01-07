@@ -120,22 +120,41 @@ const MeetingTab = ({
     const isModerator = meeting.moderator.some(
       (mod) => mod.email === user.email
     );
-    if (isModerator) {
+    if (isModerator || user.role == "AmplifyTechHost") {
       const confirmStart = window.confirm(
         "Are you sure you want to start this session?"
       );
       if (!confirmStart) return;
+
+      if(typeof window !== 'undefined'){
+        window.localStorage.setItem('email',user.email);
+      }
+      
       const fullName = `${user.firstName} ${user.lastName}`;
       try {
         if (socket) {
-          socket.emit("startMeeting", {
-            meetingId: meeting._id,
-            user: {
-              fullName,
-              email: user.email,
-              role: "Moderator",
-            },
-          });
+          if(user.role == "AmplifyTechHost"){
+            socket.emit("startMeeting", {
+              meetingId: meeting._id,
+              user: {
+                fullName,
+                email: user.email,
+                role: "Moderator",
+                isTechHost: true
+              },
+              moderator: meeting.moderator[0],
+            });
+          }else{
+            socket.emit("startMeeting", {
+              meetingId: meeting._id,
+              user: {
+                fullName,
+                email: user.email,
+                role: "Moderator",
+              },
+            });
+          }
+         
 
           // Listen for a response from the server
           socket.on("startMeetingResponse", (response) => {
@@ -146,7 +165,7 @@ const MeetingTab = ({
               window.open(
                 `/meeting/${meeting._id}?fullName=${encodeURIComponent(
                   fullName
-                )}&role=Moderator`,
+                )}&role=Moderator&${user.role == "AmplifyTechHost" ? 'ModeratorType=tech-host' : ''}`,
                 "_blank"
               );
             }
@@ -160,7 +179,7 @@ const MeetingTab = ({
         setActiveMeetingId(null);
       }
     } else {
-      toast.error("You are not the moderator of this meeting.");
+      toast.error(`You are not the moderator of this meeting.`);
 
       setActiveMeetingId(null);
     }

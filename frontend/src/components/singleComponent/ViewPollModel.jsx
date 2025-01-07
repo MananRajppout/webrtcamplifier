@@ -4,6 +4,8 @@ import TableHead from "@/components/shared/TableHead";
 import Button from "@/components/shared/button";
 import Pagination from "@/components/shared/Pagination";
 import { CgClose } from "react-icons/cg";
+import { useState } from "react";
+import EnablePollModal from "../meetingComponents/EnablePollModal";
 
 const ViewPollModel = ({
   onClose,

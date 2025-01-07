@@ -24,6 +24,7 @@ const page = () => {
   const router = useRouter();
   const { user, socket } = useGlobalContext();
   const fullName = searchParams.get("fullName");
+  const ModeratorType = searchParams.get("ModeratorType");
   const userRole = searchParams.get("role");
   const userEmail = searchParams.get("email");
   const [meetingDetails, setMeetingDetails] = useState([]);
@@ -62,6 +63,7 @@ const page = () => {
   const [projectId, setProjectId] = useState(null);
   const [isMeetingEnd, setIsMeetingEnd] = useState(false);
   const [polls, setPolls] = useState();
+  const [pollData, setPollData] = useState(null);
   const [isPollResultModalOpen, setIsPollResultModalOpen] = useState(false);
   const [pollResult, setPollResult] = useState([]);
   const [totalPages, setTotalPollPages] = useState();
@@ -224,7 +226,7 @@ const page = () => {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const email = window.localStorage.getItem("email");
-      setMyEmail(userRole == "Moderator" ? "admin@gmail.com" : email);
+      setMyEmail(email);
     }
   }, []);
 
@@ -259,14 +261,11 @@ const page = () => {
   useEffect(() => {
     let email;
     if (typeof window !== "undefined") {
-      email =
-        userRole == "Moderator"
-          ? "admin@gmail.com"
-          : window.localStorage.getItem("email");
+      email = window.localStorage.getItem("email");
     }
     socket.emit(
       "join-room",
-      { roomid: params.id, name: fullName, email, roomname, role: userRole },
+      { roomid: params.id, name: fullName, email, roomname, role: userRole, isTechHost: !!ModeratorType },
       (socketId, meeting) => {
         socketIdRef.current = socketId;
         if (meeting) {

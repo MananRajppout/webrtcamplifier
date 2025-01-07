@@ -18,6 +18,7 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
   const params = useParams();
   const role = searchParams.get("role");
   const type = searchParams.get('type') || 'main';
+  const ModeratorType = searchParams.get("ModeratorType");
   const roomname = searchParams.get('roomname') || null;
   const roomName = searchParams.get('roomname') || 'main';
   const [breakRoomID, setRoomBreakID] = useState(null);
@@ -25,8 +26,8 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
   const [roomId, setRoomId] = useState(type == 'breackout' ? `${params.id}-${roomname}` : params.id);
   const videoCanvasRef = useRef(null);
   const canvasRef = useRef(null);
-  const [isMicMute, setIsMicMute] = useState(role == 'Observer' ? true : false);
-  const [isWebCamMute, setIsWebCamMute] = useState(role == 'Observer' ? true : false);
+  const [isMicMute, setIsMicMute] = useState(role == 'Observer' || ModeratorType == 'tech-host' ? true : false);
+  const [isWebCamMute, setIsWebCamMute] = useState(role == 'Observer' || ModeratorType == 'tech-host' ? true : false);
   const [isBlur, setIsBlur] = useState(false);
   const [selected, setSelected] = useState(0);
   const [permissionOpen, setPermisstionOpen] = useState(false);
@@ -68,7 +69,7 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
   useEffect(() => {
     if (typeof window != 'undefined') {
       const email = window.localStorage.getItem('email');
-      myEmailRef.current = role == 'Moderator' ? 'admin@gmail.com' : email;
+      myEmailRef.current = email;
     }
   }, []);
 
