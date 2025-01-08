@@ -1,5 +1,5 @@
 // RightSidebarOpenUi.js
-import React, { useEffect, useState,useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { FaAngleDown, FaFolder, FaTrash } from "react-icons/fa";
 import { BsChatSquareDotsFill, BsChatSquareFill } from "react-icons/bs";
 import Search from "../singleComponent/Search";
@@ -12,10 +12,11 @@ import Button from "../shared/button";
 import { useParams, useSearchParams } from "next/navigation";
 import { PiCirclesFourFill } from "react-icons/pi";
 import toast from "react-hot-toast";
+import { BiCopy } from "react-icons/bi";
 
 
-export function bytesToMbs (size){
-  return (size / (1024**2)).toFixed(2);
+export function bytesToMbs(size) {
+  return (size / (1024 ** 2)).toFixed(2);
 }
 
 const RightSidebarOpenUi = ({
@@ -65,12 +66,12 @@ const RightSidebarOpenUi = ({
 
   const myEmailRef = useRef(null);
   useEffect(() => {
-    if(typeof window != 'undefined'){
+    if (typeof window != 'undefined') {
       const email = window.localStorage.getItem('email');
       myEmailRef.current = email
-      
+
     }
-  },[])
+  }, [])
 
 
   const fetchFiles = async () => {
@@ -91,12 +92,12 @@ const RightSidebarOpenUi = ({
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     try {
-      if(!file) return;
-      const res = handleMediaUpload(file,setUploadProgress);
-      
+      if (!file) return;
+      const res = handleMediaUpload(file, setUploadProgress);
+
     } catch (error) {
-        toast.error(error.message);
-    }finally{
+      toast.error(error.message);
+    } finally {
       setUploadProgress(0)
     }
   };
@@ -135,6 +136,16 @@ const RightSidebarOpenUi = ({
     }
     window.open(url, '_self')
   }, [fullName, userrole, id])
+
+
+  const copyUrlToClipboard = useCallback(async (url) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('URL copied to clipboard')
+    } catch (err) {
+      toast.error('Failed to copy URL!')
+    }
+  }, []);
   return (
     <>
 
@@ -261,13 +272,13 @@ const RightSidebarOpenUi = ({
             {/* participant container */}
             {users
               ?.filter((user) => user.name !== userName)
-              .map((user,index) => (
+              .map((user, index) => (
                 <div
                   className="flex justify-center items-center gap-2 py-1 my-2 px-2 rounded-md bg-gray-100"
                   key={user?.id}
                 >
                   <p className="text-[#1a1a1a] text-sm flex-grow">
-                    {index+1}. {user?.name}
+                    {index + 1}. {user?.name}
                   </p>
                 </div>
               ))}
@@ -281,19 +292,19 @@ const RightSidebarOpenUi = ({
             .filter((observer) => observer.name !== userName)
             .filter((observer) => observer.status == "online")
             .filter((observer) => (role == "Moderator" ? true : observer.role == "Moderator"))
-           
+
             .map((observer) => (
               <div
                 key={observer.id}
                 className="p-2 items-center gap-2 border-b border-solid my-2 flex justify-between"
-                
+
               >
                 <div className="flex-grow-1 text-xs ">
                   <p className="pb-1 font-bold">{observer.name}</p>
                 </div>
 
                 <button onClick={() => setSelectedChat(observer)} className="cursor-pointer">
-                  <BsChatSquareDotsFill/>
+                  <BsChatSquareDotsFill />
                 </button>
               </div>
             ))}
@@ -357,7 +368,7 @@ const RightSidebarOpenUi = ({
                   </div>
                 ))}
             </div>
-           
+
             <div className="flex justify-between items-center gap-2 relative">
               <input
                 type="text"
@@ -387,45 +398,45 @@ const RightSidebarOpenUi = ({
         {/* particpants chat */}
         {activeTab === "participantChat" &&
           <div className="flex-grow pt-2">
-          <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center relative">
-            {/* chat message */}
-            <div className="flex flex-col gap-2 flex-grow h-[24rem] overflow-y-auto w-full mb-5">
-              {
-                groupMessage && groupMessage.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex items-center gap-2 mb-3 ${message.senderEmail === myEmailRef.current
-                      ? "justify-end"
-                      : "justify-start"
-                      }`}
-                  >
+            <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center relative">
+              {/* chat message */}
+              <div className="flex flex-col gap-2 flex-grow h-[24rem] overflow-y-auto w-full mb-5">
+                {
+                  groupMessage && groupMessage.map((message, index) => (
                     <div
-                      className={`flex flex-col ${message.senderEmail === myEmailRef.current
-                        ? "items-end"
-                        : "items-start"
+                      key={index}
+                      className={`flex items-center gap-2 mb-3 ${message.senderEmail === myEmailRef.current
+                        ? "justify-end"
+                        : "justify-start"
                         }`}
                     >
-                      <p
-                        className={`text-[12px] w-full ${message.senderEmail === myEmailRef.current
-                          ? "text-blue-600"
-                          : "text-green-600"
+                      <div
+                        className={`flex flex-col ${message.senderEmail === myEmailRef.current
+                          ? "items-end"
+                          : "items-start"
                           }`}
                       >
-                        <span className="font-bold">
-                          {message.name}:
-                        </span>{" "}
-                        {message.content}
-                      </p>
-                      <p className="text-[#1a1a1a] text-[10px]">
-                        {new Date(message.timestamp).toLocaleTimeString()}
-                      </p>
+                        <p
+                          className={`text-[12px] w-full ${message.senderEmail === myEmailRef.current
+                            ? "text-blue-600"
+                            : "text-green-600"
+                            }`}
+                        >
+                          <span className="font-bold">
+                            {message.name}:
+                          </span>{" "}
+                          {message.content}
+                        </p>
+                        <p className="text-[#1a1a1a] text-[10px]">
+                          {new Date(message.timestamp).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
-              }
+                  ))
+                }
+              </div>
             </div>
           </div>
-        </div>
         }
 
 
@@ -441,10 +452,10 @@ const RightSidebarOpenUi = ({
           </h1>
 
           <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
-              {uploadProgress != 0 ? `${uploadProgress}%`: 'Upload File'}
-              <input type="file" className="hidden" onChange={handleFileUpload} />
+            {uploadProgress != 0 ? `${uploadProgress}%` : 'Upload File'}
+            <input type="file" className="hidden" onChange={handleFileUpload} />
           </label>
-         
+
         </div>
         {/* Upload file div */}
         <div className="bg-custom-gray-8 rounded-xl mx-4 p-2 overflow-y-auto h-[15rem]">
@@ -461,8 +472,8 @@ const RightSidebarOpenUi = ({
             >
               <div className="flex items-center space-x-2">
                 <FaFolder className="h-3 w-3 text-custom-gray-3" />
-                <a href={media?.file?.url} target="_blank"  download={media?.file?.name} className="text-xs text-custom-gray-3">
-                  {media?.file?.name || "Unkown"}
+                <a href={media?.file?.url} target="_blank" download={media?.file?.name} className="text-xs text-custom-gray-3">
+                  {media?.file?.name?.slice(0, 20) || "Unkown"}
                 </a>
               </div>
               <div className="flex items-center space-x-4">
@@ -473,7 +484,15 @@ const RightSidebarOpenUi = ({
                 >
                   <FaTrash className="h-3 w-3" />
                 </button>
+                <button
+                  className="text-gray-700"
+                  onClick={() => copyUrlToClipboard(media?.file?.url)}
+                >
+                  <BiCopy className="h-3 w-3" size={35}/>
+                </button>
               </div>
+
+
             </div>
           ))}
         </div>
