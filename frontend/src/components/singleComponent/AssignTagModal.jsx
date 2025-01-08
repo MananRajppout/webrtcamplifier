@@ -31,6 +31,22 @@ const AssignTagModal = ({ userId, project, onClose, fetchProjects }) => {
     });
   };
 
+  const getContrastColor = (bgColor) => {
+    // Remove the "#" if it exists
+    const color = bgColor.replace('#', '');
+    
+    // Convert to RGB
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+  
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+    // If luminance is less than 0.5, return white, otherwise black
+    return luminance < 0.5 ? '#FFFFFF' : '#000000';
+  };
+  
 
   const handleComplete = async () => {
     try {
@@ -77,8 +93,8 @@ const AssignTagModal = ({ userId, project, onClose, fetchProjects }) => {
                   className="px-2 py-1 rounded-full border-2 font-semibold text-sm"
                   style={{ 
                     backgroundColor: `${tag.color}20`,
-                    color: tag.color,
-                    borderColor: tag.color 
+        color: getContrastColor(tag.color),
+        borderColor: tag.color 
                   }}
                 >
                   {tag.name}

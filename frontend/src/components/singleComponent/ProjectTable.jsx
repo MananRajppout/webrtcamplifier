@@ -14,7 +14,14 @@ import Pagination from "../shared/Pagination";
 import axios from "axios";
 import ConfirmationModal from "../shared/ConfirmationModal";
 
-const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageChange }) => {
+const ProjectTable = ({
+  projects,
+  fetchProjects,
+  user,
+  page,
+  totalPages,
+  onPageChange,
+}) => {
   const { viewProject, setViewProject } = useDashboardContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
@@ -55,19 +62,20 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
     );
   };
 
-  const handleDeleteProject = async(project) => {
+  const handleDeleteProject = async (project) => {
     try {
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete/project/${project._id}`);
-     fetchProjects()
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete/project/${project._id}`
+      );
+      fetchProjects();
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
       setShowDeleteConfirmation(false);
       setProjectToDelete(null);
     }
-  }
-  
+  };
+
   const initiateDelete = (project) => {
     setProjectToDelete(project);
     setShowDeleteConfirmation(true);
@@ -155,6 +163,22 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
     };
   }, [isModalOpen]);
 
+  const getContrastColor = (bgColor) => {
+    // Remove the "#" if it exists
+    const color = bgColor.replace("#", "");
+
+    // Convert to RGB
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Return white for dark backgrounds and black for light backgrounds
+    return luminance < 0.5 ? "#FFFFFF" : "#000000";
+  };
+
   return (
     <div className="overflow-hidden">
       {!viewProject ? (
@@ -187,7 +211,10 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
                         {project.tags.map((tag) => (
                           <span
                             key={tag._id}
-                            style={{ backgroundColor: tag.color }}
+                            style={{
+                              backgroundColor: tag.color,
+                              color: getContrastColor(tag.color),
+                            }}
                             className="text-[10px] px-2 py-1 rounded"
                           >
                             {tag.name}
@@ -237,17 +264,15 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
             </tbody>
           </table>
           {/* Pagination Controls */}
-        {
-          projects.length !== 0 && (
+          {projects.length !== 0 && (
             <div className="flex justify-end py-3">
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-            />
-          </div>
-          )
-         }
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <ViewProject
@@ -290,17 +315,15 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
               <BsFillEnvelopeAtFill />
               <span>Assign Tag</span>
             </li>
-            {
-              (user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin") && (
-                <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => initiateDelete(selectedProject)}
-            >
-              <FaTrash />
-              <span>Delete</span>
-            </li>
-              )
-            }
+            {(user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin") && (
+              <li
+                className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                onClick={() => initiateDelete(selectedProject)}
+              >
+                <FaTrash />
+                <span>Delete</span>
+              </li>
+            )}
           </ul>
         </div>
       )}
@@ -321,7 +344,7 @@ const ProjectTable = ({ projects, fetchProjects, user, page, totalPages, onPageC
         />
       )}
 
-{showDeleteConfirmation && (
+      {showDeleteConfirmation && (
         <ConfirmationModal
           heading="Delete Project"
           text="Are you sure you want to delete this project? This action cannot be undone."
