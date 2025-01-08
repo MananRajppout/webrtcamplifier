@@ -292,7 +292,19 @@ const page = () => {
 
     // polling feature needs to be handled, here we are just reciving the data
     //starting
+    socket.on("poll-started", (data) => {
+      if (data.success) {
+        setPollData({
+          pollId: data.activePollId,
+          pollQuestions: data.pollQuestions,
+        });
+      }
+    });
 
+    socket.on("poll-ended", ({ activePollId }) => {
+      console.log("Active poll ended with ID:", activePollId);
+      fetchPollResults(activePollId); 
+    });
     //ending
 
     socket.on("break-out-room-closed", handleBreakoutClosed);
@@ -325,6 +337,8 @@ const page = () => {
       socket.off("mediabox:on-delete", handleMediaNewDelete);
       socket.off("endMeeting", onEndMeeting);
       socket.off("break-out-room-closed", handleBreakoutClosed);
+      socket.off("poll-started");
+      socket.off("poll-ended");
     };
   }, [userRole, params.id, socket, pollData]);
 
@@ -565,6 +579,7 @@ const page = () => {
   useSocketListen("participantWaiting", (data) => {
     setWaitingRoom(data.waitingRoom);
   });
+
   useSocketListen("participantList", (data) => {
     setWaitingRoom(data.waitingRoom);
     setParticipants(data.participantList);
@@ -573,6 +588,7 @@ const page = () => {
   useSocketListen("acceptFromWaitingRoomResponse", () => {
     toast.error("Participant not found in waiting room");
   });
+  
   // ? removing participant from the meeting
   useSocketListen("participantRemoved", (data) => {
     if (data.email === userEmail) {
@@ -582,6 +598,7 @@ const page = () => {
     }
     console.log("removed participant data", data);
   });
+
   // ? moving participant from the meeting to the waiting room
   useSocketListen("participantMovedToWaitingRoom", (data) => {
     if (data.email === userEmail && typeof window != "undefined") {
@@ -615,6 +632,7 @@ const page = () => {
       meetingId,
     });
   };
+
   // * request function for moving participant  from meeting to waiting room
   const moveParticipantToWaitingRoom = async (name, role, email, meetingId) => {
     socket.emit("moveParticipantToWaitingRoom", {
@@ -747,6 +765,7 @@ const page = () => {
   const fetchPollResults = (activePollId) => {
     socket.emit("get-poll-results", { activePollId }, (response) => {
       if (response.success) {
+        console.log("get-poll-response", response)
         setPollResult(response.results);
         setIsPollResultModalOpen(true);
       } else {
@@ -755,19 +774,7 @@ const page = () => {
     });
   };
   
-  socket.on("poll-started", (data) => {
-    if (data.success) {
-      setPollData({
-        pollId: data.activePollId,
-        pollQuestions: data.pollQuestions,
-      });
-    }
-  });
-
-  socket.on("poll-ended", ({ activePollId }) => {
-    console.log("Active poll ended with ID:", activePollId);
-    fetchPollResults(activePollId); // Use `activePollId` instead of `pollId`
-  });
+  
 
   //ending
 

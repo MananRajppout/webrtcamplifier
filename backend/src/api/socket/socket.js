@@ -20,7 +20,7 @@ const s3 = new AWS.S3({
 });
 
 // Helper: Upload to S3
-async function uploadToS3(buffer, mimetype, fileName) {
+const   uploadToS3 = async (buffer, mimetype, fileName) =>  {
   const uniqueFileName = `${Date.now()}-${fileName}`;
   const params = {
     Bucket: process.env.S3_BUCKET_NAME,
