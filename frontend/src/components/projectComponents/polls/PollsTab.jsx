@@ -9,14 +9,23 @@ import axios from "axios";
 import AddPollModal from "./AddPollModal";
 import Button from "@/components/shared/button";
 import Pagination from "@/components/shared/Pagination";
+import { useGlobalContext } from "@/context/GlobalContext";
 
-const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
+const PollsTab = ({
+  project,
+  polls,
+  setPolls,
+  setLocalProjectState,
+  pollPage,
   totalPollPages,
-  onPageChange, fetchPolls  }) => {
+  onPageChange,
+  fetchPolls,
+}) => {
   const [selectedPoll, setSelectedPoll] = useState(null);
   const [isViewPollModalOpen, setIsViewPollModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false); 
+  const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false);
+  const { user } = useGlobalContext();
 
   const handleViewPoll = (poll) => {
     setSelectedPoll(poll);
@@ -68,8 +77,8 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
 
       if (response.status === 200) {
         toast.success(response.data.message);
-        
-        fetchPolls()
+
+        fetchPolls();
         // setPolls(response.data.polls);
       }
     } catch (error) {
@@ -79,7 +88,6 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
       setIsLoading(false);
     }
   };
-
 
   return (
     <div className="overflow-x-auto">
@@ -92,7 +100,9 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
             <TableHead>Added Date</TableHead>
             <TableHead>Last Updated On</TableHead>
             <TableHead></TableHead>
+
             <TableHead>Action</TableHead>
+
             <TableHead></TableHead>
           </tr>
         </thead>
@@ -104,14 +114,14 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
               <TableData>{poll?.createdById?.firstName}</TableData>
               <TableData>
                 {new Intl.DateTimeFormat("en-US", {
-                  month: "short", 
+                  month: "short",
                   day: "2-digit",
                   year: "numeric",
                 }).format(new Date(poll.createdAt))}
               </TableData>
               <TableData>
                 {new Intl.DateTimeFormat("en-US", {
-                  month: "long", 
+                  month: "long",
                   day: "2-digit",
                   year: "numeric",
                 }).format(new Date(poll.updatedAt))}
@@ -125,45 +135,54 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
                   type="button"
                 />
               </TableData>
-              <TableData>
-                <div className="flex items-center space-x-2">
-                  <button
-                    className="text-blue-500 hover:text-blue-700"
-                    onClick={() => handleEditPoll(poll)}
-                    disabled={isLoading}
-                  >
-                    <RiPencilFill />
-                  </button>
-                  <button
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => handleDeletePoll(poll._id)} // Trigger delete functionality
-                    disabled={isLoading}
-                  >
-                    <IoTrashSharp />
-                  </button>
-                </div>
-              </TableData>
-              <TableData>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    children={"Active"}
-                    disabled={poll.status || isLoading}
-                    onClick={() => handleStatusChange(poll, true)}
-                    className={` font-semibold ${poll.status ? "" : "text-gray-500"}`}
-                    variant="plain"
-                    type="button"
-                  />
 
-                  <Button
-                    children={"Inactive"}
-                    disabled={!poll.status || isLoading}
-                    onClick={() => handleStatusChange(poll, false)}
-                    className={` font-semibold ${poll.status ? "text-gray-500" : ""}`}
-                    variant="plain"
-                    type="button"
-                  />
-                </div>
-              </TableData>
+              {user.role !== "AmplifyTechHost" && (
+                <>
+                  <TableData>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        className="text-blue-500 hover:text-blue-700"
+                        onClick={() => handleEditPoll(poll)}
+                        disabled={isLoading}
+                      >
+                        <RiPencilFill />
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDeletePoll(poll._id)} // Trigger delete functionality
+                        disabled={isLoading}
+                      >
+                        <IoTrashSharp />
+                      </button>
+                    </div>
+                  </TableData>
+                  <TableData>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        children={"Active"}
+                        disabled={poll.status || isLoading}
+                        onClick={() => handleStatusChange(poll, true)}
+                        className={` font-semibold ${
+                          poll.status ? "" : "text-gray-500"
+                        }`}
+                        variant="plain"
+                        type="button"
+                      />
+
+                      <Button
+                        children={"Inactive"}
+                        disabled={!poll.status || isLoading}
+                        onClick={() => handleStatusChange(poll, false)}
+                        className={` font-semibold ${
+                          poll.status ? "text-gray-500" : ""
+                        }`}
+                        variant="plain"
+                        type="button"
+                      />
+                    </div>
+                  </TableData>
+                </>
+              )}
             </tr>
           ))}
         </tbody>
@@ -178,20 +197,18 @@ const PollsTab = ({ project,  polls, setPolls, setLocalProjectState, pollPage,
           pollToEdit={selectedPoll}
           project={project}
           setLocalProjectState={setLocalProjectState}
-           setPolls={setPolls}
+          setPolls={setPolls}
         />
       )}
-      {
-        totalPollPages > 1 && (
-          <div className="flex justify-end py-3">
+      {totalPollPages > 1 && (
+        <div className="flex justify-end py-3">
           <Pagination
             currentPage={pollPage}
             totalPages={totalPollPages}
             onPageChange={onPageChange}
           />
         </div>
-        )
-      }
+      )}
     </div>
   );
 };

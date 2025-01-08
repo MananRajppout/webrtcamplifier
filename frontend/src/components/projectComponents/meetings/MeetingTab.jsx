@@ -547,13 +547,16 @@ const MeetingTab = ({
               <FaUser />
               <span>View</span>
             </li>
-            <li
+            {
+              user?.role !== "AmplifyTechHost" && (
+             <>   <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={() => handleEditMeeting(selectedMeeting)}
             >
               <RiPencilFill />
               <span>Edit</span>
             </li>
+              
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={() => handleDuplicateMeeting(selectedMeeting)}
@@ -561,19 +564,23 @@ const MeetingTab = ({
               <FaCopy />
               <span>Duplicate</span>
             </li>
-            <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleShareMeeting(selectedMeeting)}
-            >
-              <FaShareAlt />
-              <span>Share</span>
-            </li>
+            
             <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={() => handleDeleteMeeting(selectedMeeting)}
             >
               <BsFillEnvelopeAtFill />
               <span>Delete</span>
+            </li>
+            </>
+              )
+              }
+              <li
+              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+              onClick={() => handleShareMeeting(selectedMeeting)}
+            >
+              <FaShareAlt />
+              <span>Share</span>
             </li>
           </ul>
         </div>

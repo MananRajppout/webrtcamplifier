@@ -7,12 +7,14 @@ import { RiPencilFill } from "react-icons/ri";
 import toast from "react-hot-toast";
 import EditMemberModal from "./EditMemberModal";
 import Pagination from "@/components/shared/Pagination";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const MembersTab = ({ project, setLocalProjectState }) => {
   const [selectedMember, setSelectedMember] = useState(null); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1); 
   const membersPerPage = 10;
+  const { user } = useGlobalContext()
 
   // Function to handle page change
   const handlePageChange = (page) => {
@@ -89,7 +91,11 @@ const MembersTab = ({ project, setLocalProjectState }) => {
             <TableHead>Role</TableHead>
             <TableHead>Added Date</TableHead>
             <TableHead>Last Updated On</TableHead>
-            <TableHead>Action</TableHead>
+            {
+              user.role !== "AmplifyTechHost" && (
+                <TableHead>Action</TableHead>
+              )
+            }
           </tr>
         </thead>
         <tbody>
@@ -111,7 +117,9 @@ const MembersTab = ({ project, setLocalProjectState }) => {
                 {new Date(member?.userId?.lastUpdatedOn).toLocaleDateString()}{" "}
                 {/* Format Last Updated On */}
               </TableData>
-              <TableData>
+              {
+                user.role !== "AmplifyTechHost" && (
+                  <TableData>
                 {/* Actions (Edit, Remove) */}
                 <div className="flex items-center space-x-2">
                   <button
@@ -128,6 +136,8 @@ const MembersTab = ({ project, setLocalProjectState }) => {
                   </button>
                 </div>
               </TableData>
+                )
+              }
             </tr>
           ))}
         </tbody>
