@@ -257,6 +257,18 @@ const page = () => {
     [roomname]
   );
 
+
+
+  const onRoomEndingRemember = useCallback(
+    ({ roomName }) => {
+      console.log('The room has been ended.')
+      if (roomname === roomName) {
+        toast.success(`The Room "${roomName}" will end in 5 minutes.`);
+      }
+    },
+    [roomname]
+  );
+
   //! Use effect for getting waiting list
   useEffect(() => {
     let email;
@@ -308,6 +320,7 @@ const page = () => {
     socket.on("mediabox:on-upload", handleMediaNewUpload);
     socket.on("mediabox:on-delete", handleMediaNewDelete);
     socket.on("endMeeting", onEndMeeting);
+    socket.on("room-ending-remember", onRoomEndingRemember);
 
     getMeetingStatus(params.id);
     getObserverList(params.id);
@@ -325,6 +338,7 @@ const page = () => {
       socket.off("mediabox:on-delete", handleMediaNewDelete);
       socket.off("endMeeting", onEndMeeting);
       socket.off("break-out-room-closed", handleBreakoutClosed);
+      socket.off("room-ending-remember", onRoomEndingRemember);
     };
   }, [userRole, params.id, socket, pollData]);
 

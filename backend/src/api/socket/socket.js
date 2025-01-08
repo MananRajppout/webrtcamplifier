@@ -867,6 +867,14 @@ const setupSocket = (server) => {
       //set timer
       console.log('duration', duration)
       if (duration) {
+        // remember room ending in 5min 
+        const roomEnding = (Number(duration) || 0) - 5;
+        if(roomEnding > 0){
+          callAfterMin(1, () => {
+            socket.to(meetingId).emit('room-ending-remember', { roomName: breakroomname })
+          })
+        }
+        //on room end
         callAfterMin(Number(duration), async () => {
           const liveMeeting = await LiveMeeting.findOne({ meetingId });
           liveMeeting.breakRooms = liveMeeting.breakRooms.filter(room => room.roomName !== breakroomname);
