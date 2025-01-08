@@ -125,6 +125,9 @@ const signin = async (req, res) => {
     if (!user || user.isDeleted) {
       return res.status(404).json({ message: "User Not found." });
     }
+    if (user.status === 'Inactive') {
+      return res.status(404).json({ message: "Your account is inactive. " });
+    }
     var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
     if (!passwordIsValid) {
       return res.status(401).send({
@@ -279,6 +282,7 @@ const findAll = async (req, res) => {
   try {
     const token = req.cookies.token;
     const decoded = decodeToken(token);
+    console.log("decoded", decoded)
 
     if (decoded?.role !== "SuperAdmin" && decoded?.role !== "AmplifyAdmin") {
       return res.status(403).json({ message: "Access denied" });
