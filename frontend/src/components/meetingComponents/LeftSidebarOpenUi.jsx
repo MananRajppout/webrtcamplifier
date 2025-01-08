@@ -107,6 +107,7 @@ const LeftSidebarOpenUi = ({
   const previosCCountRef = useRef(groupMessage.length);
   const previosGroupCountRef = useRef(groupMessage.length);
   const [participantsMicMuted, setParticipantsMicMuted] = useState({});
+  const [isAllParticipantMuted, setIsAllParticipantMuted] = useState({});
   const [isPollModelOpen, setIsPollModelOpen] = useState(false);
   
 
@@ -361,6 +362,86 @@ const LeftSidebarOpenUi = ({
     }
 
   }, []);
+
+  // useEffect(() => {
+  //   const mutedPartipantLenfth = participantsMicMuted.filter((obj) => {
+  //     const keys = Object.keys(obj);
+  //     const value = obj[keys[0]];
+  //     return value;
+  //   }).length;
+
+  //   const userLength = users?.filter((user) => {
+  //     if (role === "Moderator") {
+  //       // Show all users for the moderator
+  //       return user.name !== userName;
+  //     } else if (role === "Participant") {
+  //       // Show only moderators to participants
+  //       return user.role === "Moderator";
+  //     } else if (role === "Observer") {
+  //       return user.role !== "Observer";
+  //     }
+
+  //   })
+  //   .filter((user) => role === "Moderator" ? true : (user.roomName?.toLowerCase() == roomname.toLowerCase() || user.role == "Moderator"))
+  //   .filter((user) => user.status !== "removed" && user.status !== "offline").length;
+
+  //   if(mutedPartipantLenfth == userLength){
+  //     setIsAllParticipantMuted(true)
+  //   }
+
+  // },[participantsMicMuted,users,role,userName])
+
+
+  useEffect(() => {
+    const mutedParticipantLength = Object.values(participantsMicMuted).filter(value => value === true).length;
+  
+    const userLength = users
+      ?.filter((user) => {
+        if (role === "Moderator") {
+          // Show all users except the current moderator
+          return user.name !== userName;
+        } else if (role === "Participant") {
+          // Show only moderators to participants
+          return user.role === "Moderator";
+        } else if (role === "Observer") {
+          // Exclude observers
+          return user.role !== "Observer";
+        }
+        return false;
+      })
+      .filter((user) =>
+        role === "Moderator"
+          ? true
+          : user.roomName?.toLowerCase() === roomname.toLowerCase() || user.role === "Moderator"
+      )
+      .filter((user) => user.status !== "removed" && user.status !== "offline").length;
+  
+    // Check if all participants are muted
+    if (mutedParticipantLength === userLength) {
+      setIsAllParticipantMuted(true);
+    } else {
+      setIsAllParticipantMuted(false);
+    }
+  }, [participantsMicMuted, users, role, userName, roomname, setIsAllParticipantMuted]);
+
+
+  const handleMuteAll = useCallback((type) => {
+    users?.filter((user) => {
+      if (role === "Moderator") {
+        // Show all users for the moderator
+        return user.name !== userName;
+      } else if (role === "Participant") {
+        // Show only moderators to participants
+        return user.role === "Moderator";
+      } else if (role === "Observer") {
+        return user.role !== "Observer";
+      }
+
+    })
+    .filter((user) => role === "Moderator" ? true : (user.roomName?.toLowerCase() == roomname.toLowerCase() || user.role == "Moderator"))
+    .filter((user) => user.status !== "removed" && user.status !== "offline")
+    .map((user) => handleMicMuteUnmute(type, user.email));
+  },[users,role,userName]);
 
 
   const handleJoinParticipantsJoinBreakoutRoom = useCallback((roomName) => {
@@ -691,6 +772,21 @@ const LeftSidebarOpenUi = ({
               </ul>
             </div>
           )}
+
+
+
+          {
+            activeTab === "participants" &&
+            !selectedChat &&
+            <div className="flex items-center justify-end">
+              {
+                
+                isAllParticipantMuted ? <button className="text-blue-500" onClick={() => handleMuteAll("mute")}>unmute all</button>
+                : <button className="text-blue-500" onClick={() => handleMuteAll("unmute")}>mute all</button>
+              }
+              
+            </div>
+          }
 
           {/* Participant chat */}
           {activeTab === "participants" &&

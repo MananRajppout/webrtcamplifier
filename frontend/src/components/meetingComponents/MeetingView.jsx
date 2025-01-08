@@ -47,6 +47,7 @@ const MeetingView = ({
   const roomname = searchParams.get("roomname");
   const type = searchParams.get("type");
   const userEmail = searchParams.get("email");
+  const ModeratorType = searchParams.get("ModeratorType");
 
   const handleCopyParticipantLink = () => {
     const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
@@ -100,7 +101,7 @@ const MeetingView = ({
               className={`text-white py-1 px-3 rounded-xl text-sm hidden md:flex`}
             />
             <Button
-              children={`${role} View`}
+              children={`${ModeratorType ? "Admin" :role} View`}
               type="button"
               variant={`${role !== "Moderator" ? "secondary" : "primary"}`}
               className={`text-white py-1 px-3 rounded-xl text-sm hidden md:flex`}
