@@ -48,11 +48,14 @@ const createProject = async (req, res) => {
       members: formData.members,
       status: formData.status,
     });
+
     const savedProject = await newProject.save({ session });
-    if (savedProject && savedProject?.members) {
+    if (savedProject && savedProject?.members?.length > 0) {
       const emails = savedProject?.members?.map((e) => {
         return e.email;
       })
+
+
       let html = `<p>Hello,</p>
         <p>You have been added to the project <strong>${savedProject?.name}</strong>.</p>
         <p>Please click the link below to accept the invitation:</p>

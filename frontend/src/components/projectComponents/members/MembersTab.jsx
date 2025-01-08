@@ -92,7 +92,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
             <TableHead>Added Date</TableHead>
             <TableHead>Last Updated On</TableHead>
             {
-              user.role !== "AmplifyTechHost" && (
+              user?.role !== "AmplifyTechHost" && (
                 <TableHead>Action</TableHead>
               )
             }
@@ -118,7 +118,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
                 {/* Format Last Updated On */}
               </TableData>
               {
-                user.role !== "AmplifyTechHost" && (
+                user?.role !== "AmplifyTechHost" && (
                   <TableData>
                 {/* Actions (Edit, Remove) */}
                 <div className="flex items-center space-x-2">

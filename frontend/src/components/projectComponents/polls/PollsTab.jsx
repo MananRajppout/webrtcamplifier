@@ -136,7 +136,7 @@ const PollsTab = ({
                 />
               </TableData>
 
-              {user.role !== "AmplifyTechHost" && (
+              {user?.role !== "AmplifyTechHost" && (
                 <>
                   <TableData>
                     <div className="flex items-center space-x-2">

@@ -55,6 +55,7 @@ const Page = () => {
     },
   });
 
+
   useEffect(() => {
     fetchContacts();
   }, []);
@@ -89,13 +90,11 @@ const Page = () => {
   const handleFormSubmit = async () => {
     // Filter out any members with empty userId (indicating they were not properly added)
     const validMembers = formData.members.filter((member) => member.userId);
-
     // Determine the project status based on the conditions
     const status =
-      validMembers.length > 0 && formData.meeting.moderator
+      validMembers.length > 0 
         ? "Active"
         : "Draft";
-
     // Add the createdBy field to the formData
     const updatedFormData = {
       ...formData,
@@ -107,7 +106,7 @@ const Page = () => {
       },
       status,
     };
-
+console.log('updated form data', updatedFormData)
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/project`,

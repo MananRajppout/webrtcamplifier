@@ -6,7 +6,7 @@ const projectSchema = new Schema({
   description: { type: String },
   startDate: { type: Date },
   endDate: { type: Date },
-  status: { type: String, enum: ['Draft', 'Active', 'Complete', 'Inactive', 'Closed','Pause','Unpause','Reopen'], default: 'Draft' },
+  status: { type: String, enum: ['Draft', 'Active', 'Complete', 'Inactive', 'Closed','Pause','Unpause','Reopen'], required: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   members: [
     {
