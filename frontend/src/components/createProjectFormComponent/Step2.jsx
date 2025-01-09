@@ -16,43 +16,55 @@ const Step2 = ({
   const [selectedRoles, setSelectedRoles] = useState({});
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const { user } = useGlobalContext();
-  // Handle role selection (checkbox)
+  
   const handleRoleChange = (index, role) => {
     setSelectedRoles((prevSelectedRoles) => {
-      const updatedRoles = prevSelectedRoles[index] || [];
-      let newRoles;
-
-      if (updatedRoles.includes(role)) {
-        // If role is already selected, remove it
-        newRoles = updatedRoles.filter((r) => r !== role);
+      // Ensure the roles array exists
+      const currentRoles = prevSelectedRoles[index]?.role || []; // Get the existing roles or initialize as an empty array
+  
+      let updatedRoles;
+  
+      if (currentRoles.includes(role)) {
+        // If the role is already selected, remove it
+        updatedRoles = currentRoles.filter((r) => r !== role);
       } else {
-        // Add the selected role
-        newRoles = [...updatedRoles, role];
+        // Add the role if it's not already selected
+        updatedRoles = [...currentRoles, role];
       }
-
+  
+      // Return the updated selectedRoles object
       return {
         ...prevSelectedRoles,
-        [index]: newRoles,
+        [index]: {
+          role: updatedRoles, // Updated roles array
+          permissions: updatedRoles, // Mirror roles array in permissions
+        },
       };
     });
   };
+  
+  
 
-  // Use useEffect to update formData only after the role state has been updated
   useEffect(() => {
     const updatedMembers = contacts
       .map((contact, index) => {
-        const rolesForMember = selectedRoles[index] || [];
-        return rolesForMember.length > 0
-          ? { userId: contact._id, email: contact.email, roles: rolesForMember }
+        const rolesForMember = selectedRoles[index] || { role: [], permissions: [] };
+        return rolesForMember.role.length > 0
+          ? {
+              userId: contact._id,
+              email: contact.email,
+              roles: rolesForMember, // Include the structured roles object
+            }
           : null;
       })
       .filter((member) => member !== null); // Filter out members with no roles
-
+  
     setFormData((prevFormData) => ({
       ...prevFormData,
       members: updatedMembers,
     }));
   }, [selectedRoles, contacts, setFormData]);
+  
 
   if (isLoading) {
     return (
@@ -137,7 +149,7 @@ const Step2 = ({
                       <input
                         type="checkbox"
                         checked={
-                          selectedRoles[index]?.includes("Admin") || false
+                          selectedRoles[index]?.role?.includes("Admin") || false
                         }
                         onChange={() => handleRoleChange(index, "Admin")}
                       />
@@ -146,7 +158,7 @@ const Step2 = ({
                       <input
                         type="checkbox"
                         checked={
-                          selectedRoles[index]?.includes("Moderator") || false
+                          selectedRoles[index]?.role?.includes("Moderator") || false
                         }
                         onChange={() => handleRoleChange(index, "Moderator")}
                       />
@@ -155,7 +167,7 @@ const Step2 = ({
                       <input
                         type="checkbox"
                         checked={
-                          selectedRoles[index]?.includes("Observer") || false
+                          selectedRoles[index]?.role?.includes("Observer") || false
                         }
                         onChange={() => handleRoleChange(index, "Observer")}
                       />

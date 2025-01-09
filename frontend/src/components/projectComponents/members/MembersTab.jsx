@@ -15,6 +15,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
   const [currentPage, setCurrentPage] = useState(1); 
   const membersPerPage = 10;
   const { user } = useGlobalContext()
+  console.log("selected member", selectedMember)
 
   // Function to handle page change
   const handlePageChange = (page) => {
@@ -30,6 +31,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
 
 
   const handleEditMember = (member) => {
+    console.log('inside handle edit member', member)
     setSelectedMember(member);
     setIsModalOpen(true); // Open the modal
   };
@@ -105,8 +107,8 @@ const MembersTab = ({ project, setLocalProjectState }) => {
                 {member?.userId?.firstName} {member?.userId?.lastName}
               </TableData>
               <TableData>
-                {member?.roles?.role}
-                {/* {member?.roles?.join(", ")}{" "} */}
+                {/* {member?.roles?.role} */}
+                {member?.roles?.permissions?.join(", ")}{" "}
                 {/* Display all roles (e.g., Admin, Moderator) */}
               </TableData>
               <TableData>
@@ -118,7 +120,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
                 {/* Format Last Updated On */}
               </TableData>
               {
-                user?.role !== "AmplifyTechHost" && (
+                (user?.role !== "AmplifyTechHost" || user?.role !== "AmplifyModerator" || user?.role !== "Moderator"  )  && (
                   <TableData>
                 {/* Actions (Edit, Remove) */}
                 <div className="flex items-center space-x-2">

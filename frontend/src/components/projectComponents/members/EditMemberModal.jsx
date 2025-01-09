@@ -3,16 +3,17 @@ import React, { useState, useEffect } from 'react';
 
 
 const EditMemberModal = ({ member, onClose, onSave }) => {
+  console.log("member", member)
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [name, setName] = useState('');
   useEffect(() => {
     if (member) {
       // Pre-fill the name and roles when the modal opens
       setName(`${member.userId.firstName} ${member.userId.lastName}`);
-      setSelectedRoles(member.roles);
+      setSelectedRoles(member.roles.permissions || []);
     }
   }, [member]);
-
+console.log("selected roles", selectedRoles)
   const handleRoleChange = (role) => {
     if (selectedRoles.includes(role)) {
       // Remove the role if it's already selected
@@ -25,7 +26,14 @@ const EditMemberModal = ({ member, onClose, onSave }) => {
 
   const handleSave = () => {
     // Call the onSave function to save changes (send new data to the backend)
-    onSave({ ...member, roles: selectedRoles });
+    const updatedMember = {
+      ...member,
+      roles: {
+        ...member.roles,
+        permissions: selectedRoles, // Update permissions array
+      },
+    };
+    onSave(updatedMember);
     onClose(); // Close the modal after saving
   };
 
@@ -46,48 +54,25 @@ const EditMemberModal = ({ member, onClose, onSave }) => {
 
         <div className="mb-4 flex justify-between items-start gap-5">
           <label className="block text-sm font-semibold text-custom-teal">Select User</label>
-          <div className='space-y-2'>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={selectedRoles.includes('Admin')}
-                onChange={() => handleRoleChange('Admin')}
-                className={`appearance-none h-6 w-6 border-2 border-custom-teal rounded-lg focus:outline-none focus:ring-custom-teal cursor-pointer ${
-                  selectedRoles.includes('Admin')
-                    ? 'bg-white border-custom-teal relative before:block before:absolute before:left-1.5 before:top-0.5 before:w-2 before:h-3 before:border-custom-teal before:border-r-2 before:border-b-2 before:rotate-45'
-                    : ''
-                }`}
-              />
-              <span className='text-sm'>Admin</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={selectedRoles.includes('Moderator')}
-                onChange={() => handleRoleChange('Moderator')}
-                className={`appearance-none h-6 w-6 border-2 border-custom-teal rounded-lg focus:outline-none cursor-pointer focus:ring-custom-teal ${
-                  selectedRoles.includes('Moderator')
-                    ? 'bg-white border-custom-teal relative before:block before:absolute before:left-1.5 before:top-0.5 before:w-2 before:h-3 before:border-custom-teal before:border-r-2 before:border-b-2 before:rotate-45'
-                    : ''
-                }`}
-              />
-              <span className='text-sm'>Moderator</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={selectedRoles.includes('Observer')}
-                onChange={() => handleRoleChange('Observer')}
-                className={`appearance-none h-6 w-6 border-2 border-custom-teal rounded-lg focus:outline-none focus:ring-custom-teal cursor-pointer ${
-                  selectedRoles.includes('Observer')
-                    ? 'bg-white border-custom-teal relative before:block before:absolute before:left-1.5 before:top-0.5 before:w-2 before:h-3 before:border-custom-teal before:border-r-2 before:border-b-2 before:rotate-45'
-                    : ''
-                }`}
-              />
-              <span className='text-sm'>Observer</span>
-            </label>
+          <div className="space-y-2">
+            {['Admin', 'Moderator', 'Observer'].map((role) => (
+              <label key={role} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedRoles.includes(role)}
+                  onChange={() => handleRoleChange(role)}
+                  className={`appearance-none h-6 w-6 border-2 border-custom-teal rounded-lg focus:outline-none focus:ring-custom-teal cursor-pointer ${
+                    selectedRoles.includes(role)
+                      ? 'bg-white border-custom-teal relative before:block before:absolute before:left-1.5 before:top-0.5 before:w-2 before:h-3 before:border-custom-teal before:border-r-2 before:border-b-2 before:rotate-45'
+                      : ''
+                  }`}
+                />
+                <span className="text-sm">{role}</span>
+              </label>
+            ))}
           </div>
         </div>
+
 
         <Button 
           variant='secondary'

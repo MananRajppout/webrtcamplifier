@@ -36,6 +36,19 @@ const createProject = async (req, res) => {
     }
 
 
+    const updatedMembers = formData.members.map((member) => ({
+      ...member,
+      roles: {
+        ...member.roles,
+        permissions: Array.isArray(member.roles.role)
+          ? [...member.roles.role] // Copy the roles to permissions if roles is an array
+          : member.roles.role // If roles is a single string
+          ? [member.roles.role] // Wrap it in an array for permissions
+          : [], // Default to an empty array if roles is undefined
+      },
+    }));
+console.log("updated members", updatedMembers)
+    
     // Step 1: Create the project
     const newProject = new Project({
       name: formData.name,
@@ -45,9 +58,14 @@ const createProject = async (req, res) => {
       projectPasscode: formData.projectPasscode,
       createdBy: formData.createdBy,
       tags: formData.tags,
-      members: formData.members,
+      members: updatedMembers,
       status: formData.status,
     });
+
+//     console.log("new project (plain object):", newProject.toObject());
+// console.log("new project roles (plain object):", newProject.toObject().members[0].roles);
+// console.log("new project role (plain object):", newProject.toObject().members[0].roles.role);
+// console.log("new project permissions (plain object):", newProject.toObject().members[0].roles.permissions);
 
     const savedProject = await newProject.save({ session });
     if (savedProject && savedProject?.members?.length > 0) {
@@ -62,25 +80,7 @@ const createProject = async (req, res) => {
         <a href="https://abc.com/invite?project=${savedProject?.name}">Accept Invitation</a>`;
       sendEmail(emails, "Invitation to join project", html)
     }
-    // Step 2: Create the meetings associated with the project
-
-    // const newMeeting = new Meeting({
-    //   projectId: savedProject._id,
-    //   title: formData.meeting.title,
-    //   description: formData.meeting.description,
-    //   startDate: formData.meeting.startDate,
-    //   startTime: formData.meeting.startTime,
-    //   timeZone: formData.meeting.timeZone,
-    //   duration: formData.meeting.duration,
-    //   ongoing: formData.meeting.ongoing,
-    //   enableBreakoutRoom: formData.meeting.enableBreakoutRoom,
-    //   meetingPasscode: formData.meeting.meetingPasscode,
-    //   moderator: formData.meeting.moderator,
-    // });
-
-    // await newMeeting.save({ session });
-
-    // Commit the transaction
+  
 
     await session.commitTransaction();
     session.endSession();

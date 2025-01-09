@@ -35,7 +35,7 @@ const Page = () => {
     members: [
       {
         userId: "",
-        roles: [], // Array to store multiple roles
+        roles: [],
         email: "",
       },
     ],
@@ -99,7 +99,7 @@ const Page = () => {
     const updatedFormData = {
       ...formData,
       createdBy: user._id,
-      members: validMembers,
+      // members: validMembers,
       meeting: {
         ...formData.meeting,
         moderator: formData.meeting.moderator || null,

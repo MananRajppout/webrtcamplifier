@@ -12,7 +12,7 @@ const projectSchema = new Schema({
     {
       userId: { type: Schema.Types.ObjectId, ref: 'Contact' },
       roles: {
-        role: { type: String, enum: ['Admin', 'Moderator', 'Observer', 'Participant', 'AmplifyAdmin', 'AmplifyModerator', 'AmplifyObserver', 'AmplifyParticipant', 'AmplifyTechHost'] },
+        role: { type: [String], enum: ['Admin', 'Moderator', 'Observer', 'Participant', 'AmplifyAdmin', 'AmplifyModerator', 'AmplifyObserver', 'AmplifyParticipant', 'AmplifyTechHost'] },
         permissions: { type: Schema.Types.Array }
       },
       email: { type: String }
