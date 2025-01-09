@@ -2,16 +2,17 @@ import { WebSocketServer, WebSocket } from "ws";
 import {IncomingMessage} from "http";
 import { wssQuery } from "../interface/recordingServerInterface.js";
 import { createWriteStream, WriteStream,mkdirSync,existsSync } from 'fs';
-import { join } from 'path';
+import path, { join } from 'path';
 import { dir } from "console";
 import { mergeAndConvertVideos } from "../service/ffmepgService.js";
 import { saveRecordingToDatabase } from "../service/httpService.js";
 import { AxiosError, AxiosResponse } from "axios";
+import { getFileSize } from "../processor/getFileSizeProcessor.js";
 
 
 
-/*
-    * Initialize the recording server
+/** 
+    * Initialize the recording server.
     * @param wss WebSocketServer instance
     * @returns void
 */
@@ -22,10 +23,14 @@ export const initRecordingServer = (wss: WebSocketServer) => {
 
         const query: wssQuery = {
             meetingId: queryParams.get('meetingId') || '',
-            projectId: queryParams.get('projectId') || ''
+            projectId: queryParams.get('projectId') || '',
+            email: queryParams.get('email') || '',
+            role: queryParams.get('role') || '',
+            name: queryParams.get('name') || '',
         };
 
-        const dirPath = join(process.cwd(),'recordings', query.meetingId);
+
+        const dirPath = join(process.cwd(),'recordings', `${query.meetingId}-${Date.now()}`);
         if(!existsSync(dirPath)){
             mkdirSync(dirPath,{recursive:true});
         }
@@ -69,10 +74,17 @@ export const initRecordingServer = (wss: WebSocketServer) => {
                             const outputFileName = outputFilePath?.split(`\\`).pop();
                             const formdata = new FormData();
                             const publucRecordingURL = `/recordings/${outputFileName}`;
-                            
-                            formdata.append('recordingUrl', publucRecordingURL);
+                            const filename = `recording-${new Date().toDateString()}`;
+                            const size = getFileSize(path.join(process.cwd(),'public',publucRecordingURL));
+                            // meetingId, email, role, projectId, addedBy, filename,size,recording_url
+                            formdata.append('recording_url', publucRecordingURL);
                             formdata.append('meetingId',query.meetingId);
-                            console.log(formdata)
+                            formdata.append('projectId',query.projectId);
+                            formdata.append('role',query.role);
+                            formdata.append('addedBy',query.name);
+                            formdata.append('email',query.email);
+                            formdata.append('filename',filename);
+                            formdata.append('size',size.toString());
                             const res = await saveRecordingToDatabase(formdata);
                             
                         } catch (error) {

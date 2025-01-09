@@ -5,7 +5,7 @@ import ffmpeg from 'fluent-ffmpeg';
 ffmpeg.setFfmpegPath('C:/ffmpeg/bin/ffmpeg.exe');
 
 
-/*
+/** 
   Merges and converts .webm files in a directory to a single .mp4 file.
   @param dirPath: The path to the directory containing the .webm files to merge and convert.
   @returns The path to the merged and converted MP4 file, or undefined if an error occurs.

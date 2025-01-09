@@ -103,6 +103,7 @@ const LeftSidebarOpenUi = ({
   const [suggestion, setSuggestion] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [unreadMessage, setUnreadMessage] = useState(0);
+  const [unreadMessageParticipant, setUnreadMessageParticipant] = useState(0);
   const previosMCountRef = useRef(messages.length);
   const previosCCountRef = useRef(groupMessage.length);
   const previosGroupCountRef = useRef(groupMessage.length);
@@ -110,21 +111,23 @@ const LeftSidebarOpenUi = ({
   const [isAllParticipantMuted, setIsAllParticipantMuted] = useState({});
   const [isPollModelOpen, setIsPollModelOpen] = useState(false);
   
+  
 
 
 
-  useEffect(() => {
-    if (previosMCountRef.current < messages?.length) {
-      previosMCountRef.current = messages?.length;
-      if (activeTab != 'participants') setUShowDot(true);
-    }
-  }, [messages]);
+  // useEffect(() => {
+  //   if (previosMCountRef.current < messages?.length) {
+  //     previosMCountRef.current = messages?.length;
+  //     if (activeTab != 'participants') setUShowDot(true);
+  //   }
+  // }, [messages]);
 
   const handlePollPageChange = useCallback((page) => {
     setCurrentPollPage(page);
     fetchPolls(page);
   }, []);
 
+  //group chats
   useEffect(() => {
     if (activeTab != "chats") {
       setUnreadMessage(prev => prev + 1);
@@ -136,6 +139,22 @@ const LeftSidebarOpenUi = ({
       }
     }
   }, [groupMessage, activeTab]);
+
+
+  //user messages
+  useEffect(() => {
+    if (activeTab != "participants") {
+      setUnreadMessageParticipant(prev => prev + 1);
+    }
+    if (previosMCountRef.current < messages?.length) {
+      previosMCountRef.current = messages?.length;
+      if (activeTab != 'participants') {
+        setUShowDot(true);
+      }
+    }
+  }, [messages, activeTab]);
+
+
 
   const myEmailRef = useRef(null);
 
@@ -183,9 +202,7 @@ const LeftSidebarOpenUi = ({
   };
   const [selectedReceiverId, setSelectedReceiverId] = useState(null);
 
-  const handleUserClick = (userId) => {
-    setSelectedReceiverId(userId);
-  };
+ 
   const toggleRemoveAndWaitingOptionModal = (event, user) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -298,21 +315,6 @@ const LeftSidebarOpenUi = ({
 
 
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    try {
-      if (!file) return;
-      const res = handleMediaUpload(file, setUploadProgress);
-
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setUploadProgress(0)
-    }
-  };
-
-
-
   const handleGroupChatMessageChange = useCallback((e) => {
     const value = e.target.value;
     setGroupMessageContent(value);
@@ -363,33 +365,6 @@ const LeftSidebarOpenUi = ({
 
   }, []);
 
-  // useEffect(() => {
-  //   const mutedPartipantLenfth = participantsMicMuted.filter((obj) => {
-  //     const keys = Object.keys(obj);
-  //     const value = obj[keys[0]];
-  //     return value;
-  //   }).length;
-
-  //   const userLength = users?.filter((user) => {
-  //     if (role === "Moderator") {
-  //       // Show all users for the moderator
-  //       return user.name !== userName;
-  //     } else if (role === "Participant") {
-  //       // Show only moderators to participants
-  //       return user.role === "Moderator";
-  //     } else if (role === "Observer") {
-  //       return user.role !== "Observer";
-  //     }
-
-  //   })
-  //   .filter((user) => role === "Moderator" ? true : (user.roomName?.toLowerCase() == roomname.toLowerCase() || user.role == "Moderator"))
-  //   .filter((user) => user.status !== "removed" && user.status !== "offline").length;
-
-  //   if(mutedPartipantLenfth == userLength){
-  //     setIsAllParticipantMuted(true)
-  //   }
-
-  // },[participantsMicMuted,users,role,userName])
 
 
   useEffect(() => {
@@ -624,11 +599,13 @@ const LeftSidebarOpenUi = ({
                   ? "shadow-[0px_4px_6px_#1E656D4D]"
                   : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
                   }  `}
-                onClick={() => { handleTabClick("participants"); setUShowDot(false) }}
+                onClick={() => { handleTabClick("participants"); setUShowDot(false); setUnreadMessageParticipant(0) }}
               />
               {
                 showUDot &&
-                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 text-xs grid text-center text-white rounded-full  bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]">
+                  {unreadMessageParticipant < 10 ? unreadMessageParticipant : '9+'}
+                </div>
               }
             </div>
           </div>
@@ -1040,6 +1017,9 @@ const LeftSidebarOpenUi = ({
       {/* {selectedReceiverId && (
         <ChatDashboard  receiverId={selectedReceiverId} users={users}/>
       )} */}
+
+
+      
 
 
       {

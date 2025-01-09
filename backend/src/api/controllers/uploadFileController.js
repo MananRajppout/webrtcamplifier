@@ -111,6 +111,48 @@ exports.uploadFile = async (req, res) => {
   }
 };
 
+
+
+
+exports.uploadRecordingFile = async (req, res) => {
+  try {
+    const { meetingId, email, role, projectId, addedBy, filename,size,recording_url } = req.body;
+
+    // Save to Database
+    const newMedia = await MediaBoxModel.create({
+      meetingId,
+      uploaderEmail: email,
+      role,
+      projectId,
+      addedBy,
+      file: {
+        url: recording_url,
+        public_id: "recording_server",
+        name: filename,
+        mimetype: "video/mp4",
+        size: Number(size) || 0,
+      },
+    });
+
+    // Emit Event
+    const EventsEmitter = req.app.get('EventsEmitter');
+    EventsEmitter.emit('mediabox:on-upload', { media: newMedia });
+
+    res.status(201).json({
+      success: true,
+      message: 'Upload Successfully',
+      file: newMedia,
+    });
+    console.log('upload successfully....')
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(501).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
 // POST - Get Files By Meeting Id
 exports.getFileByMeetingId = async (req, res) => {
   try {
