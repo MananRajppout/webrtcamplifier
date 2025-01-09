@@ -452,7 +452,7 @@ const RightSidebarOpenUi = ({
           </h1>
 
           <label className="bg-custom-orange-1 text-white rounded-xl py-1 px-3 text-xs cursor-pointer">
-            {uploadProgress != 0 ? `${uploadProgress}%` : 'Upload File'}
+            {uploadProgress != 0 ? `Uploading...` : 'Upload File'}
             <input type="file" className="hidden" onChange={handleFileUpload} />
           </label>
 

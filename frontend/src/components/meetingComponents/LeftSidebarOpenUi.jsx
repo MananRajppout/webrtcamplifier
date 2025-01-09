@@ -563,7 +563,7 @@ const LeftSidebarOpenUi = ({
             />
           )}
 
-          {role != "Participant" && (
+          {role == "Moderator" && (
             <Button
               children={"View Polls"}
               variant="meeting"
