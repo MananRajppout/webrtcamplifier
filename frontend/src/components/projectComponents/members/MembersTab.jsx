@@ -15,7 +15,6 @@ const MembersTab = ({ project, setLocalProjectState }) => {
   const [currentPage, setCurrentPage] = useState(1); 
   const membersPerPage = 10;
   const { user } = useGlobalContext()
-console.log("user.role", user.role)
   // Function to handle page change
   const handlePageChange = (page) => {
     setCurrentPage(page);

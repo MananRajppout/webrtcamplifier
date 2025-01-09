@@ -11,6 +11,7 @@ import RepositoryTab from "../repository/RepositoryTab";
 import Button from "@/components/shared/button";
 import MeetingTab from "../meetings/MeetingTab";
 import MembersTab from "../members/MembersTab";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const TabContent = ({
   activeTab,
@@ -90,6 +91,7 @@ const TabContent = ({
   } = additionalHandlers;
 
   const { localProjectState, setLocalProjectState } = localProjectStateHandlers;
+  const { user } = useGlobalContext()
 
   return (
     <div>
@@ -102,7 +104,9 @@ const TabContent = ({
               onSearch={handleMeetingSearch}
               placeholder="Search Meeting Name"
             />
-            <div className="relative">
+           {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
+            <>
+             <div className="relative">
               <Button
                 children="Bulk Add"
                 className="px-4 py-2 rounded-xl"
@@ -131,6 +135,8 @@ const TabContent = ({
               type="submit"
               onClick={handleAddMeetingModal}
             />
+            </>
+           ) }
           </div>
           <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
             <MeetingTab
@@ -149,6 +155,7 @@ const TabContent = ({
         <div className="pt-5">
           <div className="flex justify-between items-center">
             <HeadingLg children="Project Members" />
+            {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
             <div
               className="flex justify-end items-center
                gap-5"
@@ -167,7 +174,7 @@ const TabContent = ({
                 variant="secondary"
                 onClick={handleOpenAddContactModal}
               />
-            </div>
+            </div>)}
           </div>
           <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
             <MembersTab
@@ -182,6 +189,8 @@ const TabContent = ({
         <div className="pt-5">
           <div className="flex justify-between items-center">
             <HeadingLg children="Polls List" />
+            
+            {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
             <div
               className="flex justify-end items-center
              gap-5 relative"
@@ -252,7 +261,7 @@ const TabContent = ({
                   </div>
                 </div>
               )}
-            </div>
+            </div>)}
           </div>
           <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
             <PollsTab
@@ -273,7 +282,8 @@ const TabContent = ({
         <div className="pt-2">
           <div className="flex justify-between items-center">
             <HeadingLg children="Files List" />
-            <div
+            {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
+              <div
               className="flex justify-end items-center
              gap-5"
             >
@@ -283,7 +293,7 @@ const TabContent = ({
                 variant="secondary"
                 onClick={handleOpenAddRepositoryModal}
               />
-            </div>
+            </div>)}
           </div>
           <div className="overflow-x-auto border-b">
             <div className="flex space-x-5 whitespace-nowrap">
