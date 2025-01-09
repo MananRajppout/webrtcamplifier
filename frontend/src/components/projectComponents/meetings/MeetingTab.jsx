@@ -309,6 +309,10 @@ const MeetingTab = ({
       toast.error(`You cannot join backroom while meeting is in ${project.status} state.`);
       return;
     }
+
+    if(typeof window !== 'undefined'){
+      window.localStorage.setItem('email',user.email);
+    }
     const fullName = `${user?.firstName} ${user?.lastName}`;
     const meetingId = meeting?._id;
     try {
