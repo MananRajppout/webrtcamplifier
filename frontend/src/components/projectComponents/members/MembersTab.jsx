@@ -93,7 +93,7 @@ console.log("user.role", user.role)
             <TableHead>Added Date</TableHead>
             <TableHead>Last Updated On</TableHead>
             {
-              user?.role !== "AmplifyTechHost" && (
+              (user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  )  && (
                 <TableHead>Action</TableHead>
               )
             }
