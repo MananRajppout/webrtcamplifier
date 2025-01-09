@@ -950,7 +950,7 @@ const page = () => {
                 setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording}
                 setStartRecording={setStartRecording}
-                handleRecording={handleRecording}
+                handleRecording={() => handleRecording(startRecording ? 'stop': 'start')}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
@@ -1061,7 +1061,7 @@ const page = () => {
                 setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording}
                 setStartRecording={setStartRecording}
-                handleRecording={handleRecording}
+                handleRecording={() => handleRecording(startRecording ? 'stop': 'start')}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}

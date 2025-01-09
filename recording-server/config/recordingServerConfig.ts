@@ -3,12 +3,11 @@ import {IncomingMessage} from "http";
 import { wssQuery } from "../interface/recordingServerInterface.js";
 import { createWriteStream, WriteStream,mkdirSync,existsSync } from 'fs';
 import path, { join } from 'path';
-import { dir } from "console";
 import { mergeAndConvertVideos } from "../service/ffmepgService.js";
 import { saveRecordingToDatabase } from "../service/httpService.js";
-import { AxiosError, AxiosResponse } from "axios";
 import { getFileSize } from "../processor/getFileSizeProcessor.js";
-
+import { config } from "dotenv";
+config();
 
 
 /** 
@@ -71,7 +70,14 @@ export const initRecordingServer = (wss: WebSocketServer) => {
                     const mergeChunksRecordings = mergeAndConvertVideos(dirPath);
                     mergeChunksRecordings.then(async (outputFilePath) => {
                         try {
-                            const outputFileName = outputFilePath?.split(`\\`).pop();
+                            let outputFileName;
+                            if(process.env.STATUS_MODE == "development"){
+                                outputFileName = outputFilePath?.split(`\\`).pop();
+                            }else{
+                                outputFileName = outputFilePath?.split(`/`).pop();
+                            }
+
+                            
                             const formdata = new FormData();
                             const publucRecordingURL = `/recordings/${outputFileName}`;
                             const filename = `recording-${new Date().toDateString()}`;
