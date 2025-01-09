@@ -15,8 +15,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
   const [currentPage, setCurrentPage] = useState(1); 
   const membersPerPage = 10;
   const { user } = useGlobalContext()
-  console.log("selected member", selectedMember)
-
+console.log("user.role", user.role)
   // Function to handle page change
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -120,7 +119,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
                 {/* Format Last Updated On */}
               </TableData>
               {
-                (user?.role !== "AmplifyTechHost" || user?.role !== "AmplifyModerator" || user?.role !== "Moderator"  )  && (
+                (user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  )  && (
                   <TableData>
                 {/* Actions (Edit, Remove) */}
                 <div className="flex items-center space-x-2">

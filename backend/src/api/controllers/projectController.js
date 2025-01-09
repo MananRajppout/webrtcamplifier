@@ -109,12 +109,18 @@ const getAllProjects = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     const userEmail = userData.email;
+    console.log('user email', userEmail)
 
     // Create search query
     const searchQuery = search
       ? {
         $and: [
-          { $or: [{ createdBy: id }, { "members.email": userEmail }] },
+          {
+            $or: [
+              { createdBy: id },
+              { members: { $elemMatch: { email: userEmail } } }, // Use $elemMatch for matching userEmail
+            ],
+          },
           {
             $or: [
               { name: { $regex: search, $options: 'i' } }, // Case-insensitive search

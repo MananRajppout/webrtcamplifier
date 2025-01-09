@@ -552,7 +552,7 @@ const MeetingTab = ({
               <span>View</span>
             </li>
             {
-              (user?.role !== "AmplifyTechHost" || user?.role !== "AmplifyModerator" || user?.role !== "Moderator"  ) && (
+              (user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
              <>   <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={() => handleEditMeeting(selectedMeeting)}

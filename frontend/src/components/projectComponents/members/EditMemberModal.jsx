@@ -8,7 +8,6 @@ const EditMemberModal = ({ member, onClose, onSave }) => {
   const [name, setName] = useState('');
   useEffect(() => {
     if (member) {
-      // Pre-fill the name and roles when the modal opens
       setName(`${member.userId.firstName} ${member.userId.lastName}`);
       setSelectedRoles(member.roles.permissions || []);
     }
