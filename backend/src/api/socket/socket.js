@@ -1395,7 +1395,9 @@ const setupSocket = (server) => {
           participant.responses.map(response => ({
             participantEmail: participant.participantEmail,
             question: response.question,
-            answer: response.answer.join(', '), // Join multiple answers with a comma
+            answer: Array.isArray(response.answer) && response.type === 'multiple-choice'
+              ? response.answer.join(', ') // Join answers for multiple-choice
+              : response.answer, // Use the answer directly for other types
           }))
         );
 
