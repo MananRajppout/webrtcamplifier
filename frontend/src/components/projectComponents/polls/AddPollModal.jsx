@@ -309,32 +309,36 @@ const AddPollModal = ({
           };
         }),
       };
+
+      console.log('data to send', dataToSend)
       
        // Log the data being sent to the backend
 
-      // if (pollToEdit) {
-      //   const response = await axios.put(
-      //     `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-poll/${pollToEdit._id}`,
-      //     dataToSend
-      //   );
-      //   if (response.status === 200) {
-      //     setPolls(response.data);
-      //     toast.success("Poll updated successfully");
-      //   }
-      // } else {
+      if (pollToEdit) {
+        const response = await axios.put(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-poll/${pollToEdit._id}`,
+          dataToSend
+        );
+        if (response.status === 200) {
+          setPolls(response.data);
+          toast.success("Poll updated successfully");
+        }
+      } else {
         
-      //   const response = await axios.post(
-      //     `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
-      //     dataToSend
-      //   );
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
+          dataToSend
+        );
 
-      //   if (response.status === 201) {
-      //     setPolls(response.data.polls);
-      //     toast.success("Poll created successfully");
-      //   }
-      // }
+        console.log('response,', response)
 
-      // onClose(); // Close the modal
+        if (response.status === 201) {
+          setPolls(response.data.polls);
+          toast.success("Poll created successfully");
+        }
+      }
+
+      onClose(); 
     } catch (error) {
       console.error("Error saving the poll:", error);
       toast.error("Error saving the poll");
