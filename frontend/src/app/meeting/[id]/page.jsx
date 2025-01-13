@@ -163,8 +163,8 @@ const page = () => {
   );
 
   //const handleRecording
-  const handleRecording = useCallback(() => {
-    if (!startRecording) {
+  const handleRecording = useCallback((type) => {
+    if (type != 'stop') {
       if (typeof window !== "undefined") {
         const options = {
           video: {
@@ -180,7 +180,11 @@ const page = () => {
           try {
             recordingServerConnectorRef.current = new RecordingServerConnector(
               params.id,
-              projectId
+              projectId,
+              myEmail,
+              fullName,
+              userRole,
+
             );
             await recordingServerConnectorRef.current.waitForConnection();
           } catch (error) {
@@ -190,7 +194,7 @@ const page = () => {
           setStartRecording(true);
           startRecordingRef.current = true;
           gdmStreamRef.current = stream;
-          gdmStreamRef.current.onended = () => handleRecording();
+          gdmStreamRef.current.getVideoTracks()[0].onended = () => handleRecording('stop');
           handleCombineStreams(gdmStreamRef.current);
         });
       }
@@ -222,6 +226,16 @@ const page = () => {
 
     handleCombineStreams(gdmStreamRef.current);
   }, [allParticipantsAudioTracks]);
+
+
+
+  //called when setting changed
+  useEffect(() => {
+    if(setting.allowWhiteBoard == false){
+      setIsWhiteBoardOpen(false);
+    }
+  },[setting]);
+  
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -848,7 +862,7 @@ const page = () => {
                 setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording}
                 setStartRecording={setStartRecording}
-                handleRecording={handleRecording}
+                handleRecording={() => handleRecording(startRecording ? 'stop': 'start')}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
@@ -936,7 +950,7 @@ const page = () => {
                 setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording}
                 setStartRecording={setStartRecording}
-                handleRecording={handleRecording}
+                handleRecording={() => handleRecording(startRecording ? 'stop': 'start')}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
@@ -1047,7 +1061,7 @@ const page = () => {
                 setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording}
                 setStartRecording={setStartRecording}
-                handleRecording={handleRecording}
+                handleRecording={() => handleRecording(startRecording ? 'stop': 'start')}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}

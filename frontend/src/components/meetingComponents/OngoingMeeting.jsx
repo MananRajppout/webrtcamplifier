@@ -254,13 +254,23 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
 
 
   const handleJoinMainRoom = useCallback(() => {
-      let url = `/meeting/${params.id}?fullName=${fullName}&role=${role}`;
-     
-  
-      if(typeof window !== 'undefined'){
-        window.open(url, "_self");
-      }
-    }, [params,role,fullName]);
+    let url = `/meeting/${params.id}?fullName=${fullName}&role=${role}`;
+
+
+    if (typeof window !== 'undefined') {
+      window.open(url, "_self");
+    }
+  }, [params, role, fullName]);
+
+
+
+  //called when setting changed
+  useEffect(() => {
+    if (setting.allowScreenShare == false && isScreenShare) {
+      setIsScreenShare(false);
+      handleScreenShare('unshare');
+    }
+  }, [setting]);
 
 
 

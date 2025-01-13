@@ -12,7 +12,8 @@ import Button from "../shared/button";
 import { useParams, useSearchParams } from "next/navigation";
 import { PiCirclesFourFill } from "react-icons/pi";
 import toast from "react-hot-toast";
-import { BiCopy } from "react-icons/bi";
+import { BiCopy, BiShareAlt } from "react-icons/bi";
+import ShareMediaModel from "../singleComponent/ShareMediaModel";
 
 
 export function bytesToMbs(size) {
@@ -54,6 +55,7 @@ const RightSidebarOpenUi = ({
   const [inputMessage, setInputMessage] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [shareMediaModel, setShareMediaModel] = useState(null);
 
   const params = useParams();
   const searchParams = useSearchParams();
@@ -62,6 +64,10 @@ const RightSidebarOpenUi = ({
   const fullName = searchParams.get('fullName');
   const roomname = searchParams.get('roomname') || 'main'
   const id = params.id;
+
+
+
+
 
 
   const myEmailRef = useRef(null);
@@ -146,6 +152,10 @@ const RightSidebarOpenUi = ({
       toast.error('Failed to copy URL!')
     }
   }, []);
+
+
+
+
   return (
     <>
 
@@ -216,20 +226,10 @@ const RightSidebarOpenUi = ({
       <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4">
         {/* tabs */}
         <div className="flex justify-center items-center gap-2 pb-2 ">
-          {/* <Button
-            children="Participants"
-            variant="default"
-            type="submit"
-            className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersList"
-              ? "shadow-[0px_4px_6px_#1E656D4D]"
-              : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
-              } `}
-            onClick={() => handleTabClick("observersList")}
-          /> */}
           <div className="w-full relative">
             <Button
               children="Observers"
-              variant="default"
+              variant="cancel"
               type="submit"
               className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersChat"
                 ? "shadow-[0px_4px_6px_#1E656D4D]"
@@ -237,24 +237,8 @@ const RightSidebarOpenUi = ({
                 } `}
               onClick={() => handleTabClick("observersChat")}
             />
-            <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
+          
           </div>
-          {/* {
-            role == "Observer" &&
-            <div className="w-full relative">
-              <Button
-                children="Chats"
-                variant="default"
-                type="submit"
-                className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "participantChat"
-                  ? "shadow-[0px_4px_6px_#1E656D4D]"
-                  : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
-                  } `}
-                onClick={() => handleTabClick("participantChat")}
-              />
-              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
-            </div>
-          } */}
 
         </div>
 
@@ -486,9 +470,9 @@ const RightSidebarOpenUi = ({
                 </button>
                 <button
                   className="text-gray-700"
-                  onClick={() => copyUrlToClipboard(media?.file?.url)}
+                  onClick={() => setShareMediaModel(media?.file?.url)}
                 >
-                  <BiCopy className="h-3 w-3" size={35}/>
+                  <BiShareAlt className="h-3 w-3" size={35} />
                 </button>
               </div>
 
@@ -497,6 +481,16 @@ const RightSidebarOpenUi = ({
           ))}
         </div>
       </div>
+
+
+      {
+        shareMediaModel &&
+        <ShareMediaModel
+          onClose={() => setShareMediaModel(null)}
+          url={shareMediaModel}
+          handleCopy={() => copyUrlToClipboard(shareMediaModel)}
+        />
+      }
     </>
   );
 };
