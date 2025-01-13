@@ -50,9 +50,9 @@ const Page = () => {
  
   const [showModal, setShowModal] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
-  const [notifications, setNotifications] = useState(initialNotifications);
-  const [userData, setUserData] = useState(null);
+  // const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  // const [notifications, setNotifications] = useState(initialNotifications);
+  // const [userData, setUserData] = useState(null);
   const router = useRouter();
   const { id } = useParams();
  
@@ -73,25 +73,25 @@ const Page = () => {
     setIsDeleteModalOpen(false);
   };
 
-  const handleNotificationModalOpen = () => {
-    setIsNotificationModalOpen((prevState) => !prevState);
-  };
+  // const handleNotificationModalOpen = () => {
+  //   setIsNotificationModalOpen((prevState) => !prevState);
+  // };
 
-  const markAllAsRead = () => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) => ({ ...notification, read: true }))
-    );
-  };
+  // const markAllAsRead = () => {
+  //   setNotifications((prevNotifications) =>
+  //     prevNotifications.map((notification) => ({ ...notification, read: true }))
+  //   );
+  // };
 
-  const deleteNotification = (id) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.filter((notification) => notification.id !== id)
-    );
-  };
+  // const deleteNotification = (id) => {
+  //   setNotifications((prevNotifications) =>
+  //     prevNotifications.filter((notification) => notification.id !== id)
+  //   );
+  // };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
-  };
+  // const clearAllNotifications = () => {
+  //   setNotifications([]);
+  // };
 
   const deleteUser = async () => {
     try {
@@ -119,9 +119,9 @@ const Page = () => {
   };
 
 
-  const unreadCount = notifications.filter(
-    (notification) => !notification.read
-  ).length;
+  // const unreadCount = notifications.filter(
+  //   (notification) => !notification.read
+  // ).length;
 
   return (
     <div>
@@ -156,29 +156,7 @@ const Page = () => {
                 onClick={handleDeleteModalOpen}
                 className="rounded-xl w-[200px] text-center py-3 shadow-[0px_3px_6px_#FF66004D] cursor-pointer"
               />
-              <div className="relative">
-                <div
-                  className="rounded-xl bg-[#f3f4f5] text-black p-4 cursor-pointer"
-                  onClick={handleNotificationModalOpen}
-                >
-                  <FaBell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 w-5 h-5 bg-[#ff2b2b] text-white text-xs font-bold rounded-full text-center pt-0.5">
-                      {unreadCount}
-                    </span>
-                  )}
-                </div>
-                {isNotificationModalOpen && (
-                  <NotificationModal
-                    onClose={handleNotificationModalOpen}
-                    notifications={notifications}
-                    markAllAsRead={markAllAsRead}
-                    deleteNotification={deleteNotification}
-                    clearAllNotifications={clearAllNotifications}
-                    unreadCount={unreadCount}
-                  />
-                )}
-              </div>
+              
             </div>
           </div>
         </div>
@@ -320,3 +298,29 @@ const Page = () => {
 };
 
 export default Page;
+
+
+
+{/* <div className="relative">
+                <div
+                  className="rounded-xl bg-[#f3f4f5] text-black p-4 cursor-pointer"
+                  onClick={handleNotificationModalOpen}
+                >
+                  <FaBell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 w-5 h-5 bg-[#ff2b2b] text-white text-xs font-bold rounded-full text-center pt-0.5">
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
+                {isNotificationModalOpen && (
+                  <NotificationModal
+                    onClose={handleNotificationModalOpen}
+                    notifications={notifications}
+                    markAllAsRead={markAllAsRead}
+                    deleteNotification={deleteNotification}
+                    clearAllNotifications={clearAllNotifications}
+                    unreadCount={unreadCount}
+                  />
+                )}
+              </div> */}
