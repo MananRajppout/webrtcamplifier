@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import axios from "axios";
 import InputField from "../shared/InputField";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import ErrorModal from "./ErrorModal";
 import Button from "../shared/button";
 import toast from "react-hot-toast";
 
@@ -15,48 +14,42 @@ const PasswordModal = ({ onClose, id }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // for showing error message modal
-  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const validateForm = () => {
-    let formErrors = {};
-    if (!currentPassword) formErrors.currentPassword = "Incorrect password";
+    const formErrors = {};
+    if (!currentPassword) formErrors.currentPassword = "Current password is required.";
     if (newPassword.length < 8)
       formErrors.newPassword =
-        "Password must contain at least 8 characters, including upper case, lower case, numbers, & special characters";
+        "Password must contain at least 8 characters, including upper case, lower case, numbers, and special characters.";
     if (newPassword !== confirmPassword)
-      formErrors.confirmPassword = "Passwords do not match";
+      formErrors.confirmPassword = "Passwords do not match.";
     setErrors(formErrors);
     return Object.keys(formErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
-    
     e.preventDefault();
-    if (validateForm()) {
-      try {
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/changePassword`,
-          {
-            userId: id,
-            oldPassword: currentPassword,
-            newPassword: newPassword,
-          }
-        );
-        if (response.status === 200) {
-          toast.success("Password Updated");
-          onClose();
-        } else {
-          setShowErrorModal(true);
-        }
-      } catch (error) {
-        setShowErrorModal(true);
-      }
-    }
-  };
 
-  const handleCloseErrorModal = () => {
-    setShowErrorModal(false);
+    if (!validateForm()) return;
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/changePassword`,
+        {
+          userId: id,
+          oldPassword: currentPassword,
+          newPassword: newPassword,
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success(response.data.message || "Password updated successfully.");
+        onClose();
+      }
+    } catch (error) {
+      const backendMessage = error.response?.data?.message || "An unexpected error occurred.";
+      toast.error(backendMessage);
+    }
   };
 
   return (
@@ -66,7 +59,7 @@ const PasswordModal = ({ onClose, id }) => {
           Change Password
         </h2>
         <p className="text-custom-gray-6 text-[11px] mb-3">
-          Make sure you remember the password to login. Your new password must
+          Make sure you remember the password to log in. Your new password must
           be different from previously used passwords.
         </p>
         <form onSubmit={handleSubmit}>
@@ -141,7 +134,6 @@ const PasswordModal = ({ onClose, id }) => {
           </div>
         </form>
       </div>
-      {showErrorModal && <ErrorModal onClose={handleCloseErrorModal} />}
     </div>
   );
 };

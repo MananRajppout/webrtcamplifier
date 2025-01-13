@@ -14,8 +14,8 @@ const { decodeToken } = require("../../utils/jwt");
 const validatePassword = (password) => {
   const errors = [];
 
-  if (password.length <= 8) {
-    errors.push("Password must be exactly 8 characters long.");
+  if (password.length < 8) {  // Corrected condition for minimum length
+    errors.push("Password must be at least 8 characters long.");
   }
 
   if (!/[a-z]/.test(password)) {
@@ -536,29 +536,51 @@ const changePassword = async (req, res) => {
   try {
     const { userId, oldPassword, newPassword } = req.body;
     const user = await userModel.findById(userId);
+
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ error: true, message: "User not found" });
     }
+
     const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
     const isPasswordSame = await bcrypt.compare(newPassword, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: " Old Password is incorrect" });
-    } else if (isPasswordSame) {
-      return res.status(400).json({
-        message: "New Password should be different from the Old Password",
-      });
-    } else {
-      const passwordErrors = validatePassword(newPassword);
-      if (passwordErrors) {
-        return res.status(400).json({ message: passwordErrors.join(" ") });
-      }
 
-      const hashedPassword = bcrypt.hashSync(newPassword, 8);
-      await userModel.findByIdAndUpdate(user._id, { password: hashedPassword });
-      return res.status(200).json({ message: "Password changed successfully" });
+    if (!isPasswordValid) {
+      return res.status(400).json({ 
+        error: true, 
+        message: "Old password is incorrect." 
+      });
     }
+
+    if (isPasswordSame) {
+      return res.status(400).json({
+        error: true,
+        message: "New password must be different from the old password.",
+      });
+    }
+
+    const passwordErrors = validatePassword(newPassword);
+
+    if (passwordErrors) {
+      return res.status(400).json({ 
+        error: true, 
+        message: passwordErrors.join(" ") 
+      });
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, 8);
+    await userModel.findByIdAndUpdate(user._id, { password: hashedPassword });
+
+    return res.status(200).json({ 
+      error: false, 
+      message: "Password changed successfully." 
+    });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    console.error("Error changing password:", error);
+    return res.status(500).json({ 
+      error: true, 
+      message: "An unexpected error occurred. Please try again later." 
+    });
   }
 };
 
