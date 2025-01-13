@@ -140,28 +140,20 @@ const LeftSidebarCloseUi = ({
           <div className="flex flex-col pb-2 pt-4 bg-custom-gray-8 mb-2 rounded-xl overflow-y-auto mx-1 max-h-[50vh]">
             <div className="flex flex-col justify-center items-center gap-2 pb-2 ">
               <Button
-                children="Participants List"
+                children="Chat"
                 variant="default"
                 type="submit"
-                className={`w-full py-2 rounded-xl  text-[8px] text-center px-0.5 cursor-not-allowed ${
-                  activeTab === "participantList"
-                    ? "shadow-[0px_4px_6px_#1E656D4D]"
-                    : "bg-custom-gray-8 border  border-custom-teal !text-custom-teal "
-                }  `}
+                className={`w-full py-2 rounded-xl  text-[8px] text-center px-0.5 cursor-not-allowed`}
+                disabled={true}
               />
               <div className="w-full relative">
                 <Button
-                  children="Participants Chat"
+                  children="Participant"
                   variant="default"
                   type="submit"
-                  className={`w-full py-2 rounded-xl text-[8px] text-center px-0.5 cursor-not-allowed ${
-                    activeTab === "participantChat"
-                      ? "shadow-[0px_4px_6px_#1E656D4D]"
-                      : "bg-custom-gray-8 border  border-custom-teal !text-custom-teal "
-                  }  `}
-                  
+                  className={`w-full py-2 rounded-xl text-[8px] text-center px-0.5 cursor-not-allowed `}
+                  disabled={true}
                 />
-                <div className="absolute -top-1 right-1 w-2 h-2 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
               </div>
             </div>
 
@@ -320,7 +312,7 @@ const LeftSidebarCloseUi = ({
         <div className="flex flex-col pb-2 pt-4 bg-custom-gray-8 mb-2 rounded-xl overflow-y-auto mx-1 max-h-[50vh]">
           <div className="flex flex-col justify-center items-center gap-2 pb-2 ">
             <Button
-              children="Participants List"
+              children="Chat"
               variant="default"
               type="submit"
               className={`w-full py-2 rounded-xl  text-[8px] text-center px-0.5  ${
@@ -328,11 +320,11 @@ const LeftSidebarCloseUi = ({
                   ? "shadow-[0px_4px_6px_#1E656D4D]"
                   : "bg-custom-gray-8 border  border-custom-teal !text-custom-teal "
               }  `}
-              onClick={() => handleTabClick("participantList")}
+              disabled={true}
             />
             <div className="w-full relative">
               <Button
-                children="Participants Chat"
+                children="Participants"
                 variant="default"
                 type="submit"
                 className={`w-full py-2 rounded-xl text-[8px] text-center px-0.5  ${
@@ -340,9 +332,8 @@ const LeftSidebarCloseUi = ({
                     ? "shadow-[0px_4px_6px_#1E656D4D]"
                     : "bg-custom-gray-8 border  border-custom-teal !text-custom-teal "
                 }  `}
-                onClick={() => handleTabClick("participantChat")}
+                disabled={true}
               />
-              <div className="absolute -top-1 right-1 w-2 h-2 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
             </div>
           </div>
 
