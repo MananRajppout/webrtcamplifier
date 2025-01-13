@@ -143,24 +143,23 @@ const LeftSidebarCloseUi = ({
                 children="Participants List"
                 variant="default"
                 type="submit"
-                className={`w-full py-2 rounded-xl  text-[8px] text-center px-0.5  ${
+                className={`w-full py-2 rounded-xl  text-[8px] text-center px-0.5 cursor-not-allowed ${
                   activeTab === "participantList"
                     ? "shadow-[0px_4px_6px_#1E656D4D]"
                     : "bg-custom-gray-8 border  border-custom-teal !text-custom-teal "
                 }  `}
-                onClick={() =>  handleTabClick("participantList")}
               />
               <div className="w-full relative">
                 <Button
                   children="Participants Chat"
                   variant="default"
                   type="submit"
-                  className={`w-full py-2 rounded-xl text-[8px] text-center px-0.5  ${
+                  className={`w-full py-2 rounded-xl text-[8px] text-center px-0.5 cursor-not-allowed ${
                     activeTab === "participantChat"
                       ? "shadow-[0px_4px_6px_#1E656D4D]"
                       : "bg-custom-gray-8 border  border-custom-teal !text-custom-teal "
                   }  `}
-                  onClick={() => handleTabClick("participantChat")}
+                  
                 />
                 <div className="absolute -top-1 right-1 w-2 h-2 rounded-lg bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]"></div>
               </div>
