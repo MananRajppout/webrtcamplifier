@@ -7,7 +7,6 @@ import { generatePasscode } from "@/utils/generatePasscode";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaCircle } from "react-icons/fa";
 
 const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdit = null, isEditing = false }) => {
   const [formData, setFormData] = useState({
@@ -30,7 +29,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
 
   const today = new Date().toISOString().split("T")[0];
   const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() + 5); // Add 5 years to the current year
+  maxDate.setFullYear(maxDate.getFullYear() + 5); 
   const maxDateString = maxDate.toISOString().split("T")[0]; 
 
   // Populate form data if editing
@@ -106,18 +105,23 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
   // Update formData for other input fields
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-
-    // Handle moderator multi-select
+  
     if (name === "moderator") {
       const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
-      setFormData(prevFormData => ({
-        ...prevFormData,
-        moderator: [...prevFormData.moderator, ...selectedOptions.filter(id => !prevFormData.moderator.includes(id))]
-    }));
+  
+      setFormData(prevFormData => {
+        const updatedModerators = prevFormData.moderator.includes(value)
+          ? prevFormData.moderator.filter(id => id !== value) // Deselect if already selected
+          : [...prevFormData.moderator, value]; // Select if not already selected
+  
+        return {
+          ...prevFormData,
+          moderator: updatedModerators,
+        };
+      });
       return;
     }
-
-    // Rest of your existing handleInputChange logic...
+  
     if (name === "duration") {
       if (value === "" || /^[1-9]\d*$/.test(value)) {
         setFormData(prevFormData => ({
@@ -132,6 +136,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
       }));
     }
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -139,7 +144,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
 // Validation logic
 
     // Validation logic
-    if (!formData.ongoing) { // Check if ongoing is not selected
+    if (!formData.ongoing) { 
       if (!formData.startDate || !formData.startTime) {
           toast.error("Start Date and Start Time are required unless 'Ongoing/TBD' is checked.");
           return;
@@ -155,6 +160,8 @@ if (!formData.duration) {
       ...formData,
       projectId: project._id,
     };
+
+    console.log('updated form data', updatedFormData)
 
 
     try {
@@ -205,29 +212,34 @@ if (!formData.duration) {
               onChange={handleInputChange}
               placeholder="Meeting Title"
             />
-            <div className="mb-4 sm:mb-0">
-              <label
-                htmlFor="moderator"
-                className="block sm:text-sm font-semibold mb-2 text-sm text-black"
-              >
-                Moderators
-              </label>
-              <select
-                name="moderator"
-                id="moderator"
-                multiple
-                value={formData.moderator}
-                onChange={handleInputChange}
-                className="px-4 py-2 sm:py-2 border border-[#000000] rounded-lg flex items-center justify-between w-full text-custom-dark-blue-1 z-50"
-              >
-                <option value="">Select Moderator</option>
-                {contacts.map((contact, index) => (
-                  <option key={index} value={contact._id}>
-                    {contact.firstName} {contact.lastName}
-                  </option>
-                ))}
-              </select>
-            </div>
+
+
+<div className="mb-4 sm:mb-0">
+  <label
+    htmlFor="moderator"
+    className="block sm:text-sm font-semibold mb-2 text-sm text-black"
+  >
+    Moderators
+  </label>
+  <select
+    name="moderator"
+    id="moderator"
+    multiple
+    value={formData.moderator}
+    onChange={handleInputChange}
+    className="px-4 py-2 sm:py-2 border border-[#000000] rounded-lg flex items-center justify-between w-full text-custom-dark-blue-1 z-50"
+  >
+    <option value="">Select Moderator</option>
+    {contacts.map((contact, index) => (
+      <option key={index} value={contact._id}>
+        {contact.firstName} {contact.lastName}
+      </option>
+    ))}
+  </select>
+</div>
+
+
+
           </div>
           <InputField
             label="Description"

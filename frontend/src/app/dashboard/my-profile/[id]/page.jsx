@@ -50,9 +50,9 @@ const Page = () => {
  
   const [showModal, setShowModal] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
-  const [notifications, setNotifications] = useState(initialNotifications);
-  const [userData, setUserData] = useState(null);
+  // const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  // const [notifications, setNotifications] = useState(initialNotifications);
+  // const [userData, setUserData] = useState(null);
   const router = useRouter();
   const { id } = useParams();
  
@@ -73,25 +73,25 @@ const Page = () => {
     setIsDeleteModalOpen(false);
   };
 
-  const handleNotificationModalOpen = () => {
-    setIsNotificationModalOpen((prevState) => !prevState);
-  };
+  // const handleNotificationModalOpen = () => {
+  //   setIsNotificationModalOpen((prevState) => !prevState);
+  // };
 
-  const markAllAsRead = () => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) => ({ ...notification, read: true }))
-    );
-  };
+  // const markAllAsRead = () => {
+  //   setNotifications((prevNotifications) =>
+  //     prevNotifications.map((notification) => ({ ...notification, read: true }))
+  //   );
+  // };
 
-  const deleteNotification = (id) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.filter((notification) => notification.id !== id)
-    );
-  };
+  // const deleteNotification = (id) => {
+  //   setNotifications((prevNotifications) =>
+  //     prevNotifications.filter((notification) => notification.id !== id)
+  //   );
+  // };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
-  };
+  // const clearAllNotifications = () => {
+  //   setNotifications([]);
+  // };
 
   const deleteUser = async () => {
     try {
@@ -119,9 +119,9 @@ const Page = () => {
   };
 
 
-  const unreadCount = notifications.filter(
-    (notification) => !notification.read
-  ).length;
+  // const unreadCount = notifications.filter(
+  //   (notification) => !notification.read
+  // ).length;
 
   return (
     <div>
