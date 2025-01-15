@@ -127,7 +127,7 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
 
 
 
-  }, [selected, videoTrackRef.current, remoteVideoTracksRef.current, participantsRef.current, displayTrackRef.current, superForceRender, remoteDisplayTracksRef])
+  }, [selected, videoTrackRef.current, remoteVideoTracksRef.current, participantsRef.current, displayTrackRef.current, superForceRender, remoteDisplayTracksRef,isWhiteBoardOpen])
 
 
   useEffect(() => {
