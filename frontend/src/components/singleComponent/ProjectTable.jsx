@@ -30,7 +30,6 @@ const ProjectTable = ({
   const [isAssignTagModalOpen, setIsAssignTagModalOpen] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
-
   const modalRef = useRef();
 
   const getRole = (project) => {

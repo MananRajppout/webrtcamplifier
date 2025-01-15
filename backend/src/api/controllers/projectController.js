@@ -444,26 +444,43 @@ const updateBulkMembers = async (req, res) => {
 
 const assignTagsToProject = async (req, res) => {
   try {
-    const { tagIds, projectId } = req.body;
-    const tags = await Tag.distinct("_id", { _id: { $in: tagIds } });
-    const project = await Project.findById(projectId).select("tags");
+    const { tagsToAdd = [], tagsToRemove = [], projectId } = req.body;
 
-    if (project?.tags) {
-      const uniqueTags = [...new Set([...project.tags, ...tags])];
-      project.tags = uniqueTags;
-    } else {
-      project.tags = tags;
+    // Validate project existence
+    const project = await Project.findById(projectId).select("tags");
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
     }
-    const result = await Project.findByIdAndUpdate(
+
+    // Add new tags
+    if (tagsToAdd.length > 0) {
+      const validTagsToAdd = await Tag.distinct("_id", { _id: { $in: tagsToAdd } });
+      project.tags = [...new Set([...project.tags.map(tag => tag.toString()), ...validTagsToAdd])];
+    }
+
+    // Remove tags
+    if (tagsToRemove.length > 0) {
+      project.tags = project.tags.filter(
+        (tag) => !tagsToRemove.includes(tag.toString())
+      );
+    }
+
+    // Save updated project
+    const updatedProject = await Project.findByIdAndUpdate(
       projectId,
       { tags: project.tags },
       { new: true }
     );
-    return res.status(200).json({ result, message: "Tag assigned successfully." });
+
+    return res.status(200).json({
+      result: updatedProject,
+      message: "Tags updated successfully.",
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
+
 
 
 const getAllProjectsForAmplify = async (req, res) => {
