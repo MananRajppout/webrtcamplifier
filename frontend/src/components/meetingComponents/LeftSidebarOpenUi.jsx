@@ -601,12 +601,12 @@ const LeftSidebarOpenUi = ({
                   }  `}
                 onClick={() => { handleTabClick("participants"); setUShowDot(false); setUnreadMessageParticipant(0) }}
               />
-              {
+              {/* {
                 showUDot &&
                 <div className="absolute -top-1 -right-1 w-4 h-4 text-xs grid text-center text-white rounded-full  bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]">
-                  {unreadMessageParticipant < 10 ? unreadMessageParticipant : '9+'}
+                  {unreadMessageParticipant < 10 ? unreadMessageParticipant : '9+'} 
                 </div>
-              }
+              } */}
             </div>
           </div>
 
