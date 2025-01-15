@@ -231,7 +231,7 @@ const page = () => {
 
   //called when setting changed
   useEffect(() => {
-    if(setting.allowWhiteBoard == false){
+    if(setting.allowWhiteBoard == false && userRole != 'Moderator'){
       setIsWhiteBoardOpen(false);
     }
   },[setting]);
@@ -345,6 +345,7 @@ const page = () => {
     socket.on("mediabox:on-delete", handleMediaNewDelete);
     socket.on("endMeeting", onEndMeeting);
     socket.on("room-ending-remember", onRoomEndingRemember);
+    socket.on("whiteboard-toggle", handleWhiteToggle);
 
     getMeetingStatus(params.id);
     getObserverList(params.id);
@@ -365,6 +366,7 @@ const page = () => {
       socket.off("poll-started");
       socket.off("poll-ended");
       socket.off("room-ending-remember", onRoomEndingRemember);
+      socket.off("whiteboard-toggle", handleWhiteToggle);
     };
   }, [userRole, params.id, socket, pollData]);
 
@@ -803,6 +805,16 @@ const page = () => {
   
 
   //ending
+  const handleWhiteToggle = useCallback(({value,roomname:name}) => {
+    if(roomname == name){
+      setIsWhiteBoardOpen(value);
+    }
+  },[]);
+
+  const handleModeratorToggleWhiteboard = useCallback((value) => {
+    
+    socket.emit("whiteboard-toggle", {value,meetingId: params.id,roomname});
+  },[params.id,roomname]);
 
   return (
     <>
@@ -865,6 +877,7 @@ const page = () => {
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
                 setBreakoutRoomDetails={setBreakoutRoomDetails}
+                handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
@@ -953,6 +966,7 @@ const page = () => {
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
                 setBreakoutRoomDetails={setBreakoutRoomDetails}
+                handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -1064,6 +1078,7 @@ const page = () => {
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
                 setBreakoutRoomDetails={setBreakoutRoomDetails}
+                handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">

@@ -1451,6 +1451,11 @@ const setupSocket = (server) => {
 
     //ending
 
+
+    socket.on('whiteboard-toggle', (data) => {
+      socket.to(data.meetingId).emit('whiteboard-toggle',data);
+    });
+
     // * disconnect
     socket.on("disconnect", async () => {
       console.log("User disconnected", usernames[socket.id]);

@@ -459,7 +459,7 @@ const WhiteBoard = ({ users,isWhiteBoardOpen,handleMediaUpload,setting,setSettin
 
   return (
     <>
-    <div className="bg-white board-container flex justify-start items-center  w-full rounded-xl relative" style={{height: "75vh"}}>
+    <div className="bg-white  flex justify-start items-center  w-full rounded-xl relative h-full" >
       <div id="sketch" className="sketch absolute border-2 border-black overflow-auto" ref={canvasContainerRef}>
 
         <div className='box' onMouseMove={() => onDraw()} ref={boxRef} onScroll={onScroll}>

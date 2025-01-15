@@ -82,7 +82,8 @@ const LeftSidebarOpenUi = ({
   breakoutRoomPopUpOpen,
   setBreakoutRoomPopUpOpen,
   breakoutRoomDetails,
-  setBreakoutRoomDetails
+  setBreakoutRoomDetails,
+  handleModeratorToggleWhiteboard
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -432,6 +433,16 @@ const LeftSidebarOpenUi = ({
     }
   }, [id,userrole,fullName]);
 
+
+
+  const handleWhiteBoardOpen = useCallback(() => {
+    setIsWhiteBoardOpen((prev) => !prev);
+
+    if(role == "Moderator"){
+      handleModeratorToggleWhiteboard(!isWhiteBoardOpen);
+    }
+  },[role,isWhiteBoardOpen])
+
   return (
     <>
       <div className=" md:pt-0 pt-16">
@@ -523,7 +534,7 @@ const LeftSidebarOpenUi = ({
               variant="meeting"
               type="submit"
               className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-              onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
+              onClick={handleWhiteBoardOpen}
             />
           }
 

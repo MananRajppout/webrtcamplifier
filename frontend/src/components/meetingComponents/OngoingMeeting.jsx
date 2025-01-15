@@ -10,10 +10,11 @@ import { useSearchParams, useParams } from 'next/navigation';
 import { MdOutlineDeblur } from "react-icons/md"
 import RenderParticipantsAudio from '../RenderParticipantsAudio';
 import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipant';
+import WhiteBoard from './WhiteBoard';
 
 
 
-const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks, pollData, setPollData }) => {
+const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks, pollData, setPollData, isWhiteBoardOpen, handleMediaUpload,users }) => {
   const searchParams = useSearchParams();
   const params = useParams();
   const role = searchParams.get("role");
@@ -290,7 +291,7 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
             <div className='flex flex-1 flex-col md:flex-row relative h-[68vh] '>
               {/* cards center  */}
               {
-                participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length == 0 &&
+                participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length == 0 && !isWhiteBoardOpen &&
                 <>
                   {
                     participantsRef.current?.length > 1 ?
@@ -469,9 +470,9 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
                 </>
               }
 
-              {/* card left  */}
+              {/* card left for screen  */}
               {
-                participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length > 0 &&
+                (participantsRef.current && participantsRef.current.filter(participant => (participant.isShareScreen == true)).length > 0) && !isWhiteBoardOpen &&
                 <div className={`md:h-[68vh] h-[30vh] !p-2 relative overflow-y-auto cursor-pointer  flex flex-row justify-end items-end md:!flex-col md:gap-0 w-[100vw] md:w-[16vw] xl:w-[17vw] bg-[#3C3C3C]`}>
                   {
                     participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isShareScreen == true || participant.isWebCamMute == false)).map((participant, index) => (
@@ -480,6 +481,20 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
                   }
                 </div>
               }
+
+              {/* card left for whiteboard  */}
+              {
+                isWhiteBoardOpen && participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isWebCamMute == false)).length > 0 &&
+                <div className={`md:h-[68vh] h-[30vh] !p-2 relative overflow-y-auto cursor-pointer  flex flex-row justify-end items-end md:!flex-col md:gap-0 w-[100vw] md:w-[16vw] xl:w-[17vw] bg-[#3C3C3C]`}>
+                  {
+                    participantsRef.current.map((participant, index) => ({ ...participant, index })).filter(p => p.role.toLowerCase() != "observer").filter(participant => (participant.isWebCamMute == false)).map((participant, index) => (
+                      <RenderParticipants key={participant.socketId} onClick={() => setSelected(participant.index)} {...participant} videosElementsRef={videosElementsRef} audiosElementRef={audiosElementRef} socketIdRef={socketIdRef} videoTrackRef={videoTrackRef} index={participant.index} selected={selected} superForceRender={superForceRender} displayTrackRef={displayTrackRef} widthAuto={false} stream={remoteVideoTracksRef.current[participant.socketId]} />
+                    ))
+                  }
+                </div>
+              }
+
+
 
 
               {/* audios  */}
@@ -494,7 +509,7 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
                 </>
               }
 
-              <div className={`flex-1 w-full md:w-auto mx-auto my-auto ${isMobile && !showbtn ? 'h-[68vh]' : 'h-[68vh]'} `}>
+              <div className={`flex-1 w-full md:w-auto mx-auto my-auto ${isMobile && !showbtn ? 'h-[68vh]' : 'h-[68vh]'} ${isWhiteBoardOpen && 'hidden'}`}>
                 {
 
                   participantsRef.current && participantsRef.current.length > 0 && participantsRef.current[selected] &&
@@ -514,6 +529,19 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
                     </div>
                   </div>
                 }
+              </div>
+
+
+
+              <div className={`flex-1 w-full md:w-auto mx-auto my-auto ${isMobile && !showbtn ? 'h-[68vh]' : 'h-[68vh]'} ${!isWhiteBoardOpen && 'hidden'}`}>
+                <WhiteBoard
+                  role={role}
+                  users={users}
+                  isWhiteBoardOpen={isWhiteBoardOpen}
+                  handleMediaUpload={handleMediaUpload}
+                  setting={setting}
+                  setSetting={setSetting}
+                />
               </div>
 
 

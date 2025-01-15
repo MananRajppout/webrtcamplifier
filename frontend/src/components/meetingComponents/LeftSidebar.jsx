@@ -53,7 +53,8 @@ const LeftSidebar = ({
   breakoutRoomPopUpOpen,
   setBreakoutRoomPopUpOpen,
   breakoutRoomDetails,
-  setBreakoutRoomDetails
+  setBreakoutRoomDetails,
+  handleModeratorToggleWhiteboard
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -274,6 +275,7 @@ const LeftSidebar = ({
               setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
               breakoutRoomDetails={breakoutRoomDetails}
               setBreakoutRoomDetails={setBreakoutRoomDetails}
+              handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
             />
           ) : (
             <LeftSidebarCloseUi

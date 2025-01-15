@@ -178,7 +178,7 @@ const MeetingView = ({
               <EndOFMeeting role={role} />
             </div>
 
-            <div className={` ${isWhiteBoardOpen ? "block" : "hidden"}`}>
+            {/* <div className={` ${isWhiteBoardOpen ? "block" : "hidden"}`}>
               <WhiteBoard
                 role={role}
                 users={users}
@@ -187,7 +187,7 @@ const MeetingView = ({
                 setting={setting}
                 setSetting={setSetting}
               />
-            </div>
+            </div> */}
 
             <div className={`flex-1  ${isMeetingEnd ? "block" : "hidden"}`}>
               <div
@@ -199,10 +199,10 @@ const MeetingView = ({
                 </p>
               </div>
             </div>
-
+            {/* && !isWhiteBoardOpen */}
             <div
               className={`flex-1  ${
-                !isRecordingOpen && !isWhiteBoardOpen && !isMeetingEnd
+                !isRecordingOpen  && !isMeetingEnd
                   ? "block"
                   : "hidden"
               }`}
@@ -219,6 +219,11 @@ const MeetingView = ({
                 setSetting={setSetting}
                 pollData={pollData}
                 setPollData={setPollData}
+
+                isWhiteBoardOpen={isWhiteBoardOpen}
+                handleMediaUpload={handleMediaUpload}
+              
+               
               />
             </div>
           </>
