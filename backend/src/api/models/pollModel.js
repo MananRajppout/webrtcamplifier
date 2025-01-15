@@ -15,46 +15,44 @@ const matchingSchema = new mongoose.Schema({
 // Schema for storing user responses
 const responseSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  answer: mongoose.Schema.Types.Mixed, // Flexible structure to store different answers
+  answer: mongoose.Schema.Types.Mixed, 
   timestamp: { type: Date, default: Date.now },
 });
 
-const questionSchema = new mongoose.Schema({
-  question: { type: String, required: true },
-  type: {
-    type: String,
-    enum: [
-      'Single Choice',
-      'Multiple Choice',
-      'Matching',
-      'Rank Order',
-      'Short Answer',
-      'Long Answer',
-      'Fill in the Blank',
-      'Rating Scale',
-    ],
-    required: true,
+const questionSchema = new mongoose.Schema(
+  {
+    question: { type: String, required: true },
+    type: {
+      type: String,
+      enum: [
+        'Single Choice',
+        'Multiple Choice',
+        'Matching',
+        'Rank Order',
+        'Short Answer',
+        'Long Answer',
+        'Fill in the Blank',
+        'Rating Scale',
+      ],
+      required: true,
+    },
+    choices: { type: [choiceSchema], default: [] }, // Default to empty array
+    matching: { type: [matchingSchema], default: [] }, // Default to empty array
+    ratingRange: {
+      min: { type: Number, default: null }, // Default to null for clarity
+      max: { type: Number, default: null },
+    },
+    blanks: { type: [String], default: [] },
+    minLength: { type: Number, default: null },
+    maxLength: { type: Number, default: null },
+    responses: { type: [responseSchema], default: [] },
+    lowScoreLabel: { type: String, default: "" },
+    highScoreLabel: { type: String, default: "" },
+    status: { type: Boolean, default: true },
   },
-  choices: [choiceSchema], // For single/multiple choice and ranking
-  matching: [matchingSchema], // For matching type
-  ratingRange: { min: Number, max: Number }, // For rating scale questions
-  blanks: { type: [String] }, // For "Fill in the Blank" questions
-  minLength: Number, // For text answers (short/long answer)
-  maxLength: Number, // For text answers (short/long answer)
-  responses: [responseSchema], // Store user responses
-  lowScoreLable: {
-    type: String,
-    default: ""
-  },
-  highScoreLable: {
-    type: String,
-    default: ""
-  },
-  status: {
-    type: Boolean,
-    default: true
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
+
 
 const pollSchema = new mongoose.Schema({
   title: { type: String, required: true },

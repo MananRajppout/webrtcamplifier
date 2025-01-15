@@ -3,12 +3,66 @@ const Poll = require('../models/pollModel');
 // Create a new poll
 const createPoll = async (req, res) => {
   try {
-    const poll = await Poll.create(req.body)
+    // Validate required fields
+    const { title, createdById, projectId, questions } = req.body;
+    if (!title || !createdById || !projectId || !questions || !questions.length) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // Validate each question
+    for (const question of questions) {
+      if (!question.question || !question.type) {
+        return res
+          .status(400)
+          .json({ message: "Each question must have a question and type." });
+      }
+
+      switch (question.type) {
+        case "Single Choice":
+        case "Multiple Choice":
+          if (!Array.isArray(question.choices) || !question.choices.length) {
+            return res
+              .status(400)
+              .json({ message: "Choice-based questions must have choices." });
+          }
+          break;
+        case "Matching":
+          if (!Array.isArray(question.matching) || !question.matching.length) {
+            return res
+              .status(400)
+              .json({ message: "Matching questions must have pairs." });
+          }
+          break;
+        case "Fill in the Blank":
+          if (!Array.isArray(question.blanks) || !question.blanks.length) {
+            return res
+              .status(400)
+              .json({ message: "Fill in the Blank questions must have blanks." });
+          }
+          break;
+        case "Rating Scale":
+          if (
+            !question.ratingRange ||
+            question.ratingRange.min === undefined ||
+            question.ratingRange.max === undefined
+          ) {
+            return res
+              .status(400)
+              .json({ message: "Rating Scale questions must have a range." });
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    const poll = await Poll.create(req.body);
     return res.status(201).json(poll);
   } catch (error) {
     return res.status(400).json({ message: error.message });
   }
 };
+
 
 // Get all polls
 const getAllPolls = async (req, res) => {

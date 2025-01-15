@@ -27,6 +27,8 @@ const PollsTab = ({
   const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false);
   const { user } = useGlobalContext();
 
+  console.log('polls', polls)
+
   const handleViewPoll = (poll) => {
     setSelectedPoll(poll);
     setIsViewPollModalOpen(true);
@@ -100,9 +102,7 @@ const PollsTab = ({
             <TableHead>Added Date</TableHead>
             <TableHead>Last Updated On</TableHead>
             <TableHead></TableHead>
-
             <TableHead>Action</TableHead>
-
             <TableHead></TableHead>
           </tr>
         </thead>

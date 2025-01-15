@@ -1,671 +1,511 @@
 import Button from "@/components/shared/button";
-import FormDropdownLabel from "@/components/shared/FormDropdownLabel";
 import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import InputField from "@/components/shared/InputField";
 import { useGlobalContext } from "@/context/GlobalContext";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, {  useState } from "react";
 import toast from "react-hot-toast";
 import { FiMinus } from "react-icons/fi";
 import { GoPlus } from "react-icons/go";
-import { IoTrashSharp } from "react-icons/io5";
 
 const AddPollModal = ({
   onClose,
   pollToEdit,
   project,
-  setLocalProjectState,
-  setPolls,
+  fetchPolls
 }) => {
+  const [title, setTitle] = useState("");
   const { user } = useGlobalContext();
-  const [newPoll, setNewPoll] = useState({
-    pollName: "",
-    isActive: false,
-    questions: [
+  const [questions, setQuestions] = useState([
+    {
+      question: "",
+      type: "Single Choice",
+      choices: [{ text: "" }],
+      minLength: 1,
+      maxLength: 200,
+      blanks: [""],
+    },
+  ]);
+
+  const questionTypes = [
+    "Single Choice",
+    "Multiple Choice",
+    "Short Answer",
+    "Long Answer",
+    "Fill in the Blank",
+    "Rating Scale",
+    "Matching",
+    "Rank Order",
+  ];
+  // matching, rank order,
+  const addQuestion = () => {
+    setQuestions([
+      ...questions,
       {
         question: "",
-        type: "single",
-        answers: [{ answer: "" }, { answer: "" }],
+        type: "Single Choice",
+        choices: [{ text: "" }],
+        minLength: 1,
+        maxLength: 200,
+        blanks: [""],
+        matching: [],
       },
-    ],
-  });
-
-
-  useEffect(() => {
-    if (pollToEdit) {
-      const transformedPoll = {
-        pollName: pollToEdit.title,
-        isActive: pollToEdit.status,
-        questions: pollToEdit.questions.map((q) => {
-          if (q.type === "Single Choice" || q.type === "Multiple Choice") {
-            return {
-              question: q.question,
-              type: q.type,
-              answers:
-                q.choices?.map((choice) => ({
-                  answer: choice.text,
-                })) || [],
-            };
-          }
-          if (q.type === "Fill in the Blank") {
-            return {
-              question: q.question,
-              type: q.type,
-              answers:
-                q.blanks?.map((blank) => ({
-                  answer: blank,
-                })) || [],
-            };
-          }
-          if (q.type === "Long Answer" || q.type === "Short Answer") {
-            return {
-              question: q.question,
-              type: q.type,
-              maxLength: q.maxLength || 200,
-              minLength: q.minLength || 1,
-              answers: [], // Text answers don't need predefined answers
-            };
-          }
-          if (q.type === "Rank Order") {
-            return {
-              question: q.question,
-              type: q.type,
-              answers: q.choices?.map((choice) => ({
-                answer: choice.text,
-              })) || [],
-            };
-          }
-          if (q.type === "Matching") {
-            return {
-              question: q.question,
-              type: q.type,
-              answers: q.matching?.map((pair) => ({
-                option: pair.option || "",
-                answer: pair.answer || "",
-              })) || [],
-            };
-          }
-          
-          if (q.type === "Rating Scale") {
-            return {
-              question: q.question,
-              type: q.type,
-              ratingRange: {
-                min: q.ratingRange?.min || 1,
-                max: q.ratingRange?.max || 10,
-              },
-              highScoreLabel: q.highScoreLabel || "",
-              lowScoreLabel: q.lowScoreLabel || "",
-              answers: [], // Rating doesn't need predefined answers
-            };
-          }
-          // Handle regular questions
-          return {
-            question: q.question,
-            type: q.type.toLowerCase(),
-            choices:
-              q.choices?.map((choice) => ({
-                text: choice.text,
-              })) || [],
-          };
-        }),
-      };
-      setNewPoll(transformedPoll);
-    }
-  }, [pollToEdit]);
-
-  const addQuestion = () => {
-    setNewPoll({
-      ...newPoll,
-      questions: [
-        ...newPoll.questions,
-        {
-          question: "",
-          type: "Single Choice",
-          answers: [{ answer: "" }, { answer: "" }],
-          matching: [],
-        },
-      ],
-    });
+    ]);
   };
 
   const updateQuestion = (index, field, value) => {
-    const updatedQuestions = newPoll.questions.map((q, i) => {
+    const updatedQuestions = questions.map((q, i) => {
       if (i === index) {
-        // If changing to matching type, restructure the answers
-        if (field === "type" && value === "Matching") {
-          return {
-            ...q,
-            [field]: value,
-            answers: q.answers.map((a) => ({
-              option: "",
-              answer: a.answer || "",
-            })),
-          };
+        const updatedQuestion = { ...q, [field]: value };
+        if (field === "type") {
+          // Reset fields based on the new type
+          switch (value) {
+            case "Matching":
+              updatedQuestion.matching = [{ option: "", answer: "" }];
+              updatedQuestion.choices = [];
+              updatedQuestion.minLength = undefined;
+              updatedQuestion.maxLength = undefined;
+              updatedQuestion.blanks = undefined;
+              break;
+            case "Rank Order":
+              updatedQuestion.choices = [{ text: "" }];
+              updatedQuestion.matching = undefined;
+              updatedQuestion.minLength = undefined;
+              updatedQuestion.maxLength = undefined;
+              updatedQuestion.blanks = undefined;
+              break;
+            case "Fill in the Blank":
+              updatedQuestion.blanks = [""];
+              updatedQuestion.choices = undefined;
+              updatedQuestion.matching = undefined;
+              updatedQuestion.minLength = undefined;
+              updatedQuestion.maxLength = undefined;
+              break;
+            case "Short Answer":
+            case "Long Answer":
+              updatedQuestion.minLength = 1;
+              updatedQuestion.maxLength = 200;
+              updatedQuestion.choices = undefined;
+              updatedQuestion.matching = undefined;
+              updatedQuestion.blanks = undefined;
+              break;
+            case "Single Choice":
+            case "Multiple Choice":
+              updatedQuestion.choices = [{ text: "" }];
+              updatedQuestion.matching = undefined;
+              updatedQuestion.minLength = undefined;
+              updatedQuestion.maxLength = undefined;
+              updatedQuestion.blanks = undefined;
+              break;
+            default:
+              break;
+          }
         }
-        // If changing from matching type, restructure the answers
-        if (field === "type" && q.type === "Matching") {
-          return {
-            ...q,
-            [field]: value,
-            answers: q.answers.map((a) => ({
-              answer: a.answer || "",
-            })),
-          };
-        }
-        return { ...q, [field]: value };
+        return updatedQuestion;
       }
       return q;
     });
-    setNewPoll({ ...newPoll, questions: updatedQuestions });
+    setQuestions(updatedQuestions);
+  };
+  
+
+  const addChoice = (qIndex) => {
+    const updatedQuestions = questions.map((q, i) =>
+      i === qIndex ? { ...q, choices: [...q.choices, { text: "" }] } : q
+    );
+    setQuestions(updatedQuestions);
   };
 
-  const updateAnswer = (qIndex, aIndex, field, value) => {
-    const updatedQuestions = newPoll.questions.map((q, i) =>
+  const updateChoice = (qIndex, cIndex, value) => {
+    const updatedQuestions = questions.map((q, i) =>
       i === qIndex
         ? {
             ...q,
-            answers: q.answers.map((a, j) =>
-              j === aIndex
-                ? {
-                    ...a,
-                    [field]: value,
-                  }
-                : a
+            choices: q.choices.map((c, j) =>
+              j === cIndex ? { text: value } : c
             ),
           }
         : q
     );
-    setNewPoll({ ...newPoll, questions: updatedQuestions });
+    setQuestions(updatedQuestions);
   };
 
-  const addAnswer = (qIndex) => {
-    const updatedQuestions = newPoll.questions.map((q, i) =>
+  const removeChoice = (qIndex, cIndex) => {
+    const updatedQuestions = questions.map((q, i) =>
+      i === qIndex
+        ? { ...q, choices: q.choices.filter((_, j) => j !== cIndex) }
+        : q
+    );
+    setQuestions(updatedQuestions);
+  };
+
+  const addBlank = (qIndex) => {
+    const updatedQuestions = questions.map((q, i) =>
+      i === qIndex ? { ...q, blanks: [...q.blanks, ""] } : q
+    );
+    setQuestions(updatedQuestions);
+  };
+
+  const updateBlank = (qIndex, bIndex, value) => {
+    const updatedQuestions = questions.map((q, i) =>
       i === qIndex
         ? {
             ...q,
-            answers: [...q.answers, { answer: "" }],
+            blanks: q.blanks.map((b, j) => (j === bIndex ? value : b)),
           }
         : q
     );
-    setNewPoll({ ...newPoll, questions: updatedQuestions });
-  };
-
-  const removeAnswer = (qIndex, aIndex) => {
-    const updatedQuestions = newPoll.questions.map((q, i) =>
-      i === qIndex
-        ? {
-            ...q,
-            answers: q.answers.filter((_, j) => j !== aIndex),
-          }
-        : q
-    );
-    setNewPoll({ ...newPoll, questions: updatedQuestions });
-  };
-
-  const removeQuestion = (index) => {
-    const updatedQuestions = newPoll.questions.filter((_, i) => i !== index);
-    setNewPoll({ ...newPoll, questions: updatedQuestions });
+    setQuestions(updatedQuestions);
   };
 
   const handleSave = async () => {
-
-    try {
-      const dataToSend = {
-        project: project._id,
-        createdBy: user._id,
-        title: newPoll.pollName,
-        status: newPoll.isActive,
-        questions: newPoll.questions.map((q) => {
-          if (q.type === "Matching") {
-            return {
-              question: q.question,
-              type: "Matching",
-              matching: q.answers.map((a) => ({
-                option: a.option || "",
-                answer: a.answer || "",
-              })),
-              choices: [],
-              blanks: [],
-            };
-          }
-          if (q.type === "Single Choice" || q.type === "Multiple Choice") {
-            return {
-              question: q.question,
-              type: q.type,
-              choices: q.answers.map((a) => ({
-                text: a.answer,
-                votes: 0,
-              })),
-              matching: [],
-              blanks: [],
-            };
-          }
-          if (q.type === "Fill in the Blank") {
-            return {
-              question: q.question,
-              type: q.type,
-              blanks: q.answers.map((a) => a.answer),
-              choices: [], // Empty choices for fill in blank
-              matching: [], // Empty matching for fill in blank
-              highScoreLabel: "",
-              lowScoreLabel: "",
-            };
-          }
-          if (q.type === "Long Answer" || q.type === "Short Answer") {
-            return {
-              question: q.question,
-              type: q.type,
-              maxLength: q.maxLength || 200,
-              minLength: q.minLength || 1,
-              choices: [], // Empty choices for text answers
-              matching: [], // Empty matching for text answers
-            };
-          }
-          if (q.type === "Rank Order") {
-            return {
-              question: q.question,
-              type: q.type,
-              choices: q.answers.map((a) => ({
-                text: a.answer,
-                votes: 0,
-              })),
-              matching: [],
-            };
-          }
-          if (q.type === "matching") {
-            return {
-              question: q.question,
-              type: q.type,
-              matching: q.answers.map((a) => ({
-                option: a.option || "",
-                answer: a.answer || "",
-              })),
-              choices: [],
-            };
-          }
-          if (q.type === "Rating Scale") {
-            return {
-              question: q.question,
-              type: q.type,
-              ratingRange: {
-                min: q.ratingRange?.min || 1,
-                max: q.ratingRange?.max || 10,
-              },
-              highScoreLabel: q.highScoreLabel || "",
-              lowScoreLabel: q.lowScoreLabel || "",
-              choices: [], // Empty choices for rating
-              matching: [], // Empty matching for rating
-              blanks: [], // Empty blanks for rating
-            };
-          }
-          // Handle regular questions
-          return {
-            question: q.question,
-            type: q.type,
-            choices: q.answers.map((a) => ({
-              text: a.answer,
-            })),
-          };
-        }),
-      };
-
-      console.log('data to send', dataToSend)
-      
-       // Log the data being sent to the backend
-
-      if (pollToEdit) {
-        const response = await axios.put(
-          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-poll/${pollToEdit._id}`,
-          dataToSend
-        );
-        if (response.status === 200) {
-          setPolls(response.data);
-          toast.success("Poll updated successfully");
-        }
-      } else {
-        
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
-          dataToSend
-        );
-
-        console.log('response,', response)
-
-        if (response.status === 201) {
-          setPolls(response.data.polls);
-          toast.success("Poll created successfully");
-        }
-      }
-
-      onClose(); 
-    } catch (error) {
-      console.error("Error saving the poll:", error);
-      toast.error("Error saving the poll");
+    if (!title || questions.some((q) => !q.question)) {
+      toast.error("Please fill in all questions and the title.");
+      return;
     }
+
+    const dataToSend = {
+      title,
+      createdById: user._id,
+      projectId: project._id,
+      questions: questions.map((q) => {
+        const baseQuestion = { question: q.question, type: q.type };
+        switch (q.type) {
+          case "Single Choice":
+          case "Multiple Choice":
+            return {
+              ...baseQuestion,
+              choices: q.choices.map((c) => ({ text: c.text })),
+            };
+          case "Short Answer":
+          case "Long Answer":
+            return {
+              ...baseQuestion,
+              minLength: q.minLength,
+              maxLength: q.maxLength,
+            };
+          case "Fill in the Blank":
+            return {
+              ...baseQuestion,
+              blanks: q.blanks,
+            };
+          case "Rating Scale":
+            return {
+              ...baseQuestion,
+              ratingRange: { min: q.minLength, max: q.maxLength },
+              lowScoreLabel: q.lowScoreLabel,
+              highScoreLabel: q.highScoreLabel,
+            };
+          case "Matching":
+            return {
+              ...baseQuestion,
+              matching: q.matching.map((m) => ({
+                option: m.option,
+                answer: m.answer,
+              })),
+            };
+          case "Rank Order":
+            return {
+              ...baseQuestion,
+              choices: q.choices.map((c) => ({ text: c.text })),
+            };
+          default:
+            return baseQuestion;
+        }
+      }),
+    };
+
+    console.log('data to send', dataToSend)
+    if (pollToEdit) {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-poll/${pollToEdit._id}`,
+        dataToSend
+      );
+      if (response.status === 200) {
+        fetchPolls()
+        toast.success("Poll updated successfully");
+      }
+    } else {
+      
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/poll`,
+        dataToSend
+      );
+
+      console.log('response,', response)
+
+      if (response.status === 201) {
+        fetchPolls()
+        toast.success("Poll created successfully");
+      }
+    }
+
+    onClose();
   };
 
+  const updateMatching = (qIndex, mIndex, field, value) => {
+    const updatedQuestions = questions.map((q, i) =>
+      i === qIndex
+        ? {
+            ...q,
+            matching: q.matching.map((m, j) =>
+              j === mIndex ? { ...m, [field]: value } : m
+            ),
+          }
+        : q
+    );
+    setQuestions(updatedQuestions);
+  };
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl h-[90%] overflow-y-scroll">
-        <HeadingBlue25px children={pollToEdit ? "Edit Poll" : "Add Poll"} />
-        <div className="pt-5">
-          <InputField
-            label="Title"
-            type="text"
-            value={newPoll.pollName}
-            onChange={(e) =>
-              setNewPoll({ ...newPoll, pollName: e.target.value })
-            }
-          />
-        </div>
-        <div className="flex items-center mt-2">
-          <input
-            type="checkbox"
-            checked={newPoll.isActive}
-            onChange={(e) =>
-              setNewPoll({ ...newPoll, isActive: e.target.checked })
-            }
-          />
-          <FormDropdownLabel children="Active" className="ml-2 " />
-        </div>
-        <div className="bg-[#f3f3f3] -mx-6 p-6 mt-3">
-          {newPoll?.questions?.map((question, qIndex) => (
-            <div key={qIndex} className="mt-4 ">
-              <div className="flex justify-between items-center">
-                <FormDropdownLabel
-                  children={`${qIndex + 1}. Type your question`}
-                />
-                <IoTrashSharp
-                  className="bg-custom-orange-1 text-white p-2 text-3xl rounded-xl cursor-pointer"
-                  onClick={() => removeQuestion(qIndex)}
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <HeadingBlue25px children="Add Poll" />
+        <InputField
+          label="Poll Title"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        {questions.map((q, qIndex) => (
+          <div key={qIndex} className="mt-4 border-b pb-4">
+            <InputField
+              label={`Question ${qIndex + 1}`}
+              type="text"
+              value={q.question}
+              onChange={(e) =>
+                updateQuestion(qIndex, "question", e.target.value)
+              }
+            />
+            <label className="block font-semibold mt-2">Question Type</label>
+            <select
+              className="border p-2 rounded w-full"
+              value={q.type}
+              onChange={(e) => updateQuestion(qIndex, "type", e.target.value)}
+            >
+              {questionTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+
+            {q.type === "Single Choice" || q.type === "Multiple Choice" ? (
+              <div className="mt-2">
+                <label className="block font-semibold">Choices</label>
+                {q.choices.map((choice, cIndex) => (
+                  <div key={cIndex} className="flex items-center mt-2">
+                    <InputField
+                      label={`Choice ${cIndex + 1}`}
+                      type="text"
+                      value={choice.text}
+                      onChange={(e) =>
+                        updateChoice(qIndex, cIndex, e.target.value)
+                      }
+                    />
+                    <FiMinus
+                      className="ml-2 text-red-500 cursor-pointer"
+                      onClick={() => removeChoice(qIndex, cIndex)}
+                    />
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="save"
+                  children="Add Choice"
+                  icon={<GoPlus />}
+                  className="rounded-lg px-3 py-2"
+                  onClick={() => addChoice(qIndex)}
                 />
               </div>
-              <textarea
-                className="w-full mt-2 p-2 border-[0.5px] border-custom-dark-blue-1 bg-white rounded-xl"
-                value={question.question}
-                onChange={(e) =>
-                  updateQuestion(qIndex, "question", e.target.value)
-                }
-              />
-              {/* <div className="flex items-center mt-2 pl-5">
-                <input
-                  type="radio"
-                  name={`type-${qIndex}`}
-                  checked={question.type === "Single Choice"}
-                  onChange={() =>
-                    updateQuestion(qIndex, "type", "Single Choice")
+            ) : null}
+
+            {q.type === "Fill in the Blank" && (
+              <div className="mt-2">
+                <label className="block font-semibold">Blanks</label>
+                {q.blanks.map((blank, bIndex) => (
+                  <InputField
+                    key={bIndex}
+                    label={`Blank ${bIndex + 1}`}
+                    type="text"
+                    value={blank}
+                    onChange={(e) =>
+                      updateBlank(qIndex, bIndex, e.target.value)
+                    }
+                  />
+                ))}
+                <Button
+                  type="button"
+                  variant="save"
+                  children="Add Blank"
+                  className="rounded-lg px-3 py-2"
+                  icon={<GoPlus />}
+                  onClick={() => addBlank(qIndex)}
+                />
+              </div>
+            )}
+
+            {(q.type === "Short Answer" || q.type === "Long Answer") && (
+              <div className="mt-2">
+                <InputField
+                  label="Min Length"
+                  type="number"
+                  value={q.minLength}
+                  onChange={(e) =>
+                    updateQuestion(qIndex, "minLength", e.target.value)
+                  }
+                  min={1}
+                />
+                <InputField
+                  label="Max Length"
+                  type="number"
+                  value={q.maxLength}
+                  onChange={(e) =>
+                    updateQuestion(qIndex, "maxLength", e.target.value)
+                  }
+                  min={1}
+                />
+              </div>
+            )}
+
+            {q.type === "Rating Scale" && (
+              <div className="mt-2">
+                <InputField
+                  label="Low Score Label"
+                  type="text"
+                  value={q.lowScoreLabel}
+                  onChange={(e) =>
+                    updateQuestion(qIndex, "lowScoreLabel", e.target.value)
                   }
                 />
-                <FormDropdownLabel children="Single Choice" className="ml-2" />
-                <input
-                  type="radio"
-                  name={`type-${qIndex}`}
-                  className="ml-4"
-                  checked={question.type === "Multiple Choice"}
-                  onChange={() =>
-                    updateQuestion(qIndex, "type", "Multiple Choice")
+                <InputField
+                  label="High Score Label"
+                  type="text"
+                  value={q.highScoreLabel}
+                  onChange={(e) =>
+                    updateQuestion(qIndex, "highScoreLabel", e.target.value)
                   }
                 />
-                <FormDropdownLabel
-                  children="Multiple Choice"
-                  className="ml-2"
+                <InputField
+                  label="Min Score"
+                  type="number"
+                  value={q.minLength}
+                  onChange={(e) =>
+                    updateQuestion(qIndex, "minLength", e.target.value)
+                  }
                 />
-              </div> */}
-              {question?.type === "Fill in the Blank" ? (
-                <div className="mt-2">
-                  {question?.answers?.map((answer, aIndex) => (
-                    <div
-                      key={aIndex}
-                      className="flex justify-between items-center mt-2 w-full"
-                    >
-                      <div className="flex-grow">
-                        <InputField
-                          label={`Blank ${aIndex + 1}`}
-                          type="text"
-                          value={answer.answer || ""}
-                          onChange={(e) =>
-                            updateAnswer(
-                              qIndex,
-                              aIndex,
-                              "answer",
-                              e.target.value
-                            )
-                          }
-                          placeholder={`Enter text for blank ${aIndex + 1}`}
-                        />
-                      </div>
-                      {question.answers.length > 1 && (
-                        <FiMinus
-                          className="bg-custom-red text-white p-0.5 font-bold rounded-xl cursor-pointer ml-3"
-                          onClick={() => removeAnswer(qIndex, aIndex)}
-                        />
-                      )}
-                    </div>
-                  ))}
-                  <div className="flex justify-start mt-2">
-                    <Button
-                      type="button"
-                      variant="save"
-                      children="Add Blank"
-                      className="py-1 px-5 shadow-[0px_3px_6px_#09828F69] rounded-xl"
-                      icon={<GoPlus />}
-                      onClick={() => addAnswer(qIndex)}
-                    />
-                  </div>
-                </div>
-              ) : question?.type === "Short Answer" ||
-                question?.type === "Long Answer" ? (
-                <div className="mt-2">
-                  <div className="flex gap-4">
+                <InputField
+                  label="Max Score"
+                  type="number"
+                  value={q.maxLength}
+                  onChange={(e) =>
+                    updateQuestion(qIndex, "maxLength", e.target.value)
+                  }
+                />
+              </div>
+            )}
+
+{q.type === "Matching" && q.matching && (
+  <div className="mt-2">
+    <label className="block font-semibold">Matching Pairs</label>
+    {q.matching.map((pair, mIndex) => (
+      <div
+        key={mIndex}
+        className="flex justify-between items-center mt-2"
+      >
+        <InputField
+          label={`Option ${mIndex + 1}`}
+          type="text"
+          value={pair.option}
+          onChange={(e) =>
+            updateMatching(qIndex, mIndex, "option", e.target.value)
+          }
+        />
+        <InputField
+          label={`Answer ${mIndex + 1}`}
+          type="text"
+          value={pair.answer}
+          onChange={(e) =>
+            updateMatching(qIndex, mIndex, "answer", e.target.value)
+          }
+        />
+      </div>
+    ))}
+    <Button
+      type="button"
+      variant="save"
+      children="Add Matching Pair"
+      icon={<GoPlus />}
+      className="rounded-lg px-3 py-2"
+      onClick={() => {
+        const updatedQuestions = questions.map((q, i) =>
+          i === qIndex
+            ? {
+                ...q,
+                matching: [...q.matching, { option: "", answer: "" }],
+              }
+            : q
+        );
+        setQuestions(updatedQuestions);
+      }}
+    />
+  </div>
+)}
+
+
+            {q.type === "Rank Order" && (
+              <div className="mt-2">
+                <label className="block font-semibold">Choices</label>
+                {q.choices.map((choice, cIndex) => (
+                  <div key={cIndex} className="flex items-center mt-2">
                     <InputField
-                      label="Minimum Length"
-                      type="number"
-                      value={question.minLength || 1}
-                      onChange={(e) =>
-                        updateQuestion(
-                          qIndex,
-                          "minLength",
-                          parseInt(e.target.value)
-                        )
-                      }
-                    />
-                    <InputField
-                      label="Maximum Length"
-                      type="number"
-                      value={
-                        question.maxLength ||
-                        (question.type === "Long Answer" ? 1000 : 200)
-                      }
-                      onChange={(e) =>
-                        updateQuestion(
-                          qIndex,
-                          "maxLength",
-                          parseInt(e.target.value)
-                        )
-                      }
-                    />
-                  </div>
-                </div>
-              ) : question?.type === "Rating Scale" ? (
-                <div className="mt-2">
-                  <div className="flex gap-4">
-                    <InputField
-                      label="Minimum Rating"
-                      type="number"
-                      value={question.ratingRange?.min || 1}
-                      onChange={(e) =>
-                        updateQuestion(qIndex, "ratingRange", {
-                          ...question.ratingRange,
-                          min: parseInt(e.target.value),
-                        })
-                      }
-                    />
-                    <InputField
-                      label="Maximum Rating"
-                      type="number"
-                      value={question.ratingRange?.max || 10}
-                      onChange={(e) =>
-                        updateQuestion(qIndex, "ratingRange", {
-                          ...question.ratingRange,
-                          max: parseInt(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex gap-4 mt-2">
-                    <InputField
-                      label="Low Score Label"
+                      label={`Choice ${cIndex + 1}`}
                       type="text"
-                      value={question.lowScoreLabel || ""}
+                      value={choice.text}
                       onChange={(e) =>
-                        updateQuestion(qIndex, "lowScoreLabel", e.target.value)
+                        updateChoice(qIndex, cIndex, e.target.value)
                       }
-                      placeholder="e.g., Poor"
-                    />
-                    <InputField
-                      label="High Score Label"
-                      type="text"
-                      value={question.highScoreLabel || ""}
-                      onChange={(e) =>
-                        updateQuestion(qIndex, "highScoreLabel", e.target.value)
-                      }
-                      placeholder="e.g., Excellent"
                     />
                   </div>
-                </div>
-              ) : question?.type === "Matching" ? (
-                <div className="mt-2">
-                  {question?.answers?.map((pair, aIndex) => (
-                    <div
-                      key={aIndex}
-                      className="flex justify-between items-center mt-2 w-full gap-4"
-                    >
-                      <div className="flex-grow">
-                        <InputField
-                          label={`Option ${aIndex + 1}`}
-                          type="text"
-                          value={pair.option || ""}
-                          onChange={(e) =>
-                            updateAnswer(
-                              qIndex,
-                              aIndex,
-                              "option",
-                              e.target.value
-                            )
-                          }
-                          placeholder={`Enter option ${aIndex + 1}`}
-                        />
-                      </div>
-                      <div className="flex-grow">
-                        <InputField
-                          label={`Answer ${aIndex + 1}`}
-                          type="text"
-                          value={pair.answer || ""}
-                          onChange={(e) =>
-                            updateAnswer(
-                              qIndex,
-                              aIndex,
-                              "answer",
-                              e.target.value
-                            )
-                          }
-                          placeholder={`Enter answer ${aIndex + 1}`}
-                        />
-                      </div>
-                      {question.answers.length > 2 && (
-                        <FiMinus
-                          className="bg-custom-red text-white p-0.5 font-bold rounded-xl cursor-pointer ml-3"
-                          onClick={() => removeAnswer(qIndex, aIndex)}
-                        />
-                      )}
-                    </div>
-                  ))}
-                  <div className="flex justify-start mt-2">
-                    <Button
-                      type="button"
-                      variant="save"
-                      children="Add Matching Pair"
-                      className="py-1 px-5 shadow-[0px_3px_6px_#09828F69] rounded-xl"
-                      icon={<GoPlus />}
-                      onClick={() => addAnswer(qIndex)}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {question?.answers?.map((answer, aIndex) => (
-                    <div
-                      key={aIndex}
-                      className="flex justify-between items-center mt-2 w-full"
-                    >
-                      <div className="flex-grow">
-                        <InputField
-                          label={`Answer ${aIndex + 1}`}
-                          type="text"
-                          value={answer.answer || ""}
-                          onChange={(e) =>
-                            updateAnswer(
-                              qIndex,
-                              aIndex,
-                              "answer",
-                              e.target.value
-                            )
-                          }
-                          placeholder={`Enter answer ${aIndex + 1}`}
-                        />
-                      </div>
-                      {question.answers.length > 2 && (
-                        <FiMinus
-                          className="bg-custom-red text-white p-0.5 font-bold rounded-xl cursor-pointer ml-3"
-                          onClick={() => removeAnswer(qIndex, aIndex)}
-                        />
-                      )}
-                    </div>
-                  ))}
-                  <div className="flex justify-start mt-2">
-                    <Button
-                      type="button"
-                      variant="save"
-                      children="Add Answer"
-                      className="py-1 px-5 shadow-[0px_3px_6px_#09828F69] rounded-xl"
-                      icon={<GoPlus />}
-                      onClick={() => addAnswer(qIndex)}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between mt-5 items-center">
-          <div>
-            <Button
-              type="button"
-              variant="save"
-              children="Add Question"
-              className="py-1 px-5 shadow-[0px_3px_6px_#09828F69] rounded-xl"
-              icon={<GoPlus />}
-              onClick={addQuestion}
-            />
+                ))}
+                <Button
+                  type="button"
+                  variant="save"
+                  children="Add Choice"
+                  icon={<GoPlus />}
+                  className="rounded-lg px-3 py-2"
+                  onClick={() => addChoice(qIndex)}
+                />
+              </div>
+            )}
           </div>
-          <div className="flex justify-end gap-5 ">
-            <Button
-              type="button"
-              variant="cancel"
-              children="Cancel"
-              className="px-5 py-1 rounded-xl"
-              onClick={onClose}
-            />
-            <Button
-              type="button"
-              variant="save"
-              children={pollToEdit ? "Save" : "Add"}
-              className="px-5 py-1 rounded-xl"
-              onClick={handleSave}
-            />
-          </div>
+        ))}
+
+        <Button
+          type="button"
+          variant="save"
+          children="Add Question"
+          className="rounded-lg px-3 py-2"
+          icon={<GoPlus />}
+          onClick={addQuestion}
+        />
+
+        <div className="flex justify-end gap-5 mt-5">
+          <Button
+            type="button"
+            variant="cancel"
+            children="Cancel"
+            className="rounded-lg px-3 py-2"
+            onClick={onClose}
+          />
+          <Button
+            type="button"
+            variant="save"
+            children="Save"
+            className="rounded-lg px-3 py-2"
+            onClick={handleSave}
+          />
         </div>
       </div>
     </div>

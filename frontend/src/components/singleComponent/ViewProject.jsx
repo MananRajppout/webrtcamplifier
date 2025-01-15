@@ -270,7 +270,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsBulkAddDropdownOpen(false);
   };
 
-  // Function to handle file upload
+  // *Function to handle file upload
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -325,7 +325,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     }
   };
 
-  // Function to close the upload results modal
+  // *Function to close the upload results modal
   const closeUploadResultsModal = () => {
     setIsUploadResultsModalOpen(false);
   };
@@ -392,10 +392,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleOpenAddPollModal = () => {
-    setIsAddPollModalOpen(true);
   };
 
   // * Function related to files
@@ -470,9 +466,10 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   // * use effects
   useEffect(() => {
     fetchMeetings(meetingPage);
-    fetchPolls();
+    fetchPolls(1);
     fetchRepositories(localProjectState?._id, 1);
   }, [localProjectState, meetingPage]);
+
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center w-full">
@@ -602,6 +599,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               setIsLongAnswerModalOpen,
               setIsBlankModalOpen,
               setIsRatingModalOpen,
+              setIsAddPollModalOpen
             }}
             projectTeam={{
               handleOpenAddContactModal,
@@ -685,8 +683,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               onClose={() => setIsAddPollModalOpen(false)}
               pollToEdit={null}
               project={localProjectState}
-              setLocalProjectState={setLocalProjectState}
-              setPolls={setPolls}
+              fetchPolls={fetchPolls}
             />
           )}
           {/* Render add repository modal if open */}

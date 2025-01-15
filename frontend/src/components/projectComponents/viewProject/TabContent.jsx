@@ -51,6 +51,7 @@ const TabContent = ({
     setIsLongAnswerModalOpen,
     setIsBlankModalOpen,
     setIsRatingModalOpen,
+    setIsAddPollModalOpen
   } = modalStates;
 
   const { handleOpenAddContactModal } = projectTeam;
@@ -195,13 +196,20 @@ const TabContent = ({
               className="flex justify-end items-center
              gap-5 relative"
             >
-              <Button
+  <Button
+                children={"Add Poll"}
+                className="px-5 py-1.5 rounded-xl"
+                variant="secondary"
+                onClick={setIsAddPollModalOpen}
+              />
+
+              {/* <Button
                 children={"Add Poll"}
                 className="px-5 py-1.5 rounded-xl"
                 variant="secondary"
                 onClick={handleOpenPollDropdown}
-              />
-              {isPollDropdownOpen && (
+              /> */}
+              {/* {isPollDropdownOpen && (
                 <div className="absolute top-9 -left-20 bg-white border rounded shadow-lg p-2">
                   <div
                     className="flex items-center p-2 cursor-pointer"
@@ -260,7 +268,7 @@ const TabContent = ({
                     <span className="ml-2">Rating scale</span>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>)}
           </div>
           <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
