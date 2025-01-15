@@ -271,8 +271,6 @@ const page = () => {
     [roomname]
   );
 
-
-
   const onRoomEndingRemember = useCallback(
     ({ roomName }) => {
       console.log('The room has been ended.')

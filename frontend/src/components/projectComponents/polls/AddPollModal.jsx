@@ -215,7 +215,6 @@ const AddPollModal = ({
       }),
     };
 
-    console.log('data to send', dataToSend)
     if (pollToEdit) {
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-poll/${pollToEdit._id}`,
@@ -232,7 +231,6 @@ const AddPollModal = ({
         dataToSend
       );
 
-      console.log('response,', response)
 
       if (response.status === 201) {
         fetchPolls()

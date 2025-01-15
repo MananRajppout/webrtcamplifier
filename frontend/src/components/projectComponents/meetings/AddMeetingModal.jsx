@@ -161,7 +161,6 @@ if (!formData.duration) {
       projectId: project._id,
     };
 
-    console.log('updated form data', updatedFormData)
 
 
     try {

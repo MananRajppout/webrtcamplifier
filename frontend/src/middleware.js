@@ -11,7 +11,6 @@ export function middleware(request) {
   const token = cookieStore.get('token');
   // Get token from cookies
   // const token = request.cookies.get('token')?.value;
-  console.log(cookieStore)
 
   if(!token){
     if(authRoutes.includes(pathname)){

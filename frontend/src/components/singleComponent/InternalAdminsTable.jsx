@@ -81,7 +81,7 @@ const InternalAdminsTable = ({
 
     // Check if there's enough space below
     const spaceBelow = windowHeight - bottom;
-    const modalHeight = 150; // Approximate height of modal
+    const modalHeight = 150; 
 
     // If space below is less than modal height, position above the button
     const topPosition = spaceBelow < modalHeight ? "auto" : top;

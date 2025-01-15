@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 
 
 const EditMemberModal = ({ member, onClose, onSave }) => {
-  console.log("member", member)
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [name, setName] = useState('');
   useEffect(() => {
@@ -12,7 +11,6 @@ const EditMemberModal = ({ member, onClose, onSave }) => {
       setSelectedRoles(member.roles.permissions || []);
     }
   }, [member]);
-console.log("selected roles", selectedRoles)
   const handleRoleChange = (role) => {
     if (selectedRoles.includes(role)) {
       // Remove the role if it's already selected

@@ -49,12 +49,7 @@ const page = () => {
 
   
 
-  // useEffect(() => {
-  //   if (user?._id) {
-  //     console.log("Dependencies changed", { user, page, searchTerm });
-  //     fetchContacts(user._id, page, searchTerm);
-  //   }
-  // }, [user, page, searchTerm]);
+  
 
 
   // Debounced search handler

@@ -96,7 +96,7 @@ const getAllPolls = async (req, res) => {
 // Get a specific poll by ID
 const getPollById = async (req, res) => {
   try {
-    const poll = await Poll.findById(req.params.id);
+    const poll = await Poll.findById(req.params.id).populate("createdById", "email name");;
     if (!poll) return res.status(404).json({ message: 'Poll not found.' });
     return res.status(200).json(poll);
   } catch (error) {
@@ -132,91 +132,74 @@ const deletePoll = async (req, res) => {
 // Submit a response to a poll
 const submitPollResponse = async (req, res) => {
   try {
-    const { pollId, userId, answer } = req.body;
+    const { pollId, userId, responses } = req.body;
 
     const poll = await Poll.findById(pollId);
-    if (!poll) return res.status(404).json({ message: 'Poll not found.' });
+    if (!poll) return res.status(404).json({ message: "Poll not found." });
 
-    const existingResponse = poll.responses.find(r => r.userId.toString() === userId);
-    if (existingResponse) {
-      return res.status(400).json({ message: 'You have already submitted a response.' });
+    // Check if the user has already submitted a response
+    if (poll.responses.some((r) => r.userId.toString() === userId)) {
+      return res.status(400).json({ message: "You have already submitted a response." });
     }
 
-    // Handle response based on poll type
-    switch (poll.type) {
-      case 'Single Choice':
-        if (typeof answer !== 'number' || answer < 0 || answer >= poll.choices.length) {
-          return res.status(400).json({ message: 'Invalid choice.' });
-        }
-        poll.choices[answer].votes += 1;
-        poll.responses.push({ userId, answer });
-        break;
+    // Validate and process responses
+    poll.questions.forEach((question) => {
+      const response = responses[question._id];
+      if (!response) {
+        throw new Error(`Missing response for question: ${question.question}`);
+      }
 
-      case 'Multiple Choice':
-        if (!Array.isArray(answer) || answer.some(i => i < 0 || i >= poll.choices.length)) {
-          return res.status(400).json({ message: 'Invalid multiple choices.' });
-        }
-        answer.forEach(i => poll.choices[i].votes += 1);
-        break;
+      switch (question.type) {
+        case "Single Choice":
+        case "Multiple Choice":
+          if (!question.choices.some((choice) => choice.text === response)) {
+            throw new Error(`Invalid choice for question: ${question.question}`);
+          }
+          break;
+        case "Rating Scale":
+          if (
+            typeof response !== "number" ||
+            response < question.ratingRange.min ||
+            response > question.ratingRange.max
+          ) {
+            throw new Error(`Invalid rating for question: ${question.question}`);
+          }
+          break;
+        // Add more validation for other types
+        default:
+          break;
+      }
+    });
 
-      case 'Matching':
-        if (!Array.isArray(answer) || answer.length !== poll.matching.length) {
-          return res.status(400).json({ message: 'Invalid matching answer.' });
-        }
-        poll.responses.push({ userId, answer });
-        break;
-
-      case 'Rank Order':
-        if (!Array.isArray(answer) || answer.length !== poll.choices.length) {
-          return res.status(400).json({ message: 'Invalid rank order.' });
-        }
-        poll.responses.push({ userId, answer });
-        break;
-
-      case 'Short Answer':
-      case 'Long Answer':
-        if (typeof answer !== 'string' || answer.length < poll.minLength || answer.length > poll.maxLength) {
-          return res.status(400).json({ message: 'Invalid text answer.' });
-        }
-        poll.responses.push({ userId, answer });
-        break;
-
-      case 'Fill in the Blank':
-        if (!Array.isArray(answer) || answer.length !== poll.blanks.length) {
-          return res.status(400).json({ message: 'Invalid blank answers.' });
-        }
-        poll.responses.push({ userId, answer });
-        break;
-
-      case 'Rating Scale':
-        if (typeof answer !== 'number' || answer < poll.ratingRange.min || answer > poll.ratingRange.max) {
-          return res.status(400).json({ message: 'Invalid rating.' });
-        }
-        poll.responses.push({ userId, answer });
-        break;
-
-      default:
-        return res.status(400).json({ message: 'Invalid poll type.' });
-    }
-
+    // Save responses
+    poll.responses.push({ userId, answer: responses });
     await poll.save();
-    return res.status(200).json({ message: 'Response submitted successfully.' });
+
+    return res.status(200).json({ message: "Response submitted successfully." });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
+
 
 // Get poll results
 const getPollResults = async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id);
-    if (!poll) return res.status(404).json({ message: 'Poll not found.' });
+    if (!poll) return res.status(404).json({ message: "Poll not found." });
 
-    return res.status(200).json(poll.responses);
+    const results = poll.responses.map((response) => ({
+      userId: response.userId,
+      answer: response.answer,
+      timestamp: response.timestamp,
+    }));
+
+    return res.status(200).json(results);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
+
 
 const changeActiveStatus = async (req, res) => {
   try {

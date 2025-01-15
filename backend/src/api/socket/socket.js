@@ -1139,9 +1139,7 @@ const setupSocket = (server) => {
 
     //polling feature needs to be handled, here we are just sending the data to all the clients
     //starting
-    socket.on(
-      "start-poll",
-      async ({ meetingId, pollId, endTime }, callback) => {
+    socket.on("start-poll", async ({ meetingId, pollId, endTime }, callback) => {
         try {
           // Fetch the poll details
           // console.log("poll id in start poll", pollId);
@@ -1211,9 +1209,11 @@ const setupSocket = (server) => {
       }
     );
 
-    socket.on(
-      "submit-poll-response",
+    socket.on("submit-poll-response",
       async ({ meetingId, activePollId, responses, participantEmail }) => {
+        console.log("Active Poll ID:", activePollId); 
+        console.log("Responses Received:", responses); 
+        console.log("Participant Email:", participantEmail);
         console.log("poll id in submit-poll-response", activePollId, 'response', responses);
         try {
           // Validate required fields
