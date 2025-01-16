@@ -85,6 +85,7 @@ const LeftSidebarOpenUi = ({
   setBreakoutRoomPopUpOpen,
   breakoutRoomDetails,
   setBreakoutRoomDetails,
+  handleModeratorToggleWhiteboard,
   handleGetPollResults,
   pollData,
 }) => {
@@ -452,12 +453,20 @@ const LeftSidebarOpenUi = ({
         url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
       }
 
-      if (typeof window !== "undefined") {
-        window.open(url, "_self");
-      }
-    },
-    [id, userrole, fullName]
-  );
+    if(typeof window !== 'undefined'){
+      window.open(url, "_self");
+    }
+  }, [id,userrole,fullName]);
+
+
+
+  const handleWhiteBoardOpen = useCallback(() => {
+    setIsWhiteBoardOpen((prev) => !prev);
+
+    if(role == "Moderator"){
+      handleModeratorToggleWhiteboard(!isWhiteBoardOpen);
+    }
+  },[role,isWhiteBoardOpen])
 
   return (
     <>
@@ -552,7 +561,7 @@ const LeftSidebarOpenUi = ({
               variant="meeting"
               type="submit"
               className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-              onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
+              onClick={handleWhiteBoardOpen}
             />
           )}
 

@@ -54,6 +54,7 @@ const LeftSidebar = ({
   setBreakoutRoomPopUpOpen,
   breakoutRoomDetails,
   setBreakoutRoomDetails,
+  handleModeratorToggleWhiteboard,
   handleGetPollResults,
   pollData
 }) => {
@@ -276,6 +277,7 @@ const LeftSidebar = ({
               setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
               breakoutRoomDetails={breakoutRoomDetails}
               setBreakoutRoomDetails={setBreakoutRoomDetails}
+              handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
               handleGetPollResults={handleGetPollResults}
               pollData={pollData}
             />
