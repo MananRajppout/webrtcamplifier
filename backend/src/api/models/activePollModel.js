@@ -9,8 +9,8 @@ const activePollSchema = new Schema({
     enum: ['Active', 'Ended'],
     default: 'Active',
   },
-  startTime: { type: Date, default: Date.now },
-  endTime: { type: Date, required: true },
+  // startTime: { type: Date, default: Date.now },
+ 
 });
 
 const ActivePoll = mongoose.model('ActivePoll', activePollSchema);

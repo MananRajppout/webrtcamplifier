@@ -34,6 +34,8 @@ const PollResultModal = ({ setIsPollResultModalOpen, pollResult, uploaderEmail, 
     }
   };
 
+  console.log("Poll Result Data:", pollResult);
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-30">
       <div className="bg-white p-4 rounded-2xl w-[800px] max-h-[90vh] overflow-y-auto">
@@ -41,7 +43,7 @@ const PollResultModal = ({ setIsPollResultModalOpen, pollResult, uploaderEmail, 
         {pollResult && pollResult.length > 0 ? (
           pollResult.map((participant, index) => (
             <div key={index} className="mb-6">
-              <h3 className="font-bold text-lg mb-2">Participant: {participant?.participantEmail}</h3>
+              <h3 className="font-bold text-lg mb-2">Participant: {participant?.participantName}</h3>
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
                   <tr className="bg-gray-200">

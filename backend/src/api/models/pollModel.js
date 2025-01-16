@@ -36,10 +36,10 @@ const questionSchema = new mongoose.Schema(
       ],
       required: true,
     },
-    choices: { type: [choiceSchema], default: [] }, // Default to empty array
-    matching: { type: [matchingSchema], default: [] }, // Default to empty array
+    choices: { type: [choiceSchema], default: [] }, 
+    matching: { type: [matchingSchema], default: [] }, 
     ratingRange: {
-      min: { type: Number, default: null }, // Default to null for clarity
+      min: { type: Number, default: null }, 
       max: { type: Number, default: null },
     },
     blanks: { type: [String], default: [] },

@@ -241,7 +241,9 @@ const ParticipantPollModal = ({
           ))}
         </div>
         <div className="flex justify-end mt-4 px-3 py-1 rounded-lg">
-          <Button variant="primary" onClick={handleSubmit}>
+          <Button variant="primary" 
+          className="rounded-lg px-3 py-2"
+          onClick={handleSubmit}>
             Submit
           </Button>
         </div>

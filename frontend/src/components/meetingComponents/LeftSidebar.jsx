@@ -53,7 +53,9 @@ const LeftSidebar = ({
   breakoutRoomPopUpOpen,
   setBreakoutRoomPopUpOpen,
   breakoutRoomDetails,
-  setBreakoutRoomDetails
+  setBreakoutRoomDetails,
+  handleGetPollResults,
+  pollData
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -274,6 +276,8 @@ const LeftSidebar = ({
               setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
               breakoutRoomDetails={breakoutRoomDetails}
               setBreakoutRoomDetails={setBreakoutRoomDetails}
+              handleGetPollResults={handleGetPollResults}
+              pollData={pollData}
             />
           ) : (
             <LeftSidebarCloseUi

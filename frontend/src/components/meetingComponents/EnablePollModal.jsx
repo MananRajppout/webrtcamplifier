@@ -11,21 +11,11 @@ const EnablePollModal = ({ onClose, poll, meetingId }) => {
   const { socket } = useGlobalContext();
 
   const handleStartPoll = async () => {
-    if (!endTime) return alert("Please select an end time for the poll");
-
-    const currentDate = new Date();
-    const [hours, minutes] = endTime.split(":");
-    const endDateTime = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate(),
-      parseInt(hours, 10),
-      parseInt(minutes, 10)
-    );
+   
 
     socket.emit(
       "start-poll",
-      { meetingId, pollId: poll._id, endTime:endDateTime.toISOString() },
+      { meetingId, pollId: poll._id,  },
       (response) => {
       
         if (response.success) {

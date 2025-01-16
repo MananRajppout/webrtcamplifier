@@ -22,7 +22,7 @@ import { GoMoveToEnd } from "react-icons/go";
 import MoveToBreakModal from "../singleComponent/MoveToBreakModal";
 import { BiEditAlt } from "react-icons/bi";
 import UserRename from "../singleComponent/UserRenameModal";
-import ScrollToBottom from 'react-scroll-to-bottom';
+import ScrollToBottom from "react-scroll-to-bottom";
 import { bytesToMbs } from "./RightSidebarOpenUi";
 import ViewPollModel from "../singleComponent/ViewPollModel";
 import BreakoutRoomMoveModel from "../singleComponent/BreakoutRoomMoveModel";
@@ -78,11 +78,15 @@ const LeftSidebarOpenUi = ({
   totalPages,
   currentPollPage,
   setCurrentPollPage,
-  startRecording, setStartRecording, handleRecording,
+  startRecording,
+  setStartRecording,
+  handleRecording,
   breakoutRoomPopUpOpen,
   setBreakoutRoomPopUpOpen,
   breakoutRoomDetails,
-  setBreakoutRoomDetails
+  setBreakoutRoomDetails,
+  handleGetPollResults,
+  pollData,
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -94,9 +98,10 @@ const LeftSidebarOpenUi = ({
   const [userToRename, setUserToRename] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [inputMessage, setInputMessage] = useState("");
-  const [openMoveToBreakModelOpen, setMoveToOpenBreakModelOpen] = useState(false);
+  const [openMoveToBreakModelOpen, setMoveToOpenBreakModelOpen] =
+    useState(false);
   const [openMoveToRenameOpen, setMoveToOpenRenameOpen] = useState(false);
-  const [groupMessageContent, setGroupMessageContent] = useState('');
+  const [groupMessageContent, setGroupMessageContent] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showUDot, setUShowDot] = useState(false);
   const [showCDot, setCShowDot] = useState(false);
@@ -110,10 +115,13 @@ const LeftSidebarOpenUi = ({
   const [participantsMicMuted, setParticipantsMicMuted] = useState({});
   const [isAllParticipantMuted, setIsAllParticipantMuted] = useState({});
   const [isPollModelOpen, setIsPollModelOpen] = useState(false);
-  
-  
+  const [selectedPollId, setSelectedPollId] = useState(null);
 
-
+  const handlePollResultClick = (pollId, meetingId) => {
+    console.log('handle poll result', pollId)
+    setSelectedPollId(pollId);
+    handleGetPollResults(pollId, meetingId); 
+  };
 
   // useEffect(() => {
   //   if (previosMCountRef.current < messages?.length) {
@@ -130,43 +138,35 @@ const LeftSidebarOpenUi = ({
   //group chats
   useEffect(() => {
     if (activeTab != "chats") {
-      setUnreadMessage(prev => prev + 1);
+      setUnreadMessage((prev) => prev + 1);
     }
     if (previosCCountRef.current < groupMessage?.length) {
       previosCCountRef.current = groupMessage?.length;
-      if (activeTab != 'chats') {
+      if (activeTab != "chats") {
         setCShowDot(true);
       }
     }
   }, [groupMessage, activeTab]);
 
-
   //user messages
   useEffect(() => {
     if (activeTab != "participants") {
-      setUnreadMessageParticipant(prev => prev + 1);
+      setUnreadMessageParticipant((prev) => prev + 1);
     }
     if (previosMCountRef.current < messages?.length) {
       previosMCountRef.current = messages?.length;
-      if (activeTab != 'participants') {
+      if (activeTab != "participants") {
         setUShowDot(true);
       }
     }
   }, [messages, activeTab]);
 
-
-
   const myEmailRef = useRef(null);
-
-
-
-
   const params = useParams();
   const searchParams = useSearchParams();
-
-  const userrole = searchParams.get('role');
-  const fullName = searchParams.get('fullName');
-  const roomname = searchParams.get('roomname') || 'main'
+  const userrole = searchParams.get("role");
+  const fullName = searchParams.get("fullName");
+  const roomname = searchParams.get("roomname") || "main";
   const ModeratorType = searchParams.get("ModeratorType");
   const id = params.id;
   // this for handling the message input
@@ -177,23 +177,21 @@ const LeftSidebarOpenUi = ({
         senderName: userName,
         receiverName: selectedChat.name,
         senderEmail: myEmailRef.current,
-        receiverEmail: selectedChat.email || 'unkown@gmail.com',
+        receiverEmail: selectedChat.email || "unkown@gmail.com",
         message: inputMessage.trim(),
       };
-      
+
       sendMessageParticipant(newMessage);
       setInputMessage("");
     }
   };
 
-
   useEffect(() => {
-    if (typeof window != 'undefined') {
-      const email = window.localStorage.getItem('email');
-      myEmailRef.current = email
+    if (typeof window != "undefined") {
+      const email = window.localStorage.getItem("email");
+      myEmailRef.current = email;
     }
-  }, [])
-
+  }, []);
 
   const modalRef = useRef();
 
@@ -202,7 +200,6 @@ const LeftSidebarOpenUi = ({
   };
   const [selectedReceiverId, setSelectedReceiverId] = useState(null);
 
- 
   const toggleRemoveAndWaitingOptionModal = (event, user) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -271,7 +268,12 @@ const LeftSidebarOpenUi = ({
 
   const handleMoveUser = (userId) => {
     const userName = users?.find((user) => user.id === userId);
-    moveParticipantToWaitingRoom(userName.name, userName.role, userName.email, meetingId)
+    moveParticipantToWaitingRoom(
+      userName.name,
+      userName.role,
+      userName.email,
+      meetingId
+    );
     notify(
       "success",
       "Success",
@@ -291,60 +293,65 @@ const LeftSidebarOpenUi = ({
 
   const filteredMessages = messages.filter(
     (message) =>
-      (message.senderName === selectedChat?.name && message.receiverName === userName) ||
-      (message.senderName === userName && message.receiverName === selectedChat?.name)
+      (message.senderName === selectedChat?.name &&
+        message.receiverName === userName) ||
+      (message.senderName === userName &&
+        message.receiverName === selectedChat?.name)
   );
 
-
-  const handleRoomSwitch = useCallback((roomName) => {
-    let url;
-    if (roomName.toLowerCase() == "main") {
-      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}`
-    } else {
-      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
-    }
-    window.open(url, '_self')
-  }, [fullName, userrole, id]);
-
+  const handleRoomSwitch = useCallback(
+    (roomName) => {
+      let url;
+      if (roomName.toLowerCase() == "main") {
+        url = `/meeting/${id}?fullName=${fullName}&role=${userrole}`;
+      } else {
+        url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
+      }
+      window.open(url, "_self");
+    },
+    [fullName, userrole, id]
+  );
 
   const handleGroupMessage = useCallback(() => {
     if (!groupMessageContent) return;
     sendGroupMessage(groupMessageContent);
-    setGroupMessageContent('');
+    setGroupMessageContent("");
   }, [groupMessageContent]);
 
+  const handleGroupChatMessageChange = useCallback(
+    (e) => {
+      const value = e.target.value;
+      setGroupMessageContent(value);
 
+      const atIndex = value.lastIndexOf("@");
+      if (atIndex !== -1) {
+        const query = value.substring(atIndex + 1).toLowerCase();
+        const filterUser = users.map((p) => {
+          if (p.role == "Moderator") {
+            p.name = "Moderator";
+          }
 
-  const handleGroupChatMessageChange = useCallback((e) => {
-    const value = e.target.value;
-    setGroupMessageContent(value);
+          return p;
+        });
+        let filteredSuggestions = filterUser.filter((p) =>
+          p.name.toLowerCase().startsWith(query)
+        );
 
-    const atIndex = value.lastIndexOf("@");
-    if (atIndex !== -1) {
-      const query = value.substring(atIndex + 1).toLowerCase();
-      const filterUser = users.map((p) => {
-        if (p.role == "Moderator") {
-          p.name = "Moderator"
-        }
-
-        return p;
-      })
-      let filteredSuggestions = filterUser.filter((p) =>
-        p.name.toLowerCase().startsWith(query)
-      );
-
-      setSuggestions(filteredSuggestions);
-    } else {
-      setSuggestions([]);
-    }
-
-  }, [users]);
-
+        setSuggestions(filteredSuggestions);
+      } else {
+        setSuggestions([]);
+      }
+    },
+    [users]
+  );
 
   const handleSuggestionClick = useCallback((name) => {
     const atIndex = groupMessageContent.lastIndexOf("@");
     const newInput =
-      groupMessageContent.substring(0, atIndex + 1) + name + " " + groupMessageContent.substring(atIndex);
+      groupMessageContent.substring(0, atIndex + 1) +
+      name +
+      " " +
+      groupMessageContent.substring(atIndex);
     setGroupMessageContent(`@${newInput}`);
     setSuggestions([]);
   }, []);
@@ -352,24 +359,23 @@ const LeftSidebarOpenUi = ({
   const handleMicMuteUnmute = useCallback((type, email) => {
     const audioElement = document.getElementById(email);
     if (type == "mute") {
-      setParticipantsMicMuted(prev => ({ ...prev, [email]: false }));
+      setParticipantsMicMuted((prev) => ({ ...prev, [email]: false }));
       if (audioElement) {
         audioElement.muted = false;
       }
     } else {
-      setParticipantsMicMuted(prev => ({ ...prev, [email]: true }));
+      setParticipantsMicMuted((prev) => ({ ...prev, [email]: true }));
       if (audioElement) {
         audioElement.muted = true;
       }
     }
-
   }, []);
 
-
-
   useEffect(() => {
-    const mutedParticipantLength = Object.values(participantsMicMuted).filter(value => value === true).length;
-  
+    const mutedParticipantLength = Object.values(participantsMicMuted).filter(
+      (value) => value === true
+    ).length;
+
     const userLength = users
       ?.filter((user) => {
         if (role === "Moderator") {
@@ -387,56 +393,77 @@ const LeftSidebarOpenUi = ({
       .filter((user) =>
         role === "Moderator"
           ? true
-          : user.roomName?.toLowerCase() === roomname.toLowerCase() || user.role === "Moderator"
+          : user.roomName?.toLowerCase() === roomname.toLowerCase() ||
+            user.role === "Moderator"
       )
-      .filter((user) => user.status !== "removed" && user.status !== "offline").length;
-  
+      .filter(
+        (user) => user.status !== "removed" && user.status !== "offline"
+      ).length;
+
     // Check if all participants are muted
     if (mutedParticipantLength === userLength) {
       setIsAllParticipantMuted(true);
     } else {
       setIsAllParticipantMuted(false);
     }
-  }, [participantsMicMuted, users, role, userName, roomname, setIsAllParticipantMuted]);
+  }, [
+    participantsMicMuted,
+    users,
+    role,
+    userName,
+    roomname,
+    setIsAllParticipantMuted,
+  ]);
 
+  const handleMuteAll = useCallback(
+    (type) => {
+      users
+        ?.filter((user) => {
+          if (role === "Moderator") {
+            // Show all users for the moderator
+            return user.name !== userName;
+          } else if (role === "Participant") {
+            // Show only moderators to participants
+            return user.role === "Moderator";
+          } else if (role === "Observer") {
+            return user.role !== "Observer";
+          }
+        })
+        .filter((user) =>
+          role === "Moderator"
+            ? true
+            : user.roomName?.toLowerCase() == roomname.toLowerCase() ||
+              user.role == "Moderator"
+        )
+        .filter(
+          (user) => user.status !== "removed" && user.status !== "offline"
+        )
+        .map((user) => handleMicMuteUnmute(type, user.email));
+    },
+    [users, role, userName]
+  );
 
-  const handleMuteAll = useCallback((type) => {
-    users?.filter((user) => {
-      if (role === "Moderator") {
-        // Show all users for the moderator
-        return user.name !== userName;
-      } else if (role === "Participant") {
-        // Show only moderators to participants
-        return user.role === "Moderator";
-      } else if (role === "Observer") {
-        return user.role !== "Observer";
+  const handleJoinParticipantsJoinBreakoutRoom = useCallback(
+    (roomName) => {
+      let url = "";
+      if (roomName?.toLowerCase() == "main") {
+        url = `/meeting/${id}?fullName=${fullName}&role=${userrole}`;
+      } else {
+        url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
       }
 
-    })
-    .filter((user) => role === "Moderator" ? true : (user.roomName?.toLowerCase() == roomname.toLowerCase() || user.role == "Moderator"))
-    .filter((user) => user.status !== "removed" && user.status !== "offline")
-    .map((user) => handleMicMuteUnmute(type, user.email));
-  },[users,role,userName]);
-
-
-  const handleJoinParticipantsJoinBreakoutRoom = useCallback((roomName) => {
-    let url = "";
-    if (roomName?.toLowerCase() == "main") {
-      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}`;
-    } else {
-      url = `/meeting/${id}?fullName=${fullName}&role=${userrole}&type=breackout&roomname=${roomName}`;
-    }
-
-    if(typeof window !== 'undefined'){
-      window.open(url, "_self");
-    }
-  }, [id,userrole,fullName]);
+      if (typeof window !== "undefined") {
+        window.open(url, "_self");
+      }
+    },
+    [id, userrole, fullName]
+  );
 
   return (
     <>
       <div className=" md:pt-0 pt-16">
         {/* break rooms  */}
-        {role === "Moderator" && breakoutRooms?.length > 1 &&
+        {role === "Moderator" && breakoutRooms?.length > 1 && (
           <div className=" flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4 mt-16 hidden md:flex">
             {/* top heading */}
 
@@ -448,10 +475,17 @@ const LeftSidebarOpenUi = ({
               <div className="flex justify-end items-center gap-1">
                 <PiCirclesFourFill className="text-custom-orange-1 text-xs" />
                 <h1 className="text-xs font-bold">
-                  {users.filter(u => u.roomName?.toLowerCase() == selectedRoom.toLowerCase() && u.status == "online")?.length || 0}
+                  {users.filter(
+                    (u) =>
+                      u.roomName?.toLowerCase() == selectedRoom.toLowerCase() &&
+                      u.status == "online"
+                  )?.length || 0}
                 </h1>
-                <Button variant="plain" onClick={() => setBreakoutRoomModelOpen(true)}>
-                  <PiPlusCircle/>
+                <Button
+                  variant="plain"
+                  onClick={() => setBreakoutRoomModelOpen(true)}
+                >
+                  <PiPlusCircle />
                 </Button>
               </div>
             </div>
@@ -464,37 +498,32 @@ const LeftSidebarOpenUi = ({
               >
                 {selectedRoom}
                 <FaAngleDown
-                  className={`ml-2 transform transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : "rotate-0"
-                    }`}
+                  className={`ml-2 transform transition-transform duration-200 ${
+                    isDropdownOpen ? "rotate-180" : "rotate-0"
+                  }`}
                 />
               </button>
               {isDropdownOpen && (
                 <ul
                   className={`absolute left-0 text-xs bg-white rounded-lg shadow-[0px_3px_6px_#00000029] text-custom-dark-blue-1 font-semibold w-full`}
                 >
-
-                  {
-                    breakoutRooms.map((name) => (
-                      <li
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                        index={name}
-                        onClick={() => handleRoomSwitch(name)}
-                      >
-                        {name}
-                      </li>
-                    ))
-                  }
-
+                  {breakoutRooms.map((name) => (
+                    <li
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                      index={name}
+                      onClick={() => handleRoomSwitch(name)}
+                    >
+                      {name}
+                    </li>
+                  ))}
                 </ul>
               )}
             </div>
           </div>
-        }
-
+        )}
 
         {/* Whiteboard and local recording */}
         <div className=" lg:pt-10 px-4">
-
           {role === "Moderator" && enabledBreakoutRoom && (
             <Button
               children={"Create Breakout Room"}
@@ -504,7 +533,6 @@ const LeftSidebarOpenUi = ({
               onClick={() => setBreakoutRoomModelOpen(true)}
             />
           )}
-
 
           {role === "Moderator" && (
             <Button
@@ -516,8 +544,9 @@ const LeftSidebarOpenUi = ({
             />
           )}
 
-          {
-            (role == "Moderator" || role == "Observer" || setting.allowWhiteBoard) &&
+          {(role == "Moderator" ||
+            role == "Observer" ||
+            setting.allowWhiteBoard) && (
             <Button
               children={isWhiteBoardOpen ? "Meeting" : "Whiteboard"}
               variant="meeting"
@@ -525,8 +554,7 @@ const LeftSidebarOpenUi = ({
               className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
               onClick={() => setIsWhiteBoardOpen((prev) => !prev)}
             />
-          }
-
+          )}
 
           {role === "Moderator" && (
             <Button
@@ -548,18 +576,29 @@ const LeftSidebarOpenUi = ({
             />
           )}
 
+          {pollData && role === "Moderator" && (
+            <Button
+              children={`View Result`}
+              variant="meeting"
+              type="submit"
+              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+              onClick={() => handlePollResultClick(pollData.pollId, meetingId)}
+            />
+          )}
 
-          {
-            role == "Participant" && breakoutRoomDetails && (
-              <Button
-                children={`Join Breakout`}
-                variant="meeting"
-                type="submit"
-                className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
-                onClick={() => handleJoinParticipantsJoinBreakoutRoom(breakoutRoomDetails?.name)}
-              />
-            )
-          }
+          {role == "Participant" && breakoutRoomDetails && (
+            <Button
+              children={`Join Breakout`}
+              variant="meeting"
+              type="submit"
+              className="w-full py-2 rounded-xl !justify-start pl-2 mb-2"
+              onClick={() =>
+                handleJoinParticipantsJoinBreakoutRoom(
+                  breakoutRoomDetails?.name
+                )
+              }
+            />
+          )}
         </div>
 
         {/* Backroom chat and icon */}
@@ -576,30 +615,38 @@ const LeftSidebarOpenUi = ({
                 children="Chats"
                 variant="default"
                 type="submit"
-                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "chats"
-                  ? "shadow-[0px_4px_6px_#1E656D4D]"
-                  : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
-                  }  `}
-                onClick={() => { handleTabClick("chats"); setCShowDot(false); setUnreadMessage(0); }}
+                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${
+                  activeTab === "chats"
+                    ? "shadow-[0px_4px_6px_#1E656D4D]"
+                    : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
+                }  `}
+                onClick={() => {
+                  handleTabClick("chats");
+                  setCShowDot(false);
+                  setUnreadMessage(0);
+                }}
               />
-              {
-                showCDot &&
+              {showCDot && (
                 <div className="absolute -top-1 -right-1 w-4 h-4 text-xs grid text-center text-white rounded-full  bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]">
-                  {unreadMessage < 10 ? unreadMessage : '9+'}
-
+                  {unreadMessage < 10 ? unreadMessage : "9+"}
                 </div>
-              }
+              )}
             </div>
             <div className="w-full relative">
               <Button
                 children="Participants"
                 variant="default"
                 type="submit"
-                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${activeTab === "participants"
-                  ? "shadow-[0px_4px_6px_#1E656D4D]"
-                  : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
-                  }  `}
-                onClick={() => { handleTabClick("participants"); setUShowDot(false); setUnreadMessageParticipant(0) }}
+                className={`w-full py-2 rounded-xl pl-2  text-[10px] text-center px-1  ${
+                  activeTab === "participants"
+                    ? "shadow-[0px_4px_6px_#1E656D4D]"
+                    : "bg-custom-gray-8 border-2  border-custom-teal !text-custom-teal "
+                }  `}
+                onClick={() => {
+                  handleTabClick("participants");
+                  setUShowDot(false);
+                  setUnreadMessageParticipant(0);
+                }}
               />
               {/* {
                 showUDot &&
@@ -618,38 +665,38 @@ const LeftSidebarOpenUi = ({
               <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center relative">
                 {/* chat message */}
                 <ScrollToBottom className="flex flex-col gap-2 flex-grow h-[10rem] overflow-y-auto w-full mb-5">
-                  {
-                    groupMessage && groupMessage.map((message, index) => (
+                  {groupMessage &&
+                    groupMessage.map((message, index) => (
                       <div
                         key={index}
-                        className={`flex items-center gap-2 mb-3 ${message.senderEmail === myEmailRef.current
-                          ? "justify-end"
-                          : "justify-start"
-                          }`}
+                        className={`flex items-center gap-2 mb-3 ${
+                          message.senderEmail === myEmailRef.current
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
                       >
                         <div
-                          className={`flex flex-col ${message.senderEmail === myEmailRef.current
-                            ? "items-end"
-                            : "items-start"
-                            }`}
+                          className={`flex flex-col ${
+                            message.senderEmail === myEmailRef.current
+                              ? "items-end"
+                              : "items-start"
+                          }`}
                         >
                           <p
-                            className={`text-[12px] ${message.senderEmail === myEmailRef.current
-                              ? "text-blue-600"
-                              : "text-green-600"
-                              }`}
+                            className={`text-[12px] ${
+                              message.senderEmail === myEmailRef.current
+                                ? "text-blue-600"
+                                : "text-green-600"
+                            }`}
                           >
-                            <span className="font-bold">
-                              {message.name}:
-                            </span>{" "}
-                            {message.content?.split(' ').map(text => (
+                            <span className="font-bold">{message.name}:</span>{" "}
+                            {message.content?.split(" ").map((text) => (
                               <>
-                                {
-                                  text.startsWith('@') ?
-                                    <span className="text-red-500">{text}{" "}</span>
-                                    :
-                                    <span>{text}{" "}</span>
-                                }
+                                {text.startsWith("@") ? (
+                                  <span className="text-red-500">{text} </span>
+                                ) : (
+                                  <span>{text} </span>
+                                )}
                               </>
                             ))}
                           </p>
@@ -658,12 +705,10 @@ const LeftSidebarOpenUi = ({
                           </p>
                         </div>
                       </div>
-                    ))
-                  }
+                    ))}
                 </ScrollToBottom>
                 {/* send message */}
-                {
-                  role !== "Observer" &&
+                {role !== "Observer" && (
                   <div className="flex justify-between items-center gap-2 relative">
                     <input
                       type="text"
@@ -671,22 +716,24 @@ const LeftSidebarOpenUi = ({
                       className="rounded-lg py-1 px-2 placeholder:text-[10px]"
                       value={groupMessageContent}
                       onChange={handleGroupChatMessageChange}
-                    // onKeyPress={(e) => e.key === "Enter" && handleGroupMessage()}
+                      // onKeyPress={(e) => e.key === "Enter" && handleGroupMessage()}
                     />
 
                     {suggestions.length > 0 && (
                       <div className="sugesstions absolute -top-[11rem] left-0 h-[10rem] w-[12rem] bg-white z-50 rounded-md p-2 overflow-y-auto">
                         <ul className="suggestions space-y-2">
                           {suggestions.map((s) => (
-                            <li key={s.email} onClick={() => handleSuggestionClick(s.name)} className="cursor-pointer text-red-500">
+                            <li
+                              key={s.email}
+                              onClick={() => handleSuggestionClick(s.name)}
+                              className="cursor-pointer text-red-500"
+                            >
                               @{s.name}
                             </li>
                           ))}
                         </ul>
                       </div>
                     )}
-
-
 
                     <div className="absolute right-11 cursor-pointer">
                       <MdInsertEmoticon />
@@ -698,9 +745,7 @@ const LeftSidebarOpenUi = ({
                       <IoSend />
                     </div>
                   </div>
-                }
-
-
+                )}
               </div>
             </div>
           )}
@@ -745,25 +790,29 @@ const LeftSidebarOpenUi = ({
                   <BiEditAlt />
                   <span>Rename</span>
                 </li>
-
               </ul>
             </div>
           )}
 
-
-
-          {
-            activeTab === "participants" &&
-            !selectedChat &&
+          {activeTab === "participants" && !selectedChat && (
             <div className="flex items-center justify-end">
-              {
-                
-                isAllParticipantMuted ? <button className="text-blue-500" onClick={() => handleMuteAll("mute")}>unmute all</button>
-                : <button className="text-blue-500" onClick={() => handleMuteAll("unmute")}>mute all</button>
-              }
-              
+              {isAllParticipantMuted ? (
+                <button
+                  className="text-blue-500"
+                  onClick={() => handleMuteAll("mute")}
+                >
+                  unmute all
+                </button>
+              ) : (
+                <button
+                  className="text-blue-500"
+                  onClick={() => handleMuteAll("unmute")}
+                >
+                  mute all
+                </button>
+              )}
             </div>
-          }
+          )}
 
           {/* Participant chat */}
           {activeTab === "participants" &&
@@ -779,12 +828,18 @@ const LeftSidebarOpenUi = ({
                 } else if (role === "Observer") {
                   return user.role !== "Observer";
                 }
-
               })
               //only show the users who are in the same room
-              .filter((user) => role === "Moderator" ? true : (user.roomName?.toLowerCase() == roomname.toLowerCase() || user.role == "Moderator"))
+              .filter((user) =>
+                role === "Moderator"
+                  ? true
+                  : user.roomName?.toLowerCase() == roomname.toLowerCase() ||
+                    user.role == "Moderator"
+              )
               //filter out the removed and offline users
-              .filter((user) => user.status !== "removed" && user.status !== "offline")
+              .filter(
+                (user) => user.status !== "removed" && user.status !== "offline"
+              )
               .map((user) => (
                 <div
                   key={user.name}
@@ -795,30 +850,38 @@ const LeftSidebarOpenUi = ({
                   </div>
 
                   <div className="flex items-center gap-2">
-
-                    {
-                      (role == "Observer" || role == "Moderator") &&
+                    {(role == "Observer" || role == "Moderator") && (
                       <>
-                        {
-                          participantsMicMuted[user.email] ?
-                            <button onClick={() => handleMicMuteUnmute("mute", user.email)} className="cursor-pointer">
-                              <IoMdMicOff size={20} />
-                            </button>
-                            :
-                            <button onClick={() => handleMicMuteUnmute("unmute", user.email)} className="cursor-pointer">
-                              <IoMdMic size={20} />
-                            </button>
-                        }
+                        {participantsMicMuted[user.email] ? (
+                          <button
+                            onClick={() =>
+                              handleMicMuteUnmute("mute", user.email)
+                            }
+                            className="cursor-pointer"
+                          >
+                            <IoMdMicOff size={20} />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleMicMuteUnmute("unmute", user.email)
+                            }
+                            className="cursor-pointer"
+                          >
+                            <IoMdMic size={20} />
+                          </button>
+                        )}
                       </>
-                    }
+                    )}
 
-                    {
-                      role !== "Observer" &&
-                      <button onClick={() => setSelectedChat(user)} className="cursor-pointer">
+                    {role !== "Observer" && (
+                      <button
+                        onClick={() => setSelectedChat(user)}
+                        className="cursor-pointer"
+                      >
                         <BsChatSquareDotsFill />
                       </button>
-                    }
-
+                    )}
 
                     {role === "Moderator" && (
                       <button
@@ -826,20 +889,17 @@ const LeftSidebarOpenUi = ({
                           toggleRemoveAndWaitingOptionModal(event, user)
                         }
                       >
-                        <BsThreeDotsVertical
-                          className="cursor-pointer"
-                        />
+                        <BsThreeDotsVertical className="cursor-pointer" />
                       </button>
-
                     )}
                   </div>
                 </div>
               ))}
 
-
-          {
-            activeTab === "participants" &&
-            !selectedChat && waitingRoom.length > 0 && userrole == 'Moderator' &&
+          {activeTab === "participants" &&
+            !selectedChat &&
+            waitingRoom.length > 0 &&
+            userrole == "Moderator" &&
             waitingRoom.map((user) => (
               <div
                 key={user.name}
@@ -850,9 +910,10 @@ const LeftSidebarOpenUi = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-
-
-                  <button onClick={() => setSelectedChat(user)} className="cursor-pointer">
+                  <button
+                    onClick={() => setSelectedChat(user)}
+                    className="cursor-pointer"
+                  >
                     <BsChatSquareDotsFill />
                   </button>
 
@@ -862,16 +923,12 @@ const LeftSidebarOpenUi = ({
                         toggleRemoveAndWaitingOptionModal(event, user)
                       }
                     >
-                      <BsThreeDotsVertical
-                        className="cursor-pointer"
-                      />
+                      <BsThreeDotsVertical className="cursor-pointer" />
                     </button>
                   )}
                 </div>
               </div>
-            ))
-          }
-
+            ))}
 
           {activeTab === "participants" && selectedChat && (
             <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center">
@@ -880,7 +937,6 @@ const LeftSidebarOpenUi = ({
                 <p className="text-[#1a1a1a] text-[12px] font-bold flex-1">
                   {selectedChat.name}
                 </p>
-
 
                 {role === "Moderator" && (
                   <BsThreeDotsVertical
@@ -901,30 +957,35 @@ const LeftSidebarOpenUi = ({
                 {messages
                   .filter(
                     (message) =>
-                      (message.senderEmail === (selectedChat.email || "unkown@gmail.com") &&
+                      (message.senderEmail ===
+                        (selectedChat.email || "unkown@gmail.com") &&
                         message.receiverEmail === myEmailRef.current) ||
                       (message.senderEmail === myEmailRef.current &&
-                        message.receiverEmail === (selectedChat.email || "unkown@gmail.com"))
+                        message.receiverEmail ===
+                          (selectedChat.email || "unkown@gmail.com"))
                   )
                   .map((message, index) => (
                     <div
                       key={index}
-                      className={`flex items-center gap-2 ${message.senderEmail === myEmailRef.current
-                        ? "justify-end"
-                        : "justify-start"
-                        }`}
+                      className={`flex items-center gap-2 ${
+                        message.senderEmail === myEmailRef.current
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
                     >
                       <div
-                        className={`flex flex-col ${message.senderEmail === myEmailRef.current
-                          ? "items-end"
-                          : "items-start"
-                          }`}
+                        className={`flex flex-col ${
+                          message.senderEmail === myEmailRef.current
+                            ? "items-end"
+                            : "items-start"
+                        }`}
                       >
                         <p
-                          className={`text-[12px] ${message.senderEmail === myEmailRef.current
-                            ? "text-blue-600"
-                            : "text-green-600"
-                            }`}
+                          className={`text-[12px] ${
+                            message.senderEmail === myEmailRef.current
+                              ? "text-blue-600"
+                              : "text-green-600"
+                          }`}
                         >
                           <span className="font-bold">
                             {message.senderName}:
@@ -938,7 +999,6 @@ const LeftSidebarOpenUi = ({
                     </div>
                   ))}
               </div>
-
 
               {/* send message */}
               <div className="flex justify-between items-center gap-2 relative">
@@ -960,7 +1020,6 @@ const LeftSidebarOpenUi = ({
                   <IoSend />
                 </div>
               </div>
-
             </div>
           )}
         </div>
@@ -1018,23 +1077,26 @@ const LeftSidebarOpenUi = ({
         <ChatDashboard  receiverId={selectedReceiverId} users={users}/>
       )} */}
 
-
-      
-
-
-      {
-        breakoutRoomPopUpOpen &&
+      {breakoutRoomPopUpOpen && (
         <BreakoutRoomMoveModel
           onClose={() => setBreakoutRoomPopUpOpen(false)}
-          handleMove={() => handleJoinParticipantsJoinBreakoutRoom(breakoutRoomDetails.name)}
+          handleMove={() =>
+            handleJoinParticipantsJoinBreakoutRoom(breakoutRoomDetails.name)
+          }
           roomDetails={breakoutRoomDetails}
         />
-      }
+      )}
 
-      {
-        isPollModelOpen &&
-        <ViewPollModel onClose={() => setIsPollModelOpen(false)} polls={polls} onPageChange={handlePollPageChange} pollPage={currentPollPage} totalPollPages={totalPages} meetingId={meetingId} />
-      }
+      {isPollModelOpen && (
+        <ViewPollModel
+          onClose={() => setIsPollModelOpen(false)}
+          polls={polls}
+          onPageChange={handlePollPageChange}
+          pollPage={currentPollPage}
+          totalPollPages={totalPages}
+          meetingId={meetingId}
+        />
+      )}
 
       {isRemoveModalOpen && (
         <RemoveUserModal
@@ -1051,29 +1113,25 @@ const LeftSidebarOpenUi = ({
         />
       )}
 
-      {
-        openMoveToBreakModelOpen &&
+      {openMoveToBreakModelOpen && (
         <MoveToBreakModal
           onClose={() => setMoveToOpenBreakModelOpen(false)}
           breakoutRooms={breakoutRooms}
           userToMoveBreak={userToMoveBreak}
           handleMoveParticipant={handleMoveParticipant}
         />
-      }
+      )}
 
-      {
-        openMoveToRenameOpen &&
+      {openMoveToRenameOpen && (
         <UserRename
           onClose={() => setMoveToOpenRenameOpen(false)}
           user={userToRename}
           handleUserRename={handleUserRename}
           setSelectedChat={setSelectedChat}
         />
-      }
+      )}
 
-
-      {
-        brealRoomModelOpen &&
+      {brealRoomModelOpen && (
         <BreakoutRoomModal
           onClose={() => setBreakoutRoomModelOpen(false)}
           handleMoveUser={() => handleMoveUser(userToMove.id)}
@@ -1081,8 +1139,7 @@ const LeftSidebarOpenUi = ({
           users={users}
           handleBreakoutRoom={handleBreakoutRoom}
         />
-      }
-
+      )}
     </>
   );
 };

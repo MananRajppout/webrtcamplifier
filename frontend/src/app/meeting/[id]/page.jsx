@@ -65,6 +65,7 @@ const page = () => {
   const [polls, setPolls] = useState();
   const [pollData, setPollData] = useState(null);
   const [isPollResultModalOpen, setIsPollResultModalOpen] = useState(false);
+  const [activePollId, setActivePollId] = useState(null);
   const [pollResult, setPollResult] = useState([]);
   const [totalPages, setTotalPollPages] = useState();
   const [currentPollPage, setCurrentPollPage] = useState(1);
@@ -287,8 +288,7 @@ const page = () => {
     if (typeof window !== "undefined") {
       email = window.localStorage.getItem("email");
     }
-    socket.emit(
-      "join-room",
+    socket.emit( "join-room",
       { roomid: params.id, name: fullName, email, roomname, role: userRole, isTechHost: !!ModeratorType },
       (socketId, meeting) => {
         socketIdRef.current = socketId;
@@ -306,23 +306,27 @@ const page = () => {
         );
       }
     );
-    socket.emit(
-      "grounp:get-message",
+    socket.emit("grounp:get-message",
       { meetingId: params.id, roomname },
       (messages) => {
         setGroupMessage([...messages]);
       }
     );
 
-    // polling feature needs to be handled, here we are just reciving the data
+    // polling feature needs to be handled, here we are just receiving the data
     //starting
     socket.on("poll-started", (data) => {
       if (data.success) {
         setPollData({
+
           pollId: data.activePollId,
           pollQuestions: data.pollQuestions,
         });
       }
+    });
+
+    socket.on("poll-response-received", (data) => {
+      toast.success(`${data.message}`)
     });
 
     socket.on("poll-ended", ({ activePollId }) => {
@@ -353,7 +357,6 @@ const page = () => {
     // Clean up function to clear the interval when component unmounts or userRole changes
     return () => {
       socket.off("getParticipantListResponse", handleParticipantList);
-      // socket.off("participantChatResponse", handleParticipantChatResponse);
       socket.off("getObserverListResponse", handleObserverListResponse);
       socket.off("getObserverChatResponse", handleObserverChatResponse);
       socket.off("participantRemoved", handleParticipantRemoved);
@@ -365,6 +368,7 @@ const page = () => {
       socket.off("poll-started");
       socket.off("poll-ended");
       socket.off("room-ending-remember", onRoomEndingRemember);
+      socket.off("poll-response-received");
     };
   }, [userRole, params.id, socket, pollData]);
 
@@ -789,7 +793,7 @@ const page = () => {
   //starting
 
   const fetchPollResults = (activePollId) => {
-    socket.emit("get-poll-results", { activePollId }, (response) => {
+    socket.emit("get-poll-results", { activePollId, liveMeetingId: meetingId }, (response) => {
       if (response.success) {
         console.log("get-poll-response", response)
         setPollResult(response.results);
@@ -800,8 +804,34 @@ const page = () => {
     });
   };
   
+  const handleGetPollResults = (activePollId, meetingId) => {
+    console.log("Frontend meetingId:", meetingId); 
+    socket.emit("get-poll-results", { activePollId, meetingId }, 
+      (response) => {
+        console.log('get-poll-results', response);
+        if (response.success) {
+          setPollResult(response.results); 
+          setIsPollResultModalOpen(true);
+        } else {
+          toast.error(response.message || "Failed to fetch poll results");
+        }
+      }
+    );
+  };
   
-
+  
+  // const handleGetPollResults = (pollId) => {
+  //   console.log('handleGetPollResults', pollId)
+  //   socket.emit("get-participant-responses", { pollId }, (response) => {
+  //     console.log('get-participant-responses',response)
+  //     if (response.success) {
+  //       setPollResult(response.results);
+  //       setIsPollResultModalOpen(true);
+  //     } else {
+  //       toast.error("Failed to fetch poll results");
+  //     }
+  //   });
+  // };
   //ending
 
   return (
@@ -865,6 +895,8 @@ const page = () => {
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
                 setBreakoutRoomDetails={setBreakoutRoomDetails}
+                handleGetPollResults={handleGetPollResults}
+                pollData={pollData}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
@@ -898,6 +930,7 @@ const page = () => {
                 setIsPollResultModalOpen={setIsPollResultModalOpen}
                 projectId={projectId}
                 user={user}
+                
               />
             </div>
           </>
@@ -953,6 +986,8 @@ const page = () => {
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
                 setBreakoutRoomDetails={setBreakoutRoomDetails}
+                handleGetPollResults={handleGetPollResults}
+                pollData={pollData}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -1064,6 +1099,8 @@ const page = () => {
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
                 setBreakoutRoomDetails={setBreakoutRoomDetails}
+                handleGetPollResults={handleGetPollResults}
+                pollData={pollData}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">

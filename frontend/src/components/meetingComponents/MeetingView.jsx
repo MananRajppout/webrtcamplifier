@@ -42,6 +42,7 @@ const MeetingView = ({
   setIsPollResultModalOpen,
   projectId,
   user,
+  
 }) => {
   const searchParams = useSearchParams();
   const roomname = searchParams.get("roomname");
@@ -238,6 +239,7 @@ const MeetingView = ({
         />
       )}
       {role === "Moderator" && isPollResultModalOpen && (
+        
         <PollResultModal
           setIsPollResultModalOpen={setIsPollResultModalOpen}
           pollResult={pollResult}
