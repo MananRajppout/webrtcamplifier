@@ -1,95 +1,136 @@
-const e = require('cors');
-const mongoose = require('mongoose');
+const e = require("cors");
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const liveMeetingSchema = new Schema({
-  meetingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meeting', required: true },
-  waitingRoom: [{
-    name: { type: String, required: true },
-    role: { type: String, required: true },
-    email: { type: String, required: true },
-    image: { type: String, default: null },
-  }],
-  removedParticipants: [{
-    name: { type: String, required: true },
-    role: { type: String, required: true },
-    email: { type: String, required: true },
-    image: { type: String, default: null },
-    
-  }],
+  projectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Project",
+    required: true,
+  },
+  meetingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Meeting",
+    required: true,
+  },
+  waitingRoom: [
+    {
+      name: { type: String, required: true },
+      role: { type: String, required: true },
+      email: { type: String, required: true },
+      image: { type: String, default: null },
+    },
+  ],
+  removedParticipants: [
+    {
+      name: { type: String, required: true },
+      role: { type: String, required: true },
+      email: { type: String, required: true },
+      image: { type: String, default: null },
+    },
+  ],
   moderator: {
     name: { type: String, required: true },
     id: { type: String, required: true },
     role: { type: String, required: true },
-    joiningTime: {type: Date, required: false, default: Date.now},
-    leavingTime: {type: Date, required: false, default: null},
-    status: {type: String, required: false, default: "offline",enum: ['online', 'offline']},
-    email: {type: String, requried: true},
+    joiningTime: { type: Date, required: false, default: Date.now },
+    leavingTime: { type: Date, required: false, default: null },
+    status: {
+      type: String,
+      required: false,
+      default: "offline",
+      enum: ["online", "offline"],
+    },
+    email: { type: String, requried: true },
   },
-  participantsList: [{
+  participantsList: [
+    {
       name: { type: String, required: true },
       id: { type: String, required: true },
       role: { type: String, required: true },
-      email: {type: String, requried: true},
+      email: { type: String, requried: true },
       image: { type: String, default: null },
-      roomName: {type: String, required: false, default: "main"},
-      joiningTime: {type: Date, required: false, default: Date.now},
-      leavingTime: {type: Date, required: false, default: null},
-      status: {type: String, required: false, default: "offline",enum: ['online', 'offline', 'removed']},
-      isTechHost: {type: Boolean,default: false},
-    }],
-  observerList: [{
-    name: { type: String, required: true },
-    id: { type: String, required: true },
-    role: { type: String, required: true },
-    email: {type: String,default: null},
-    joiningTime: {type: Date, required: false, default: Date.now},
-    leavingTime: {type: Date, required: false, default: null},
-    status: {type: String, required: false, default: "offline",enum: ['online', 'offline']},
-  }],
+      roomName: { type: String, required: false, default: "main" },
+      joiningTime: { type: Date, required: false, default: Date.now },
+      leavingTime: { type: Date, required: false, default: null },
+      status: {
+        type: String,
+        required: false,
+        default: "offline",
+        enum: ["online", "offline", "removed"],
+      },
+      isTechHost: { type: Boolean, default: false },
+    },
+  ],
+  observerList: [
+    {
+      name: { type: String, required: true },
+      id: { type: String, required: true },
+      role: { type: String, required: true },
+      email: { type: String, default: null },
+      joiningTime: { type: Date, required: false, default: Date.now },
+      leavingTime: { type: Date, required: false, default: null },
+      status: {
+        type: String,
+        required: false,
+        default: "offline",
+        enum: ["online", "offline"],
+      },
+    },
+  ],
   ongoing: {
     type: Boolean,
-    default: false
+    default: false,
   },
   isStreaming: {
     type: Boolean,
-    default: false
+    default: false,
   },
   webRtcRoomId: {
     type: String,
-    default: null
+    default: null,
   },
-  iframeUrl: {
-    type: String,
-    default: null
-  },
+  // iframeUrl: {
+  //   type: String,
+  //   default: null,
+  // },
   isMeetindEnded: {
     type: Boolean,
-    default: false
+    default: false,
   },
   startTime: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   endTime: {
     type: Date,
-    default: null
+    default: null,
   },
   duration: {
     type: Number,
-    default: 0
+    default: 0,
   },
-  recordings: [{
-    url: String
-  }],
-  currentPoll: { type: mongoose.Schema.Types.ObjectId, ref: 'ActivePoll', default: null },
-  participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
-  observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
-  breakRooms: [{
-    roomName: {type: String}
-  }]
+  recordings: [
+    {
+      url: String,
+    },
+  ],
+  currentPoll: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "ActivePoll",
+    default: null,
+  },
+  participantChat: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "ChatMessage" },
+  ],
+  observerChat: [{ type: mongoose.Schema.Types.ObjectId, ref: "ChatMessage" }],
+  breakRooms: [
+    {
+      roomName: { type: String },
+    },
+  ],
 });
 
-const LiveMeeting = mongoose.model('LiveMeeting', liveMeetingSchema);
+const LiveMeeting = mongoose.model("LiveMeeting", liveMeetingSchema);
 
 module.exports = LiveMeeting;

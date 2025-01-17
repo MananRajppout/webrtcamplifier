@@ -822,18 +822,7 @@ const page = () => {
   };
   
   
-  // const handleGetPollResults = (pollId) => {
-  //   console.log('handleGetPollResults', pollId)
-  //   socket.emit("get-participant-responses", { pollId }, (response) => {
-  //     console.log('get-participant-responses',response)
-  //     if (response.success) {
-  //       setPollResult(response.results);
-  //       setIsPollResultModalOpen(true);
-  //     } else {
-  //       toast.error("Failed to fetch poll results");
-  //     }
-  //   });
-  // };
+
   //ending
   const handleWhiteToggle = useCallback(({value,roomname:name}) => {
     if(roomname == name){

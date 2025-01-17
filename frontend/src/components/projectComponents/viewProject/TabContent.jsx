@@ -1,10 +1,5 @@
 import Search from "@/components/singleComponent/Search";
 import React from "react";
-import { FaCheckSquare, FaStarHalfAlt } from "react-icons/fa";
-import { HiMiniBars2, HiMiniBars4 } from "react-icons/hi2";
-import { IoRemoveOutline } from "react-icons/io5";
-import { MdBarChart, MdOutlineRadioButtonChecked } from "react-icons/md";
-import { TbArrowsShuffle } from "react-icons/tb";
 import PollsTab from "../polls/PollsTab";
 import HeadingLg from "@/components/shared/HeadingLg";
 import RepositoryTab from "../repository/RepositoryTab";
@@ -51,7 +46,7 @@ const TabContent = ({
     setIsLongAnswerModalOpen,
     setIsBlankModalOpen,
     setIsRatingModalOpen,
-    setIsAddPollModalOpen
+    setIsAddPollModalOpen,
   } = modalStates;
 
   const { handleOpenAddContactModal } = projectTeam;
@@ -64,7 +59,7 @@ const TabContent = ({
     handlePollPageChange,
     handleOpenPollDropdown,
     isPollDropdownOpen,
-    fetchPolls
+    fetchPolls,
   } = pollsData;
 
   const {
@@ -92,7 +87,7 @@ const TabContent = ({
   } = additionalHandlers;
 
   const { localProjectState, setLocalProjectState } = localProjectStateHandlers;
-  const { user } = useGlobalContext()
+  const { user } = useGlobalContext();
 
   return (
     <div>
@@ -105,39 +100,41 @@ const TabContent = ({
               onSearch={handleMeetingSearch}
               placeholder="Search Meeting Name"
             />
-           {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
-            <>
-             <div className="relative">
-              <Button
-                children="Bulk Add"
-                className="px-4 py-2 rounded-xl"
-                onClick={handleBulkAddDropdownToggle}
-              />
-              {isBulkAddDropdownOpen && (
-                <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg">
-                  <button
-                    className="block px-4 py-2 text-left"
-                    onClick={handleDownloadFormat}
-                  >
-                    Download Format
-                  </button>
-                  <input
-                    type="file"
-                    onChange={handleFileUpload}
-                    className="block px-4 py-2 text-left"
-                  />
-                </div>
-              )}
-            </div>
+            {user?.role !== "AmplifyTechHost" &&
+              user?.role !== "AmplifyModerator" &&
+              user?.role !== "Moderator" && (
+                <>
+                  <div className="relative">
+                    <Button
+                      children="Bulk Add"
+                      className="px-4 py-2 rounded-xl"
+                      onClick={handleBulkAddDropdownToggle}
+                    />
+                    {isBulkAddDropdownOpen && (
+                      <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg">
+                        <button
+                          className="block px-4 py-2 text-left"
+                          onClick={handleDownloadFormat}
+                        >
+                          Download Format
+                        </button>
+                        <input
+                          type="file"
+                          onChange={handleFileUpload}
+                          className="block px-4 py-2 text-left"
+                        />
+                      </div>
+                    )}
+                  </div>
 
-            <Button
-              children="Add Meeting"
-              className="px-4 py-2 rounded-xl"
-              type="submit"
-              onClick={handleAddMeetingModal}
-            />
-            </>
-           ) }
+                  <Button
+                    children="Add Meeting"
+                    className="px-4 py-2 rounded-xl"
+                    type="submit"
+                    onClick={handleAddMeetingModal}
+                  />
+                </>
+              )}
           </div>
           <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
             <MeetingTab
@@ -156,26 +153,29 @@ const TabContent = ({
         <div className="pt-5">
           <div className="flex justify-between items-center">
             <HeadingLg children="Project Members" />
-            {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
-            <div
-              className="flex justify-end items-center
+            {user?.role !== "AmplifyTechHost" &&
+              user?.role !== "AmplifyModerator" &&
+              user?.role !== "Moderator" && (
+                <div
+                  className="flex justify-end items-center
                gap-5"
-            >
-              <Button
-                className="font-bold"
-                variant="plain"
-                type="submit"
-                onClick={handleBulkUpdateModal}
-              >
-                Bulk Update
-              </Button>
-              <Button
-                children={"Add"}
-                className="px-5 py-1.5 rounded-xl"
-                variant="secondary"
-                onClick={handleOpenAddContactModal}
-              />
-            </div>)}
+                >
+                  <Button
+                    className="font-bold"
+                    variant="plain"
+                    type="submit"
+                    onClick={handleBulkUpdateModal}
+                  >
+                    Bulk Update
+                  </Button>
+                  <Button
+                    children={"Add"}
+                    className="px-5 py-1.5 rounded-xl"
+                    variant="secondary"
+                    onClick={handleOpenAddContactModal}
+                  />
+                </div>
+              )}
           </div>
           <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
             <MembersTab
@@ -190,86 +190,22 @@ const TabContent = ({
         <div className="pt-5">
           <div className="flex justify-between items-center">
             <HeadingLg children="Polls List" />
-            
-            {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
-            <div
-              className="flex justify-end items-center
-             gap-5 relative"
-            >
-  <Button
-                children={"Add Poll"}
-                className="px-5 py-1.5 rounded-xl"
-                variant="secondary"
-                onClick={setIsAddPollModalOpen}
-              />
 
-              {/* <Button
-                children={"Add Poll"}
-                className="px-5 py-1.5 rounded-xl"
-                variant="secondary"
-                onClick={handleOpenPollDropdown}
-              /> */}
-              {/* {isPollDropdownOpen && (
-                <div className="absolute top-9 -left-20 bg-white border rounded shadow-lg p-2">
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsSingleChoiceModalOpen(true)}
-                  >
-                    <MdOutlineRadioButtonChecked />
-                    <span className="ml-2">Single choice</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsMultipleChoiceModalOpen(true)}
-                  >
-                    <FaCheckSquare />
-                    <span className="ml-2">Multiple choice</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsMatchingModalOpen(true)}
-                  >
-                    <TbArrowsShuffle />
-                    <span className="ml-2">Matching</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsRankOrderModalOpen(true)}
-                  >
-                    <MdBarChart />
-                    <span className="ml-2">Rank order</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsShortAnswerModalOpen(true)}
-                  >
-                    <HiMiniBars2 />
-                    <span className="ml-2">Short answer</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsLongAnswerModalOpen(true)}
-                  >
-                    <HiMiniBars4 />
-                    <span className="ml-2">Long answer</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsBlankModalOpen(true)}
-                  >
-                    <IoRemoveOutline />
-                    <span className="ml-2">Fill in the blank</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsRatingModalOpen(true)}
-                  >
-                    <FaStarHalfAlt />
-                    <span className="ml-2">Rating scale</span>
-                  </div>
+            {user?.role !== "AmplifyTechHost" &&
+              user?.role !== "AmplifyModerator" &&
+              user?.role !== "Moderator" && (
+                <div
+                  className="flex justify-end items-center
+             gap-5 relative"
+                >
+                  <Button
+                    children={"Add Poll"}
+                    className="px-5 py-1.5 rounded-xl"
+                    variant="secondary"
+                    onClick={setIsAddPollModalOpen}
+                  />
                 </div>
-              )} */}
-            </div>)}
+              )}
           </div>
           <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">
             <PollsTab
@@ -290,18 +226,21 @@ const TabContent = ({
         <div className="pt-2">
           <div className="flex justify-between items-center">
             <HeadingLg children="Files List" />
-            {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
-              <div
-              className="flex justify-end items-center
+            {user?.role !== "AmplifyTechHost" &&
+              user?.role !== "AmplifyModerator" &&
+              user?.role !== "Moderator" && (
+                <div
+                  className="flex justify-end items-center
              gap-5"
-            >
-              <Button
-                children={"Upload"}
-                className="px-5 py-1.5 rounded-xl"
-                variant="secondary"
-                onClick={handleOpenAddRepositoryModal}
-              />
-            </div>)}
+                >
+                  <Button
+                    children={"Upload"}
+                    className="px-5 py-1.5 rounded-xl"
+                    variant="secondary"
+                    onClick={handleOpenAddRepositoryModal}
+                  />
+                </div>
+              )}
           </div>
           <div className="overflow-x-auto border-b">
             <div className="flex space-x-5 whitespace-nowrap">

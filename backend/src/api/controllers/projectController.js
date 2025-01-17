@@ -41,13 +41,12 @@ const createProject = async (req, res) => {
       roles: {
         ...member.roles,
         permissions: Array.isArray(member.roles.role)
-          ? [...member.roles.role] // Copy the roles to permissions if roles is an array
-          : member.roles.role // If roles is a single string
-          ? [member.roles.role] // Wrap it in an array for permissions
-          : [], // Default to an empty array if roles is undefined
+          ? [...member.roles.role] 
+          : member.roles.role 
+          ? [member.roles.role] 
+          : [], 
       },
     }));
-console.log("updated members", updatedMembers)
     
     // Step 1: Create the project
     const newProject = new Project({
@@ -62,12 +61,16 @@ console.log("updated members", updatedMembers)
       status: formData.status,
     });
 
-//     console.log("new project (plain object):", newProject.toObject());
-// console.log("new project roles (plain object):", newProject.toObject().members[0].roles);
-// console.log("new project role (plain object):", newProject.toObject().members[0].roles.role);
-// console.log("new project permissions (plain object):", newProject.toObject().members[0].roles.permissions);
-
     const savedProject = await newProject.save({ session });
+
+     // Step 2: Generate the meeting link using the project ID
+     const meetingLink = `${process.env.FRONTEND_BASE_URL}/meeting/${savedProject._id}`;
+
+     // Update the project with the meeting link
+     savedProject.meetingLink = meetingLink;
+     await savedProject.save({ session });
+
+// Step 3: Send invitation emails
     if (savedProject && savedProject?.members?.length > 0) {
       const emails = savedProject?.members?.map((e) => {
         return e.email;
@@ -76,19 +79,23 @@ console.log("updated members", updatedMembers)
 
       let html = `<p>Hello,</p>
         <p>You have been added to the project <strong>${savedProject?.name}</strong>.</p>
-        <p>Please click the link below to accept the invitation:</p>
-        <a href="https://abc.com/invite?project=${savedProject?.name}">Accept Invitation</a>`;
+        <p>Please login below to check the details:</p>
+        <a href="${process.env.FRONTEND_BASE_URL}/login">Login</a>`;
+        
       sendEmail(emails, "Invitation to join project", html)
     }
   
 
     await session.commitTransaction();
     session.endSession();
+
     res.status(201).json({
       message: "Project and meeting created successfully",
       projectId: savedProject._id,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error creating project:", error);
     res.status(500).json({
       message: "Failed to create project",

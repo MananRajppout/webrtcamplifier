@@ -21,6 +21,10 @@ const projectSchema = new Schema({
   tags: { type: [Schema.Types.ObjectId], default: [], ref: 'Tag' },
   projectPasscode: { type: String, required: true },
   startTime: { type: String },
+  meetingLink: { type: String, default: '' },
+  activeMeeting: { type: Schema.Types.ObjectId, ref: 'Meeting', default: null },
+
+
 }, { timestamps: true });
 
 // Middleware to update the updatedAt field on save

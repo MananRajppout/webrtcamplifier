@@ -58,14 +58,37 @@ async function flushMessages() {
   }
 }
 
-async function checkMeetingExists(meetingId, socket, event) {
-  const existingMeeting = await Meeting.findById(meetingId);
+// async function checkMeetingExists(meetingId, socket, event) {
+//   const existingMeeting = await Meeting.findById(meetingId);
+
+//   if (!existingMeeting) {
+//     socket.emit(event, {
+//       success: false,
+//       message: "Meeting not found",
+//       meetingId,
+//     });
+//     return false;
+//   }
+
+//   return existingMeeting;
+// }
+
+async function checkMeetingExists(identifier, socket, event) {
+  let existingMeeting;
+  console.log('identifier', identifier)
+
+  // Check if the identifier is a projectId or meetingId
+  if (identifier.projectId) {
+    existingMeeting = await Meeting.findOne({ projectId: identifier.projectId });
+  } else {
+    existingMeeting = await Meeting.findById(identifier.meetingId);
+  }
 
   if (!existingMeeting) {
     socket.emit(event, {
       success: false,
       message: "Meeting not found",
-      meetingId,
+      identifier,
     });
     return false;
   }
@@ -73,21 +96,42 @@ async function checkMeetingExists(meetingId, socket, event) {
   return existingMeeting;
 }
 
-async function checkLiveMeetingExists(meetingId, socket, event) {
-  const existingMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
+// async function checkLiveMeetingExists(meetingId, socket, event) {
+//   const existingMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
 
-  if (!existingMeeting) {
+//   if (!existingMeeting) {
+//     socket.emit(event, {
+//       success: false,
+//       message: "Meeting not found",
+//       meetingId,
+//     });
+//     return false;
+//   }
+
+//   return existingMeeting;
+// }
+
+async function checkLiveMeetingExists(identifier, socket, event) {
+  let existingLiveMeeting;
+
+  // Check if the identifier is a projectId or meetingId
+  if (identifier.projectId) {
+    existingLiveMeeting = await LiveMeeting.findOne({ projectId: identifier.projectId });
+  } else {
+    existingLiveMeeting = await LiveMeeting.findOne({ meetingId: identifier.meetingId });
+  }
+
+  if (!existingLiveMeeting) {
     socket.emit(event, {
       success: false,
-      message: "Meeting not found",
-      meetingId,
+      message: "Live meeting not found",
+      identifier,
     });
     return false;
   }
 
-  return existingMeeting;
+  return existingLiveMeeting;
 }
-
 
 setInterval(flushMessages, FLUSH_INTERVAL);
 
@@ -124,24 +168,31 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    socket.on("join-room", async ({ roomid, name, email, roomname, role,isTechHost }, callback) => {
+    socket.on("join-room", async ({ projectId, roomid, name, email, roomname, role,isTechHost }, callback) => {
 
-      socket.join(roomid);
+      const identifier = projectId ? { projectId } : { meetingId: roomid };
+
+      socket.join(projectId || roomid);
       // for group chat
-      socket.join(`${roomid}-${roomname}`);
+      socket.join(`${projectId || roomid}-${roomname}`);
       usernames[socket.id] = {
         name,
+        projectId,
         roomid,
         email,
         role,
         isTechHost
       };
-      console.log(`User with name ${name} joined meeting ${roomid} role ${role}`)
+
+      const liveMeeting = await checkLiveMeetingExists(identifier, socket, "meeting-not-found");
+      if (!liveMeeting) return;
+
+      console.log(`User with name ${name} joined meeting ${projectId || roomid} role ${role}`)
       const newname = email + roomid;
       delete userchangeroom[newname];
 
       if (role == "Participant" || isTechHost) {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
+        // const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
         const participantIndex = liveMeeting.participantsList.findIndex(p => p.email == email);
         if (participantIndex != -1 && liveMeeting.participantsList[participantIndex]) {
           liveMeeting.participantsList[participantIndex].status = "online";
@@ -156,7 +207,7 @@ const setupSocket = (server) => {
           ...liveMeeting.participantsList,
         ];
 
-        io.to(liveMeeting.meetingId.toString()).emit("participantList", {
+        io.to(projectId || roomid).emit("participantList", {
           success: true,
           message: "Participant added to participants list",
           waitingRoom: liveMeeting.waitingRoom,
@@ -165,8 +216,7 @@ const setupSocket = (server) => {
       }
 
       if (role == "Moderator" && !isTechHost) {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
-        if (liveMeeting) {
+        // const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
           liveMeeting.startTime = Date.now();
           liveMeeting.moderator.joiningTime = Date.now();
           liveMeeting.moderator.status = "online";
@@ -177,22 +227,19 @@ const setupSocket = (server) => {
             ...liveMeeting.participantsList,
           ];
 
-          io.to(liveMeeting.meetingId.toString()).emit("participantList", {
+          io.to(projectId || roomid).emit("participantList", {
             success: true,
             message: "Participant added to participants list",
             waitingRoom: liveMeeting.waitingRoom,
             participantList: fullParticipantList,
           });
-        }
-
-
       }
 
 
 
       if (role == "Observer") {
-        const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
-        if (liveMeeting) {
+        // const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
+       
           const observerIndex = liveMeeting.observerList.findIndex(b => b.email == email);
           console.log(observerIndex)
           if (liveMeeting.observerList[observerIndex]) {
@@ -207,13 +254,13 @@ const setupSocket = (server) => {
               ...liveMeeting.observerList,
             ];
 
-            io.to(liveMeeting.meetingId.toString()).emit("getObserverListResponse", {
+            io.to(projectId || roomid).emit("getObserverListResponse", {
               success: true,
               message: "Observer list retrieved successfully",
               observersList: fullObserverList,
             });
           }
-        }
+        
 
 
       }
@@ -223,14 +270,16 @@ const setupSocket = (server) => {
     })
 
     socket.on("startMeeting", async (data) => {
-      const { meetingId, user, moderator } = data;
+      const { meetingId, projectId, user, moderator } = data;
       console.log(moderator)
 
-      const existingMeeting = await checkMeetingExists(meetingId, socket, "meeting-not-found");
-      if (!existingMeeting) return;
+      const identifier = projectId ? { projectId } : { meetingId };
 
+      const existingMeeting = await checkMeetingExists(identifier, socket, "meeting-not-found");
+  if (!existingMeeting) return;
 
-      const liveMeeting = await LiveMeeting.findOne({ meetingId });
+  let liveMeeting = await checkLiveMeetingExists(identifier, socket, "meeting-not-found");
+
 
       if (liveMeeting) {
         if (user.isTechHost) {
@@ -253,11 +302,11 @@ const setupSocket = (server) => {
           socket.emit("startMeetingResponse", {
             success: false,
             message: "Meeting is already in progress",
-            meetingId: meetingId,
+            identifier,
           });
         } else {
           liveMeeting.ongoing = true;
-          liveMeeting.webRtcRoomId = meetingId;
+          liveMeeting.webRtcRoomId = projectId || meetingId;
           await liveMeeting.save();
           socket.emit("startMeetingResponse", {
             success: true,
@@ -272,9 +321,10 @@ const setupSocket = (server) => {
       let newLiveMeeting = undefined;
       if (user.isTechHost) {
         newLiveMeeting = new LiveMeeting({
+          projectId, 
           meetingId: meetingId,
           ongoing: true,
-          webRtcRoomId: meetingId,
+          webRtcRoomId: projectId || meetingId,
           participantsList: [
             {
               name: user.fullName,
@@ -295,8 +345,9 @@ const setupSocket = (server) => {
       } else {
         newLiveMeeting = new LiveMeeting({
           meetingId: meetingId,
+          projectId: projectId,
           ongoing: true,
-          webRtcRoomId: meetingId,
+          webRtcRoomId: projectId || meetingId,
           moderator: {
             name: user.fullName,
             id: moderatorId,
@@ -1417,33 +1468,7 @@ const setupSocket = (server) => {
       }
     });
 
-    // Function to end a poll
-    const endPoll = async (meetingId, activePollId) => {
-      console.log("activePollId id in end poll", activePollId);
-      try {
-        const activePoll = await ActivePoll.findOneAndUpdate(
-          { meetingId, _id: activePollId, status: "Active" },
-          { status: "Ended" },
-          { new: true }
-        );
-        console.log("poll ended poll id", activePoll);
-
-        if (!activePoll) {
-          console.log("Poll not found or already ended");
-          return;
-        }
-        // Notify participants that the poll has ended
-        io.to(meetingId).emit("poll-ended", {
-          success: true,
-          message: "Poll has ended",
-          activePollId,
-        });
-
-        console.log(`Poll ${activePollId} has ended for meeting ${meetingId}`);
-      } catch (error) {
-        console.error("Error ending poll:", error);
-      }
-    };
+    
 
     socket.on("get-poll-results", async ({ activePollId, meetingId }, callback) => {
       try {
@@ -1530,43 +1555,7 @@ const setupSocket = (server) => {
       }
     });
 
-    // socket.on("get-participant-responses", async ({ activePollId, participantId }, callback) => {
-    //   try {
-    //     console.log('activePollId',activePollId,'participantId',participantId)
-
-    //     const query = participantId
-    //       ? { activePollId, participantId }
-    //       : { activePollId };
-    
-    //     const responses = await PollResponse.find(query).populate({
-    //   path: "responses.questionId", // Populating questionId
-    //   select: "question", // Selecting the question field
-    // });
-
-    //     console.log('responses',responses)
-    
-    //     if (!responses.length) {
-    //       return callback({
-    //         success: false,
-    //         message: participantId
-    //           ? `No responses found for participant ${participantId}`
-    //           : "No responses found",
-    //       });
-    //     }
-    
-    //     callback({
-    //       success: true,
-    //       responses,
-    //     });
-    //   } catch (error) {
-    //     console.error("Error fetching participant responses:", error);
-    //     callback({
-    //       success: false,
-    //       message: "Error fetching responses",
-    //     });
-    //   }
-    // });
-    
+   
 
     socket.on('save-poll-results-csv', async ({ pollResult, uploaderEmail, meetingId, projectId, role, addedBy }, callback) => {
       try {

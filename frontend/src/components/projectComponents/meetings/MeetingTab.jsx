@@ -69,7 +69,6 @@ const MeetingTab = ({
     setIsParticipantModalOpen(true);
   };
 
-
   const handleClickOutside = (event) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
       closeModal();
@@ -107,13 +106,17 @@ const MeetingTab = ({
   });
 
   const handleJoinMeeting = async (meeting) => {
-    if (project.status === "Draft" || project.status === "Paused" || project.status === "Closed") {
+    if (
+      project.status === "Draft" ||
+      project.status === "Paused" ||
+      project.status === "Closed"
+    ) {
       toast.error(
         `Meeting cannot be started while project in the ${project.status} status.`
       );
       return;
     }
-    
+
     if (activeMeetingId === meeting._id) return;
 
     setActiveMeetingId(meeting._id);
@@ -126,27 +129,29 @@ const MeetingTab = ({
       );
       if (!confirmStart) return;
 
-      if(typeof window !== 'undefined'){
-        window.localStorage.setItem('email',user.email);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("email", user.email);
       }
-      
+
       const fullName = `${user.firstName} ${user.lastName}`;
       try {
         if (socket) {
-          if(user.role == "AmplifyTechHost"){
+          if (user.role == "AmplifyTechHost") {
             socket.emit("startMeeting", {
               meetingId: meeting._id,
+              projectId: project._id,
               user: {
                 fullName,
                 email: user.email,
                 role: "Moderator",
-                isTechHost: true
+                isTechHost: true,
               },
               moderator: meeting.moderator[0],
             });
-          }else{
+          } else {
             socket.emit("startMeeting", {
               meetingId: meeting._id,
+              projectId: project._id,
               user: {
                 fullName,
                 email: user.email,
@@ -154,7 +159,6 @@ const MeetingTab = ({
               },
             });
           }
-         
 
           // Listen for a response from the server
           socket.on("startMeetingResponse", (response) => {
@@ -163,9 +167,13 @@ const MeetingTab = ({
             } else {
               const liveMeetingData = response.liveMeeting;
               window.open(
-                `/meeting/${meeting._id}?fullName=${encodeURIComponent(
+                `/meeting/${project._id}?fullName=${encodeURIComponent(
                   fullName
-                )}&role=Moderator&${user.role == "AmplifyTechHost" ? 'ModeratorType=tech-host' : ''}`,
+                )}&role=Moderator&${
+                  user.role == "AmplifyTechHost"
+                    ? "ModeratorType=tech-host"
+                    : ""
+                }`,
                 "_blank"
               );
             }
@@ -306,12 +314,14 @@ const MeetingTab = ({
 
   const handleJoinBackroom = async (meeting) => {
     if (project.status === "Draft" || project.status === "Closed") {
-      toast.error(`You cannot join backroom while meeting is in ${project.status} state.`);
+      toast.error(
+        `You cannot join backroom while meeting is in ${project.status} state.`
+      );
       return;
     }
 
-    if(typeof window !== 'undefined'){
-      window.localStorage.setItem('email',user.email);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("email", user.email);
     }
     const fullName = `${user?.firstName} ${user?.lastName}`;
     const meetingId = meeting?._id;
@@ -396,27 +406,27 @@ const MeetingTab = ({
                   {meeting?.liveMeetings[0]?.moderator?.name}
                 </td>
                 <td
-                className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
-                onClick={() =>
-                  handleParticipantClick(
-                    meeting?.liveMeetings[0]?.participantsList,
-                    meeting?.title
-                  )
-                }
-              >
-                {meeting?.liveMeetings[0]?.participantsList?.length}
-              </td>
+                  className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
+                  onClick={() =>
+                    handleParticipantClick(
+                      meeting?.liveMeetings[0]?.participantsList,
+                      meeting?.title
+                    )
+                  }
+                >
+                  {meeting?.liveMeetings[0]?.participantsList?.length}
+                </td>
                 <td
-                className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
-                onClick={() =>
-                  handleParticipantClick(
-                    meeting?.liveMeetings[0]?.observerList,
-                    meeting?.title
-                  )
-                }
-              >
-                {meeting?.liveMeetings[0]?.observerList.length}
-              </td>
+                  className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
+                  onClick={() =>
+                    handleParticipantClick(
+                      meeting?.liveMeetings[0]?.observerList,
+                      meeting?.title
+                    )
+                  }
+                >
+                  {meeting?.liveMeetings[0]?.observerList.length}
+                </td>
                 {/* <TableData>
                   {meeting?.liveMeetings[0].observerList.length}
                 </TableData> */}
@@ -551,35 +561,35 @@ const MeetingTab = ({
               <FaUser />
               <span>View</span>
             </li>
-            {
-              (user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
-             <>   <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleEditMeeting(selectedMeeting)}
-            >
-              <RiPencilFill />
-              <span>Edit</span>
-            </li>
-              
+            {user?.role !== "AmplifyTechHost" &&
+              user?.role !== "AmplifyModerator" &&
+              user?.role !== "Moderator" && (
+                <>
+                  {" "}
+                  <li
+                    className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                    onClick={() => handleEditMeeting(selectedMeeting)}
+                  >
+                    <RiPencilFill />
+                    <span>Edit</span>
+                  </li>
+                  <li
+                    className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                    onClick={() => handleDuplicateMeeting(selectedMeeting)}
+                  >
+                    <FaCopy />
+                    <span>Duplicate</span>
+                  </li>
+                  <li
+                    className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                    onClick={() => handleDeleteMeeting(selectedMeeting)}
+                  >
+                    <BsFillEnvelopeAtFill />
+                    <span>Delete</span>
+                  </li>
+                </>
+              )}
             <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleDuplicateMeeting(selectedMeeting)}
-            >
-              <FaCopy />
-              <span>Duplicate</span>
-            </li>
-            
-            <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleDeleteMeeting(selectedMeeting)}
-            >
-              <BsFillEnvelopeAtFill />
-              <span>Delete</span>
-            </li>
-            </>
-              )
-              }
-              <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={() => handleShareMeeting(selectedMeeting)}
             >
@@ -620,15 +630,14 @@ const MeetingTab = ({
         />
       )}
 
-       {/* Participant or Moderator Modal */}
-       {isParticipantModalOpen && (
+      {/* Participant or Moderator Modal */}
+      {isParticipantModalOpen && (
         <MeetingParticipantModal
           title={modalTitle}
           data={participantData}
           onClose={() => setIsParticipantModalOpen(false)}
         />
       )}
-
 
       {/* Pagination */}
       {meetings.length >= 10 && (
@@ -640,8 +649,6 @@ const MeetingTab = ({
           />
         </div>
       )}
-
-
     </div>
   );
 };
