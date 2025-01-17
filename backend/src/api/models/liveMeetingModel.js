@@ -15,37 +15,38 @@ const liveMeetingSchema = new Schema({
     role: { type: String, required: true },
     email: { type: String, required: true },
     image: { type: String, default: null },
-    
+
   }],
   moderator: {
     name: { type: String, required: true },
     id: { type: String, required: true },
     role: { type: String, required: true },
-    joiningTime: {type: Date, required: false, default: Date.now},
-    leavingTime: {type: Date, required: false, default: null},
-    status: {type: String, required: false, default: "offline",enum: ['online', 'offline']},
-    email: {type: String, requried: true},
+    joiningTime: { type: Date, required: false, default: Date.now },
+    leavingTime: { type: Date, required: false, default: null },
+    status: { type: String, required: false, default: "offline", enum: ['online', 'offline'] },
+    email: { type: String, requried: true },
   },
   participantsList: [{
-      name: { type: String, required: true },
-      id: { type: String, required: true },
-      role: { type: String, required: true },
-      email: {type: String, requried: true},
-      image: { type: String, default: null },
-      roomName: {type: String, required: false, default: "main"},
-      joiningTime: {type: Date, required: false, default: Date.now},
-      leavingTime: {type: Date, required: false, default: null},
-      status: {type: String, required: false, default: "offline",enum: ['online', 'offline', 'removed']},
-      isTechHost: {type: Boolean,default: false},
-    }],
+    name: { type: String, required: true },
+    id: { type: String, required: true },
+    role: { type: String, required: true },
+    email: { type: String, requried: true },
+    image: { type: String, default: null },
+    roomName: { type: String, required: false, default: "main" },
+    joiningTime: { type: Date, required: false, default: Date.now },
+    leavingTime: { type: Date, required: false, default: null },
+    status: { type: String, required: false, default: "offline", enum: ['online', 'offline', 'removed'] },
+    isTechHost: { type: Boolean, default: false },
+    mute: { type: Boolean, default: false }
+  }],
   observerList: [{
     name: { type: String, required: true },
     id: { type: String, required: true },
     role: { type: String, required: true },
-    email: {type: String,default: null},
-    joiningTime: {type: Date, required: false, default: Date.now},
-    leavingTime: {type: Date, required: false, default: null},
-    status: {type: String, required: false, default: "offline",enum: ['online', 'offline']},
+    email: { type: String, default: null },
+    joiningTime: { type: Date, required: false, default: Date.now },
+    leavingTime: { type: Date, required: false, default: null },
+    status: { type: String, required: false, default: "offline", enum: ['online', 'offline'] },
   }],
   ongoing: {
     type: Boolean,
@@ -83,10 +84,10 @@ const liveMeetingSchema = new Schema({
     url: String
   }],
   currentPoll: { type: mongoose.Schema.Types.ObjectId, ref: 'ActivePoll', default: null },
-  participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
-  observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
+  participantChat: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage' }],
+  observerChat: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage' }],
   breakRooms: [{
-    roomName: {type: String}
+    roomName: { type: String }
   }]
 });
 

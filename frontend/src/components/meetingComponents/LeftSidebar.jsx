@@ -56,7 +56,8 @@ const LeftSidebar = ({
   setBreakoutRoomDetails,
   handleModeratorToggleWhiteboard,
   handleGetPollResults,
-  pollData
+  pollData,
+  handleMuteAndUnmuteParticipant
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -192,7 +193,7 @@ const LeftSidebar = ({
     <div>
       <div
         className={`flex ${isSidebarOpen ? "w-80" : "w-8 bg-custom-meet-bg md:bg-white md:w-24"
-          } transition-width duration-300 md:bg-white h-screen md:rounded-r-xl relative overflow-auto`}
+          } transition-width duration-300 md:bg-white h-screen md:rounded-r-xl overflow-auto`}
       >
         {isSidebarOpen ? (
           <>
@@ -280,6 +281,7 @@ const LeftSidebar = ({
               handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
               handleGetPollResults={handleGetPollResults}
               pollData={pollData}
+              handleMuteAndUnmuteParticipant={handleMuteAndUnmuteParticipant}
             />
           ) : (
             <LeftSidebarCloseUi

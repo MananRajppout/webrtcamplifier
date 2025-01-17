@@ -24,7 +24,10 @@ const RightSidebar = ({
   setSelectedRoom,
   groupMessage,
   handleMediaUpload,
-  mediaBox
+  mediaBox,
+  sendObserverGroupMessage,
+  setObserverGroupMessage,
+  observerGroupMessage
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -224,6 +227,9 @@ const RightSidebar = ({
             groupMessage={groupMessage}
             handleMediaUpload={handleMediaUpload}
             mediaBox={mediaBox}
+            sendObserverGroupMessage={sendObserverGroupMessage}
+            setObserverGroupMessage={setObserverGroupMessage}
+            observerGroupMessage={observerGroupMessage}
           />
         ) : (
           <RightSidebarCloseUi

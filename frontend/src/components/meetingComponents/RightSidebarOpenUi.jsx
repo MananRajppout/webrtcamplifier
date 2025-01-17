@@ -14,6 +14,7 @@ import { PiCirclesFourFill } from "react-icons/pi";
 import toast from "react-hot-toast";
 import { BiCopy, BiShareAlt } from "react-icons/bi";
 import ShareMediaModel from "../singleComponent/ShareMediaModel";
+import ScrollToBottom from "react-scroll-to-bottom";
 
 
 export function bytesToMbs(size) {
@@ -49,13 +50,17 @@ const RightSidebarOpenUi = ({
   setSelectedRoom,
   groupMessage,
   handleMediaUpload,
-  mediaBox
+  mediaBox,
+  sendObserverGroupMessage,
+  setObserverGroupMessage,
+  observerGroupMessage
 }) => {
   const [fileList, setFileList] = useState(files);
   const [inputMessage, setInputMessage] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [shareMediaModel, setShareMediaModel] = useState(null);
+  const [groupMessageContent, setGroupMessageContent] = useState('');
 
   const params = useParams();
   const searchParams = useSearchParams();
@@ -154,7 +159,11 @@ const RightSidebarOpenUi = ({
   }, []);
 
 
-
+  const handleSendGroupMessage = useCallback((message) => {
+    if (!message) return;
+    sendObserverGroupMessage(message)
+    setGroupMessageContent('');
+  }, []);
 
   return (
     <>
@@ -223,51 +232,40 @@ const RightSidebarOpenUi = ({
       </div>
 
       {/* chat container */}
-      <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4">
+      <div className="flex flex-col flex-grow px-4 pb-2 pt-4 bg-custom-gray-8 mb-4 rounded-xl overflow-y-auto mx-4 relative">
         {/* tabs */}
         <div className="flex justify-center items-center gap-2 pb-2 ">
-          <div className="w-full relative">
+          <div className="w-full relative flex gap-2">
             <Button
               children="Observers"
               variant="cancel"
               type="submit"
-              className={`w-full py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersChat"
+              className={`flex-1 py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "observersChat"
                 ? "shadow-[0px_4px_6px_#1E656D4D]"
                 : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
                 } `}
               onClick={() => handleTabClick("observersChat")}
             />
-          
+
+
+            <Button
+              children="chats"
+              variant="cancel"
+              type="submit"
+              className={`flex-1 py-2 rounded-xl pl-2 text-[10px] text-center px-1 ${activeTab === "chats"
+                ? "shadow-[0px_4px_6px_#1E656D4D]"
+                : "bg-custom-gray-8 border-2 border-custom-teal !text-custom-teal "
+                } `}
+              onClick={() => handleTabClick("chats")}
+            />
+
           </div>
 
         </div>
 
-        {/* observers container */}
 
-        {/* observers list */}
-        {activeTab === "observersList" && (
-          <div className="flex-grow pt-2">
-            <Search
-              placeholder="Search Name"
-              onSearch={handleSearch}
-              inputClassName="!bg-[#F3F4F5] !rounded-xl "
-              iconClassName="!bg-[#EBEBEB]"
-            />
-            {/* participant container */}
-            {users
-              ?.filter((user) => user.name !== userName)
-              .map((user, index) => (
-                <div
-                  className="flex justify-center items-center gap-2 py-1 my-2 px-2 rounded-md bg-gray-100"
-                  key={user?.id}
-                >
-                  <p className="text-[#1a1a1a] text-sm flex-grow">
-                    {index + 1}. {user?.name}
-                  </p>
-                </div>
-              ))}
-          </div>
-        )}
+
+
 
         {/* observers chat */}
         {activeTab === "observersChat" &&
@@ -292,6 +290,17 @@ const RightSidebarOpenUi = ({
                 </button>
               </div>
             ))}
+
+
+        {activeTab === "observersChat" &&
+          !selectedChat && observers
+            .filter((observer) => observer.name !== userName)
+            .filter((observer) => observer.status == "online")
+            .filter((observer) => (role == "Moderator" ? true : observer.role == "Moderator")).length == 0 &&
+          <div className="py-5 flex items-center justify-center">
+            <h2>No Observer</h2>
+          </div>
+        }
 
         {activeTab === "observersChat" && selectedChat && (
           <div className="flex-grow pt-2 rounded-xl flex flex-col justify-center items-center">
@@ -378,50 +387,73 @@ const RightSidebarOpenUi = ({
 
 
 
-
-        {/* particpants chat */}
-        {activeTab === "participantChat" &&
+        {activeTab === "chats" && (
           <div className="flex-grow pt-2">
             <div className="flex-grow pt-2  rounded-xl flex flex-col justify-center items-center relative">
               {/* chat message */}
-              <div className="flex flex-col gap-2 flex-grow h-[24rem] overflow-y-auto w-full mb-5">
-                {
-                  groupMessage && groupMessage.map((message, index) => (
+              <ScrollToBottom className={`flex flex-col gap-2 flex-grow ${role == "Moderator" ? "h-[12rem] 2xl:h-[23rem]" : "h-[10rem]"} overflow-y-auto w-full mb-5`}>
+                {observerGroupMessage &&
+                  observerGroupMessage.map((message, index) => (
                     <div
                       key={index}
                       className={`flex items-center gap-2 mb-3 ${message.senderEmail === myEmailRef.current
-                        ? "justify-end"
-                        : "justify-start"
+                          ? "justify-end"
+                          : "justify-start"
                         }`}
                     >
                       <div
                         className={`flex flex-col ${message.senderEmail === myEmailRef.current
-                          ? "items-end"
-                          : "items-start"
+                            ? "items-end"
+                            : "items-start"
                           }`}
                       >
                         <p
-                          className={`text-[12px] w-full ${message.senderEmail === myEmailRef.current
-                            ? "text-blue-600"
-                            : "text-green-600"
+                          className={`text-[12px] ${message.senderEmail === myEmailRef.current
+                              ? "text-blue-600"
+                              : "text-green-600"
                             }`}
                         >
-                          <span className="font-bold">
-                            {message.name}:
-                          </span>{" "}
-                          {message.content}
+                          <span className="font-bold">{message.name}:</span>{" "}
+                          {message.content?.split(" ").map((text) => (
+                            <>
+                              {text.startsWith("@") ? (
+                                <span className="text-red-500">{text} </span>
+                              ) : (
+                                <span>{text} </span>
+                              )}
+                            </>
+                          ))}
                         </p>
                         <p className="text-[#1a1a1a] text-[10px]">
                           {new Date(message.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
                     </div>
-                  ))
-                }
+                  ))}
+              </ScrollToBottom>
+              {/* send message */}
+              <div className="flex justify-between items-center gap-2 relative">
+                <input
+                  type="text"
+                  placeholder={`Type Message ${groupMessage.length}`}
+                  className="rounded-lg py-1 px-2 placeholder:text-[10px]"
+                  value={groupMessageContent}
+                  onChange={(e) => setGroupMessageContent(e.target.value)}
+                // onKeyPress={(e) => e.key === "Enter" && handleGroupMessage()}
+                />
+                <div className="absolute right-11 cursor-pointer">
+                  <MdInsertEmoticon />
+                </div>
+                <div
+                  className="py-1.5 px-1.5 bg-custom-orange-2 rounded-[50%] text-white cursor-pointer text-sm"
+                  onClick={() => handleSendGroupMessage(groupMessageContent)}
+                >
+                  <IoSend />
+                </div>
               </div>
             </div>
           </div>
-        }
+        )}
 
 
       </div>

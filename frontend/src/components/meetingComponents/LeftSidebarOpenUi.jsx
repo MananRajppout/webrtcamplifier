@@ -20,7 +20,7 @@ import BreakoutRoomModal from "../singleComponent/BreakoutRoomModal";
 import { useParams, useSearchParams } from "next/navigation";
 import { GoMoveToEnd } from "react-icons/go";
 import MoveToBreakModal from "../singleComponent/MoveToBreakModal";
-import { BiEditAlt } from "react-icons/bi";
+import { BiEditAlt, BiMicrophone, BiMicrophoneOff } from "react-icons/bi";
 import UserRename from "../singleComponent/UserRenameModal";
 import ScrollToBottom from "react-scroll-to-bottom";
 import { bytesToMbs } from "./RightSidebarOpenUi";
@@ -88,6 +88,7 @@ const LeftSidebarOpenUi = ({
   handleModeratorToggleWhiteboard,
   handleGetPollResults,
   pollData,
+  handleMuteAndUnmuteParticipant
 }) => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -466,7 +467,27 @@ const LeftSidebarOpenUi = ({
     if(role == "Moderator"){
       handleModeratorToggleWhiteboard(!isWhiteBoardOpen);
     }
-  },[role,isWhiteBoardOpen])
+  },[role,isWhiteBoardOpen]);
+
+
+
+
+  const handleMuteCurrentUser = useCallback((currentUser,value) => {
+    setUsers(prev => {
+      const users = JSON.parse(JSON.stringify(prev));
+      const indexOf = users.findIndex(user => user.email == currentUser.email);
+      
+      if(indexOf != -1){
+        users[indexOf].mute=value;
+        return users;
+      }
+
+      return prev;
+    });
+
+    setCurrentUser(prev => ({...prev,mute: value}));
+    handleMuteAndUnmuteParticipant(value,currentUser.email);
+  },[users]);
 
   return (
     <>
@@ -657,12 +678,7 @@ const LeftSidebarOpenUi = ({
                   setUnreadMessageParticipant(0);
                 }}
               />
-              {/* {
-                showUDot &&
-                <div className="absolute -top-1 -right-1 w-4 h-4 text-xs grid text-center text-white rounded-full  bg-[#ff2b2b] shadow-[0px_1px_3px_#00000036]">
-                  {unreadMessageParticipant < 10 ? unreadMessageParticipant : '9+'} 
-                </div>
-              } */}
+              
             </div>
           </div>
 
@@ -762,7 +778,7 @@ const LeftSidebarOpenUi = ({
           {isModeratorPopupModalOpen && currentUser && (
             <div
               ref={modalRef}
-              className="absolute bg-white shadow-[0px_3px_6px_#0000004A] rounded-lg w-44 z-20"
+              className="absolute bg-white shadow-[0px_3px_6px_#0000004A] rounded-lg w-44 z-50"
               style={{
                 top: modalPosition.top + 20,
                 left: modalPosition.left - 30,
@@ -798,6 +814,16 @@ const LeftSidebarOpenUi = ({
                 >
                   <BiEditAlt />
                   <span>Rename</span>
+                </li>
+
+                <li
+                  className="py-2 px-2 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2 relative"
+                  onClick={(e) =>  handleMuteCurrentUser(currentUser,!currentUser.mute)}
+                >
+                  {currentUser.mute == true ? <BiMicrophoneOff /> : <BiMicrophone/>}
+                  {currentUser.mute == true ? <span>Unmute</span> : <span>Mute</span>}
+                  
+                  
                 </li>
               </ul>
             </div>

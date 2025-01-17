@@ -11,10 +11,11 @@ import { MdOutlineDeblur } from "react-icons/md"
 import RenderParticipantsAudio from '../RenderParticipantsAudio';
 import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipant';
 import WhiteBoard from './WhiteBoard';
+import toast from 'react-hot-toast';
 
 
 
-const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks, pollData, setPollData, isWhiteBoardOpen, handleMediaUpload,users }) => {
+const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks, pollData, setPollData, isWhiteBoardOpen, handleMediaUpload,users,micmuteByModerator }) => {
   const searchParams = useSearchParams();
   const params = useParams();
   const role = searchParams.get("role");
@@ -27,7 +28,7 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
   const [roomId, setRoomId] = useState(type == 'breackout' ? `${params.id}-${roomname}` : params.id);
   const videoCanvasRef = useRef(null);
   const canvasRef = useRef(null);
-  const [isMicMute, setIsMicMute] = useState(role == 'Observer' || ModeratorType == 'tech-host' ? true : false);
+  const [isMicMute, setIsMicMute] = useState(micmuteByModerator == true ? true :(role == 'Observer' || ModeratorType == 'tech-host' ? true : false));
   const [isWebCamMute, setIsWebCamMute] = useState(role == 'Observer' || ModeratorType == 'tech-host' ? true : false);
   const [isBlur, setIsBlur] = useState(false);
   const [selected, setSelected] = useState(0);
@@ -73,6 +74,14 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
       myEmailRef.current = email;
     }
   }, []);
+
+
+  useEffect(() => {
+    if(micmuteByModerator){
+      setIsMicMute(true);
+      handleMuteUnmute(true,'mic')
+    }
+  },[micmuteByModerator])
 
 
   // on select video change
@@ -135,7 +144,7 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
       localVideoElementRef.current.srcObject = new MediaStream([videoTrackRef.current]);
       localVideoElementRef.current.play();
     }
-  }, [videoTrackRef.current, participantsRef.current]);
+  }, [videoTrackRef.current, participantsRef.current,isWhiteBoardOpen]);
 
 
   useEffect(() => {
@@ -171,13 +180,17 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
       return
     }
     if (isMicMute) {
+      if(micmuteByModerator == true){
+        toast.success("Your Mic is muted by the moderator.");
+        return;
+      }
       handleMuteUnmute(false, 'mic');
       setIsMicMute(false);
     } else {
       setIsMicMute(true);
       handleMuteUnmute(true, 'mic');
     }
-  }, [isMicMute, audioPermisson])
+  }, [isMicMute, audioPermisson,micmuteByModerator])
 
 
 
