@@ -333,6 +333,7 @@ const ProjectTable = ({
           project={selectedProject}
           onClose={() => setIsAssignTagModalOpen(false)}
           fetchProjects={fetchProjects}
+          page={page}
         />
       )}
 

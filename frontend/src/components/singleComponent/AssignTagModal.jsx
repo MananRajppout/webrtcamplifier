@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Button from "../shared/button";
 import CreateTag from "./CreateTag";
 
-const AssignTagModal = ({ userId, project, onClose, fetchProjects }) => {
+const AssignTagModal = ({ userId, project, onClose, fetchProjects, page }) => {
   const [tags, setTags] = useState([]);
   const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
@@ -83,7 +83,7 @@ const AssignTagModal = ({ userId, project, onClose, fetchProjects }) => {
       );
 
       if (response.ok) {
-        await fetchProjects(userId);
+        await fetchProjects(userId, page);
         onClose();
       } else {
         console.error("Failed to update tags");
