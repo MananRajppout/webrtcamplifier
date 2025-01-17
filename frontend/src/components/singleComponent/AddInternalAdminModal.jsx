@@ -11,11 +11,11 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 const AddInternalAdminModal = ({ onClose }) => {
   const { user } = useGlobalContext();
   const userRole = user?.role;
-  const [firstName, setFirstName] = useState("User6FN");
-  const [lastName, setLastName] = useState("User6LN");
-  const [email, setEmail] = useState("user6@gmail.com");
-  const [password, setPassword] = useState("Ab123456@");
-  const [confirmPassword, setConfirmPassword] = useState("Ab123456@");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState(
     userRole === "SuperAdmin" ? "AmplifyAdmin" : "AmplifyModerator"
   );
