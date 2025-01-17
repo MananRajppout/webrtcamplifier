@@ -3,7 +3,7 @@ import Button from "@/components/shared/button";
 const PollDetailsModal = ({ poll, onClose }) => {
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center ">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-2/3 lg:w-1/2">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-2/3 lg:w-1/2 max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4 text-custom-dark-blue-1">
           {poll.pollName}
         </h2>

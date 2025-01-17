@@ -196,8 +196,9 @@ const PollsTab = ({
           onClose={handleCloseAddModal}
           pollToEdit={selectedPoll}
           project={project}
-          setLocalProjectState={setLocalProjectState}
-          setPolls={setPolls}
+          // setLocalProjectState={setLocalProjectState}
+          // setPolls={setPolls}
+          fetchPolls={fetchPolls}
         />
       )}
       {totalPollPages > 1 && (

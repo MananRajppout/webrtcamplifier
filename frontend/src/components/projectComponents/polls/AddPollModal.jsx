@@ -3,7 +3,7 @@ import HeadingBlue25px from "@/components/shared/HeadingBlue25px";
 import InputField from "@/components/shared/InputField";
 import { useGlobalContext } from "@/context/GlobalContext";
 import axios from "axios";
-import React, {  useState } from "react";
+import React, {  useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiMinus } from "react-icons/fi";
 import { GoPlus } from "react-icons/go";
@@ -37,6 +37,58 @@ const AddPollModal = ({
     "Matching",
     "Rank Order",
   ];
+
+   // UseEffect to populate modal when editing a poll
+   useEffect(() => {
+    if (pollToEdit) {
+      setTitle(pollToEdit.title); // Set poll title
+      setQuestions(
+        pollToEdit.questions.map((q) => {
+          switch (q.type) {
+            case "Single Choice":
+            case "Multiple Choice":
+              return {
+                ...q,
+                choices: q.choices || [{ text: "" }],
+              };
+            case "Short Answer":
+            case "Long Answer":
+              return {
+                ...q,
+                minLength: q.minLength || 1,
+                maxLength: q.maxLength || 200,
+              };
+            case "Fill in the Blank":
+              return {
+                ...q,
+                blanks: q.blanks || [""],
+              };
+            case "Rating Scale":
+              return {
+                ...q,
+                lowScoreLabel: q.lowScoreLabel || "",
+                highScoreLabel: q.highScoreLabel || "",
+                minLength: q.ratingRange?.min || 1,
+                maxLength: q.ratingRange?.max || 5,
+              };
+            case "Matching":
+              return {
+                ...q,
+                matching: q.matching || [{ option: "", answer: "" }],
+              };
+            case "Rank Order":
+              return {
+                ...q,
+                choices: q.choices || [{ text: "" }],
+              };
+            default:
+              return q;
+          }
+        })
+      );
+    }
+  }, [pollToEdit]);
+
   // matching, rank order,
   const addQuestion = () => {
     setQuestions([
