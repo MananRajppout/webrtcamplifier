@@ -3,14 +3,14 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { BsCheckCircle } from "react-icons/bs";
 
-const ShareMeetingModal = ({ meeting, onClose }) => {
+const ShareMeetingModal = ({ meeting, onClose, project }) => {
   const [accessLevel, setAccessLevel] = useState("Observer Access");
 
   const handleCopyInvite = () => {
     const inviteText =
       accessLevel === "Observer Access"
-        ? `Nancy Jones has just created a Project named ${meeting.title}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting._id}\nPasscode: ${meeting.meetingPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
-        : `Nancy Jones has invited you to a scheduled meeting for the project ${meeting.title}.\n\nTitle: Focus Group Meeting\nJoin Meeting\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting._id}`;
+        ? `${project.createdBy.firstName} has just created a Project named ${project.name}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${project._id}/${meeting._id}\nPasscode: ${meeting.meetingPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
+        : `${project.createdBy.firstName} has invited you to a scheduled meeting for the project ${project.name}.\n\nTitle: Focus Group Meeting\nJoin Meeting\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting//${project._id}/${meeting._id}`;
 
     navigator.clipboard.writeText(inviteText);
     toast.success("Project invite copied to clipboard!");
@@ -52,17 +52,17 @@ const ShareMeetingModal = ({ meeting, onClose }) => {
         {accessLevel === "Observer Access" ? (
           <div className="p-4 border rounded-md mb-4">
             <p className="text-sm">
-              Nancy Jones has just created a meeting named {meeting.name}. The
+            {project.createdBy.firstName} has just created a meeting named {meeting.name}. The
               meeting is now accessible to you as an observer.
             </p>
             <p className="mt-2 text-sm">
               <strong>Join Meeting</strong>
               <br />
               <Link
-                href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting._id}`}
+                href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${project._id}/${meeting._id}`}
                 className="text-blue-500"
               >
-                {`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting._id}`}
+                {`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${project._id}/${meeting._id}`}
               </Link>
             </p>
             <p className="mt-2 text-sm">
@@ -80,7 +80,7 @@ const ShareMeetingModal = ({ meeting, onClose }) => {
         ) : (
           <div className="p-4 border rounded-md mb-4">
             <p className="text-sm">
-              Nancy Jones has invited you to a scheduled Amplify Meeting
+            {project.createdBy.firstName} has invited you to a scheduled Amplify Meeting
             </p>
             <p className="mt-2 text-sm">
               <strong>Title:</strong> {meeting.title}
@@ -93,10 +93,10 @@ const ShareMeetingModal = ({ meeting, onClose }) => {
               <strong>Join Meeting</strong>
               <br />
               <Link
-                href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting._id}`}
+                href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${project._id}/${meeting._id}`}
                 className="text-blue-500"
               >
-                {`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting._id}`}
+                {`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${project._id}/${meeting._id}`}
               </Link>
             </p>
           </div>

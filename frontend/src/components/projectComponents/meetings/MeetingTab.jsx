@@ -25,6 +25,7 @@ const MeetingTab = ({
   totalMeetingPages,
   onPageChange,
 }) => {
+
   const [localMeetingState, setLocalMeetingState] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -105,7 +106,7 @@ const MeetingTab = ({
     toast.error("Meeting not found");
   });
 
-  const handleJoinMeeting = async (meeting) => {
+  const handleJoinMeeting = async (meeting, project) => {
     if (
       project.status === "Draft" ||
       project.status === "Paused" ||
@@ -438,7 +439,7 @@ const MeetingTab = ({
                           ? "bg-gray-300 cursor-not-allowed"
                           : "text-blue-500 hover:text-blue-700"
                       } `}
-                      onClick={() => handleJoinMeeting(meeting)}
+                      onClick={() => handleJoinMeeting(meeting, project)}
                       disabled={activeMeetingId === meeting._id}
                     >
                       {activeMeetingId === meeting._id
@@ -604,6 +605,7 @@ const MeetingTab = ({
         <ShareMeetingModal
           meeting={selectedMeeting}
           onClose={() => setIsShareMeetingModalOpen(false)}
+          project={project}
         />
       )}
 

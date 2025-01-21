@@ -697,76 +697,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             />
           )}
 
-          {isSingleChoiceModalOpen && (
-            <AddSingleChoicePollModal
-              onClose={() => setIsSingleChoiceModalOpen(false)}
-              onSave={handleSingleChoiceSave}
-              project={project}
-              user={user}
-            />
-          )}
-
-          {isMultipleChoiceModalOpen && (
-            <MultipleChoicePollModal
-              onClose={() => setIsMultipleChoiceModalOpen(false)}
-              onSave={handleSingleChoiceSave}
-              project={project}
-              user={user}
-            />
-          )}
-
-          {isMatchingModalOpen && (
-            <MatchingPollModal
-              onClose={() => setIsMatchingModalOpen(false)}
-              onSave={handleSingleChoiceSave}
-              project={project}
-              user={user}
-            />
-          )}
-
-          {isRankOrderModalOpen && (
-            <RankOrderPollModal
-              onClose={() => setIsRankOrderModalOpen(false)}
-              onSave={handleSingleChoiceSave}
-              project={project}
-              user={user}
-            />
-          )}
-          {isShortAnswerModalOpen && (
-            <ShortAnswerPollModal
-              onClose={() => setIsShortAnswerModalOpen(false)}
-              onSave={handleSingleChoiceSave}
-              project={project}
-              user={user}
-            />
-          )}
-
-          {isLongAnswerModalOpen && (
-            <LongAnswerPollModal
-              onClose={() => setIsLongAnswerModalOpen(false)}
-              onSave={handleSingleChoiceSave}
-              project={project}
-              user={user}
-            />
-          )}
-
-          {isBlankModalOpen && (
-            <FillBlankModal
-              onClose={() => setIsBlankModalOpen(false)}
-              onSave={handleSingleChoiceSave}
-              project={project}
-              user={user}
-            />
-          )}
-
-          {isRatingModalOpen && (
-            <RatingScaleModal
-              onClose={() => setIsRatingModalOpen(false)}
-              onSave={handleSingleChoiceSave}
-              project={project}
-              user={user}
-            />
-          )}
+          
 
           {isUploadResultsModalOpen && (
             <UploadResultsModal

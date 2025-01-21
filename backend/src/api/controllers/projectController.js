@@ -154,7 +154,7 @@ const getAllProjects = async (req, res) => {
     }
 
     const projects = await Project.find(searchQuery)
-      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color')
+      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color').populate('createdBy', 'firstName lastName')
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -199,7 +199,7 @@ const getAllProjects = async (req, res) => {
 const getProjectById = async (req, res) => {
   const { id } = req.params;
   try {
-    const project = await Project.findById(id).populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color');
+    const project = await Project.findById(id).populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color').populate('createdBy', 'firstName lastName');
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -251,7 +251,7 @@ const deleteProject = async (req, res) => {
 
 
 const searchProjectsByFirstName = async (req, res) => {
-  const { name } = req.query; // Get the firstName from query parameters
+  const { name } = req.query; 
 
   // Check if firstName query parameter is provided
   if (!name) {
@@ -521,12 +521,13 @@ const getAllProjectsForAmplify = async (req, res) => {
     }
 
     const projects = await Project.find(searchQuery)
-      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color')
+      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color').populate('createdBy', 'firstName lastName')
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-    const totalDocuments = await Project.countDocuments(searchQuery); // Total number of documents matching the criteria
-    const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
+    const totalDocuments = await Project.countDocuments(searchQuery); 
+
+    const totalPages = Math.ceil(totalDocuments / limit); 
 
     res.status(200).json({
       page: parseInt(page),
@@ -575,7 +576,7 @@ const sendEmailToNewContact = async (req, res) => {
   
     try {
       const projects = await Project.find({ createdBy: id })
-       .sort({ createdAt: 1 }); // Sort projects by creation date (most recent first)
+       .sort({ createdAt: 1 }).populate('createdBy', 'firstName lastName'); 
   
       if (projects.length === 0) {
         return res.status(404).json({ message: "No projects found for this user." });

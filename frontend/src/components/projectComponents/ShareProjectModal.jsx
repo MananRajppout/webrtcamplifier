@@ -6,10 +6,11 @@ import { BsCheckCircle } from "react-icons/bs";
 const ShareProjectModal = ({ project, onClose }) => {
   const [accessLevel, setAccessLevel] = useState("Observer Access");
 
+
   const handleCopyInvite = () => {
     const inviteText =
       accessLevel === "Observer Access"
-        ? `Nancy Jones has just created a Project named ${project.name}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/login\nPasscode: ${project.projectPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
+        ? `${project.createdBy.firstName} has just created a Project named ${project.name}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/login\nPasscode: ${project.projectPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
         : `Participant does not have access to the project.`;
 
     navigator.clipboard.writeText(inviteText);
@@ -44,44 +45,40 @@ const ShareProjectModal = ({ project, onClose }) => {
 
         {/* Dropdown for access level */}
         <div className="mb-4 flex justify-center">
-         
-            <p >Observer Access</p>
-          
+          <p>Observer Access</p>
         </div>
 
-       
-          <div className="p-4 border rounded-md mb-4">
-            <p className="text-sm">
-              Nancy Jones has just created a Project named{" "}
-              <strong>{project.name}</strong>. The project is now accessible to
-              you as an observer.
-            </p>
-            <p className="mt-2 text-sm">
-              <strong>Join Project</strong>
-              <br />
-              <Link
-                href={`https://new-amplify-fe-kj4c.vercel.app/login`}
-                className="text-blue-500"
-              >
-                https://new-amplify-fe-kj4c.vercel.app/login
-              </Link>
-            </p>
-            <p className="mt-2 text-sm">
-              <strong>Passcode:</strong> {project.projectPasscode}
-            </p>
-            <p className="mt-4 text-sm">Or</p>
-            <p className="mt-2 text-sm">
-              <strong>Create an account</strong>
-              <br />
-              <Link
-                href={`https://new-amplify-fe-kj4c.vercel.app/register`}
-                className="text-blue-500"
-              >
-                https://new-amplify-fe-kj4c.vercel.app/register
-              </Link>
-            </p>
-          </div>
-       
+        <div className="p-4 border rounded-md mb-4">
+          <p className="text-sm">
+            {project?.createdBy?.firstName} has just created a Project named 
+            <strong> {project?.name}</strong>. The project is now accessible to
+            you as an observer.
+          </p>
+          <p className="mt-2 text-sm">
+            <strong>Join Project</strong>
+            <br />
+            <Link
+              href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/login`}
+              className="text-blue-500"
+            >
+              {process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/login
+            </Link>
+          </p>
+          <p className="mt-2 text-sm">
+            <strong>Passcode:</strong> {project.projectPasscode}
+          </p>
+          <p className="mt-4 text-sm">Or</p>
+          <p className="mt-2 text-sm">
+            <strong>Create an account</strong>
+            <br />
+            <Link
+              href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`}
+              className="text-blue-500"
+            >
+              {process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register
+            </Link>
+          </p>
+        </div>
 
         {/* Copy button */}
         <button

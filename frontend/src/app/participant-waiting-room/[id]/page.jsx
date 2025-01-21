@@ -10,7 +10,6 @@ import axios from "axios";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaVideo } from "react-icons/fa";
-import { IoLogOutSharp } from "react-icons/io5";
 
 const page = () => {
   const searchParams = useSearchParams();
