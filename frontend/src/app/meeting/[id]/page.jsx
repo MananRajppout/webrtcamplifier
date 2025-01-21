@@ -58,6 +58,7 @@ const page = () => {
   const [streams, setStreams] = useState([]);
   const [messages, setMessages] = useState([]);
   const [groupMessage, setGroupMessage] = useState([]);
+  const [observerGroupMessage, setObserverGroupMessage] = useState([]);
   const [mediaBox, setMediaBox] = useState([]);
   const [enabledBreakoutRoom, setEnabledBreakoutRoom] = useState(true);
   const [projectId, setProjectId] = useState(null);
@@ -78,6 +79,7 @@ const page = () => {
   //breakout room popup
   const [breakoutRoomPopUpOpen, setBreakoutRoomPopUpOpen] = useState(false);
   const [breakoutRoomDetails, setBreakoutRoomDetails] = useState(null);
+  const [micmuteByModerator, setMicMuteByModerator] = useState(false);
 
   //recording feauture
   const mixAudioDestinationRef = useRef(null);
@@ -290,8 +292,9 @@ const page = () => {
     }
     socket.emit( "join-room",
       { roomid: params.id, name: fullName, email, roomname, role: userRole, isTechHost: !!ModeratorType },
-      (socketId, meeting) => {
+      (socketId, meeting,micmute) => {
         socketIdRef.current = socketId;
+        setMicMuteByModerator(micmute);
         if (meeting) {
           setEnabledBreakoutRoom(meeting.enableBreakoutRoom);
           setProjectId(meeting.projectId);
@@ -313,6 +316,16 @@ const page = () => {
       }
     );
 
+
+
+
+    socket.emit("observer-group:get-message",
+      { meetingId: params.id, roomname },
+      (messages) => {
+        setObserverGroupMessage([...messages]);
+      }
+    );
+
     // polling feature needs to be handled, here we are just receiving the data
     //starting
     socket.on("poll-started", (data) => {
@@ -324,6 +337,8 @@ const page = () => {
         });
       }
     });
+
+    socket.on("mute-and-unmute-participant",MuteAndUnmuteParticipant)
 
     socket.on("poll-response-received", (data) => {
       toast.success(`${data.message}`)
@@ -345,6 +360,7 @@ const page = () => {
     socket.on("participantRemoved", handleParticipantRemoved);
     socket.on("getMeetingStatusResponse", handleGetMeetingStatusResponse);
     socket.on("group:receive-message", handleNewMessageReceive);
+    socket.on("observer-group:receive-message", handleNewObserMessageReceive);
     socket.on("mediabox:on-upload", handleMediaNewUpload);
     socket.on("mediabox:on-delete", handleMediaNewDelete);
     socket.on("endMeeting", onEndMeeting);
@@ -371,6 +387,8 @@ const page = () => {
       socket.off("room-ending-remember", onRoomEndingRemember);
       socket.off("whiteboard-toggle", handleWhiteToggle);
       socket.off("poll-response-received");
+      socket.off("observer-group:receive-message", handleNewObserMessageReceive);
+      socket.off("mute-and-unmute-participant",MuteAndUnmuteParticipant);
     };
   }, [userRole, params.id, socket, pollData]);
 
@@ -491,8 +509,36 @@ const page = () => {
     [myEmail, params.id, participants, roomname]
   );
 
+
+
+  const sendObserverGroupMessage = useCallback(
+    (content) => {    
+      const newMessage = {
+        meetingId: params.id,
+        senderEmail: myEmail,
+        content,
+        name: fullName,
+        timestamp: Date.now(),
+      };
+      setObserverGroupMessage((prev) => [...prev, newMessage]);
+      socket.emit("observer-group:send-message", {
+        meetingId: params.id,
+        email: myEmail,
+        content,
+        name:fullName,
+        roomname,
+      });
+    },
+    [myEmail, params.id, participants, roomname,fullName]
+  );
+
   const handleNewMessageReceive = useCallback((newMessage) => {
     setGroupMessage((prev) => [...prev, newMessage]);
+  }, []);
+
+
+  const handleNewObserMessageReceive = useCallback((newMessage) => {
+    setObserverGroupMessage((prev) => [...prev, newMessage]);
   }, []);
 
   const handleMediaNewUpload = useCallback((media) => {
@@ -846,6 +892,16 @@ const page = () => {
     socket.emit("whiteboard-toggle", {value,meetingId: params.id,roomname});
   },[params.id,roomname]);
 
+
+  const handleMuteAndUnmuteParticipant = useCallback((value,email) => {
+    socket.emit("mute-and-unmute-participant", {value,email,meetingId: params.id});
+    console.log(value,email)
+  },[params.id]);
+
+  const MuteAndUnmuteParticipant = useCallback(({value}) => {
+    setMicMuteByModerator(value);
+  },[params]);
+
   return (
     <>
       <div className="flex justify-between min-h-screen max-h-screen meeting_bg ">
@@ -861,7 +917,7 @@ const page = () => {
             <div className="h-full">
               <LeftSidebar
                 users={participants}
-                setUsers={setUsers}
+                setUsers={setParticipants}
                 role={userRole}
                 isWhiteBoardOpen={isWhiteBoardOpen}
                 setIsWhiteBoardOpen={setIsWhiteBoardOpen}
@@ -910,12 +966,14 @@ const page = () => {
                 handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
                 handleGetPollResults={handleGetPollResults}
                 pollData={pollData}
+                handleMuteAndUnmuteParticipant={handleMuteAndUnmuteParticipant}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden bg-orange-600">
               <MeetingView
                 role={userRole}
                 users={participants}
+                
                 isWhiteBoardOpen={isWhiteBoardOpen}
                 setIsWhiteBoardOpen={setIsWhiteBoardOpen}
                 meetingStatus={meetingStatus}
@@ -943,7 +1001,7 @@ const page = () => {
                 setIsPollResultModalOpen={setIsPollResultModalOpen}
                 projectId={projectId}
                 user={user}
-                
+                micmuteByModerator={micmuteByModerator}
               />
             </div>
           </>
@@ -952,7 +1010,7 @@ const page = () => {
             <div className="h-full">
               <LeftSidebar
                 users={participants}
-                setUsers={setUsers}
+                setUsers={setParticipants}
                 role={userRole}
                 isWhiteBoardOpen={isWhiteBoardOpen}
                 setIsWhiteBoardOpen={setIsWhiteBoardOpen}
@@ -1002,6 +1060,7 @@ const page = () => {
                 handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
                 handleGetPollResults={handleGetPollResults}
                 pollData={pollData}
+                handleMuteAndUnmuteParticipant={handleMuteAndUnmuteParticipant}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -1035,6 +1094,7 @@ const page = () => {
                 setIsPollResultModalOpen={setIsPollResultModalOpen}
                 projectId={projectId}
                 user={user}
+                micmuteByModerator={micmuteByModerator}
               />
             </div>
             <div className="h-full">
@@ -1052,12 +1112,15 @@ const page = () => {
                 sendMessageObserver={sendMessageObserver}
                 messages={participantMessages}
                 users={participants}
-                setUsers={setUsers}
+                setUsers={setParticipants}
                 selectedRoom={selectedRoom}
                 setSelectedRoom={setSelectedRoom}
                 groupMessage={groupMessage}
                 handleMediaUpload={handleMediaUpload}
                 mediaBox={mediaBox}
+                sendObserverGroupMessage={sendObserverGroupMessage}
+                setObserverGroupMessage={setObserverGroupMessage}
+                observerGroupMessage={observerGroupMessage}
               />
             </div>
           </>
@@ -1066,7 +1129,7 @@ const page = () => {
             <div className="h-full">
               <LeftSidebar
                 users={participants}
-                setUsers={setUsers}
+                setUsers={setParticipants}
                 role={userRole}
                 isWhiteBoardOpen={isWhiteBoardOpen}
                 setIsWhiteBoardOpen={setIsWhiteBoardOpen}
@@ -1116,6 +1179,7 @@ const page = () => {
                 handleModeratorToggleWhiteboard={handleModeratorToggleWhiteboard}
                 handleGetPollResults={handleGetPollResults}
                 pollData={pollData}
+                handleMuteAndUnmuteParticipant={handleMuteAndUnmuteParticipant}
               />
             </div>
             <div className="flex-1 w-full max-h-[100vh] overflow-hidden">
@@ -1149,6 +1213,7 @@ const page = () => {
                 setIsPollResultModalOpen={setIsPollResultModalOpen}
                 projectId={projectId}
                 user={user}
+                micmuteByModerator={micmuteByModerator}
               />
             </div>
             <div className="h-full">
@@ -1166,13 +1231,16 @@ const page = () => {
                 sendMessageObserver={sendMessageObserver}
                 messages={participantMessages}
                 users={participants}
-                setUsers={setUsers}
+                setUsers={setParticipants}
                 selectedRoom={selectedRoom}
                 setSelectedRoom={setSelectedRoom}
                 groupMessage={groupMessage}
                 handleMediaUpload={handleMediaUpload}
                 mediaBox={mediaBox}
                 enabledBreakoutRoom={enabledBreakoutRoom}
+                sendObserverGroupMessage={sendObserverGroupMessage}
+                setObserverGroupMessage={setObserverGroupMessage}
+                observerGroupMessage={observerGroupMessage}
               />
             </div>
           </>

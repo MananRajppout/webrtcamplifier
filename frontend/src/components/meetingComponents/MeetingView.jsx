@@ -42,7 +42,7 @@ const MeetingView = ({
   setIsPollResultModalOpen,
   projectId,
   user,
-  
+  micmuteByModerator
 }) => {
   const searchParams = useSearchParams();
   const roomname = searchParams.get("roomname");
@@ -147,13 +147,7 @@ const MeetingView = ({
               />
             </div>
           )}
-          {/* <Button
-            children="Leave"
-            type="submit"
-            variant="meeting"
-            icon={<IoLogOutSharp />}
-            className=" rounded-lg text-custom-black px-3 py-1 hidden md:block"
-          /> */}
+          
         </div>
       </div>
 
@@ -161,34 +155,13 @@ const MeetingView = ({
       <div className="h-auto relative">
         {meetingStatus ? (
           <>
-            {/* {isRecordingOpen ? (
-            <div className="flex-1 h-full">
-              <EndOFMeeting role={role} />
-            </div>
-          ) : isWhiteBoardOpen ? (
-            <div className="h-4/5 max-h-4/5">
-              <WhiteBoard role={role} users={users} />
-            </div>
-          ) : (
-            <div className="flex-1 h-full">
-              <OngoingMeeting users={users} iframeLink={iframeLink} role={role}/>
-            </div>
-          )} */}
+           
 
             <div className={`flex-1  ${isRecordingOpen ? "block" : "hidden"}`}>
               <EndOFMeeting role={role} />
             </div>
 
-            {/* <div className={` ${isWhiteBoardOpen ? "block" : "hidden"}`}>
-              <WhiteBoard
-                role={role}
-                users={users}
-                isWhiteBoardOpen={isWhiteBoardOpen}
-                handleMediaUpload={handleMediaUpload}
-                setting={setting}
-                setSetting={setSetting}
-              />
-            </div> */}
+            
 
             <div className={`flex-1  ${isMeetingEnd ? "block" : "hidden"}`}>
               <div
@@ -200,7 +173,7 @@ const MeetingView = ({
                 </p>
               </div>
             </div>
-            {/* && !isWhiteBoardOpen */}
+            
             <div
               className={`flex-1  ${
                 !isRecordingOpen  && !isMeetingEnd
@@ -223,8 +196,7 @@ const MeetingView = ({
 
                 isWhiteBoardOpen={isWhiteBoardOpen}
                 handleMediaUpload={handleMediaUpload}
-              
-               
+                micmuteByModerator={micmuteByModerator}
               />
             </div>
           </>

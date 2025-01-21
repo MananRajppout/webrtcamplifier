@@ -4,6 +4,7 @@ const LiveMeeting = require("../models/liveMeetingModel");
 const { v4: uuidv4 } = require("uuid");
 const ChatMessage = require("../models/chatModel");
 const GroupMessage = require('../models/groupMessage');
+const ObserverGroupMessage = require('../models/observerGroupMessage.js')
 const MediaBoxModel = require('../models/mediaBox.js');
 const ActivePoll = require("../models/activePollModel.js");
 const Poll = require("../models/pollModel.js");
@@ -34,28 +35,47 @@ const   uploadToS3 = async (buffer, mimetype, fileName) =>  {
 }
 
 let messageBatch = [];
+let observerMessageBatch = [];
 const FLUSH_INTERVAL = 10000;
 
 function addMessageToBatch(message) {
   messageBatch.push(message);
 }
 
+function addObserverMessageToBatch(message) {
+  observerMessageBatch.push(message);
+}
+
 
 async function flushMessages() {
-  if (messageBatch.length === 0) {
-    return;
+  //push participant messages
+  if (messageBatch.length != 0) {
+     // Create a copy of the batch and reset the main array
+      const batchToInsert = [...messageBatch];
+      messageBatch = [];
+      try {
+        await GroupMessage.insertMany(batchToInsert);
+        console.log(`Successfully inserted ${batchToInsert.length} messages`);
+      } catch (error) {
+        console.error('Failed to insert messages:', error);
+        messageBatch.push(...batchToInsert);
+      }
   }
 
-  // Create a copy of the batch and reset the main array
-  const batchToInsert = [...messageBatch];
-  messageBatch = [];
-  try {
-    await GroupMessage.insertMany(batchToInsert);
-    console.log(`Successfully inserted ${batchToInsert.length} messages`);
-  } catch (error) {
-    console.error('Failed to insert messages:', error);
-    messageBatch.push(...batchToInsert);
-  }
+  if (observerMessageBatch.length != 0) {
+    // Create a copy of the batch and reset the main array
+     const batchToInsert = [...observerMessageBatch];
+     observerMessageBatch = [];
+     try {
+       await ObserverGroupMessage.insertMany(batchToInsert);
+       console.log(`Successfully inserted ${batchToInsert.length} messages`);
+     } catch (error) {
+       console.error('Failed to insert messages:', error);
+       observerMessageBatch.push(...batchToInsert);
+     }
+ }
+
+ 
 }
 
 async function checkMeetingExists(meetingId, socket, event) {
@@ -98,6 +118,12 @@ async function getGroupMessage(meetingId) {
 }
 
 
+async function getObserverGroupMessage(meetingId) {
+  const noAddedMessage = observerMessageBatch.filter(m => m.meetingId == meetingId);
+  const addedMessage = await ObserverGroupMessage.find({ meetingId });
+  return [...addedMessage, ...noAddedMessage]
+}
+
 function callAfterMin(min, callback) {
   if (typeof min !== 'number' || min <= 0) {
     throw new Error('The "min" parameter should be a positive number.');
@@ -111,6 +137,7 @@ function callAfterMin(min, callback) {
 
 const usernames = {};
 const userchangeroom = {};
+const socketIds = {}
 
 
 const setupSocket = (server) => {
@@ -136,9 +163,13 @@ const setupSocket = (server) => {
         role,
         isTechHost
       };
+      socketIds[email] = socket.id;
       console.log(`User with name ${name} joined meeting ${roomid} role ${role}`)
       const newname = email + roomid;
       delete userchangeroom[newname];
+
+
+      let micmute = false;
 
       if (role == "Participant" || isTechHost) {
         const liveMeeting = await LiveMeeting.findOne({ meetingId: roomid });
@@ -147,6 +178,7 @@ const setupSocket = (server) => {
           liveMeeting.participantsList[participantIndex].status = "online";
           liveMeeting.participantsList[participantIndex].joiningTime = Date.now();
           liveMeeting.participantsList[participantIndex].roomName = roomname;
+          micmute = !!liveMeeting.participantsList[participantIndex].mute;
 
           await liveMeeting.save();
         }
@@ -219,7 +251,7 @@ const setupSocket = (server) => {
       }
 
       const meeting = await Meeting.findById(roomid).populate("moderator");
-      callback(socket.id, meeting);
+      callback(socket.id, meeting,micmute);
     })
 
     socket.on("startMeeting", async (data) => {
@@ -958,6 +990,7 @@ const setupSocket = (server) => {
       callback({ fullParticipantList }, null);
     });
 
+    //participant group chat
     socket.on('grounp:send-message', ({ meetingId, email, content, name, roomname }) => {
       const id = `${meetingId}-${roomname}`;
       const newMessage = {
@@ -977,6 +1010,55 @@ const setupSocket = (server) => {
 
       callback(messages);
     })
+
+
+
+    
+    //observer group chat
+    socket.on('observer-group:send-message', ({ meetingId, email, content, name, roomname }) => {
+      
+      const newMessage = {
+        meetingId,
+        senderEmail: email,
+        content,
+        name,
+        timestamp: Date.now()
+      }
+      
+      addObserverMessageToBatch(newMessage);
+      socket.to(meetingId).emit('observer-group:receive-message', newMessage);
+    });
+
+    socket.on('observer-group:get-message', async ({ meetingId, roomname }, callback) => {
+      const messages = await getObserverGroupMessage(meetingId);
+      callback(messages);
+    })
+
+
+
+    //participant mute and unmute by moderator
+    socket.on('mute-and-unmute-participant', async ({ meetingId, email,value}) => {
+      const liveMeeting = await LiveMeeting.findOne({ meetingId });
+      console.log('aaaaaaaa')
+
+      if (!liveMeeting) {
+        return
+      }
+
+      const indexOf = liveMeeting.participantsList.findIndex(p => p.email == email);
+      if(indexOf != -1){
+        liveMeeting.participantsList[indexOf].mute = value;
+      }
+
+      await liveMeeting.save();
+
+      const socketId = socketIds[email];
+      socket.to(socketId).emit('mute-and-unmute-participant',{value});
+    })
+
+
+
+
 
     socket.on('mediabox:on-get-media', async ({ meetingId, projectId }, callback) => {
       const media = await MediaBoxModel.find({ projectId });
@@ -1139,75 +1221,7 @@ const setupSocket = (server) => {
 
     //polling feature needs to be handled, here we are just sending the data to all the clients
     //starting
-    // socket.on("start-poll", async ({ meetingId, pollId, endTime }, callback) => {
-    //     try {
-    //       // Fetch the poll details
-         
-    //       const poll = await Poll.findById(pollId).lean();
-    //       if (!poll) {
-    //         return callback({
-    //           success: false,
-    //           message: "Poll not found",
-    //         });
-    //       }
-
-    //       // Check if the meeting exists
-    //       const liveMeeting = await LiveMeeting.findOne({ meetingId });
-    //       if (!liveMeeting) {
-    //         return callback({
-    //           success: false,
-    //           message: "Live meeting not found",
-    //         });
-    //       }
-
-    //       // Create an active poll
-    //       const activePoll = new ActivePoll({
-    //         meetingId,
-    //         pollId,
-    //         status: "Active",
-    //         startTime: new Date(),
-    //         endTime: new Date(endTime),
-    //       });
-
-    //       await activePoll.save();
-    //       console.log("Active Poll during poll start:", activePoll);
-
-    //       // Update the live meeting with the current poll
-    //       liveMeeting.currentPoll = activePoll._id;
-    //       await liveMeeting.save();
-    //       // Notify all participants about the active poll
-    //       io.to(meetingId).emit("poll-started", {
-    //         success: true,
-    //         message: "Poll started successfully",
-    //         activePollId: activePoll._id,
-    //         pollQuestions: poll.questions,
-    //       });
-
-    //       callback({
-    //         success: true,
-    //         message: "Poll started and broadcasted to participants",
-    //         activePoll,
-    //       });
-    //       const activePollId = activePoll._id;
-    //       // Schedule the poll to automatically end at the specified time
-    //       setTimeout(async () => {
-    //         const now = new Date();
-    //         if (now >= new Date(endTime)) {
-    //           await endPoll(meetingId, activePollId);
-    //           // Emit event to notify moderator about poll end
-    //           io.to(meetingId).emit("poll-ended", { activePollId });
-    //         }
-    //       }, new Date(endTime) - new Date());
-    //     } catch (error) {
-    //       console.error("Error starting poll:", error);
-    //       callback({
-    //         success: false,
-    //         message: "Failed to start poll",
-    //         error,
-    //       });
-    //     }
-    //   }
-    // );
+    
 
   
     socket.on("start-poll", async ({ pollId, meetingId }, callback) => {
@@ -1260,83 +1274,7 @@ const setupSocket = (server) => {
       }
     });
 
-    // socket.on("submit-poll-response",
-    //   async ({ meetingId, activePollId, responses, participantEmail }) => {
-        
-    //     try {
-    //       // Validate required fields
-    //       if (!meetingId || !activePollId || !responses || !participantEmail) {
-    //         return socket.emit("poll-response-error", {
-    //           message: "Invalid poll response data",
-    //         });
-    //       }
-
-    //       // Check if the poll is active
-    //       const activePoll = await ActivePoll.findOne({
-    //         _id: activePollId,
-    //         meetingId,
-    //         status: "Active",
-    //       });
-    //       if (!activePoll) {
-    //         return socket.emit("poll-response-error", {
-    //           message: "Poll is no longer active",
-    //         });
-    //       }
-
-    //       console.log("Active Poll during response save:", activePoll);
-
-    //       // Find the participant ID based on participantEmail in LiveMeeting
-    //       const liveMeeting = await LiveMeeting.findOne({ meetingId });
-    //       if (!liveMeeting) {
-    //         return socket.emit("poll-response-error", {
-    //           message: "Live meeting not found",
-    //         });
-    //       }
-
-    //       const participant = liveMeeting.participantsList.find(
-    //         (p) => p.email === participantEmail && p.status === "online"
-    //       );
-
-    //       if (!participant) {
-    //         return socket.emit("poll-response-error", {
-    //           message: "Participant not found or not online",
-    //         });
-    //       }
-
-    //       // Save the response in PollResponse
-    //       const pollResponse = new PollResponse({
-    //         activePollId,
-    //         meetingId,
-    //         participantId: participant.id,
-    //         participantEmail,
-    //         responses: Object.entries(responses).map(
-    //           ([questionId, answer]) => ({
-    //             questionId,
-    //             answer,
-    //           })
-    //         ),
-    //       });
-
-    //       await pollResponse.save();
-    //       console.log('poll response saved', pollResponse)
-    //       // Notify the participant about the successful submission
-    //       socket.emit("poll-response-success", {
-    //         message: "Response submitted successfully",
-    //       });
-
-    //       // Optionally notify the moderator or others in the meeting
-    //       io.to(meetingId).emit("poll-update", {
-    //         activePollId,
-    //         participantId: participant.id,
-    //       });
-    //     } catch (error) {
-    //       console.error("Error handling poll response:", error);
-    //       socket.emit("poll-response-error", {
-    //         message: "Failed to handle poll response",
-    //       });
-    //     }
-    //   }
-    // );
+    
 
     socket.on("submit-poll-response", async (data) => {
       const { activePollId, meetingId, participantEmail, responses } = data;

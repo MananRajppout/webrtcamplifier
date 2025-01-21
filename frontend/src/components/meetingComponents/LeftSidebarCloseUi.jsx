@@ -284,24 +284,7 @@ const LeftSidebarCloseUi = ({
     ) : (
       <div className="">
         <div className=" lg:pt-10 px-6">
-          {/* <Button
-            variant="meeting"
-            type="submit"
-            className="w-full  rounded-xl justify-center py-2 pl-1.5  mb-2"
-            icon={
-              <LuClipboardSignature className="bg-[#fcd860] p-1 text-white text-2xl rounded-md font-bold" />
-            }
-            onClick={toggleWhiteBoard}
-          />
-          <Button
-            variant="meeting"
-            type="submit"
-            className="w-full  rounded-xl justify-center py-2 pl-1.5 mb-2"
-            icon={
-              <FaVideo className="bg-custom-orange-1 p-1 text-white text-2xl rounded-md font-bold" />
-            }
-            onClick={toggleRecordingButton}
-          /> */}
+          
         </div>
         {/* Backroom chat and icon */}
         <div className="flex justify-center items-center py-4 ">
@@ -339,51 +322,9 @@ const LeftSidebarCloseUi = ({
 
           {/* participants container */}
 
-          {/* participants list */}
-          {activeTab === "participantList" && (
-            <div className="flex-grow pt-2 overflow-y-auto">
-              {/* participant continer */}
-              {/* {users?.map((user) => (
-                <div
-                  className="flex justify-center items-center gap-2 py-1"
-                  key={user.id}
-                >
-                  <Image
-                    src={user.image}
-                    alt="user image"
-                    height={40}
-                    width={40}
-                    className="rounded-2xl border-[3px] border-white border-solid"
-                  />
-                </div>
-              ))} */}
-            </div>
-          )}
+         
 
-          {/* Participant chat */}
-          {/* {activeTab === "participantChat" &&
-            !selectedChat &&
-            chatParticipants.map((chat) => (
-              <div
-                key={chat.id}
-                className="bg-custom-gray-2 p-2 flex justify-center items-center gap-2 border-b border-solid border-custom-gray-1 cursor-pointer relative"
-                onClick={() => setSelectedChat(chat)}
-              >
-                <Image
-                  src={chat.image}
-                  alt="chat-user-image"
-                  height={40}
-                  width={40}
-                  className="rounded-[50%]"
-                />
-
-                {chat.unreadCount > 0 && (
-                  <p className="py-0.5 px-1 text-white bg-[#ff2b2b] rounded-[50%] absolute top-1 right-5 text-[8px]">
-                    {chat.unreadCount}
-                  </p>
-                )}
-              </div>
-            ))} */}
+        
         </div>
       </div>
     )}
