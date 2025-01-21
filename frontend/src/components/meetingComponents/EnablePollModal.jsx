@@ -1,21 +1,16 @@
 'use client';
-import { useState } from "react";
 import Button from "@/components/shared/button";
 import { CgClose } from "react-icons/cg";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useGlobalContext } from "@/context/GlobalContext";
 
 const EnablePollModal = ({ onClose, poll, meetingId }) => {
-  const [endTime, setEndTime] = useState("");
   const { socket } = useGlobalContext();
 
   const handleStartPoll = async () => {
-   
-
     socket.emit(
       "start-poll",
-      { meetingId, pollId: poll._id,  },
+      { meetingId, pollId: poll._id },
       (response) => {
       
         if (response.success) {
@@ -38,15 +33,7 @@ const EnablePollModal = ({ onClose, poll, meetingId }) => {
             <CgClose />
           </Button>
         </div>
-        <div className="mt-4">
-          <label className="block text-sm font-medium">End Time</label>
-          <input
-            type="time"
-            className="w-full border border-gray-300 rounded-md px-2 py-1"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
-        </div>
+       
         <div className="flex justify-end mt-4">
           <Button variant="primary" onClick={handleStartPoll}
           className="px-2 py-1 rounded-lg"

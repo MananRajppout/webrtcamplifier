@@ -43,6 +43,8 @@ const MeetingTab = ({
   const [modalTitle, setModalTitle] = useState("");
   const router = useRouter();
 
+  console.log('selected meeting', selectedMeeting)
+
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -515,6 +517,10 @@ const MeetingTab = ({
             <div>
               <h3 className="font-medium">Status</h3>
               <p>{selectedMeeting?.status}</p>
+            </div>
+            <div>
+              <h3 className="font-medium">Breakout Room Enable</h3>
+              <p>{selectedMeeting?.enableBreakoutRoom ? "Yes" : "No"}</p>
             </div>
             {/* Share meeting button */}
             <div className="flex flex-col lg:flex-row gap-3 justify-between items-center">
