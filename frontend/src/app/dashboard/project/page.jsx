@@ -29,7 +29,6 @@ const Page = () => {
   ) => {
     setLoading(true);
     try {
-      // Determine API endpoint based on user role
       const endpoint =
         user?.role === "SuperAdmin" ||
         user?.role === "AmplifyAdmin" ||
@@ -63,13 +62,13 @@ const Page = () => {
 
   const handleSearch = (term) => {
     setSearchTerm(term);
-    setPage(1); // Reset to first page when searching
+    setPage(1); 
     fetchProjects(user?._id, 1, term);
   };
 
   const handleStatusSelect = (status) => {
     setSelectedStatus(status);
-    // Add your status select logic here
+    
   };
 
   const handleRefresh = () => {
@@ -86,6 +85,15 @@ const Page = () => {
     setPage(1);
     fetchProjects(user?._id, 1, searchTerm, filters);
   };
+
+  const handleCreateProject = () => {
+    if(user?.role === "Admin" || user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin"  ){
+      router.push("/dashboard/create-project-amplify-admin")
+    } else {
+      router.push("/dashboard/create-project")
+    }
+  }
+  
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
@@ -106,7 +114,7 @@ const Page = () => {
                 variant="default"
                 icon={<MdAdd />}
                 className="rounded-xl text-center shadow-[0px_3px_6px_#2976a54d] hidden md:flex w-[200px] py-3"
-                onClick={() => router.push(`/dashboard/create-project`)}
+                onClick={handleCreateProject}
               />
               )
              }
@@ -118,7 +126,7 @@ const Page = () => {
                 variant="default"
                 icon={<MdAdd />}
                 className="rounded-xl text-center py-3 mr-2 shadow-[0px_3px_6px_#2976a54d] md:hidden block pr-2 pl-3"
-                onClick={() => router.push(`/dashboard/create-project`)}
+                onClick={handleCreateProject}
               />)}
             </div>
           </div>

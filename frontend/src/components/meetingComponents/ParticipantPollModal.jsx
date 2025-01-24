@@ -14,7 +14,6 @@ const ParticipantPollModal = ({
   const { socket } = useGlobalContext();
   const [responses, setResponses] = useState({});
 
-  console.log("pollQuestions", pollQuestions);
 
   useEffect(() => {
     // Listen for the poll-ended event
@@ -62,12 +61,7 @@ const ParticipantPollModal = ({
       return;
     }
 
-    console.log(
-      "poll answer response at the fe",
-      responses,
-      "active poll id",
-      activePollId
-    );
+    
 
     // Emit the responses to the backend
     socket.emit("submit-poll-response", {

@@ -34,7 +34,6 @@ const PollResultModal = ({ setIsPollResultModalOpen, pollResult, uploaderEmail, 
     }
   };
 
-  console.log("Poll Result Data:", pollResult);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-30">

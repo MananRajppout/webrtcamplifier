@@ -120,17 +120,11 @@ const LeftSidebarOpenUi = ({
   const [selectedPollId, setSelectedPollId] = useState(null);
 
   const handlePollResultClick = (pollId, meetingId) => {
-    console.log('handle poll result', pollId)
     setSelectedPollId(pollId);
     handleGetPollResults(pollId, meetingId); 
   };
 
-  // useEffect(() => {
-  //   if (previosMCountRef.current < messages?.length) {
-  //     previosMCountRef.current = messages?.length;
-  //     if (activeTab != 'participants') setUShowDot(true);
-  //   }
-  // }, [messages]);
+  
 
   const handlePollPageChange = useCallback((page) => {
     setCurrentPollPage(page);

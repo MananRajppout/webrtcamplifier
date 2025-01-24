@@ -41,13 +41,12 @@ const createProject = async (req, res) => {
       roles: {
         ...member.roles,
         permissions: Array.isArray(member.roles.role)
-          ? [...member.roles.role] 
+          ? [...member.roles.role]
           : member.roles.role // If roles is a single string
           ? [member.roles.role] // Wrap it in an array for permissions
           : [], // Default to an empty array if roles is undefined
       },
     }));
-    console.log("updated members", updatedMembers);
 
     // Step 1: Create the project
     const newProject = new Project({
@@ -62,11 +61,7 @@ const createProject = async (req, res) => {
       status: formData.status,
     });
 
-    //     console.log("new project (plain object):", newProject.toObject());
-    // console.log("new project roles (plain object):", newProject.toObject().members[0].roles);
-    // console.log("new project role (plain object):", newProject.toObject().members[0].roles.role);
-    // console.log("new project permissions (plain object):", newProject.toObject().members[0].roles.permissions);
-
+   
     const savedProject = await newProject.save({ session });
     if (savedProject && savedProject?.members?.length > 0) {
       const emails = savedProject?.members?.map((e) => {
@@ -100,16 +95,14 @@ const createProjectByExternalAdmin = async (req, res) => {
 
   try {
     session.startTransaction();
-    const {projectData, uniqueId, userId} = req.body;
+    const { projectData, uniqueId, userId } = req.body;
 
-    
     const user = await User.findById(userId);
 
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
-    
 
     if (user.role === "AmplifyTechHost" || user.role === "AmplifyModerator") {
       res.status(403).json({
@@ -118,8 +111,8 @@ const createProjectByExternalAdmin = async (req, res) => {
       return;
     }
 
-   // Generate a project name using user.firstName and a random number
-   const projectName = `${user.firstName}_${Math.floor(Math.random() * 1000)}`;
+    // Generate a project name using user.firstName and a random number
+    const projectName = `${user.firstName}_${Math.floor(Math.random() * 1000)}`;
 
     // Create the new project
     const newProject = new Project({
@@ -129,20 +122,18 @@ const createProjectByExternalAdmin = async (req, res) => {
       status: projectData.status,
       createdBy: userId,
       projectDetails: {
-        respondentMarket: projectData.respondentMarket, 
+        respondentMarket: projectData.respondentMarket,
         respondentLanguage: projectData.respondentLanguage,
-        sessions: projectData.sessions, 
+        sessions: projectData.sessions,
       },
     });
 
-   
-
     const savedProject = await newProject.save({ session });
 
-   // Delete the ProjectForm document
-   if (uniqueId) {
-    await ProjectForm.findByIdAndDelete(uniqueId, { session });
-  }
+    // Delete the ProjectForm document
+    if (uniqueId) {
+      await ProjectForm.findByIdAndDelete(uniqueId, { session });
+    }
 
     await session.commitTransaction();
     session.endSession();
@@ -151,8 +142,55 @@ const createProjectByExternalAdmin = async (req, res) => {
       projectId: savedProject._id,
     });
   } catch (error) {
-    await session.abortTransaction(); 
+    await session.abortTransaction();
     session.endSession();
+    console.error("Error creating project:", error);
+    res.status(500).json({
+      message: "Failed to create project",
+      error: error.message,
+    });
+  }
+};
+
+const createProjectByAmplifyAdmin = async (req, res) => {
+  try {
+    const  payload  = req.body;
+    // Validate required fields
+    if (!payload || !payload.startDate || !payload.createdBy) {
+      return res
+        .status(400)
+        .json({ message: "Invalid payload. Required fields are missing." });
+    }
+
+    const user = await User.findById(payload.createdBy);
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    if (
+      user.role !== "AmplifyAdmin" &&
+      user.role !== "Admin" &&
+      user.role !== "SuperAdmin"
+    ) {
+      res.status(403).json({
+        message: "You are not allowed to create a project.",
+      });
+      return;
+    }
+
+  
+    // Create the new project
+    const newProject = new Project(payload);
+
+    const savedProject = await newProject.save();
+
+    res.status(201).json({
+      message: "Project saved successfully",
+      projectId: savedProject._id,
+    });
+  } catch (error) {
     console.error("Error creating project:", error);
     res.status(500).json({
       message: "Failed to create project",
@@ -182,7 +220,6 @@ const getAllProjects = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     const userEmail = userData.email;
-    console.log("user email", userEmail);
 
     // Create search query
     const searchQuery = search
@@ -402,11 +439,9 @@ const updateGeneralProjectInfo = async (req, res) => {
   try {
     // Validate the input
     if (!name || !startDate || !projectPasscode) {
-      return res
-        .status(400)
-        .json({
-          message: "Name, Start Date, and Project Passcode are required.",
-        });
+      return res.status(400).json({
+        message: "Name, Start Date, and Project Passcode are required.",
+      });
     }
     // Find the project by its ID
     const project = await Project.findById(projectId);
@@ -451,12 +486,10 @@ const addPeopleIntoProject = async (req, res) => {
       updatedProject._id
     ).populate("members.userId");
 
-    res
-      .status(200)
-      .json({
-        message: "People added successfully",
-        updatedProject: populatedProject,
-      });
+    res.status(200).json({
+      message: "People added successfully",
+      updatedProject: populatedProject,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error adding people", error });
   }
@@ -535,12 +568,10 @@ const updateBulkMembers = async (req, res) => {
       "members.userId"
     );
 
-    return res
-      .status(200)
-      .json({
-        message: "Members updated successfully",
-        updatedProject: populatedProject,
-      });
+    return res.status(200).json({
+      message: "Members updated successfully",
+      updatedProject: populatedProject,
+    });
   } catch (error) {
     console.error("Error updating bulk members:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -707,8 +738,7 @@ const getProjectByUserId = async (req, res) => {
 
 const saveProgress = async (req, res) => {
   try {
- 
-    const { uniqueId, formData, userId } = req.body; 
+    const { uniqueId, formData, userId } = req.body;
 
     if (!userId) {
       return res.status(400).json({ error: "User ID is required" });
@@ -719,7 +749,6 @@ const saveProgress = async (req, res) => {
     }
 
     if (uniqueId) {
-      
       let existingForm = await ProjectForm.findById(uniqueId);
 
       if (!existingForm) {
@@ -776,7 +805,9 @@ const emailProjectInfo = async (req, res) => {
     const { userId, uniqueId, formData } = req.body;
 
     if (!userId || !uniqueId) {
-      return res.status(400).json({ error: "userId and uniqueId are required" });
+      return res
+        .status(400)
+        .json({ error: "userId and uniqueId are required" });
     }
 
     // Fetch user data from the User collection
@@ -790,16 +821,18 @@ const emailProjectInfo = async (req, res) => {
     // if (!projectForm) {
     //   return res.status(404).json({ error: "ProjectForm not found" });
     // }
-  // Format sessions for the email
-  const formattedSessions = formData.sessions
-  .map(
-    (session, index) =>
-      `<p>Session ${index + 1}: ${session.number} sessions - Duration: ${session.duration}</p>`
-  )
-  .join("");
+    // Format sessions for the email
+    const formattedSessions = formData.sessions
+      .map(
+        (session, index) =>
+          `<p>Session ${index + 1}: ${session.number} sessions - Duration: ${
+            session.duration
+          }</p>`
+      )
+      .join("");
 
-// Email content
-const emailContent = `
+    // Email content
+    const emailContent = `
   <h2>Project Information</h2>
   <p><strong>First Name:</strong> ${user.firstName}</p>
   <p><strong>Last Name:</strong> ${user.lastName}</p>
@@ -811,8 +844,12 @@ const emailContent = `
   <p><strong>Language:</strong> ${formData.language}</p>
   <h4>Sessions:</h4>
   ${formattedSessions}
-  <p><strong>First Date of Streaming:</strong> ${formData.firstDateOfStreaming}</p>
-  <p><strong>Respondents per Session:</strong> ${formData.respondentsPerSession}</p>
+  <p><strong>First Date of Streaming:</strong> ${
+    formData.firstDateOfStreaming
+  }</p>
+  <p><strong>Respondents per Session:</strong> ${
+    formData.respondentsPerSession
+  }</p>
   <p><strong>Number of Sessions:</strong> ${formData.numSessions}</p>
   <p><strong>Session Length:</strong> ${formData.sessionLength}</p>
   <p><strong>Pre-Work Details:</strong> ${formData.preWorkDetails}</p>
@@ -823,7 +860,11 @@ const emailContent = `
     // ! email should be change to info@amplifyresearch.com
 
     try {
-      await sendEmail("enayetflweb@gmail.com", "Project Information", emailContent);
+      await sendEmail(
+        "enayetflweb@gmail.com",
+        "Project Information",
+        emailContent
+      );
     } catch (emailError) {
       console.error("Error sending email:", emailError);
       return res.status(500).json({ error: "Failed to send email" });
@@ -832,18 +873,20 @@ const emailContent = `
     // Delete the ProjectForm document
     await ProjectForm.findByIdAndDelete(uniqueId);
 
-    return res.status(200).json({ message: "Email sent and form deleted successfully" });
+    return res
+      .status(200)
+      .json({ message: "Email sent and form deleted successfully" });
   } catch (error) {
     console.error("Error in emailProjectInfo:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-
 module.exports = {
   searchProjectsByFirstName,
   createProject,
   createProjectByExternalAdmin,
+  createProjectByAmplifyAdmin,
   getAllProjects,
   getProjectById,
   updateProject,

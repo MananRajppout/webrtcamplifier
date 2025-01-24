@@ -19,7 +19,6 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
     }
   }, [paymentStatus]);
 
-  console.log("total price", totalPrice);
 
   const packages = [
     { hours: 1, rate: 150, description: "1 Hour: $150.00" },
@@ -69,7 +68,6 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
       );
 
       if (response.status === 201) {
-        console.log("response data", response.data);
         toast.success("Project created successfully!");
       } else {
         console.error("Unexpected response:", response);

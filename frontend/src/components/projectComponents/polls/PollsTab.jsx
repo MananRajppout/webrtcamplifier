@@ -27,7 +27,6 @@ const PollsTab = ({
   const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false);
   const { user } = useGlobalContext();
 
-  console.log('polls', polls)
 
   const handleViewPoll = (poll) => {
     setSelectedPoll(poll);

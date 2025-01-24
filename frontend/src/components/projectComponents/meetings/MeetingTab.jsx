@@ -43,7 +43,6 @@ const MeetingTab = ({
   const [modalTitle, setModalTitle] = useState("");
   const router = useRouter();
 
-  console.log('selected meeting', selectedMeeting)
 
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();

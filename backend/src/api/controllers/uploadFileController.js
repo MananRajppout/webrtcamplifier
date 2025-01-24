@@ -143,7 +143,6 @@ exports.uploadRecordingFile = async (req, res) => {
       message: 'Upload Successfully',
       file: newMedia,
     });
-    console.log('upload successfully....')
   } catch (error) {
     console.error('Error uploading file:', error);
     res.status(501).json({ success: false, message: error.message });

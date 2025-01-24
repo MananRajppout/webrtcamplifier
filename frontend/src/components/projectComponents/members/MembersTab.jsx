@@ -29,7 +29,6 @@ const MembersTab = ({ project, setLocalProjectState }) => {
 
 
   const handleEditMember = (member) => {
-    console.log('inside handle edit member', member)
     setSelectedMember(member);
     setIsModalOpen(true); // Open the modal
   };

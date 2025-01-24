@@ -16,13 +16,11 @@
 //   useEffect(() => {
 //     const fetchPollById = async () => {
 //       try {
-//         console.log("Fetching poll data for ID:", polls);
   
 //         const response = await axios.get(
 //           `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get/poll-id/${polls}`
 //         );
   
-//         console.log("Fetched poll data:", response.data);
 //         setPoll(response.data);
 //         setLoading(false);
 //       } catch (error) {
@@ -118,7 +116,6 @@
 //   const handleSave = async () => {
 //     try {
 //       // Log the data being sent to the API
-//       console.log("Payload being sent to update poll:", {
 //         pollName: newPoll.name,
 //         isActive: newPoll.active,
 //         questions: newPoll.questions,
@@ -135,9 +132,7 @@
 //         }
 //       );
   
-//       // Log the API response
-//       console.log("API Response for updating poll:", response);
-  
+
 //       // Close the modal on success
 //       onClose();
 //     } catch (error) {

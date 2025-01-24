@@ -3,6 +3,7 @@ const controller = require("../controllers/projectController");
 module.exports = function (app) {
   app.post("/api/create/project", controller.createProject);
   app.post("/api/create-project-by-external-admin", controller.createProjectByExternalAdmin)
+  app.post("/api/create-project-by-amplify-admin", controller.createProjectByAmplifyAdmin)
   app.get("/api/get/project-id", controller.getProjectById);
   app.get("/api/get/get-project-by-userId/:id", controller.getProjectByUserId);
   app.get("/api/get-all/project/:id", controller.getAllProjects);

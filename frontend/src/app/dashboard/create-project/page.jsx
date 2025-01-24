@@ -35,7 +35,6 @@ const Page = () => {
   const { user } = useGlobalContext()
   const [stepValid, setStepValid] = useState(true);
 
-  console.log('Form Data', formData)
 
   const updateFormData = (updates) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -96,7 +95,6 @@ const Page = () => {
       if (!uniqueId) {
         setUniqueId(response.data.uniqueId);
       }
-      console.log('response', response)
       // Navigate to the next step
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     } catch (error) {
