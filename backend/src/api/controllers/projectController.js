@@ -41,7 +41,7 @@ const createProject = async (req, res) => {
       roles: {
         ...member.roles,
         permissions: Array.isArray(member.roles.role)
-          ? [...member.roles.role] // Copy the roles to permissions if roles is an array
+          ? [...member.roles.role] 
           : member.roles.role // If roles is a single string
           ? [member.roles.role] // Wrap it in an array for permissions
           : [], // Default to an empty array if roles is undefined
@@ -87,6 +87,72 @@ const createProject = async (req, res) => {
       projectId: savedProject._id,
     });
   } catch (error) {
+    console.error("Error creating project:", error);
+    res.status(500).json({
+      message: "Failed to create project",
+      error: error.message,
+    });
+  }
+};
+
+const createProjectByExternalAdmin = async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+    const {projectData, uniqueId, userId} = req.body;
+
+    
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+    
+
+    if (user.role === "AmplifyTechHost" || user.role === "AmplifyModerator") {
+      res.status(403).json({
+        message: "You are not allowed to create a project.",
+      });
+      return;
+    }
+
+   // Generate a project name using user.firstName and a random number
+   const projectName = `${user.firstName}_${Math.floor(Math.random() * 1000)}`;
+
+    // Create the new project
+    const newProject = new Project({
+      name: projectName,
+      description: "",
+      startDate: projectData.startDate,
+      status: projectData.status,
+      createdBy: userId,
+      projectDetails: {
+        respondentMarket: projectData.respondentMarket, 
+        respondentLanguage: projectData.respondentLanguage,
+        sessions: projectData.sessions, 
+      },
+    });
+
+   
+
+    const savedProject = await newProject.save({ session });
+
+   // Delete the ProjectForm document
+   if (uniqueId) {
+    await ProjectForm.findByIdAndDelete(uniqueId, { session });
+  }
+
+    await session.commitTransaction();
+    session.endSession();
+    res.status(201).json({
+      message: "Project saved successfully",
+      projectId: savedProject._id,
+    });
+  } catch (error) {
+    await session.abortTransaction(); 
+    session.endSession();
     console.error("Error creating project:", error);
     res.status(500).json({
       message: "Failed to create project",
@@ -777,6 +843,7 @@ const emailContent = `
 module.exports = {
   searchProjectsByFirstName,
   createProject,
+  createProjectByExternalAdmin,
   getAllProjects,
   getProjectById,
   updateProject,

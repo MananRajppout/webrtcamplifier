@@ -5,8 +5,7 @@ const projectSchema = new Schema(
   {
     name: { type: String, default: "Untitled" },
     description: { type: String, default: "" },
-    startDate: { type: Date },
-    // endDate: { type: Date },
+    startDate: { type: Date, required: true },
     status: {
       type: String,
       enum: [
@@ -46,13 +45,18 @@ const projectSchema = new Schema(
       },
     ],
     tags: { type: [Schema.Types.ObjectId], default: [], ref: "Tag" },
-    projectPasscode: { type: String, required: true },
+    projectPasscode: { type: String, default: "A3h@xP" },
+    
     projectDetails: {
-      type: Schema.Types.ObjectId,
-      ref: "ProjectForm",
-      required: true,
+      respondentMarket: { type: String },
+      respondentLanguage: { type: String },
+      sessions: [
+        {
+          number: { type: Number },
+          duration: { type: String },
+        },
+      ],
     },
-    // startTime: { type: String },
   },
   { timestamps: true }
 );

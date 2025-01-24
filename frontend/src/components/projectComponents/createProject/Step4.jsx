@@ -2,6 +2,8 @@ import Button from "@/components/shared/button";
 import React, { useEffect, useState } from "react";
 import PaymentModal from "./PaymentModal";
 import { useGlobalContext } from "@/context/GlobalContext";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 const Step4 = ({ formData, updateFormData, uniqueId }) => {
   const [credits, setCredits] = useState(Array(5).fill(0));
@@ -42,6 +44,41 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
 
     setTotalHours(newTotalHours);
     setTotalPrice(newTotalPrice);
+  };
+
+  const handleSaveProjectData = async () => {
+    try {
+      // Prepare data for the request
+      const projectData = {
+        respondentMarket:
+          formData.market === "us" ? "USA" : formData.otherMarket,
+        respondentLanguage: formData.language,
+        sessions: formData.sessions,
+        startDate: formData.firstDateOfStreaming,
+        status: "Active",
+      };
+
+      // Make the API call
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create-project-by-external-admin`,
+        {
+          uniqueId,
+          userId: user?._id,
+          projectData,
+        }
+      );
+
+      if (response.status === 201) {
+        console.log("response data", response.data);
+        toast.success("Project created successfully!");
+      } else {
+        console.error("Unexpected response:", response);
+        toast.error("Failed to create project. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast.error("An error occurred. Please try again.");
+    }
   };
 
   return (
@@ -118,55 +155,57 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
           })}
         </tbody>
         <tfoot>
-  <tr className="font-bold">
-    <td colSpan="3" className="border border-gray-300 p-2 text-left">
-      Total
-    </td>
-    <td className="border border-gray-300 p-2 ">
-      {formData.sessions
-        ?.reduce((totalHours, session) => {
-          const durationString = session.duration || "0 minutes";
-          let durationMinutes = 0;
-          const matchMinutes = durationString.match(/(\d+)\s*minutes/);
-          const matchParentheses = durationString.match(/\((\d+)\s*minutes\)/);
+          <tr className="font-bold">
+            <td colSpan="3" className="border border-gray-300 p-2 text-left">
+              Total
+            </td>
+            <td className="border border-gray-300 p-2 ">
+              {formData.sessions
+                ?.reduce((totalHours, session) => {
+                  const durationString = session.duration || "0 minutes";
+                  let durationMinutes = 0;
+                  const matchMinutes = durationString.match(/(\d+)\s*minutes/);
+                  const matchParentheses =
+                    durationString.match(/\((\d+)\s*minutes\)/);
 
-          if (matchMinutes) {
-            durationMinutes = parseInt(matchMinutes[1], 10);
-          } else if (matchParentheses) {
-            durationMinutes = parseInt(matchParentheses[1], 10);
-          }
+                  if (matchMinutes) {
+                    durationMinutes = parseInt(matchMinutes[1], 10);
+                  } else if (matchParentheses) {
+                    durationMinutes = parseInt(matchParentheses[1], 10);
+                  }
 
-          const durationHours = durationMinutes / 60;
-          const quantity = parseInt(session.number || 0, 10);
-          return totalHours + durationHours * quantity;
-        }, 0)
-        .toFixed(2)} hrs
-    </td>
-    <td></td>
-    <td className="border border-gray-300 p-2">
-      $
-      {formData.sessions
-        ?.reduce((totalPrice, session) => {
-          const durationString = session.duration || "0 minutes";
-          let durationMinutes = 0;
-          const matchMinutes = durationString.match(/(\d+)\s*minutes/);
-          const matchParentheses = durationString.match(/\((\d+)\s*minutes\)/);
+                  const durationHours = durationMinutes / 60;
+                  const quantity = parseInt(session.number || 0, 10);
+                  return totalHours + durationHours * quantity;
+                }, 0)
+                .toFixed(2)}{" "}
+              hrs
+            </td>
+            <td></td>
+            <td className="border border-gray-300 p-2">
+              $
+              {formData.sessions
+                ?.reduce((totalPrice, session) => {
+                  const durationString = session.duration || "0 minutes";
+                  let durationMinutes = 0;
+                  const matchMinutes = durationString.match(/(\d+)\s*minutes/);
+                  const matchParentheses =
+                    durationString.match(/\((\d+)\s*minutes\)/);
 
-          if (matchMinutes) {
-            durationMinutes = parseInt(matchMinutes[1], 10);
-          } else if (matchParentheses) {
-            durationMinutes = parseInt(matchParentheses[1], 10);
-          }
+                  if (matchMinutes) {
+                    durationMinutes = parseInt(matchMinutes[1], 10);
+                  } else if (matchParentheses) {
+                    durationMinutes = parseInt(matchParentheses[1], 10);
+                  }
 
-          const durationHours = durationMinutes / 60;
-          const quantity = parseInt(session.number || 0, 10);
-          return totalPrice + durationHours * quantity * 150;
-        }, 0)
-        .toFixed(2)}
-    </td>
-  </tr>
-</tfoot>
-
+                  const durationHours = durationMinutes / 60;
+                  const quantity = parseInt(session.number || 0, 10);
+                  return totalPrice + durationHours * quantity * 150;
+                }, 0)
+                .toFixed(2)}
+            </td>
+          </tr>
+        </tfoot>
       </table>
       <p className="text-sm text-gray-500 mt-2">
         *Final billing will be based on actual streaming hours for sessions
@@ -238,11 +277,11 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
       <div className="mt-6 flex justify-end">
         {paymentStatus === "succeeded" ? (
           <Button
-            onClick={() => alert("Form submitted successfully!")}
+            onClick={handleSaveProjectData}
             className=" py-2 px-4 rounded-lg"
             variant="primary"
           >
-            Submit
+            Save
           </Button>
         ) : (
           <Button
