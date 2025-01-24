@@ -8,7 +8,7 @@ const Tag = require("../models/tagModel");
 const { sendEmail } = require("../../config/email.config");
 const dotenv = require("dotenv");
 const LiveMeeting = require("../models/liveMeetingModel");
-const ProjectForm = require("../models/projectFormScehma");
+const ProjectForm = require("../models/projectFormSchema");
 dotenv.config();
 
 // Controller to create a new project
@@ -721,23 +721,47 @@ const emailProjectInfo = async (req, res) => {
 
     // Fetch form data from the ProjectForm collection
     const projectForm = await ProjectForm.findById(uniqueId);
-    if (!projectForm) {
-      return res.status(404).json({ error: "ProjectForm not found" });
-    }
+    // if (!projectForm) {
+    //   return res.status(404).json({ error: "ProjectForm not found" });
+    // }
+  // Format sessions for the email
+  const formattedSessions = formData.sessions
+  .map(
+    (session, index) =>
+      `<p>Session ${index + 1}: ${session.number} sessions - Duration: ${session.duration}</p>`
+  )
+  .join("");
 
-    
-    // Email content
-    const emailContent = `
-      <h2>Project Information</h2>
-      <p><strong>First Name:</strong> ${user.firstName}</p>
-      <p><strong>Last Name:</strong> ${user.lastName}</p>
-      <p><strong>Email:</strong> ${user.email}</p>
-      <h3>Form Data:</h3>
-      <pre>${JSON.stringify(formData, null, 2)}</pre>
-    `;
+// Email content
+const emailContent = `
+  <h2>Project Information</h2>
+  <p><strong>First Name:</strong> ${user.firstName}</p>
+  <p><strong>Last Name:</strong> ${user.lastName}</p>
+  <p><strong>Email:</strong> ${user.email}</p>
+  <h3>Form Data:</h3>
+  <p><strong>Service:</strong> ${formData.service}</p>
+  <p><strong>Add-Ons:</strong> ${formData.addOns.join(", ")}</p>
+  <p><strong>Market:</strong> ${formData.market}</p>
+  <p><strong>Language:</strong> ${formData.language}</p>
+  <h4>Sessions:</h4>
+  ${formattedSessions}
+  <p><strong>First Date of Streaming:</strong> ${formData.firstDateOfStreaming}</p>
+  <p><strong>Respondents per Session:</strong> ${formData.respondentsPerSession}</p>
+  <p><strong>Number of Sessions:</strong> ${formData.numSessions}</p>
+  <p><strong>Session Length:</strong> ${formData.sessionLength}</p>
+  <p><strong>Pre-Work Details:</strong> ${formData.preWorkDetails}</p>
+  <p><strong>Selected Languages:</strong> ${formData.selectedLanguages}</p>
+  <p><strong>Additional Info:</strong> ${formData.additionalInfo}</p>
+`;
 
     // ! email should be change to info@amplifyresearch.com
-    await sendEmail("enayetflweb@gmail.com", "Project Information", emailContent);
+
+    try {
+      await sendEmail("enayetflweb@gmail.com", "Project Information", emailContent);
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      return res.status(500).json({ error: "Failed to send email" });
+    }
 
     // Delete the ProjectForm document
     await ProjectForm.findByIdAndDelete(uniqueId);

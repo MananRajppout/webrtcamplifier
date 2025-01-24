@@ -7,7 +7,6 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
   const [credits, setCredits] = useState(Array(5).fill(0));
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
-  const [paymentComplete, setPaymentComplete] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const { user } = useGlobalContext();
   const [paymentStatus, setPaymentStatus] = useState("pending");
