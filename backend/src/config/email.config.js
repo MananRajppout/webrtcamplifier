@@ -9,26 +9,42 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-//to can also take array of valid emails
 async function sendEmail(to, subject, html) {
   return new Promise(async (resolve, reject) => {
-    let info = await transporter
-      .sendMail({
+    try {
+      const info = await transporter.sendMail({
         from: "test356sales@gmail.com",
         to,
         subject,
-        text: "Text Here!",
         html,
-      })
-      .catch((e) => {
-        reject(e);
       });
-
-    if (info?.messageId) {
-      resolve("email sent");
+      resolve(`Email sent successfully: ${info.messageId}`);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      reject(error);
     }
   });
 }
+//to can also take array of valid emails
+// async function sendEmail(to, subject, html) {
+//   return new Promise(async (resolve, reject) => {
+//     let info = await transporter
+//       .sendMail({
+//         from: "test356sales@gmail.com",
+//         to,
+//         subject,
+//         text: "Text Here!",
+//         html,
+//       })
+//       .catch((e) => {
+//         reject(e);
+//       });
+
+//     if (info?.messageId) {
+//       resolve("email sent");
+//     }
+//   });
+// }
 
 async function sendVerifyEmail(name, email, id) {
   try {
@@ -55,13 +71,11 @@ async function sendVerifyEmail(name, email, id) {
   }
 }
 
-
-
 const sendStatusChangeEmail = async (ticket) => {
   try {
     const mailOptions = {
       from: "test356sales@gmail.com",
-      to: ticket.email, // assuming customerEmail is a field in the ticket document
+      to: ticket.email, 
       subject: `Ticket ${ticket._id} status updated to ${ticket.status}`,
       text: `Dear ${ticket.fullName}, 
   

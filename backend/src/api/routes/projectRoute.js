@@ -20,6 +20,10 @@ module.exports = function (app) {
   app.put("/api/project/assignTagsToProject", controller.assignTagsToProject);
   app.get("/api/project/getAllProjectsForAmplify", controller.getAllProjectsForAmplify);
   app.post("/api/send-email-to-new-contact", controller.sendEmailToNewContact)
+
+  // Project details form 
+  app.post("/api/save-progress", controller.saveProgress)
+  app.post("/api/email-project-info", controller.emailProjectInfo)
 };
 
 // for usage of this search Api

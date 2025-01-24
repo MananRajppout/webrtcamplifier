@@ -8,6 +8,7 @@ const Tag = require("../models/tagModel");
 const { sendEmail } = require("../../config/email.config");
 const dotenv = require("dotenv");
 const LiveMeeting = require("../models/liveMeetingModel");
+const ProjectForm = require("../models/projectFormScehma");
 dotenv.config();
 
 // Controller to create a new project
@@ -28,13 +29,12 @@ const createProject = async (req, res) => {
       return;
     }
 
-    if(user.role === "AmplifyTechHost" || user.role === "AmplifyModerator"){
+    if (user.role === "AmplifyTechHost" || user.role === "AmplifyModerator") {
       res.status(403).json({
         message: "You are not allowed to create a project.",
       });
       return;
     }
-
 
     const updatedMembers = formData.members.map((member) => ({
       ...member,
@@ -47,8 +47,8 @@ const createProject = async (req, res) => {
           : [], // Default to an empty array if roles is undefined
       },
     }));
-console.log("updated members", updatedMembers)
-    
+    console.log("updated members", updatedMembers);
+
     // Step 1: Create the project
     const newProject = new Project({
       name: formData.name,
@@ -62,25 +62,23 @@ console.log("updated members", updatedMembers)
       status: formData.status,
     });
 
-//     console.log("new project (plain object):", newProject.toObject());
-// console.log("new project roles (plain object):", newProject.toObject().members[0].roles);
-// console.log("new project role (plain object):", newProject.toObject().members[0].roles.role);
-// console.log("new project permissions (plain object):", newProject.toObject().members[0].roles.permissions);
+    //     console.log("new project (plain object):", newProject.toObject());
+    // console.log("new project roles (plain object):", newProject.toObject().members[0].roles);
+    // console.log("new project role (plain object):", newProject.toObject().members[0].roles.role);
+    // console.log("new project permissions (plain object):", newProject.toObject().members[0].roles.permissions);
 
     const savedProject = await newProject.save({ session });
     if (savedProject && savedProject?.members?.length > 0) {
       const emails = savedProject?.members?.map((e) => {
         return e.email;
-      })
-
+      });
 
       let html = `<p>Hello,</p>
         <p>You have been added to the project <strong>${savedProject?.name}</strong>.</p>
         <p>Please click the link below to accept the invitation:</p>
         <a href="https://abc.com/invite?project=${savedProject?.name}">Accept Invitation</a>`;
-      sendEmail(emails, "Invitation to join project", html)
+      sendEmail(emails, "Invitation to join project", html);
     }
-  
 
     await session.commitTransaction();
     session.endSession();
@@ -99,7 +97,16 @@ console.log("updated members", updatedMembers)
 
 // Controller to get all projects with pagination
 const getAllProjects = async (req, res) => {
-  const { page = 1, limit = 10, search = '', startDate, endDate, status, tag, role } = req.query;
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    startDate,
+    endDate,
+    status,
+    tag,
+    role,
+  } = req.query;
   const { id } = req.params;
 
   try {
@@ -109,49 +116,50 @@ const getAllProjects = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     const userEmail = userData.email;
-    console.log('user email', userEmail)
+    console.log("user email", userEmail);
 
     // Create search query
     const searchQuery = search
       ? {
-        $and: [
-          {
-            $or: [
-              { createdBy: id },
-              { members: { $elemMatch: { email: userEmail } } }, // Use $elemMatch for matching userEmail
-            ],
-          },
-          {
-            $or: [
-              { name: { $regex: search, $options: 'i' } }, // Case-insensitive search
-              { description: { $regex: search, $options: 'i' } }
-            ]
-          }
-        ]
-      }
+          $and: [
+            {
+              $or: [
+                { createdBy: id },
+                { members: { $elemMatch: { email: userEmail } } }, // Use $elemMatch for matching userEmail
+              ],
+            },
+            {
+              $or: [
+                { name: { $regex: search, $options: "i" } }, // Case-insensitive search
+                { description: { $regex: search, $options: "i" } },
+              ],
+            },
+          ],
+        }
       : { $or: [{ createdBy: id }, { "members.email": userEmail }] };
     if (startDate) {
-      searchQuery.startDate = { $gte: new Date(startDate) }
+      searchQuery.startDate = { $gte: new Date(startDate) };
     }
     if (endDate) {
-      searchQuery.endDate = { $lte: new Date(endDate) }
+      searchQuery.endDate = { $lte: new Date(endDate) };
     }
     if (status) {
-      searchQuery.status = status
+      searchQuery.status = status;
     }
     if (tag) {
-      searchQuery.tags = tag
+      searchQuery.tags = tag;
     }
     if (role) {
       searchQuery["members.roles"] = role;
     }
 
     const projects = await Project.find(searchQuery)
-      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color')
+      .populate("members.userId", "firstName lastName addedDate lastUpdatedOn")
+      .populate("tags", "name description color")
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-      // Calculate cumulative minutes for each project
+    // Calculate cumulative minutes for each project
     const projectsWithMinutes = await Promise.all(
       projects.map(async (project) => {
         // Find related meetings
@@ -159,7 +167,7 @@ const getAllProjects = async (req, res) => {
 
         // Find associated live meetings and calculate cumulative duration
         const liveMeetings = await LiveMeeting.find({
-          meetingId: { $in: meetings.map((meeting) => meeting._id) }
+          meetingId: { $in: meetings.map((meeting) => meeting._id) },
         });
 
         const cumulativeMinutes = liveMeetings.reduce(
@@ -192,7 +200,9 @@ const getAllProjects = async (req, res) => {
 const getProjectById = async (req, res) => {
   const { id } = req.params;
   try {
-    const project = await Project.findById(id).populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color');
+    const project = await Project.findById(id)
+      .populate("members.userId", "firstName lastName addedDate lastUpdatedOn")
+      .populate("tags", "name description color");
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -212,9 +222,9 @@ const updateProject = async (req, res) => {
       req.body.passcode = await bcrypt.hash(passcode, 8); // Adjust saltRounds as per your security requirements
     }
 
-    const updatedProject = await Project.findByIdAndUpdate(
-      id, req.body, { new: true }
-    );
+    const updatedProject = await Project.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
 
     if (!updatedProject) {
       return res.status(404).json({ message: "Project not found" });
@@ -242,7 +252,6 @@ const deleteProject = async (req, res) => {
   }
 };
 
-
 const searchProjectsByFirstName = async (req, res) => {
   const { name } = req.query; // Get the firstName from query parameters
 
@@ -254,13 +263,10 @@ const searchProjectsByFirstName = async (req, res) => {
   }
 
   try {
-
     // Search for Projects by matching the first name (case-insensitive)
     const Projects = await Project.find({
       name: { $regex: name, $options: "i" },
-    }).populate('tags', 'name description color');
-
-
+    }).populate("tags", "name description color");
 
     if (Projects.length === 0) {
       return res.status(404).json({
@@ -282,10 +288,20 @@ const projectStatusChange = async (req, res) => {
   const { projectId } = req.params;
   const { status } = req.body;
   // Validate status to ensure it's one of the allowed values
-  const validStatuses = ['Draft', 'Active', 'Complete', 'Inactive', 'Closed', 'Pause', 'Unpause', 'Reopen'];
+  const validStatuses = [
+    "Draft",
+    "Active",
+    "Complete",
+    "Inactive",
+    "Closed",
+    "Pause",
+    "Unpause",
+    "Reopen",
+  ];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({
-      message: "Invalid status. Status must be one of 'Draft', 'Active', 'Complete', 'Inactive','Pause','Unpause','Reopen' or 'Closed'.",
+      message:
+        "Invalid status. Status must be one of 'Draft', 'Active', 'Complete', 'Inactive','Pause','Unpause','Reopen' or 'Closed'.",
     });
   }
 
@@ -297,17 +313,17 @@ const projectStatusChange = async (req, res) => {
       { new: true } // Return the updated document
     );
     if (!updatedProject) {
-      return res.status(404).json({ message: 'Project not found' });
+      return res.status(404).json({ message: "Project not found" });
     }
     // test
     res.status(200).json({
-      message: 'Project status updated successfully',
+      message: "Project status updated successfully",
       project: updatedProject,
     });
   } catch (error) {
-    console.error('Error updating project status:', error);
+    console.error("Error updating project status:", error);
     res.status(500).json({
-      message: 'Failed to update project status',
+      message: "Failed to update project status",
       error: error.message,
     });
   }
@@ -320,12 +336,16 @@ const updateGeneralProjectInfo = async (req, res) => {
   try {
     // Validate the input
     if (!name || !startDate || !projectPasscode) {
-      return res.status(400).json({ message: 'Name, Start Date, and Project Passcode are required.' });
+      return res
+        .status(400)
+        .json({
+          message: "Name, Start Date, and Project Passcode are required.",
+        });
     }
     // Find the project by its ID
     const project = await Project.findById(projectId);
     if (!project) {
-      return res.status(404).json({ message: 'Project not found.' });
+      return res.status(404).json({ message: "Project not found." });
     }
     // Update project fields with the new values
     project.name = name;
@@ -335,10 +355,14 @@ const updateGeneralProjectInfo = async (req, res) => {
     project.projectPasscode = projectPasscode;
     // Save the updated project
     await project.save();
-    return res.status(200).json({ message: 'Project updated successfully.', project });
+    return res
+      .status(200)
+      .json({ message: "Project updated successfully.", project });
   } catch (error) {
-    console.error('Error updating project:', error);
-    return res.status(500).json({ message: 'Server error. Could not update the project.' });
+    console.error("Error updating project:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error. Could not update the project." });
   }
 };
 
@@ -347,7 +371,7 @@ const addPeopleIntoProject = async (req, res) => {
   try {
     const project = await Project.findById(projectId);
     if (!project) {
-      return res.status(404).json({ message: 'Project not found' });
+      return res.status(404).json({ message: "Project not found" });
     }
     people.forEach((person) => {
       project.members.push({
@@ -357,14 +381,20 @@ const addPeopleIntoProject = async (req, res) => {
       });
     });
     const updatedProject = await project.save();
-    const populatedProject = await Project.findById(updatedProject._id).populate('members.userId');
+    const populatedProject = await Project.findById(
+      updatedProject._id
+    ).populate("members.userId");
 
-    res.status(200).json({ message: 'People added successfully', updatedProject: populatedProject });
+    res
+      .status(200)
+      .json({
+        message: "People added successfully",
+        updatedProject: populatedProject,
+      });
   } catch (error) {
-    res.status(500).json({ message: 'Error adding people', error });
+    res.status(500).json({ message: "Error adding people", error });
   }
-}
-
+};
 
 const editMemberRole = async (req, res) => {
   try {
@@ -373,27 +403,28 @@ const editMemberRole = async (req, res) => {
 
     // Find the project by ID and update the specific member's roles
     const updatedProject = await Project.findOneAndUpdate(
-      { _id: projectId, 'members._id': updatedMember._id },
+      { _id: projectId, "members._id": updatedMember._id },
       {
-        $set: { 'members.$.roles': updatedMember.roles }
+        $set: { "members.$.roles": updatedMember.roles },
       },
       { new: true }
     );
 
-
     if (!updatedProject) {
-      return res.status(404).json({ message: 'Project or member not found' });
+      return res.status(404).json({ message: "Project or member not found" });
     }
-    const populatedProject = await Project.findById(projectId).populate('members.userId');
+    const populatedProject = await Project.findById(projectId).populate(
+      "members.userId"
+    );
     return res.status(200).json({
-      message: 'Member roles updated successfully',
+      message: "Member roles updated successfully",
       updatedProject: populatedProject,
     });
   } catch (error) {
-    console.error('Error updating member roles:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error updating member roles:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 const deleteMemberFromProject = async (req, res) => {
   try {
@@ -406,16 +437,18 @@ const deleteMemberFromProject = async (req, res) => {
       { new: true }
     );
     if (!updatedProject) {
-      return res.status(404).json({ message: 'Project or member not found' });
+      return res.status(404).json({ message: "Project or member not found" });
     }
-    const populatedProject = await Project.findById(projectId).populate('members.userId');
+    const populatedProject = await Project.findById(projectId).populate(
+      "members.userId"
+    );
     return res.status(200).json({
-      message: 'Member removed successfully',
+      message: "Member removed successfully",
       updatedProject: populatedProject,
     });
   } catch (error) {
-    console.error('Error removing member from project:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error removing member from project:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -425,22 +458,28 @@ const updateBulkMembers = async (req, res) => {
 
     const updatedProject = await Project.updateOne(
       { _id: projectId },
-      { $set: { members: members } },
+      { $set: { members: members } }
     );
 
     if (!updatedProject) {
-      return res.status(404).json({ message: 'Project not found' });
+      return res.status(404).json({ message: "Project not found" });
     }
 
-    const populatedProject = await Project.findById(projectId).populate('members.userId');
+    const populatedProject = await Project.findById(projectId).populate(
+      "members.userId"
+    );
 
-    return res.status(200).json({ message: 'Members updated successfully', updatedProject: populatedProject });
+    return res
+      .status(200)
+      .json({
+        message: "Members updated successfully",
+        updatedProject: populatedProject,
+      });
   } catch (error) {
-    console.error('Error updating bulk members:', error);
-    return res.status(500).json({ message: 'Internal server error' });
-
+    console.error("Error updating bulk members:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 const assignTagsToProject = async (req, res) => {
   try {
@@ -454,8 +493,15 @@ const assignTagsToProject = async (req, res) => {
 
     // Add new tags
     if (tagsToAdd.length > 0) {
-      const validTagsToAdd = await Tag.distinct("_id", { _id: { $in: tagsToAdd } });
-      project.tags = [...new Set([...project.tags.map(tag => tag.toString()), ...validTagsToAdd])];
+      const validTagsToAdd = await Tag.distinct("_id", {
+        _id: { $in: tagsToAdd },
+      });
+      project.tags = [
+        ...new Set([
+          ...project.tags.map((tag) => tag.toString()),
+          ...validTagsToAdd,
+        ]),
+      ];
     }
 
     // Remove tags
@@ -481,40 +527,47 @@ const assignTagsToProject = async (req, res) => {
   }
 };
 
-
-
 const getAllProjectsForAmplify = async (req, res) => {
-  const { page = 1, limit = 10, search = '', startDate, endDate, status, tag, role } = req.query;
-
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    startDate,
+    endDate,
+    status,
+    tag,
+    role,
+  } = req.query;
 
   try {
     // Create search query
     const searchQuery = search
       ? {
-        $or: [
-          { name: { $regex: search, $options: 'i' } }, // Case-insensitive search
-          { description: { $regex: search, $options: 'i' } }
-        ]
-      }
+          $or: [
+            { name: { $regex: search, $options: "i" } }, // Case-insensitive search
+            { description: { $regex: search, $options: "i" } },
+          ],
+        }
       : {};
     if (startDate) {
-      searchQuery.startDate = { $gte: new Date(startDate) }
+      searchQuery.startDate = { $gte: new Date(startDate) };
     }
     if (endDate) {
-      searchQuery.endDate = { $lte: new Date(endDate) }
+      searchQuery.endDate = { $lte: new Date(endDate) };
     }
     if (status) {
-      searchQuery.status = status
+      searchQuery.status = status;
     }
     if (tag) {
-      searchQuery.tags = tag
+      searchQuery.tags = tag;
     }
     if (role) {
       searchQuery["members.roles"] = role;
     }
 
     const projects = await Project.find(searchQuery)
-      .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn').populate('tags', 'name description color')
+      .populate("members.userId", "firstName lastName addedDate lastUpdatedOn")
+      .populate("tags", "name description color")
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -533,9 +586,9 @@ const getAllProjectsForAmplify = async (req, res) => {
 };
 
 const sendEmailToNewContact = async (req, res) => {
-  const memberData = req.body
+  const memberData = req.body;
   try {
-    const createdBy = await User.findById(memberData.createdBy)
+    const createdBy = await User.findById(memberData.createdBy);
     const email = memberData.email;
 
     let html = `
@@ -545,45 +598,156 @@ const sendEmailToNewContact = async (req, res) => {
   <a href="${process.env.FRONTEND_BASE_URL}/register">Register</a>
 `;
 
-
-    sendEmail(email, "Invitation to join project", html)
+    sendEmail(email, "Invitation to join project", html);
 
     res.status(200).json({
-      message: "Email successfully sent. "
-    })
+      message: "Email successfully sent. ",
+    });
   } catch (error) {
-    console.error('Error', error)
+    console.error("Error", error);
     res.status(500).json({ message: error.message });
   }
+};
 
-}
+const getProjectByUserId = async (req, res) => {
+  const { id } = req.params; // Extract the userId from params
 
+  if (!id) {
+    return res.status(400).json({ message: "User ID is required." });
+  }
 
-  const getProjectByUserId = async (req, res) => {
-    const { id } = req.params; // Extract the userId from params
-  
-    if (!id) {
-      return res.status(400).json({ message: "User ID is required." });
+  try {
+    const projects = await Project.find({ createdBy: id }).sort({
+      createdAt: 1,
+    }); // Sort projects by creation date (most recent first)
+
+    if (projects.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No projects found for this user." });
     }
-  
-    try {
-      const projects = await Project.find({ createdBy: id })
-       .sort({ createdAt: 1 }); // Sort projects by creation date (most recent first)
-  
-      if (projects.length === 0) {
-        return res.status(404).json({ message: "No projects found for this user." });
+
+    res.status(200).json({
+      message: "Projects retrieved successfully.",
+      projects,
+    });
+  } catch (error) {
+    console.error("Error fetching projects by user ID:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to retrieve projects.", error: error.message });
+  }
+};
+
+const saveProgress = async (req, res) => {
+  try {
+ 
+    const { uniqueId, formData, userId } = req.body; 
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    if (!formData || Object.keys(formData).length === 0) {
+      return res.status(400).json({ error: "Form data is required" });
+    }
+
+    if (uniqueId) {
+      
+      let existingForm = await ProjectForm.findById(uniqueId);
+
+      if (!existingForm) {
+        // If not found, create a new form entry
+        const newForm = new ProjectForm({
+          user: userId,
+          formData,
+        });
+
+        const savedForm = await newForm.save();
+
+        return res.status(201).json({
+          success: true,
+          message: "Form not found. New progress saved successfully.",
+          uniqueId: savedForm._id,
+        });
+      } else {
+        // If found, update the formData
+        existingForm.formData = { ...existingForm.formData, ...formData };
+        await existingForm.save();
+
+        return res.status(200).json({
+          success: true,
+          message: "Progress updated successfully",
+          uniqueId: existingForm._id,
+        });
       }
-  
-      res.status(200).json({
-        message: "Projects retrieved successfully.",
-        projects,
+    } else {
+      // Create a new form if uniqueId is not provided
+      const newForm = new ProjectForm({
+        user: userId,
+        formData,
       });
-    } catch (error) {
-      console.error("Error fetching projects by user ID:", error);
-      res.status(500).json({ message: "Failed to retrieve projects.", error: error.message });
-    }
-}
 
+      const savedForm = await newForm.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "Progress saved successfully",
+        uniqueId: savedForm._id,
+      });
+    }
+  } catch (error) {
+    console.error("Error in saveProgress:", error);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while saving progress. Please try again later.",
+    });
+  }
+};
+
+const emailProjectInfo = async (req, res) => {
+  try {
+    const { userId, uniqueId, formData } = req.body;
+
+    if (!userId || !uniqueId) {
+      return res.status(400).json({ error: "userId and uniqueId are required" });
+    }
+
+    // Fetch user data from the User collection
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Fetch form data from the ProjectForm collection
+    const projectForm = await ProjectForm.findById(uniqueId);
+    if (!projectForm) {
+      return res.status(404).json({ error: "ProjectForm not found" });
+    }
+
+    
+    // Email content
+    const emailContent = `
+      <h2>Project Information</h2>
+      <p><strong>First Name:</strong> ${user.firstName}</p>
+      <p><strong>Last Name:</strong> ${user.lastName}</p>
+      <p><strong>Email:</strong> ${user.email}</p>
+      <h3>Form Data:</h3>
+      <pre>${JSON.stringify(formData, null, 2)}</pre>
+    `;
+
+    // ! email should be change to info@amplifyresearch.com
+    await sendEmail("enayetflweb@gmail.com", "Project Information", emailContent);
+
+    // Delete the ProjectForm document
+    await ProjectForm.findByIdAndDelete(uniqueId);
+
+    return res.status(200).json({ message: "Email sent and form deleted successfully" });
+  } catch (error) {
+    console.error("Error in emailProjectInfo:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 
 module.exports = {
@@ -600,6 +764,9 @@ module.exports = {
   deleteMemberFromProject,
   updateBulkMembers,
   assignTagsToProject,
-  getAllProjectsForAmplify, sendEmailToNewContact, getProjectByUserId
+  getAllProjectsForAmplify,
+  sendEmailToNewContact,
+  getProjectByUserId,
+  saveProgress,
+  emailProjectInfo,
 };
-

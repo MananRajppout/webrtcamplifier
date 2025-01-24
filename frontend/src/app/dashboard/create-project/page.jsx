@@ -1,218 +1,128 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import Step1 from "@/components/createProjectFormComponent/Step1";
-import Step2 from "@/components/createProjectFormComponent/Step2";
-import { PiNotebookFill } from "react-icons/pi";
-import {  FaUsers } from "react-icons/fa";
-import { HiOutlineMinus } from "react-icons/hi2";
-import { useRouter } from "next/navigation";
-import { useGlobalContext } from "@/context/GlobalContext";
+import React, { useState } from "react";
+import Step1 from "@/components/projectComponents/createProject/Step1";
+import Step2 from "@/components/projectComponents/createProject/Step2";
+import Step3 from "@/components/projectComponents/createProject/Step3";
+import Step4 from "@/components/projectComponents/createProject/Step4";
 import Button from "@/components/shared/button";
+import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
-import Step3 from "@/components/createProjectFormComponent/Step3";
+import axios from "axios";
 
 const Page = () => {
-  const router = useRouter();
-  const { user } = useGlobalContext();
-  const [paymentStatus, setPaymentStatus] = useState("pending");
-  const [paymentId, setPaymentId] = useState('')
-  const [contacts, setContacts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
-    // Step 1: General Information
-    name: "",
-    description: "",
-    startDate: "",
-    endDate: "",
-    projectPasscode: "",
-    createdBy: "",
-    tags: [],
-    status: "",
-    // Step 2: Add People
-    members: [
-      {
-        userId: "",
-        roles: [],
-        email: "",
-      },
-    ],
-
-    // Step 3: Add Meeting
-    meeting: {
-      title: "",
-      moderator: "",
-      description: "",
-      startDate: "",
-      startTime: "",
-      timeZone: "",
-      duration: "",
-      ongoing: false,
-      enableBreakoutRoom: false,
-      meetingPasscode: "",
-    },
+    service: "",
+    addOns: [],
+    market: "",
+    language: "",
+    sessions: [],
+    firstDateOfStreaming: "",
+    projectDate: "",
+    respondentsPerSession: "",
+    numSessions: "",
+    sessionLength: "",
+    recruitmentSpecs: "",
+    preWorkDetails: "",
+    selectedLanguages: "",
+    inLanguageHosting: "",
+    provideInterpreter: "",
+    languageSessionBreakdown: "",
+    additionalInfo: "",
   });
+  const [uniqueId, setUniqueId] = useState(null); 
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useGlobalContext()
+
+  console.log('Form Data', formData)
 
 
-  useEffect(() => {
-    fetchContacts();
-  }, []);
+  const updateFormData = (updates) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+  };
 
-  const fetchContacts = async () => {
+  const isStep3 = () => {
+    if (formData.service === "tier1") {
+      return false; // Tier 1 always skips Step 3
+    }
+  
+    if (formData.service === "tier2") {
+      const today = new Date();
+      const twoWeeksFromToday = new Date(today);
+      twoWeeksFromToday.setDate(today.getDate() + 14);
+  
+      const firstStreamingDate = formData.firstDateOfStreaming
+        ? new Date(formData.firstDateOfStreaming)
+        : null;
+  
+      const isDateWithinTwoWeeks =
+        firstStreamingDate && firstStreamingDate <= twoWeeksFromToday;
+  
+      const isTier2WithAddOns = formData.addOns && formData.addOns.length > 0;
+  
+      return isDateWithinTwoWeeks || isTier2WithAddOns;
+    }
+  
+    return false; // Default fallback
+  };
+  
+  // Define steps dynamically based on user selection
+  const steps = [
+    Step1,
+    ...(formData.service === "tier1" ? [Step2, Step4] : isStep3() ? [Step3] : [Step2, Step4]),
+  ];
+  
+ const StepComponent = steps[currentStep];
+
+  
+  const goBack = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
+
+  const handleSubmit = () => {
+    console.log("Final Form Data:", formData);
+    alert("Form submitted successfully!");
+  };
+
+  const saveProgress = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-all/contact/${user?._id}`
-      );
-      if (!response.ok) {
-        throw new Error(`Failed to fetch contacts: ${response.statusText}`);
+      const payload = {
+        formData,
+        userId: user?._id, 
+      };
+  
+      // Include uniqueId in the payload if it exists
+      if (uniqueId) {
+        payload.uniqueId = uniqueId;
       }
-      const data = await response.json();
-      setContacts(data);
+  
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/save-progress`, payload);
+  
+      // If the form is newly saved, capture the uniqueId from the response
+      if (!uniqueId) {
+        setUniqueId(response.data.uniqueId);
+      }
+      console.log('response', response)
+      // Navigate to the next step
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     } catch (error) {
-      console.error("Error fetching contacts:", error);
-      toast.error(`Error fetching contacts: ${error.message}. Please try again later.`);
+      console.error("Error saving progress:", error);
+      toast.error(`${error.response.data.error}`);
+
+      
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); 
     }
   };
+  console.log('Unique Id', uniqueId)
 
-  // const nextStep = () => {
-  //   setCurrentStep((prevStep) => prevStep + 1);
-  // };
-
-  const prevStep = () => {
-    setCurrentStep((prevStep) => prevStep - 1);
-  };
-
-  const handleFormSubmit = async () => {
-    // Filter out any members with empty userId (indicating they were not properly added)
-    const validMembers = formData.members.filter((member) => member.userId);
-    // Determine the project status based on the conditions
-    const status =
-      validMembers.length > 0 
-        ? "Active"
-        : "Draft";
-    // Add the createdBy field to the formData
-    const updatedFormData = {
-      ...formData,
-      createdBy: user._id,
-      // members: validMembers,
-      meeting: {
-        ...formData.meeting,
-        moderator: formData.meeting.moderator || null,
-      },
-      status,
-    };
-console.log('updated form data', updatedFormData)
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create/project`,
-        updatedFormData
-      );
-
-      // Handle success response
-      if (response.status === 201) {
-        await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/update-payment`, {
-          paymentId,
-          projectId: response.data.projectId,
-        });
-        
-        toast.success("Project created successfully!");
-        router.push("/dashboard/project");
-      }
-    } catch (error) {
-      console.error("Error creating project:", error);
-
-      // Check if the error response contains a message related to email verification
-      if (
-        error.response &&
-        error.response.data.message ===
-          "Email needs to be verified before creating a project."
-      ) {
-        toast.error(
-          "Your email is not verified. Please verify your email to create a project."
-        );
-      } else {
-        toast.error("Failed to create project. Please try again.");
-      }
+  // Validation for enabling/disabling the "Next" button
+  const isNextButtonDisabled = () => {
+    if (currentStep === 0) {
+      return !formData.service || !formData.firstDateOfStreaming; 
     }
+    return false; 
   };
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <Step1 formData={formData} setFormData={setFormData} />;
-      case 2:
-        return (
-          <Step2
-            formData={formData}
-            setFormData={setFormData}
-            contacts={contacts}
-            setContacts={setContacts}
-            isLoading={isLoading}
-            fetchContacts={fetchContacts}
-          />
-        );
-      case 3:
-        return (
-          <Step3
-          userId={user._id}
-          setPaymentId={setPaymentId}
-          setPaymentStatus={setPaymentStatus}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const validateForm = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          formData.name !== "" &&
-          formData.description !== "" &&
-          formData.endDate !== "" &&
-          formData.projectPasscode !== ""
-        );
-      case 2:
-        return true;
-
-      // case 3:
-      //   return (
-      //     formData.meeting.title !== "" &&
-      //     formData.meeting.startDate !== "" &&
-      //     formData.meeting.startTime !== "" &&
-      //     formData.meeting.timeZone !== "" &&
-      //     formData.meeting.duration !== "" &&
-      //     formData.meeting.meetingPasscode !== ""
-      //   );
-      default:
-        return true;
-    }
-  };
-
-  const nextStep = () => {
-    if (validateForm()) {
-      setCurrentStep((prevStep) => prevStep + 1);
-    } else {
-      toast.error("Please fill out all required fields before proceeding.");
-    }
-  };
-
-  const getIconClass = (step) => {
-    return currentStep >= step ? "bg-custom-orange-1" : "bg-custom-dark-blue-1";
-  };
-
-  const getLineClass = (step) => {
-    return currentStep >= step
-      ? "text-custom-orange-1 text-5xl"
-      : "text-custom-dark-blue-1 text-5xl";
-  };
+  
 
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen pb-10">
@@ -225,51 +135,32 @@ console.log('updated form data', updatedFormData)
           </div>
         </div>
       </div>
-      <div className="create_project_progress_bar_bg py-1 w-full flex justify-center items-center ">
-        <div className={`text-white ${getIconClass(1)} p-2 rounded-full`}>
-          <PiNotebookFill />
-        </div>
-        <HiOutlineMinus className={getLineClass(2)} />
-        <div className={`text-white ${getIconClass(2)} p-2 rounded-full`}>
-          <FaUsers />
-        </div>
-        {/* <HiOutlineMinus className={getLineClass(3)} />
-        <div className={`text-white ${getIconClass(3)} p-2 rounded-full`}>
-          <FaUserClock />
-        </div> */}
-      </div>
-      <div className="flex-grow mx-auto pt-5 md:px-10 ">
-        {renderStep()}
 
-        {/* Navigation buttons */}
-        <div className="flex justify-end gap-3 mt-2">
-          {currentStep > 1 && (
+      <div className="flex-grow mx-auto pt-5 md:px-10">
+        <StepComponent
+          formData={formData}
+          updateFormData={updateFormData}
+          uniqueId={uniqueId}
+        />
+        <div className="flex justify-between mt-4">
+          {currentStep > 0 && (
             <Button
-              onClick={prevStep}
-              variant="cancel"
-              className="rounded-lg px-7 py-1 my-6"
-            >
-              Back
-            </Button>
+              children="Back"
+              variant="secondary"
+              className="rounded-lg px-4 py-2"
+              onClick={goBack}
+            />
           )}
-          {currentStep < 3 && (
+          {currentStep < steps.length - 1 && (
             <Button
-              onClick={nextStep}
-              variant="save"
-              className="rounded-lg px-7 py-1 my-6 mr-2"
-            >
-              Next
-            </Button>
-          )}
-          {(currentStep === 3 && paymentStatus === "succeeded") && (
-            <Button
-              variant="save"
-              type="button"
-              className="rounded-lg px-7 py-1 my-6"
-              onClick={handleFormSubmit}
-            >
-              Save Project
-            </Button>
+              children={isLoading ? "Saving..." : "Next"}
+              variant={isNextButtonDisabled() ? "closed" : "secondary"}
+              className={`rounded-lg px-4 py-2 ${
+                isNextButtonDisabled() ? " cursor-not-allowed" : ""
+              }`}
+              onClick={saveProgress}
+              disabled={isNextButtonDisabled() || isLoading}
+            />
           )}
         </div>
       </div>
