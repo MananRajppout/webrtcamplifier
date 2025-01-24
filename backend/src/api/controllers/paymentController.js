@@ -34,13 +34,18 @@ const createPaymentIntent = async (req, res) => {
 };
 
 const savePayment = async (req, res) => {
-  const { userId, projectId, amount, status, paymentIntent } = req.body;
+  const { userId, amount, status, paymentIntent } = req.body;
 
   try {
+    if (!userId || !amount || !status) {
+      return res.status(400).json({
+        message: "userId, amount, and status are required fields",
+      });
+    }
+    
     // Save the payment record in the database
     const payment = new Payment({
       userId,
-      projectId,
       amount,
       status,
       paymentIntent, 

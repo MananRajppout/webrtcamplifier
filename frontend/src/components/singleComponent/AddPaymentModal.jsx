@@ -13,9 +13,6 @@ const stripePromise = loadStripe(
 );
 
 const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedProject, setSelectedProject] = useState(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [clientSecret, setClientSecret] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -38,22 +35,7 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
     }
   }, [paymentStatus, onClose, fetchPaymentData]);
 
-  const fetchProjects = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get/get-project-by-userId/${userId}`
-      );
-      setProjects(response.data.projects);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleProjectSelect = (project) => {
-    setSelectedProject(project);
-  };
+  
 
   const handlePackageSelect = async (selected) => {
     const selectedPkg = packages.find(
@@ -65,17 +47,17 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
       return;
     }
 
-    setSelectedPackage(selectedPkg); // Update selected package state
+    setSelectedPackage(selectedPkg); 
 
     // Create a payment intent for the selected package
     try {
       setIsLoading(true);
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create-payment-intent`,
-        { amount: selectedPkg.total } // Use selectedPkg to get the total
+        { amount: selectedPkg.total } 
       );
       if (response.status === 201) {
-        setClientSecret(response.data.clientSecret);
+        setClientSecret(response?.data?.clientSecret);
       }
     } catch (error) {
       console.error("Error creating payment intent:", error);
@@ -91,29 +73,7 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
           Add Payment
         </h2>
 
-        {/* Select Project Dropdown */}
-        <div className="mt-4 lg:flex lg:justify-center lg:items-center lg:gap-4">
-          <label className="block text-sm font-medium mb-2 text-gray-700">
-            Select Project
-          </label>
-          {loading ? (
-            <p>Loading projects...</p>
-          ) : (
-            <Dropdown
-              className="w-full"
-              options={projects.map((project) => project.name)}
-              selectedOption={
-                selectedProject ? selectedProject.name : "Select a project"
-              }
-              onSelect={(selectedName) => {
-                const selected = projects.find(
-                  (project) => project.name === selectedName
-                );
-                handleProjectSelect(selected);
-              }}
-            />
-          )}
-        </div>
+       
 
         {/* Select Package Dropdown */}
         <div className="mt-4 lg:flex lg:justify-center lg:items-center lg:gap-4">
@@ -131,7 +91,7 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
                 : "Select a package"
             }
             onSelect={(selected) => {
-              handlePackageSelect(selected); // Pass the correct string to handlePackageSelect
+              handlePackageSelect(selected); 
             }}
           />
         </div>
@@ -155,7 +115,7 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
         )}
 
         {/* Display Payment Form */}
-        {clientSecret && selectedProject && (
+        {clientSecret && (
           <div className="mt-6">
             <h2 className="text-lg font-semibold mb-4">Complete Payment</h2>
             <Elements stripe={stripePromise} options={{ clientSecret }}>
@@ -165,7 +125,6 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
                 setPaymentId={setPaymentId}
                 setPaymentStatus={setPaymentStatus}
                 amount={selectedPackage?.total}
-                projectId={selectedProject._id}
               />
             </Elements>
           </div>

@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 
 const { useState } = require("react");
 
-const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amount, projectId = null }) => {
+const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amount}) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -37,7 +37,7 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amo
           status: "Failed",
           paymentIntent: null,
         };
-        if (projectId) failedPaymentData.projectId = projectId; // Add projectId if present
+        
 
         await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/save-payment`, failedPaymentData);
 
@@ -50,7 +50,7 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amo
           status: "Completed",
           paymentIntent: paymentIntent,
         };
-        if (projectId) successfulPaymentData.projectId = projectId; // Add projectId if present
+       
 
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/save-payment`,
