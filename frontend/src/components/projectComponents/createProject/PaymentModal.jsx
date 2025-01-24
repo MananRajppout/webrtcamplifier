@@ -118,6 +118,7 @@ const PaymentModal = ({ userId, setPaymentStatus, amount, credits, onClose}) => 
                 setPaymentId={setPaymentId}
                 setPaymentStatus={setPaymentStatus}
                 amount={amount}
+                totalHours={totalHours}
               />
             </Elements>
           </div>

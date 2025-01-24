@@ -171,7 +171,6 @@ const createProjectByAmplifyAdmin = async (req, res) => {
 
     if (
       user.role !== "AmplifyAdmin" &&
-      user.role !== "Admin" &&
       user.role !== "SuperAdmin"
     ) {
       res.status(403).json({

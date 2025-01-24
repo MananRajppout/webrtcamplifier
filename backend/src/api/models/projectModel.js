@@ -46,7 +46,12 @@ const projectSchema = new Schema(
     ],
     tags: { type: [Schema.Types.ObjectId], default: [], ref: "Tag" },
     projectPasscode: { type: String, default: "A3h@xP" },
-    
+    cumulativeMinutes:{
+      type: String
+    },
+    meetingLink: {
+      type: String
+    },
     projectDetails: {
       respondentMarket: { type: String },
       respondentLanguage: { type: String },

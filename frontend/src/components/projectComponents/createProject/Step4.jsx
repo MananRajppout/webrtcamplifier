@@ -1,9 +1,10 @@
 import Button from "@/components/shared/button";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import PaymentModal from "./PaymentModal";
 import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const Step4 = ({ formData, updateFormData, uniqueId }) => {
   const [credits, setCredits] = useState(Array(5).fill(0));
@@ -12,10 +13,12 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const { user } = useGlobalContext();
   const [paymentStatus, setPaymentStatus] = useState("pending");
+  const router = useRouter()
 
   useEffect(() => {
     if (paymentStatus === "succeeded") {
       setIsPaymentModalOpen(false);
+      router.push("/dashboard/project")
     }
   }, [paymentStatus]);
 

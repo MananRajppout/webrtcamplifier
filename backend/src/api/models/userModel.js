@@ -67,6 +67,10 @@ const userSchema = new Schema({
   },
   createdById: {
     type: Schema.Types.ObjectId,
+  },
+  credits:{
+    type: String,
+    default: "0"
   }
 
 }, { timestamps: true });

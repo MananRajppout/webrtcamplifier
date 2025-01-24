@@ -190,7 +190,6 @@ const ProjectTable = ({
                 <TableHead>Status</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
                 <TableHead>Cummulative Minutes Used</TableHead>
                 <TableHead>Actions</TableHead>
               </tr>
@@ -237,10 +236,6 @@ const ProjectTable = ({
                     {project.startTime}
                   </TableData>
 
-                  {/* Display End Date */}
-                  <TableData>
-                    {new Date(project?.endDate)?.toLocaleDateString()}
-                  </TableData>
                   <TableData>
                     {project?.cumulativeMinutes?.toFixed(0)}
                   </TableData>

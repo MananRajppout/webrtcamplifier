@@ -18,10 +18,10 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState("pending");
   const [paymentId, setPaymentId] = useState("");
+
+  console.log('total hour', selectedPackage?.hours)
+  console.log('selectedPackage', selectedPackage)
   
-
-
-
   useEffect(() => {
     if (paymentStatus === "succeeded") {
       
@@ -120,6 +120,7 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
                 setPaymentId={setPaymentId}
                 setPaymentStatus={setPaymentStatus}
                 amount={selectedPackage?.total}
+                totalHours={selectedPackage?.hours}
               />
             </Elements>
           </div>

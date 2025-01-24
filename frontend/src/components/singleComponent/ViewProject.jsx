@@ -470,7 +470,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     fetchRepositories(localProjectState?._id, 1);
   }, [localProjectState, meetingPage]);
 
-
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center w-full">
       {/* navbar */}
@@ -526,25 +525,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               )}
             />
           </div>
-          <div className="flex justify-start items-center gap-3 sm:gap-5">
-            <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
-              Fieldwork End Date:
-            </p>
-            {/* Format the end date to include both date and 12-hour time */}
-            <ParagraphBlue2
-              children={new Date(localProjectState?.endDate).toLocaleString(
-                "en-US",
-                {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "numeric",
-                  hour12: true,
-                }
-              )}
-            />
-          </div>
+
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
               Passcode:
@@ -556,8 +537,14 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
               Project Status:
             </p>
-            {/* <HeadingLg children="Project Status" /> */}
+            
             <ParagraphBlue2 children={localProjectState?.status} />
+          </div>
+          <div className="flex justify-start items-center gap-3 sm:gap-5">
+            <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
+              Meeting Link:
+            </p>
+            <ParagraphBlue2 children={localProjectState?.meetingLink} />
           </div>
         </div>
 
@@ -599,7 +586,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
               setIsLongAnswerModalOpen,
               setIsBlankModalOpen,
               setIsRatingModalOpen,
-              setIsAddPollModalOpen
+              setIsAddPollModalOpen,
             }}
             projectTeam={{
               handleOpenAddContactModal,

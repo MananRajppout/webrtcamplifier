@@ -1,5 +1,7 @@
 const dotenv = require("dotenv");
 const Payment = require("../models/paymentModel");
+const { default: mongoose } = require("mongoose");
+const User = require("../models/userModel");
 dotenv.config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
@@ -34,12 +36,15 @@ const createPaymentIntent = async (req, res) => {
 };
 
 const savePayment = async (req, res) => {
-  const { userId, amount, status, paymentIntent } = req.body;
+  const { userId, amount, status, paymentIntent, totalHours } = req.body;
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
   try {
-    if (!userId || !amount || !status) {
+    if (!userId || !amount || !status || !totalHours) {
       return res.status(400).json({
-        message: "userId, amount, and status are required fields",
+        message: "userId, amount,total hours and status are required fields",
       });
     }
     
@@ -51,10 +56,28 @@ const savePayment = async (req, res) => {
       paymentIntent, 
     });
 
-    await payment.save();
+    await payment.save({ session });
+
+     // Step 2: Update the user's credits
+     const user = await User.findById(userId).session(session);
+     if (!user) {
+       throw new Error("User not found");
+     }
+ 
+     const currentCredits = parseInt(user.credits) || 0;
+     user.credits = (currentCredits + parseInt(totalHours)*60).toString();
+ 
+     await user.save({ session });
+
+       // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json({ message: "Payment saved successfully", payment });
   } catch (error) {
+      // Rollback the transaction
+      await session.abortTransaction();
+      session.endSession();
     console.error("Error saving payment:", error);
     res.status(500).json({ message: "Failed to save payment", error });
   }

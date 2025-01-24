@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 
 const { useState } = require("react");
 
-const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amount}) => {
+const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amount, totalHours}) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -36,6 +36,7 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amo
           amount,
           status: "Failed",
           paymentIntent: null,
+          totalHours
         };
         
 
@@ -49,6 +50,7 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amo
           amount,
           status: "Completed",
           paymentIntent: paymentIntent,
+          totalHours
         };
        
 

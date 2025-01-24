@@ -87,7 +87,7 @@ const Page = () => {
   };
 
   const handleCreateProject = () => {
-    if(user?.role === "Admin" || user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin"  ){
+    if(user?.role === "SuperAdmin" || user?.role === "AmplifyAdmin"  ){
       router.push("/dashboard/create-project-amplify-admin")
     } else {
       router.push("/dashboard/create-project")
