@@ -33,9 +33,9 @@ const Page = () => {
   const [uniqueId, setUniqueId] = useState(null); 
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useGlobalContext()
+  const [stepValid, setStepValid] = useState(true);
 
   console.log('Form Data', formData)
-
 
   const updateFormData = (updates) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -67,9 +67,7 @@ const Page = () => {
   };
   
   // Define steps dynamically based on user selection
-  const steps = [
-    Step1,
-    ...(formData.service === "tier1" ? [Step2, Step4] : isStep3() ? [Step3] : [Step2, Step4]),
+  const steps = [Step1, ...(formData.service === "tier1" ? [Step2, Step4] : isStep3() ? [Step3] : [Step2, Step4]),
   ];
   
  const StepComponent = steps[currentStep];
@@ -77,10 +75,7 @@ const Page = () => {
   
   const goBack = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
-  const handleSubmit = () => {
-    console.log("Final Form Data:", formData);
-    alert("Form submitted successfully!");
-  };
+
 
   const saveProgress = async () => {
     setIsLoading(true);
@@ -113,15 +108,22 @@ const Page = () => {
       setIsLoading(false); 
     }
   };
-  console.log('Unique Id', uniqueId)
 
   // Validation for enabling/disabling the "Next" button
-  const isNextButtonDisabled = () => {
-    if (currentStep === 0) {
-      return !formData.service || !formData.firstDateOfStreaming; 
-    }
-    return false; 
-  };
+const isNextButtonDisabled = () => {
+  if (currentStep === 0) {
+    // Step 1 validation: Ensure 'service' and 'firstDateOfStreaming' are filled
+    return !formData.service || !formData.firstDateOfStreaming;
+  }
+
+  if (currentStep === 1) {
+    // Step 2 validation: Ensure 'stepValid' is true (from Step2 component)
+    return !stepValid;
+  }
+
+  return false; // Allow "Next" for other steps
+};
+
   
 
   return (
@@ -141,6 +143,7 @@ const Page = () => {
           formData={formData}
           updateFormData={updateFormData}
           uniqueId={uniqueId}
+          setStepValid={setStepValid}
         />
         <div className="flex justify-between mt-4">
           {currentStep > 0 && (

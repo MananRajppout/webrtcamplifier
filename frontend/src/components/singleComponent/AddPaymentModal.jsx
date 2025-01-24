@@ -21,15 +21,10 @@ const AddPaymentModal = ({ userId, onClose, fetchPaymentData }) => {
   
 
 
-  useEffect(() => {
-    if (userId) {
-      fetchProjects();
-    }
-  }, [userId]);
 
   useEffect(() => {
     if (paymentStatus === "succeeded") {
-      // Close the modal and refresh payment data when payment succeeds
+      
       onClose();
       fetchPaymentData();
     }

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const Step2 = ({ formData, updateFormData, uniqueId }) => {
+const Step2 = ({ formData, updateFormData, uniqueId, setStepValid  }) => {
   const [sessions, setSessions] = useState([]);
   const [tempSession, setTempSession] = useState({ number: "", duration: "" });
   const [varyingLengths, setVaryingLengths] = useState(false);
@@ -16,6 +16,21 @@ const Step2 = ({ formData, updateFormData, uniqueId }) => {
     "2.5 hour (150 minutes)",
     "3 hour (180+ minutes)",
   ];
+
+  useEffect(() => {
+    validateStep();
+  }, [formData, sessions]);
+
+  const validateStep = () => {
+    const isValid =
+      formData.market &&
+      formData.language &&
+      sessions.length > 0 &&
+      sessions.every(
+        (session) => session.number && session.duration
+      );
+    setStepValid(isValid); 
+  };
 
   const handleNumSessionsChange = (e) => {
     setTempSession({ ...tempSession, number: e.target.value });

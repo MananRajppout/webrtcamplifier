@@ -77,7 +77,7 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amo
         disabled={!stripe || isProcessing}
         className="px-4 py-2 bg-custom-teal text-white rounded-lg"
       >
-        {isProcessing ? "Processing..." : `Pay ${amount}`}
+        {isProcessing ? "Processing..." : `Pay $ ${amount}`}
       </button>
     </form>
   );

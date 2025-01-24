@@ -1,11 +1,24 @@
 import Button from "@/components/shared/button";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import PaymentModal from "./PaymentModal";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const Step4 = ({ formData, updateFormData, uniqueId }) => {
   const [credits, setCredits] = useState(Array(5).fill(0));
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
   const [paymentComplete, setPaymentComplete] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const { user } = useGlobalContext();
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+
+  useEffect(() => {
+    if (paymentStatus === "succeeded") {
+      setIsPaymentModalOpen(false);
+    }
+  }, [paymentStatus]);
+
+  console.log("total price", totalPrice);
 
   const packages = [
     { hours: 1, rate: 150, description: "1 Hour: $150.00" },
@@ -32,15 +45,6 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
     setTotalPrice(newTotalPrice);
   };
 
-  const handleBuyNow = () => {
-    // Mock payment flow
-    alert("Redirecting to payment page...");
-    setTimeout(() => {
-      alert("Payment successful!");
-      setPaymentComplete(true);
-    }, 2000);
-  };
-
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Project Review</h2>
@@ -58,85 +62,117 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
 
       {/* Project Estimate Table */}
       <h3 className="text-xl font-bold mt-6 mb-4">Project Estimate:</h3>
-<table className="w-full border-collapse border border-gray-300 text-sm">
-  <thead>
-    <tr>
-      <th className="border border-gray-300 p-2">Service</th>
-      <th className="border border-gray-300 p-2">Quantity</th>
-      <th className="border border-gray-300 p-2">Session Duration (mins)</th>
-      <th className="border border-gray-300 p-2">Total Hour</th>
-      <th className="border border-gray-300 p-2">Unit Price</th>
-      <th className="border border-gray-300 p-2">Total Price USD</th>
-    </tr>
-  </thead>
-  <tbody>
-    {formData.sessions?.map((session, index) => {
-      // Extract duration in minutes
-      const durationString = session.duration || "0 minutes";
-
-      // Check for both formats: "30 minutes" or "1.25 hour (75 minutes)"
-      let durationMinutes = 0;
-      const matchMinutes = durationString.match(/(\d+)\s*minutes/); // For "30 minutes"
-      const matchParentheses = durationString.match(/\((\d+)\s*minutes\)/); // For "(75 minutes)"
-
-      if (matchMinutes) {
-        durationMinutes = parseInt(matchMinutes[1], 10); // Extract minutes
-      } else if (matchParentheses) {
-        durationMinutes = parseInt(matchParentheses[1], 10); // Extract minutes in parentheses
-      }
-
-      const durationHours = durationMinutes / 60; // Convert to hours
-      const quantity = parseInt(session.number || 0, 10); // Get quantity
-      const totalHours = durationHours * quantity; // Calculate total hours
-      const unitPrice = 150; // Unit price per hour
-      const totalPrice = totalHours * unitPrice; // Calculate total price
-
-      return (
-        <tr key={index}>
-          <td className="border border-gray-300 p-2">Signature Service</td>
-          <td className="border border-gray-300 p-2">{quantity || 0}</td>
-          <td className="border border-gray-300 p-2">{session.duration || "N/A"}</td>
-          <td className="border border-gray-300 p-2">{totalHours.toFixed(2)} hrs</td>
-          <td className="border border-gray-300 p-2">${unitPrice}</td>
-          <td className="border border-gray-300 p-2">${totalPrice.toFixed(2)}</td>
-        </tr>
-      );
-    })}
-  </tbody>
-  <tfoot>
-    <tr className="font-bold">
-      <td colSpan="5" className="border border-gray-300 p-2 text-right">
-        Estimated Total:
-      </td>
-      <td className="border border-gray-300 p-2">
-        $
-        {formData.sessions
-          ?.reduce((total, session) => {
+      <table className="w-full border-collapse border border-gray-300 text-sm">
+        <thead>
+          <tr>
+            <th className="border border-gray-300 p-2">Service</th>
+            <th className="border border-gray-300 p-2">Quantity</th>
+            <th className="border border-gray-300 p-2">
+              Session Duration (mins)
+            </th>
+            <th className="border border-gray-300 p-2">Total Hour</th>
+            <th className="border border-gray-300 p-2">Unit Price</th>
+            <th className="border border-gray-300 p-2">Total Price USD</th>
+          </tr>
+        </thead>
+        <tbody>
+          {formData.sessions?.map((session, index) => {
+            // Extract duration in minutes
             const durationString = session.duration || "0 minutes";
+
+            // Check for both formats: "30 minutes" or "1.25 hour (75 minutes)"
             let durationMinutes = 0;
-            const matchMinutes = durationString.match(/(\d+)\s*minutes/);
-            const matchParentheses = durationString.match(/\((\d+)\s*minutes\)/);
+            const matchMinutes = durationString.match(/(\d+)\s*minutes/); // For "30 minutes"
+            const matchParentheses =
+              durationString.match(/\((\d+)\s*minutes\)/); // For "(75 minutes)"
 
             if (matchMinutes) {
-              durationMinutes = parseInt(matchMinutes[1], 10);
+              durationMinutes = parseInt(matchMinutes[1], 10); // Extract minutes
             } else if (matchParentheses) {
-              durationMinutes = parseInt(matchParentheses[1], 10);
+              durationMinutes = parseInt(matchParentheses[1], 10); // Extract minutes in parentheses
             }
 
-            const durationHours = durationMinutes / 60;
-            const quantity = parseInt(session.number || 0, 10);
-            return total + durationHours * quantity * 150;
-          }, 0)
-          .toFixed(2)}
-      </td>
-    </tr>
-  </tfoot>
-</table>
-<p className="text-sm text-gray-500 mt-2">
-  *Final billing will be based on actual streaming hours for sessions booked.
-</p>
+            const durationHours = durationMinutes / 60; // Convert to hours
+            const quantity = parseInt(session.number || 0, 10); // Get quantity
+            const totalHours = durationHours * quantity; // Calculate total hours
+            const unitPrice = 150; // Unit price per hour
+            const totalPrice = totalHours * unitPrice; // Calculate total price
 
+            return (
+              <tr key={index}>
+                <td className="border border-gray-300 p-2">
+                  Signature Service
+                </td>
+                <td className="border border-gray-300 p-2">{quantity || 0}</td>
+                <td className="border border-gray-300 p-2">
+                  {session.duration || "N/A"}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {totalHours.toFixed(2)} hrs
+                </td>
+                <td className="border border-gray-300 p-2">${unitPrice}</td>
+                <td className="border border-gray-300 p-2">
+                  ${totalPrice.toFixed(2)}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+        <tfoot>
+  <tr className="font-bold">
+    <td colSpan="3" className="border border-gray-300 p-2 text-left">
+      Total
+    </td>
+    <td className="border border-gray-300 p-2 ">
+      {formData.sessions
+        ?.reduce((totalHours, session) => {
+          const durationString = session.duration || "0 minutes";
+          let durationMinutes = 0;
+          const matchMinutes = durationString.match(/(\d+)\s*minutes/);
+          const matchParentheses = durationString.match(/\((\d+)\s*minutes\)/);
 
+          if (matchMinutes) {
+            durationMinutes = parseInt(matchMinutes[1], 10);
+          } else if (matchParentheses) {
+            durationMinutes = parseInt(matchParentheses[1], 10);
+          }
+
+          const durationHours = durationMinutes / 60;
+          const quantity = parseInt(session.number || 0, 10);
+          return totalHours + durationHours * quantity;
+        }, 0)
+        .toFixed(2)} hrs
+    </td>
+    <td></td>
+    <td className="border border-gray-300 p-2">
+      $
+      {formData.sessions
+        ?.reduce((totalPrice, session) => {
+          const durationString = session.duration || "0 minutes";
+          let durationMinutes = 0;
+          const matchMinutes = durationString.match(/(\d+)\s*minutes/);
+          const matchParentheses = durationString.match(/\((\d+)\s*minutes\)/);
+
+          if (matchMinutes) {
+            durationMinutes = parseInt(matchMinutes[1], 10);
+          } else if (matchParentheses) {
+            durationMinutes = parseInt(matchParentheses[1], 10);
+          }
+
+          const durationHours = durationMinutes / 60;
+          const quantity = parseInt(session.number || 0, 10);
+          return totalPrice + durationHours * quantity * 150;
+        }, 0)
+        .toFixed(2)}
+    </td>
+  </tr>
+</tfoot>
+
+      </table>
+      <p className="text-sm text-gray-500 mt-2">
+        *Final billing will be based on actual streaming hours for sessions
+        booked.
+      </p>
 
       {/* Purchase Credits */}
       <h3 className="text-xl font-bold mt-6 mb-4">Purchase Credits:</h3>
@@ -201,24 +237,37 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
 
       {/* Buy Now or Save/Submit */}
       <div className="mt-6 flex justify-end">
-        {!paymentComplete ? (
-          <Button
-            onClick={handleBuyNow}
-            className=" py-2 px-4 rounded-lg"
-            variant="secondary"
-          >
-            Buy Now
-          </Button>
-        ) : (
+        {paymentStatus === "succeeded" ? (
           <Button
             onClick={() => alert("Form submitted successfully!")}
             className=" py-2 px-4 rounded-lg"
-            variant="secondary"
+            variant="primary"
           >
             Submit
           </Button>
+        ) : (
+          <Button
+            onClick={() => {
+              setIsPaymentModalOpen(true);
+            }}
+            className=" py-2 px-4 rounded-lg"
+            variant="secondary"
+          >
+            Pay Now
+          </Button>
         )}
       </div>
+      {isPaymentModalOpen && (
+        <PaymentModal
+          userId={user?._id}
+          setPaymentStatus={setPaymentStatus}
+          amount={totalPrice}
+          credits={credits}
+          onClose={() => {
+            setIsPaymentModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
