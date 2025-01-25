@@ -37,7 +37,8 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // *Meeting realted state
-  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [sortField, setSortField] = useState("");
+const [sortOrder, setSortOrder] = useState("asc");
   const [meetings, setMeetings] = useState([]);
   const [isAddMeetingModalOpen, setIsAddMeetingModalOpen] = useState(false);
   const [meetingPage, setMeetingPage] = useState(1);
@@ -67,10 +68,6 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
   const [isAddRepositoryModalOpen, setIsAddRepositoryModalOpen] =
     useState(false);
   const [repositories, setRepositories] = useState([]);
-  const [repositoryData, setRepositoryData] = useState({
-    documents: [],
-    media: [],
-  });
   const [selectedRepositoryMeetingTab, setSelectedRepositoryMeetingTab] =
     useState("All");
   const [showDocAndMediaTab, setShowDocAndMediaTab] = useState("Documents");
@@ -215,7 +212,7 @@ console.log('localProject state', localProjectState)
     fetchMeetings(page, searchTerm);
   };
 
-  const fetchMeetings = async (page = 1, searchQuery = "", filters = {}) => {
+  const fetchMeetings = async (page = 1, searchQuery = "", filters = {}, sortField = "", sortOrder = "") => {
     setIsLoading(true);
     try {
       const response = await axios.get(
@@ -225,6 +222,8 @@ console.log('localProject state', localProjectState)
             page,
             limit: 10,
             search: searchQuery,
+            sortField,
+          sortOrder,
             ...filters,
           },
         }
@@ -236,6 +235,13 @@ console.log('localProject state', localProjectState)
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSort = (field) => {
+    const order = sortField === field && sortOrder === "asc" ? "desc" : "asc";
+    setSortField(field);
+    setSortOrder(order);
+    fetchMeetings(meetingPage, searchTerm, {}, field, order);
   };
 
   const handleAddMeetingModal = () => {
@@ -584,6 +590,9 @@ console.log('localProject state', localProjectState)
               totalMeetingPages,
               handleMeetingPageChange,
               handleBulkUpdateModal,
+              handleSort,
+              sortField,
+              sortOrder
             }}
             modalStates={{
               setIsSingleChoiceModalOpen,

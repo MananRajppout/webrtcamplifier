@@ -1,10 +1,5 @@
 import Search from "@/components/singleComponent/Search";
 import React from "react";
-import { FaCheckSquare, FaStarHalfAlt } from "react-icons/fa";
-import { HiMiniBars2, HiMiniBars4 } from "react-icons/hi2";
-import { IoRemoveOutline } from "react-icons/io5";
-import { MdBarChart, MdOutlineRadioButtonChecked } from "react-icons/md";
-import { TbArrowsShuffle } from "react-icons/tb";
 import PollsTab from "../polls/PollsTab";
 import HeadingLg from "@/components/shared/HeadingLg";
 import RepositoryTab from "../repository/RepositoryTab";
@@ -40,6 +35,9 @@ const TabContent = ({
     totalMeetingPages,
     handleMeetingPageChange,
     handleBulkUpdateModal,
+    handleSort,
+    sortField,
+              sortOrder
   } = meetingHandlers;
 
   const {
@@ -147,6 +145,9 @@ const TabContent = ({
               meetingPage={meetingPage}
               totalMeetingPages={totalMeetingPages}
               onPageChange={handleMeetingPageChange}
+              handleSort={handleSort}
+              sortField={sortField}
+              sortOrder={sortOrder}
             />
           </div>
         </div>

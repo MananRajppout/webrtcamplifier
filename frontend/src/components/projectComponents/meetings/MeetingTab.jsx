@@ -24,6 +24,9 @@ const MeetingTab = ({
   meetingPage,
   totalMeetingPages,
   onPageChange,
+  handleSort,
+  sortField,
+  sortOrder,
 }) => {
   const [localMeetingState, setLocalMeetingState] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,7 +46,6 @@ const MeetingTab = ({
   const [modalTitle, setModalTitle] = useState("");
   const router = useRouter();
 
-
   const toggleModal = (event, meeting) => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     setModalPosition({ top, left });
@@ -56,7 +58,6 @@ const MeetingTab = ({
     setParticipantData(participants);
     setIsParticipantModalOpen(true);
   };
-
 
   const handleClickOutside = (event) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -95,13 +96,17 @@ const MeetingTab = ({
   });
 
   const handleJoinMeeting = async (meeting) => {
-    if (project.status === "Draft" || project.status === "Paused" || project.status === "Closed") {
+    if (
+      project.status === "Draft" ||
+      project.status === "Paused" ||
+      project.status === "Closed"
+    ) {
       toast.error(
         `Meeting cannot be started while project in the ${project.status} status.`
       );
       return;
     }
-    
+
     if (activeMeetingId === meeting._id) return;
 
     setActiveMeetingId(meeting._id);
@@ -114,25 +119,25 @@ const MeetingTab = ({
       );
       if (!confirmStart) return;
 
-      if(typeof window !== 'undefined'){
-        window.localStorage.setItem('email',user.email);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("email", user.email);
       }
-      
+
       const fullName = `${user.firstName} ${user.lastName}`;
       try {
         if (socket) {
-          if(user.role == "AmplifyTechHost"){
+          if (user.role == "AmplifyTechHost") {
             socket.emit("startMeeting", {
               meetingId: meeting._id,
               user: {
                 fullName,
                 email: user.email,
                 role: "Moderator",
-                isTechHost: true
+                isTechHost: true,
               },
               moderator: meeting.moderator[0],
             });
-          }else{
+          } else {
             socket.emit("startMeeting", {
               meetingId: meeting._id,
               user: {
@@ -142,7 +147,6 @@ const MeetingTab = ({
               },
             });
           }
-         
 
           // Listen for a response from the server
           socket.on("startMeetingResponse", (response) => {
@@ -153,7 +157,11 @@ const MeetingTab = ({
               window.open(
                 `/meeting/${meeting._id}?fullName=${encodeURIComponent(
                   fullName
-                )}&role=Moderator&${user.role == "AmplifyTechHost" ? 'ModeratorType=tech-host' : ''}`,
+                )}&role=Moderator&${
+                  user.role == "AmplifyTechHost"
+                    ? "ModeratorType=tech-host"
+                    : ""
+                }`,
                 "_blank"
               );
             }
@@ -294,12 +302,14 @@ const MeetingTab = ({
 
   const handleJoinBackroom = async (meeting) => {
     if (project.status === "Draft" || project.status === "Closed") {
-      toast.error(`You cannot join backroom while meeting is in ${project.status} state.`);
+      toast.error(
+        `You cannot join backroom while meeting is in ${project.status} state.`
+      );
       return;
     }
 
-    if(typeof window !== 'undefined'){
-      window.localStorage.setItem('email',user.email);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("email", user.email);
     }
     const fullName = `${user?.firstName} ${user?.lastName}`;
     const meetingId = meeting?._id;
@@ -358,10 +368,29 @@ const MeetingTab = ({
         <table className="min-w-full bg-white shadow-md rounded-lg ">
           <thead className="border-b-[0.5px] border-solid border-custom-dark-blue-1">
             <tr>
-              <TableHead>Meeting Title</TableHead>
-              <TableHead>Start Date & Time</TableHead>
+              <th onClick={() => handleSort("title")}
+                className="px-3 py-3 text-left text-[12px] font-bold text-custom-dark-blue-1 capitalize tracking-wider cursor-pointer"
+                >Meeting Title{" "}
+              {sortField === "title" && (sortOrder === "asc" ? "↑" : "↓")}</th>
+              {/* <TableHead >
+                
+              </TableHead> */}
+              <th 
+              className="px-3 py-3 text-left text-[12px] font-bold text-custom-dark-blue-1 capitalize tracking-wider cursor-pointer"
+              onClick={() => handleSort("startDate")}> Start Date & Time{" "}
+              {sortField === "startDate" && (sortOrder === "asc" ? "↑" : "↓")}</th>
+              {/* <TableHead >
+               
+              </TableHead> */}
               <TableHead>Time Zone</TableHead>
-              <TableHead>Moderator</TableHead>
+              <th onClick={() => handleSort("moderator.firstName")}
+                className="px-3 py-3 text-left text-[12px] font-bold text-custom-dark-blue-1 capitalize tracking-wider cursor-pointer"
+                > Moderator{" "}
+                {sortField === "moderator.firstName" &&
+                  (sortOrder === "asc" ? "↑" : "↓")}</th>
+              {/* <TableHead >
+               
+              </TableHead> */}
               <TableHead>Participant Count</TableHead>
               <TableHead>Observer Count</TableHead>
               <TableHead>Action</TableHead>
@@ -381,35 +410,35 @@ const MeetingTab = ({
                 })} ${convertTo12HourFormat(meeting?.startTime)}`}</td>
                 <TableData>{meeting?.timeZone}</TableData>
                 <td className="px-3 py-1 text-left text-[12px] font-medium text-custom-dark-blue-1">
-  {meeting?.moderator?.map((mod, index) => (
-    <span key={index}>
-      {mod?.firstName} {mod?.lastName}
-      {index < meeting?.moderator.length - 1 && ", "}
-    </span>
-  ))}
-</td>
+                  {meeting?.moderator?.map((mod, index) => (
+                    <span key={index}>
+                      {mod?.firstName} {mod?.lastName}
+                      {index < meeting?.moderator.length - 1 && ", "}
+                    </span>
+                  ))}
+                </td>
                 <td
-                className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
-                onClick={() =>
-                  handleParticipantClick(
-                    meeting?.liveMeetings[0]?.participantsList,
-                    meeting?.title
-                  )
-                }
-              >
-                {meeting?.liveMeetings[0]?.participantsList?.length}
-              </td>
+                  className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
+                  onClick={() =>
+                    handleParticipantClick(
+                      meeting?.liveMeetings[0]?.participantsList,
+                      meeting?.title
+                    )
+                  }
+                >
+                  {meeting?.liveMeetings[0]?.participantsList?.length}
+                </td>
                 <td
-                className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
-                onClick={() =>
-                  handleParticipantClick(
-                    meeting?.liveMeetings[0]?.observerList,
-                    meeting?.title
-                  )
-                }
-              >
-                {meeting?.liveMeetings[0]?.observerList.length}
-              </td>
+                  className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
+                  onClick={() =>
+                    handleParticipantClick(
+                      meeting?.liveMeetings[0]?.observerList,
+                      meeting?.title
+                    )
+                  }
+                >
+                  {meeting?.liveMeetings[0]?.observerList.length}
+                </td>
                 {/* <TableData>
                   {meeting?.liveMeetings[0].observerList.length}
                 </TableData> */}
@@ -548,35 +577,35 @@ const MeetingTab = ({
               <FaUser />
               <span>View</span>
             </li>
-            {
-              (user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
-             <>   <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleEditMeeting(selectedMeeting)}
-            >
-              <RiPencilFill />
-              <span>Edit</span>
-            </li>
-              
+            {user?.role !== "AmplifyTechHost" &&
+              user?.role !== "AmplifyModerator" &&
+              user?.role !== "Moderator" && (
+                <>
+                  {" "}
+                  <li
+                    className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                    onClick={() => handleEditMeeting(selectedMeeting)}
+                  >
+                    <RiPencilFill />
+                    <span>Edit</span>
+                  </li>
+                  <li
+                    className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                    onClick={() => handleDuplicateMeeting(selectedMeeting)}
+                  >
+                    <FaCopy />
+                    <span>Duplicate</span>
+                  </li>
+                  <li
+                    className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
+                    onClick={() => handleDeleteMeeting(selectedMeeting)}
+                  >
+                    <BsFillEnvelopeAtFill />
+                    <span>Delete</span>
+                  </li>
+                </>
+              )}
             <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleDuplicateMeeting(selectedMeeting)}
-            >
-              <FaCopy />
-              <span>Duplicate</span>
-            </li>
-            
-            <li
-              className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
-              onClick={() => handleDeleteMeeting(selectedMeeting)}
-            >
-              <BsFillEnvelopeAtFill />
-              <span>Delete</span>
-            </li>
-            </>
-              )
-              }
-              <li
               className="py-2 px-4 hover:bg-gray-200 cursor-pointer text-[#697e89] flex justify-start items-center gap-2"
               onClick={() => handleShareMeeting(selectedMeeting)}
             >
@@ -617,15 +646,14 @@ const MeetingTab = ({
         />
       )}
 
-       {/* Participant or Moderator Modal */}
-       {isParticipantModalOpen && (
+      {/* Participant or Moderator Modal */}
+      {isParticipantModalOpen && (
         <MeetingParticipantModal
           title={modalTitle}
           data={participantData}
           onClose={() => setIsParticipantModalOpen(false)}
         />
       )}
-
 
       {/* Pagination */}
       {meetings.length >= 10 && (
@@ -637,8 +665,6 @@ const MeetingTab = ({
           />
         </div>
       )}
-
-
     </div>
   );
 };

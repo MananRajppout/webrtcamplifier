@@ -1,6 +1,5 @@
 const Project = require("../models/projectModel");
 const Meeting = require("../models/meetingModel");
-const Contact = require("../models/contactModel");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const LiveMeeting = require("../models/liveMeetingModel");
@@ -40,9 +39,10 @@ const getAllMeetings = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const { startDate, status, timeZone, moderator, search } = req.query;
+    const { startDate, status, timeZone, moderator, search, sortField, sortOrder } = req.query;
 
     const query = { projectId: req.params.projectId };
+
     if (startDate) {
       query.startDate = { $eq: new Date(startDate) };
     }
@@ -62,9 +62,20 @@ const getAllMeetings = async (req, res) => {
         { description: { $regex: search, $options: "i" } },
       ];
     }
+
+      // Default sort: Meetings that have not occurred yet
+      const defaultSort = { startDate: -1 };
+
+      // Dynamic sort based on query
+      const sortOptions = {};
+      if (sortField && sortOrder) {
+        sortOptions[sortField] = sortOrder === "asc" ? 1 : -1;
+      }
+
     // Find all meetings that match the projectId with pagination
     const meetings = await Meeting.find(query)
       .populate("moderator")
+      .sort(Object.keys(sortOptions).length ? sortOptions : defaultSort)
       .skip(skip)
       .limit(limit);
 
@@ -212,74 +223,7 @@ const editMeeting = async (req, res) => {
   }
 };
 
-// const bulkUploadMeeting = async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ message: "No file uploaded" });
-//     }
 
-//     // Read the uploaded Excel file
-//     const workbook = XLSX.readFile(req.file.path);
-//     const sheetName = workbook.SheetNames[0];
-//     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-//     const successResults = [];
-//     const errorResults = [];
-
-//     for (const [index, row] of sheetData.entries()) {
-//       try {
-//         // Validate the projectId
-//         const project = await Project.findById(row.projectId);
-//         if (!project) {
-//           throw new Error(`Project not found for projectId: ${row.projectId}`);
-//         }
-
-//         // Prepare meeting data
-//         const meetingData = {
-//           projectId: row.projectId,
-//           title: row.title,
-//           description: row.description || '',
-//           startDate: row.startDate ? new Date(row.startDate) : null,
-//           startTime: row.startTime || null,
-//           moderator: row.moderator ? row.moderator.split(',').map(id => id.trim()) : [],
-//           timeZone: row.timeZone,
-//           duration: row.duration,
-//           ongoing: row.ongoing === 'true',
-//           enableBreakoutRoom: row.enableBreakoutRoom === 'true',
-//           meetingPasscode: project.projectPasscode, // Set from project
-//           status: row.status || 'Draft',
-//         };
-
-//         // Create a new meeting
-//         const newMeeting = new Meeting(meetingData);
-//         const savedMeeting = await newMeeting.save();
-
-//         // Add to success results
-//         successResults.push({
-//           row: index + 1,
-//           meetingId: savedMeeting._id,
-//           message: 'Meeting created successfully',
-//         });
-//       } catch (error) {
-//         // Add to error results
-//         errorResults.push({
-//           row: index + 1,
-//           error: error.message,
-//         });
-//       }
-//     }
-
-//     // Respond with results
-//     res.status(200).json({
-//       message: 'Bulk upload processed',
-//       successResults,
-//       errorResults,
-//     });
-//   } catch (error) {
-//     console.error("Error in bulkUploadMeeting:", error);
-//     res.status(500).json({ message: "Internal Server Error", error: error.message });
-//   }
-// };
 
 const bulkUploadMeeting = async (req, res) => {
   try {
