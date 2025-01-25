@@ -205,7 +205,7 @@ const getAllProjects = async (req, res) => {
     limit = 10,
     search = "",
     startDate,
-    endDate,
+   
     status,
     tag,
     role,
@@ -227,7 +227,7 @@ const getAllProjects = async (req, res) => {
             {
               $or: [
                 { createdBy: id },
-                { members: { $elemMatch: { email: userEmail } } }, // Use $elemMatch for matching userEmail
+                { members: { $elemMatch: { email: userEmail } } }, 
               ],
             },
             {
@@ -242,9 +242,7 @@ const getAllProjects = async (req, res) => {
     if (startDate) {
       searchQuery.startDate = { $gte: new Date(startDate) };
     }
-    if (endDate) {
-      searchQuery.endDate = { $lte: new Date(endDate) };
-    }
+  
     if (status) {
       searchQuery.status = status;
     }
@@ -262,27 +260,26 @@ const getAllProjects = async (req, res) => {
       .limit(parseInt(limit));
 
     // Calculate cumulative minutes for each project
-    const projectsWithMinutes = await Promise.all(
-      projects.map(async (project) => {
-        // Find related meetings
-        const meetings = await Meeting.find({ projectId: project._id });
+    // const projectsWithMinutes = await Promise.all(
+    //   projects.map(async (project) => {
+    //     // Find related meetings
+    //     const meetings = await Meeting.find({ projectId: project._id });
 
-        // Find associated live meetings and calculate cumulative duration
-        const liveMeetings = await LiveMeeting.find({
-          meetingId: { $in: meetings.map((meeting) => meeting._id) },
-        });
+    //     // Find associated live meetings and calculate cumulative duration
+    //     const liveMeetings = await LiveMeeting.find({
+    //       meetingId: { $in: meetings.map((meeting) => meeting._id) },
+    //     });
 
-        const cumulativeMinutes = liveMeetings.reduce(
-          (acc, liveMeeting) => acc + (liveMeeting.duration || 0),
-          0
-        );
+    //     // const cumulativeMinutes = liveMeetings.reduce(
+    //     //   (acc, liveMeeting) => acc + (liveMeeting.duration || 0),
+    //     //   0
+    //     // );
 
-        return {
-          ...project.toObject(),
-          cumulativeMinutes,
-        };
-      })
-    );
+    //     return {
+    //       project
+    //     };
+    //   })
+    // );
 
     const totalDocuments = await Project.countDocuments(searchQuery); // Total number of documents matching the criteria
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
@@ -291,7 +288,7 @@ const getAllProjects = async (req, res) => {
       page: parseInt(page),
       totalPages,
       totalDocuments,
-      projects: projectsWithMinutes,
+      projects
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

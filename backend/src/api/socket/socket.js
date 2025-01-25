@@ -12,6 +12,7 @@ const PollResponse = require("../models/pollResponseModel.js");
 const { Parser } = require('json2csv');
 const AWS = require('aws-sdk');
 const dotenv = require("dotenv");
+const Project = require("../models/projectModel.js");
 dotenv.config();
 
 // Configure AWS S3
@@ -1468,42 +1469,6 @@ const setupSocket = (server) => {
       }
     });
 
-    // socket.on("get-participant-responses", async ({ activePollId, participantId }, callback) => {
-    //   try {
-    //     console.log('activePollId',activePollId,'participantId',participantId)
-
-    //     const query = participantId
-    //       ? { activePollId, participantId }
-    //       : { activePollId };
-    
-    //     const responses = await PollResponse.find(query).populate({
-    //   path: "responses.questionId", // Populating questionId
-    //   select: "question", // Selecting the question field
-    // });
-
-    //     console.log('responses',responses)
-    
-    //     if (!responses.length) {
-    //       return callback({
-    //         success: false,
-    //         message: participantId
-    //           ? `No responses found for participant ${participantId}`
-    //           : "No responses found",
-    //       });
-    //     }
-    
-    //     callback({
-    //       success: true,
-    //       responses,
-    //     });
-    //   } catch (error) {
-    //     console.error("Error fetching participant responses:", error);
-    //     callback({
-    //       success: false,
-    //       message: "Error fetching responses",
-    //     });
-    //   }
-    // });
     
 
     socket.on('save-poll-results-csv', async ({ pollResult, uploaderEmail, meetingId, projectId, role, addedBy }, callback) => {
@@ -1623,19 +1588,46 @@ const setupSocket = (server) => {
           liveMeeting.observerList[observerIndex].leavingTime = Date.now();
           liveMeeting.observerList[observerIndex].status = "offline";
         }
-
       }
 
       if (userDetails?.role == "Moderator" && !userDetails.isTechHost) {
         liveMeeting.isMeetindEnded = true;
         liveMeeting.endTime = Date.now();
-        liveMeeting.duration = (((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime))) / 1000) / 60;
+        liveMeeting.duration = Math.ceil((((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime))) / 1000) / 60);
+
+        console.log('duration', (((new Date(liveMeeting.endTime)) - (new Date(liveMeeting.startTime))) / 1000) / 60)
         liveMeeting.moderator.endTime = Date.now();
         liveMeeting.moderator.status = "offline";
       }
 
-
+      console.log('live meeting', liveMeeting)
       await liveMeeting.save();
+
+      try {
+        // Find the Meeting document
+        const meeting = await Meeting.findById(liveMeeting.meetingId);
+        if (!meeting) {
+          console.error("Meeting not found");
+          return;
+        }
+    
+        // Find the Project document
+        const project = await Project.findById(meeting.projectId);
+        if (!project) {
+          console.error("Project not found");
+          return;
+        }
+    
+        // Update cumulativeMinutes in the Project document
+        const cumulativeMinutes = parseInt(project.cumulativeMinutes || "0", 10);
+        project.cumulativeMinutes = (cumulativeMinutes + Math.round(liveMeeting.duration)).toString();
+    
+        await project.save();
+        console.log(`Updated cumulativeMinutes for project ${project._id}: ${project.cumulativeMinutes}`);
+      } catch (error) {
+        console.error("Error updating cumulativeMinutes in the project:", error);
+      }
+
 
       const fullParticipantList = [
         liveMeeting.moderator,

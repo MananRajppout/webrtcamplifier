@@ -237,7 +237,7 @@ const ProjectTable = ({
                   </TableData>
 
                   <TableData>
-                    {project?.cumulativeMinutes?.toFixed(0)}
+                    {project?.cumulativeMinutes}
                   </TableData>
 
                   <td className="flex justify-between items-center gap-2 relative">

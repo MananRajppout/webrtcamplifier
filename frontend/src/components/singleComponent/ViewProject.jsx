@@ -85,7 +85,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     useState(false);
   const [uploadResults, setUploadResults] = useState(null);
   const [rejectedData, setRejectedData] = useState([]);
-
+console.log('localProject state', localProjectState)
   // *Shared functions
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -463,6 +463,7 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
     setIsAddMeetingModalOpen(false);
   };
 
+  console.log("meetings", meetings)
   // * use effects
   useEffect(() => {
     fetchMeetings(meetingPage);
@@ -539,6 +540,13 @@ const ViewProject = ({ project, onClose, user, fetchProjects }) => {
             </p>
             
             <ParagraphBlue2 children={localProjectState?.status} />
+          </div>
+          <div className="flex justify-start items-center gap-3 sm:gap-5">
+            <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
+            Cumulative Minutes:
+            </p>
+            
+            <ParagraphBlue2 children={localProjectState?.cumulativeMinutes} />
           </div>
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <p className=" md:text-custom-dark-blue-1 text-base font-semibold sm:text-lg">
