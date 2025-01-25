@@ -135,11 +135,18 @@ const createProjectByExternalAdmin = async (req, res) => {
       await ProjectForm.findByIdAndDelete(uniqueId, { session });
     }
 
+    // Fetch the newly created project with populated fields
+    const project = await Project.findById(savedProject._id)
+      .populate("members.userId", "firstName lastName addedDate lastUpdatedOn")
+      .populate("tags", "name description color")
+      .session(session);
+
     await session.commitTransaction();
     session.endSession();
     res.status(201).json({
       message: "Project saved successfully",
       projectId: savedProject._id,
+      project
     });
   } catch (error) {
     await session.abortTransaction();

@@ -92,7 +92,6 @@ const Payment = () => {
             <tr className="shadow-[0px_0px_26px_#00000029] w-full">
               <th className="px-4 py-2 text-left font-medium text-gray-700">Amount</th>
               <th className="px-4 py-2 text-left font-medium text-gray-700">Status</th>
-              <th className="px-4 py-2 text-left font-medium text-gray-700">Project</th>
               <th className="px-4 py-2 text-left font-medium text-gray-700">Payment Date</th>
             </tr>
           </thead>
@@ -108,7 +107,6 @@ const Payment = () => {
                 <tr key={payment._id} className="shadow-[0px_0px_26px_#00000029] w-full">
                   <td className="px-4 py-2">${payment.amount }</td>
                   <td className="px-4 py-2">{payment.status}</td>
-                  <td className="px-4 py-2">{payment.projectId ? payment.projectId.name : "N/A"}</td>
                   <td className="px-4 py-2">
             {new Intl.DateTimeFormat("en-GB", {
               day: "2-digit",
