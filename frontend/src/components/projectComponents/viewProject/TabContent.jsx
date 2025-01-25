@@ -203,72 +203,7 @@ const TabContent = ({
                 onClick={setIsAddPollModalOpen}
               />
 
-              {/* <Button
-                children={"Add Poll"}
-                className="px-5 py-1.5 rounded-xl"
-                variant="secondary"
-                onClick={handleOpenPollDropdown}
-              /> */}
-              {/* {isPollDropdownOpen && (
-                <div className="absolute top-9 -left-20 bg-white border rounded shadow-lg p-2">
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsSingleChoiceModalOpen(true)}
-                  >
-                    <MdOutlineRadioButtonChecked />
-                    <span className="ml-2">Single choice</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsMultipleChoiceModalOpen(true)}
-                  >
-                    <FaCheckSquare />
-                    <span className="ml-2">Multiple choice</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsMatchingModalOpen(true)}
-                  >
-                    <TbArrowsShuffle />
-                    <span className="ml-2">Matching</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsRankOrderModalOpen(true)}
-                  >
-                    <MdBarChart />
-                    <span className="ml-2">Rank order</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsShortAnswerModalOpen(true)}
-                  >
-                    <HiMiniBars2 />
-                    <span className="ml-2">Short answer</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsLongAnswerModalOpen(true)}
-                  >
-                    <HiMiniBars4 />
-                    <span className="ml-2">Long answer</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsBlankModalOpen(true)}
-                  >
-                    <IoRemoveOutline />
-                    <span className="ml-2">Fill in the blank</span>
-                  </div>
-                  <div
-                    className="flex items-center p-2 cursor-pointer"
-                    onClick={() => setIsRatingModalOpen(true)}
-                  >
-                    <FaStarHalfAlt />
-                    <span className="ml-2">Rating scale</span>
-                  </div>
-                </div>
-              )} */}
+              
             </div>)}
           </div>
           <div className="border-[0.5px] border-solid border-custom-dark-blue-1 rounded-xl h-[300px] overflow-y-scroll mt-2">

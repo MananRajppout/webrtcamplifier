@@ -57,19 +57,6 @@ const MeetingTab = ({
     setIsParticipantModalOpen(true);
   };
 
-  const handleModeratorClick = (moderators, title) => {
-    setModalTitle(`Moderators of ${title}`);
-    setParticipantData(
-      moderators.map((moderator) => ({
-        name: moderator.name,
-        email: moderator.email,
-        joiningTime: moderator.joiningTime,
-        leavingTime: moderator.leavingTime,
-      }))
-    );
-    setIsParticipantModalOpen(true);
-  };
-
 
   const handleClickOutside = (event) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -376,7 +363,7 @@ const MeetingTab = ({
               <TableHead>Time Zone</TableHead>
               <TableHead>Moderator</TableHead>
               <TableHead>Participant Count</TableHead>
-              <TableHead>Moderator Count</TableHead>
+              <TableHead>Observer Count</TableHead>
               <TableHead>Action</TableHead>
               <TableHead>Meeting Minutes</TableHead>
             </tr>
@@ -393,9 +380,14 @@ const MeetingTab = ({
                   day: "numeric",
                 })} ${convertTo12HourFormat(meeting?.startTime)}`}</td>
                 <TableData>{meeting?.timeZone}</TableData>
-                <td className="px-3 py-1 text-left text-[12px]  font-medium text-custom-dark-blue-1">
-                  {meeting?.liveMeetings[0]?.moderator?.name}
-                </td>
+                <td className="px-3 py-1 text-left text-[12px] font-medium text-custom-dark-blue-1">
+  {meeting?.moderator?.map((mod, index) => (
+    <span key={index}>
+      {mod?.firstName} {mod?.lastName}
+      {index < meeting?.moderator.length - 1 && ", "}
+    </span>
+  ))}
+</td>
                 <td
                 className="px-3 py-1 text-left text-[12px] font-medium text-blue-500 cursor-pointer"
                 onClick={() =>
