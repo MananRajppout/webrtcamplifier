@@ -81,6 +81,10 @@ const projectFormSchema = new Schema(
         type: String,
         default: "",
       },
+      emailSent:{
+        type: String,
+        default: "Pending"
+      }
     },
   },
   {

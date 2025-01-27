@@ -41,6 +41,7 @@ const userRoleRoutes = require("./src/api/routes/userJoinMeetRoute.js");
 const userRoutes = require("./src/api/routes/userMessRoutes.js");
 const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
 const processOverduePayments = require("./src/api/cronJob/overduePaymentProcess.js");
+const processIncompleteFormSent = require("./src/api/cronJob/incompleteFormDataEmail.js");
 app.use("/api", userRoleRoutes);
 
 // Import other route files
@@ -96,6 +97,7 @@ app.use("/api", uploadFileRoutes);
 cron.schedule("* * * * *", async () => {
   console.log("Executing the overdue payment processor...");
   await processOverduePayments();
+  await processIncompleteFormSent()
 });
 
 // Start the server
