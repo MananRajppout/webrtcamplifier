@@ -71,7 +71,14 @@ const userSchema = new Schema({
   credits:{
     type: String,
     default: "0"
-  }
+  },
+  stripeCustomerId: {
+    type: String,
+  },
+  stripePaymentMethodId: {
+    type: String,
+  },
+  
 
 }, { timestamps: true });
 

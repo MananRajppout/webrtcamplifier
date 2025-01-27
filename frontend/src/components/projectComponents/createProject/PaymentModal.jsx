@@ -1,5 +1,6 @@
 import Button from '@/components/shared/button';
 import PaymentForm from '@/components/stripe/paymentForm';
+import { useGlobalContext } from '@/context/GlobalContext';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import axios from 'axios';
@@ -13,8 +14,8 @@ const stripePromise = loadStripe(
 const PaymentModal = ({ userId, setPaymentStatus, amount, credits, onClose}) => {
   const [clientSecret, setClientSecret] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
   const [paymentId, setPaymentId] = useState("");
+  const { user } = useGlobalContext()
 
   const packages = [
     { hours: 1, rate: 150, description: "1 Hour: $150.00" },
@@ -34,15 +35,32 @@ const PaymentModal = ({ userId, setPaymentStatus, amount, credits, onClose}) => 
     0
   );
 
- 
-
+  useEffect(() => {
+    const createCustomerIfNeeded = async () => {
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create-stripe-customer`,
+          { userId, email: user?.email }
+        );
+  
+        if (response.status === 201) {
+          console.log("Customer created successfully:", response.data.stripeCustomerId);
+        }
+      } catch (error) {
+        console.error("Error creating customer:", error);
+      }
+    };
+  
+    createCustomerIfNeeded();
+  }, [userId]);
+  
   useEffect(() => {
     const createPaymentIntent = async () => {
       try {
         setIsLoading(true);
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create-payment-intent`,
-          { amount }
+          { amount: totalPrice }
         );
         if (response.status === 201) {
           setClientSecret(response?.data?.clientSecret);
@@ -55,7 +73,28 @@ const PaymentModal = ({ userId, setPaymentStatus, amount, credits, onClose}) => 
     };
 
     createPaymentIntent();
-  }, [amount]);
+  }, [totalPrice]);
+
+  // useEffect(() => {
+  //   const createPaymentIntent = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await axios.post(
+  //         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/create-payment-intent`,
+  //         { amount }
+  //       );
+  //       if (response.status === 201) {
+  //         setClientSecret(response?.data?.clientSecret);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error creating payment intent:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   createPaymentIntent();
+  // }, [amount]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">

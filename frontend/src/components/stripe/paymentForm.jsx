@@ -8,9 +8,9 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amo
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     if (!stripe || !elements) {
       toast.error("Stripe is not loaded yet. Please try again.");
       return;
@@ -27,6 +27,7 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amo
           payment_method: {
             card: cardElement,
           },
+          setup_future_usage: "off_session",
         }
       );
       if (error) {
@@ -50,6 +51,7 @@ const PaymentForm = ({ clientSecret, userId, setPaymentId, setPaymentStatus, amo
           amount,
           status: "Completed",
           paymentIntent: paymentIntent,
+          paymentMethodId: paymentIntent.payment_method, 
           totalHours
         };
        

@@ -12,7 +12,7 @@ const { default: mongoose } = require("mongoose");
 const app = express();
 const server = http.createServer(app);
 const Events  = require('events');
-
+const cron = require("node-cron");
 const io = setupSocket(server);
 const EventsEmitter = new Events();
 
@@ -40,6 +40,7 @@ const userRoleRoutes = require("./src/api/routes/userJoinMeetRoute.js");
 // Import routes
 const userRoutes = require("./src/api/routes/userMessRoutes.js");
 const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
+const processOverduePayments = require("./src/api/cronJob/overduePaymentProcess.js");
 app.use("/api", userRoleRoutes);
 
 // Import other route files
@@ -90,6 +91,12 @@ app.use(
 
 // Use the user routes
 app.use("/api", uploadFileRoutes);
+
+// Cron job to run every minute
+cron.schedule("* * * * *", async () => {
+  console.log("Executing the overdue payment processor...");
+  await processOverduePayments();
+});
 
 // Start the server
 const PORT = process.env.PORT || 8008;
