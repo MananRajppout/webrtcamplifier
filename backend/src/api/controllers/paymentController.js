@@ -191,10 +191,54 @@ const getPaymentDataByUserId = async (req, res) => {
   }
 };
 
+const updateCreditCard =  async (req, res) => {
+  try {
+    const { userId, paymentMethodId } = req.body;
+
+    if (!userId || !paymentMethodId) {
+      return res.status(400).json({ error: "User ID and Payment Method ID are required." });
+    }
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    console.log("user", user)
+
+    // Update the payment method in Stripe
+    await stripe.paymentMethods.attach(paymentMethodId, {
+      customer: user.stripeCustomerId,
+    });
+
+    console.log("attach done")
+
+    // Set the new payment method as the default for future charges
+    await stripe.customers.update(user.stripeCustomerId, {
+      invoice_settings: { default_payment_method: paymentMethodId },
+    });
+
+    console.log("update done")
+    // Update the user's payment method ID in the database
+    user.stripePaymentMethodId = paymentMethodId;
+    await user.save();
+
+    console.log("updated user", user)
+
+    res.status(200).json({ message: "Credit card updated successfully." });
+  } catch (error) {
+    console.error("Error updating credit card info:", error);
+    res.status(500).json({ error: "Failed to update credit card info." });
+  }
+}
+
+
 module.exports = {
   createPaymentIntent,
   savePayment,
   updatePaymentProjectId,
   getPaymentDataByUserId,
   createStripeCustomer,
+  updateCreditCard
 };

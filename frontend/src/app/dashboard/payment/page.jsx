@@ -2,9 +2,12 @@
 import Button from '@/components/shared/button';
 import Pagination from '@/components/shared/Pagination';
 import AddPaymentModal from '@/components/singleComponent/AddPaymentModal';
+import UpdateCreditCardModal from '@/components/singleComponent/UpdateCreditCardModal';
+import UpdateCreditCardWrapper from '@/components/singleComponent/UpdateCreditCardWrapper';
 import { useGlobalContext } from '@/context/GlobalContext'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
+import { GrUpdate } from 'react-icons/gr';
 import { MdAdd } from 'react-icons/md';
 
 const Payment = () => {
@@ -14,6 +17,7 @@ const Payment = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
+  const [isUpdateCreditCardModalOpen, setIsUpdateCreditCardModalOpen] = useState(false);
   useEffect(() => {
     if (user?._id) {
       fetchPaymentData(page);
@@ -50,6 +54,15 @@ const Payment = () => {
     setIsAddPaymentModalOpen(false);
   };
 
+  const handleOpenUpdateCreditCardModal = () => {
+    setIsUpdateCreditCardModalOpen(true)
+  }
+  
+  const handleUpdateCreditCardModalClose = () => {
+    setIsUpdateCreditCardModalOpen(false)
+  }
+  
+
   return (
     <div className="my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-center items-center">
     {/* Navbar */}
@@ -61,7 +74,26 @@ const Payment = () => {
         </div>
          {/* right div */}
          <div className="flex justify-end items-center gap-2">
+          <div>
+          <Button
+              children="Update Credit Card"
+              type="submit"
+              variant="default"
+              icon={<GrUpdate />}
+              className="rounded-xl text-center shadow-[0px_3px_6px_#2976a54d] hidden md:flex w-[200px] py-3"
+              onClick={handleOpenUpdateCreditCardModal}
+            />
             <Button
+              children="."
+              type="submit"
+              variant="default"
+              icon={<GrUpdate />}
+              className="rounded-xl text-center py-3 mr-2 shadow-[0px_3px_6px_#2976a54d] md:hidden block pr-2 pl-3"
+              onClick={handleOpenUpdateCreditCardModal}
+            />
+          </div>
+          <div>
+          <Button
               children="Add new Payment"
               type="submit"
               variant="default"
@@ -77,6 +109,7 @@ const Payment = () => {
               className="rounded-xl text-center py-3 mr-2 shadow-[0px_3px_6px_#2976a54d] md:hidden block pr-2 pl-3"
               onClick={handleOpenAddPaymentModal}
             />
+          </div>
           </div>
       </div>
     </div>
@@ -140,6 +173,14 @@ const Payment = () => {
         userId={user._id}
         onClose={handleModalClose}
         fetchPaymentData={fetchPaymentData}
+        />
+      )
+    }
+    {
+      isUpdateCreditCardModalOpen && (
+        <UpdateCreditCardWrapper
+        userId={user._id}
+        onClose={handleUpdateCreditCardModalClose}
         />
       )
     }
