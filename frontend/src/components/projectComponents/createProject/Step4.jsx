@@ -1,10 +1,11 @@
 import Button from "@/components/shared/button";
-import React, { use, useEffect, useState } from "react";
+import React, {  useEffect, useState } from "react";
 import PaymentModal from "./PaymentModal";
 import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import ConfirmationModal from "@/components/shared/ConfirmationModal";
 
 const Step4 = ({ formData, updateFormData, uniqueId }) => {
   const [credits, setCredits] = useState(Array(5).fill(0));
@@ -13,12 +14,14 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const { user } = useGlobalContext();
   const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false)
+  const [isSetUpModalOpen, setIsSetUpModalOpen] = useState(false)
+  const [createdProject, setCreatedProject] = useState(null)
   const router = useRouter()
 
   useEffect(() => {
     if (paymentStatus === "succeeded") {
       setIsPaymentModalOpen(false);
-      router.push("/dashboard/project")
     }
   }, [paymentStatus]);
 
@@ -72,6 +75,8 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
 
       if (response.status === 201) {
         toast.success("Project created successfully!");
+        setIsConfirmationModalOpen(true)
+        setCreatedProject(response?.data?.project)
       } else {
         console.error("Unexpected response:", response);
         toast.error("Failed to create project. Please try again.");
@@ -304,6 +309,33 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
           credits={credits}
           onClose={() => {
             setIsPaymentModalOpen(false);
+          }}
+        />
+      )}
+      {isConfirmationModalOpen && (
+        <ConfirmationModal
+          heading="Project Created"
+          text="Do you want to Set Up your project now?"
+          onCancel={() => {
+            setIsConfirmationModalOpen(false);
+            router.push("/dashboard/project");
+          }}
+          onYes={() => {
+            setIsConfirmationModalOpen(false);
+            setIsSetUpModalOpen(true)
+          }}
+        />
+      )}
+      {isSetUpModalOpen && (
+        <ConfirmationModal
+          heading="Set Up your Project"
+          text={`Your Project Name is ${createdProject.name}. Do you want to go to project table to set it?`}
+          onCancel={() => {
+            setIsSetUpModalOpen(false);
+            router.push("/dashboard/project");
+          }}
+          onYes={() => {
+            router.push("/dashboard/project");
           }}
         />
       )}
