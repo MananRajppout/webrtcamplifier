@@ -885,6 +885,46 @@ const emailProjectInfo = async (req, res) => {
   }
 };
 
+const getCreditBalance = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Step 1: Fetch the user details
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Step 2: Find all projects created by this user
+    const projects = await Project.find({ createdBy: userId });
+
+    // Step 3: Calculate the total cumulative minutes used in all projects
+    let totalMinutesUsed = 0;
+    projects.forEach((project) => {
+      if (project.cumulativeMinutes) {
+        totalMinutesUsed += parseInt(project.cumulativeMinutes, 10) || 0;
+      }
+    });
+
+    // Step 4: Calculate remaining credits
+    const userCredits = parseInt(user.credits, 10) || 0;
+    const remainingCredits = userCredits - totalMinutesUsed;
+
+    // Step 5: Return the remaining credits
+    return res.status(200).json({
+      remainingCredits,
+      totalMinutesUsed,
+      userCredits,
+      projectsCount: projects.length,
+    });
+  } catch (error) {
+    console.error("Error calculating remaining credits:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+
+}
+
+
 module.exports = {
   searchProjectsByFirstName,
   createProject,
@@ -906,4 +946,5 @@ module.exports = {
   getProjectByUserId,
   saveProgress,
   emailProjectInfo,
+  getCreditBalance
 };

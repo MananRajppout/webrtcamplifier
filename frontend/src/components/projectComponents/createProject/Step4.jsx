@@ -1,5 +1,5 @@
 import Button from "@/components/shared/button";
-import React, {  useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import PaymentModal from "./PaymentModal";
 import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
@@ -7,24 +7,23 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import ConfirmationModal from "@/components/shared/ConfirmationModal";
 
-const Step4 = ({ formData, updateFormData, uniqueId }) => {
+const Step4 = ({ formData, updateFormData, uniqueId, remainingCredits }) => {
   const [credits, setCredits] = useState(Array(5).fill(0));
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const { user } = useGlobalContext();
   const [paymentStatus, setPaymentStatus] = useState("pending");
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false)
-  const [isSetUpModalOpen, setIsSetUpModalOpen] = useState(false)
-  const [createdProject, setCreatedProject] = useState(null)
-  const router = useRouter()
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [isSetUpModalOpen, setIsSetUpModalOpen] = useState(false);
+  const [createdProject, setCreatedProject] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (paymentStatus === "succeeded") {
       setIsPaymentModalOpen(false);
     }
   }, [paymentStatus]);
-
 
   const packages = [
     { hours: 1, rate: 150, description: "1 Hour: $150.00" },
@@ -75,8 +74,8 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
 
       if (response.status === 201) {
         toast.success("Project created successfully!");
-        setIsConfirmationModalOpen(true)
-        setCreatedProject(response?.data?.project)
+        setIsConfirmationModalOpen(true);
+        setCreatedProject(response?.data?.project);
       } else {
         console.error("Unexpected response:", response);
         toast.error("Failed to create project. Please try again.");
@@ -90,8 +89,6 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Project Review</h2>
-
-      {/* Respondent Market and Language */}
       <div className="mb-4">
         <p className="text-sm font-medium">
           <strong>Respondent Market:</strong>{" "}
@@ -218,6 +215,8 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
         booked.
       </p>
 
+                {/* Available Credits */}
+      <h3 className="text-xl font-bold mt-6 mb-4">Available Credits: {remainingCredits} minutes</h3>
       {/* Purchase Credits */}
       <h3 className="text-xl font-bold mt-6 mb-4">Purchase Credits:</h3>
       <table className="w-full border-collapse border border-gray-300 text-sm">
@@ -322,7 +321,7 @@ const Step4 = ({ formData, updateFormData, uniqueId }) => {
           }}
           onYes={() => {
             setIsConfirmationModalOpen(false);
-            setIsSetUpModalOpen(true)
+            setIsSetUpModalOpen(true);
           }}
         />
       )}

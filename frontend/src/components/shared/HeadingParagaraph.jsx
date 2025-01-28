@@ -1,6 +1,10 @@
 import React from 'react'
 
 const HeadingParagaraph = ({heading, paragraph}) => {
+
+
+
+
   return (
     <div>
         <h1 className='text-lg font-semibold text-custom-dark-blue-1'>{heading}</h1>

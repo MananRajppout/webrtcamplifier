@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Step1 from "@/components/projectComponents/createProject/Step1";
 import Step2 from "@/components/projectComponents/createProject/Step2";
 import Step3 from "@/components/projectComponents/createProject/Step3";
@@ -34,7 +34,25 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useGlobalContext()
   const [stepValid, setStepValid] = useState(true);
+  const [remainingCredits, setRemainingCredits] = useState(null)
 
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (user?._id) {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/remaining-credits/${user._id}`
+          );
+          setRemainingCredits(response.data.remainingCredits)
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [user?._id]);
 
   const updateFormData = (updates) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -142,6 +160,7 @@ const isNextButtonDisabled = () => {
           updateFormData={updateFormData}
           uniqueId={uniqueId}
           setStepValid={setStepValid}
+          remainingCredits={remainingCredits}
         />
         <div className="flex justify-between mt-4">
           {currentStep > 0 && (

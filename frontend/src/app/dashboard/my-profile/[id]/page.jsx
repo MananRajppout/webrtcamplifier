@@ -1,23 +1,20 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
 import Image from "next/image";
 import userImage from "../../../../../public/placeholder-image.png";
 import realUserImage from "../../../../../public/user.jpg";
 import { RiPencilFill } from "react-icons/ri";
 import { MdLockReset } from "react-icons/md";
 import { IoTrashSharp } from "react-icons/io5";
-import { FaBell } from "react-icons/fa";
 import PasswordModal from "@/components/singleComponent/PasswordModal";
-import DeleteModal from "@/components/singleComponent/DeleteModal";
-import NotificationModal from "@/components/singleComponent/NotificationModal";
 import HeadingParagaraph from "@/components/shared/HeadingParagaraph";
 import Link from "next/link";
 import Button from "@/components/shared/button";
 import { useGlobalContext } from "@/context/GlobalContext";
 import toast from "react-hot-toast";
 import ConfirmationModal from "@/components/shared/ConfirmationModal";
+import axios from "axios";
 
 const initialNotifications = [
   {
@@ -47,19 +44,39 @@ const initialNotifications = [
 ];
 
 const Page = () => {
- 
   const [showModal, setShowModal] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  // const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
-  // const [notifications, setNotifications] = useState(initialNotifications);
-  // const [userData, setUserData] = useState(null);
+  const { user, setUser } = useGlobalContext();
   const router = useRouter();
   const { id } = useParams();
- 
+  const [remainingCredits, setRemainingCredits] = useState(null);
+  const [isLoading, setIsLoading] = useState(false)
+  console.log("remainingCredits",remainingCredits)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        if (user?._id) {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/remaining-credits/${user._id}`
+          );
+          console.log("res", response.data);
+          setRemainingCredits(response.data.remainingCredits);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally{
+        setIsLoading(false)
+      }
+    };
+
+    fetchData();
+  }, [user?._id]);
+
   const handlePasswordChangeClick = () => {
     setShowModal(true);
   };
-  const {user, setUser}= useGlobalContext()
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -73,41 +90,23 @@ const Page = () => {
     setIsDeleteModalOpen(false);
   };
 
-  // const handleNotificationModalOpen = () => {
-  //   setIsNotificationModalOpen((prevState) => !prevState);
-  // };
-
-  // const markAllAsRead = () => {
-  //   setNotifications((prevNotifications) =>
-  //     prevNotifications.map((notification) => ({ ...notification, read: true }))
-  //   );
-  // };
-
-  // const deleteNotification = (id) => {
-  //   setNotifications((prevNotifications) =>
-  //     prevNotifications.filter((notification) => notification.id !== id)
-  //   );
-  // };
-
-  // const clearAllNotifications = () => {
-  //   setNotifications([]);
-  // };
 
   const deleteUser = async () => {
     try {
       const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/users/delete-by-id`,
         {
-          params: { id: id }, 
+          params: { id: id },
         }
       );
-      
+
       if (response.status === 200) {
         toast.success("User deleted successfully");
         setIsDeleteModalOpen(false);
-        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie =
+          "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         localStorage.clear();
-        setUser(null)
+        setUser(null);
         router.push("/register");
       } else {
         toast.error("Error deleting user");
@@ -118,10 +117,12 @@ const Page = () => {
     }
   };
 
-
-  // const unreadCount = notifications.filter(
-  //   (notification) => !notification.read
-  // ).length;
+  if(isLoading)
+  {
+    <div className="flex justify-center items-center min-h-screen">
+      <p>Loading</p>
+    </div>
+  }
 
   return (
     <div>
@@ -156,7 +157,6 @@ const Page = () => {
                 onClick={handleDeleteModalOpen}
                 className="rounded-xl w-[200px] text-center py-3 shadow-[0px_3px_6px_#FF66004D] cursor-pointer"
               />
-              
             </div>
           </div>
         </div>
@@ -194,15 +194,24 @@ const Page = () => {
                   heading="Email"
                   paragraph={user && user?.email}
                 />
+                <HeadingParagaraph
+                  heading="Remaining Credits"
+                  paragraph={`${remainingCredits} Min`}
+                />
               </div>
             </div>
           </div>
         </div>
         {showModal && <PasswordModal onClose={handleCloseModal} id={id} />}
         {isDeleteModalOpen && (
-          <ConfirmationModal onCancel={handleCloseDeleteModal} onYes={deleteUser} heading={'Delete Account'} text={'Are you sure you want to delete your account? All your data will be permanently deleted. This action cannot be undone.'}
+          <ConfirmationModal
+            onCancel={handleCloseDeleteModal}
+            onYes={deleteUser}
+            heading={"Delete Account"}
+            text={
+              "Are you sure you want to delete your account? All your data will be permanently deleted. This action cannot be undone."
+            }
           />
-
         )}
       </div>
       <div className="md:hidden my_profile_main_section_shadow bg-[#fafafb] bg-opacity-90 h-full min-h-screen flex flex-col justify-start items-center p-5 relative">
@@ -247,7 +256,7 @@ const Page = () => {
               <h1 className="text-xl md:text-2xl font-semibold text-custom-dark-blue-1 pt-10">
                 Personal Details
               </h1>
-              <div className="space-y-7 pt-7">
+              <div className="space-y-3 pt-7">
                 <HeadingParagaraph
                   heading="First Name"
                   paragraph={user && user?.firstName?.toUpperCase()}
@@ -259,6 +268,10 @@ const Page = () => {
                 <HeadingParagaraph
                   heading="Email"
                   paragraph={user && user.email}
+                />
+                <HeadingParagaraph
+                  heading="Remaining Credits"
+                  paragraph={`${remainingCredits} Min`}
                 />
               </div>
             </div>
@@ -289,7 +302,13 @@ const Page = () => {
         </div>
         {showModal && <PasswordModal onClose={handleCloseModal} id={id} />}
         {isDeleteModalOpen && (
-          <ConfirmationModal onCancel={handleCloseDeleteModal} onYes={deleteUser} heading={'Delete Account'} text={'Are you sure you want to delete your account? All your data will be permanently deleted. This action cannot be undone.'}
+          <ConfirmationModal
+            onCancel={handleCloseDeleteModal}
+            onYes={deleteUser}
+            heading={"Delete Account"}
+            text={
+              "Are you sure you want to delete your account? All your data will be permanently deleted. This action cannot be undone."
+            }
           />
         )}
       </div>
@@ -300,27 +319,3 @@ const Page = () => {
 export default Page;
 
 
-
-{/* <div className="relative">
-                <div
-                  className="rounded-xl bg-[#f3f4f5] text-black p-4 cursor-pointer"
-                  onClick={handleNotificationModalOpen}
-                >
-                  <FaBell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 w-5 h-5 bg-[#ff2b2b] text-white text-xs font-bold rounded-full text-center pt-0.5">
-                      {unreadCount}
-                    </span>
-                  )}
-                </div>
-                {isNotificationModalOpen && (
-                  <NotificationModal
-                    onClose={handleNotificationModalOpen}
-                    notifications={notifications}
-                    markAllAsRead={markAllAsRead}
-                    deleteNotification={deleteNotification}
-                    clearAllNotifications={clearAllNotifications}
-                    unreadCount={unreadCount}
-                  />
-                )}
-              </div> */}

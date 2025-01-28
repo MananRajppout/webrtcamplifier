@@ -26,6 +26,9 @@ module.exports = function (app) {
   // Project details form 
   app.post("/api/save-progress", controller.saveProgress)
   app.post("/api/email-project-info", controller.emailProjectInfo)
+
+  // Project
+  app.get("/api/remaining-credits/:userId", controller.getCreditBalance)
 };
 
 // for usage of this search Api
