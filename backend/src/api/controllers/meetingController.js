@@ -177,29 +177,7 @@ const deleteMeeting = async (req, res) => {
   }
 };
 
-const meetingStatusChange = async (req, res) => {
-  const { status, meetingId } = req.body;
-  try {
-    const data = await Meeting.findByIdAndUpdate(
-      meetingId,
-      { status },
-      { new: true, runValidators: true }
-    );
-    if (!data) {
-      return res.status(404).json({ message: "Meeting not found" });
-    }
-    return res.status(200).json({
-      message: "Meeting status updated successfully",
-      data,
-    });
-  } catch (error) {
-    console.error("Error updating meeting status:", error);
-    return res.status(500).json({
-      message: "Failed to update meeting status",
-      error: error.message,
-    });
-  }
-};
+
 
 const editMeeting = async (req, res) => {
   try {

@@ -239,35 +239,7 @@ const MeetingTab = ({
     closeModal();
   };
 
-  const handleStatusChange = async (e) => {
-    const newStatus = e.target.value;
 
-    try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/change-meeting-status`,
-        {
-          meetingId: selectedMeeting._id,
-          status: newStatus,
-        }
-      );
-
-      if (response.status === 200) {
-        toast.success("Meeting status updated successfully");
-        // Update local state
-        const updatedMeetings = localMeetingState.map((meeting) => {
-          if (meeting._id === selectedMeeting._id) {
-            return { ...meeting, status: newStatus };
-          }
-          return meeting;
-        });
-        setLocalMeetingState(updatedMeetings);
-        setSelectedMeeting({ ...selectedMeeting, status: newStatus });
-      }
-    } catch (error) {
-      console.error("Error updating meeting status:", error);
-      toast.error("Failed to update meeting status");
-    }
-  };
 
   const handleDuplicateMeeting = async (meeting) => {
     try {
@@ -439,9 +411,7 @@ const MeetingTab = ({
                 >
                   {meeting?.liveMeetings[0]?.observerList.length}
                 </td>
-                {/* <TableData>
-                  {meeting?.liveMeetings[0].observerList.length}
-                </TableData> */}
+                
                 <TableData>
                   <div className="flex flex-col justify-center items-center gap-2">
                     <button
@@ -493,31 +463,20 @@ const MeetingTab = ({
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-medium">General Information</h3>
-              <select
-                className="border rounded-lg text-white font-semibold px-4  py-2 bg-custom-teal outline-none"
-                onChange={handleStatusChange}
-                value={selectedMeeting.status}
-              >
-                <option value="Join">Join</option>
-                <option value="Scheduled">Scheduled</option>
-                <option value="Draft">Draft</option>
-                <option value="Complete">Complete</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="Closed">Closed</option>
-              </select>
-            </div>
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h3 className="font-medium">Meeting Title</h3>
-                <p>{selectedMeeting?.title}</p>
-              </div>
               <button
                 className="font-bold text-custom-teal"
                 onClick={() => handleEditMeeting(selectedMeeting)}
               >
                 Edit
               </button>
+             
+            </div>
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-medium">Meeting Title</h3>
+                <p>{selectedMeeting?.title}</p>
+              </div>
+              
             </div>
             <div>
               <h3 className="font-medium">Description</h3>
