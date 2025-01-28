@@ -1810,8 +1810,8 @@ const setupSocket = (server) => {
   <p>Best regards,<br>The Amplify Team</p>
 `;
 
-          // await sendEmail(userToCharge.email, emailSubject, emailBody);
-          await sendEmail("enayetflweb@gmail.com", emailSubject, emailBody);
+          await sendEmail(userToCharge.email, emailSubject, emailBody);
+          // await sendEmail("enayetflweb@gmail.com", emailSubject, emailBody);
 
           console.log(
             `Low credit alert email sent to user ${userToCharge._id} (${userToCharge.email})`
