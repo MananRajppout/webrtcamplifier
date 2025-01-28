@@ -49,8 +49,8 @@ const meetingSchema = new Schema({
   meetingPasscode: { type: String, required: true },
   status: {
     type: String,
-    enum: ['Draft', 'Active', 'Complete', 'Inactive', 'Closed', 'Join', 'Scheduled'],
-    default: 'Draft'
+    enum: ['Active', 'Complete', 'Scheduled'],
+    default: 'Scheduled'
   },
   
 }, { timestamps: true });

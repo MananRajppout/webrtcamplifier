@@ -1722,11 +1722,15 @@ const setupSocket = (server) => {
 
       try {
         // Find the Meeting document
-        const meeting = await Meeting.findById(liveMeeting.meetingId);
+        let meeting = await Meeting.findById(liveMeeting.meetingId);
         if (!meeting) {
           console.error("Meeting not found");
           return;
         }
+
+        meeting.status = "Complete";
+
+        await meeting.save();
 
         // Find the Project document
         const project = await Project.findById(meeting.projectId);
@@ -1743,6 +1747,32 @@ const setupSocket = (server) => {
           console.error(`User associate to project ${project._id} not found`);
           return;
         }
+
+           // Check all meetings within the project
+    const projectMeetings = await Meeting.find({ projectId: project._id });
+
+    const hasScheduledMeetings = projectMeetings.some(
+      (m) => m.status === "Scheduled"
+    );
+
+    if (!hasScheduledMeetings) {
+      // Send email about no active meetings
+      const emailSubject = "No Active Meetings in Your Project";
+      const emailBody = `
+        <p>Dear ${userToCharge.firstName},</p>
+        <p>We noticed that there are no active or scheduled meetings in your project "<strong>${project.name}</strong>".</p>
+        <p>If you do not add a new meeting within the next 7 days, the project will be automatically closed.</p>
+        <p>Please take action soon to keep your project active.</p>
+        <p>Thank you for using our service!</p>
+        <p>Best regards,<br>The Amplify Team</p>
+      `;
+
+      await sendEmail(userToCharge.email, emailSubject, emailBody);
+
+      console.log(
+        `No active meetings email sent to user ${userToCharge._id} (${userToCharge.email})`
+      );
+    }
 
         // Update cumulativeMinutes in the Project document
         const cumulativeMinutes = parseInt(
@@ -1796,12 +1826,10 @@ const setupSocket = (server) => {
           console.log(
             `User ${userToCharge._id} has an overdue  of  ${overdueMinutes} minutes.`
           );
-
-         
         }
 
-         // Notify the user if credits are below 120 minutes
-         if (userCredits < 120) {
+        // Notify the user if credits are below 120 minutes
+        if (userCredits < 120) {
           const emailSubject = "Low Credit Alert: Only 2 Hours Remaining";
           const emailBody = `
   <p>Dear ${userToCharge.firstName},</p>
@@ -1817,7 +1845,6 @@ const setupSocket = (server) => {
             `Low credit alert email sent to user ${userToCharge._id} (${userToCharge.email})`
           );
         }
-
       } catch (error) {
         console.error("Error updating overdue balance:", error);
       }
