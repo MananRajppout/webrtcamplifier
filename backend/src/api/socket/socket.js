@@ -15,6 +15,7 @@ const dotenv = require("dotenv");
 const Project = require("../models/projectModel.js");
 const User = require("../models/userModel.js");
 const Overdue = require("../models/overdue.js");
+const { sendEmail } = require("../../config/email.config.js");
 dotenv.config();
 
 // Configure AWS S3
@@ -1796,23 +1797,27 @@ const setupSocket = (server) => {
             `User ${userToCharge._id} has an overdue  of  ${overdueMinutes} minutes.`
           );
 
-          // Notify the user if credits are below 120 minutes
-          if (userCredits < 120) {
-            const emailSubject = "Low Credit Alert: Only 2 Hours Remaining";
-            const emailBody = `
-    <p>Dear ${userToCharge.firstName},</p>
-    <p>We noticed that your available credits are below 2 hours (120 minutes). Please recharge your credits to avoid being charged a premium rate for over-usage.</p>
-    <p>Thank you for using our service!</p>
-    <p>Best regards,<br>The Amplify Team</p>
-  `;
-
-            await sendEmail(userToCharge.email, emailSubject, emailBody);
-
-            console.log(
-              `Low credit alert email sent to user ${userToCharge._id} (${userToCharge.email})`
-            );
-          }
+         
         }
+
+         // Notify the user if credits are below 120 minutes
+         if (userCredits < 120) {
+          const emailSubject = "Low Credit Alert: Only 2 Hours Remaining";
+          const emailBody = `
+  <p>Dear ${userToCharge.firstName},</p>
+  <p>We noticed that your available credits are below 2 hours (120 minutes). Please recharge your credits to avoid being charged a premium rate for over-usage.</p>
+  <p>Thank you for using our service!</p>
+  <p>Best regards,<br>The Amplify Team</p>
+`;
+
+          // await sendEmail(userToCharge.email, emailSubject, emailBody);
+          await sendEmail("enayetflweb@gmail.com", emailSubject, emailBody);
+
+          console.log(
+            `Low credit alert email sent to user ${userToCharge._id} (${userToCharge.email})`
+          );
+        }
+
       } catch (error) {
         console.error("Error updating overdue balance:", error);
       }
