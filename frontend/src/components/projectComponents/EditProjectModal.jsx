@@ -9,7 +9,6 @@ const EditProjectModal = ({ onClose, project, onSave }) => {
     name: project?.name || "",
     description: project?.description || "",
     startDate: project?.startDate?.split('T')[0] || "", 
-  endDate: project?.endDate?.split('T')[0] || "",
     projectPasscode: project?.projectPasscode || "",
   });
   const handleInputChange = (e) => {
@@ -51,13 +50,7 @@ const EditProjectModal = ({ onClose, project, onSave }) => {
             value={formData.startDate}
             onChange={handleInputChange}
           />
-          <InputField
-            label="End Date"
-            type="date"
-            name="endDate"
-            value={formData.endDate}
-            onChange={handleInputChange}
-          />
+          
           <InputField
             label="Project Passcode"
             name="projectPasscode"

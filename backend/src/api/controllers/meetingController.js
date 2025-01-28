@@ -352,7 +352,6 @@ module.exports = {
   verifyModeratorMeetingPasscode,
   getMeetingById,
   deleteMeeting,
-  meetingStatusChange,
   editMeeting,
   bulkUploadMeeting,
 };
