@@ -1763,39 +1763,56 @@ const setupSocket = (server) => {
           createdBy: userToCharge._id,
         });
 
-        console.log("user projects", userProjects)
+        console.log("user projects", userProjects);
 
         const totalCumulativeMinutes = userProjects.reduce(
           (total, proj) => total + parseInt(proj.cumulativeMinutes || "0", 10),
           0
         );
 
-        console.log("totalCumulativeMinutes", totalCumulativeMinutes)
-
+        console.log("totalCumulativeMinutes", totalCumulativeMinutes);
 
         // Compare with user credits
         const userCredits = parseInt(userToCharge.credits || "0", 10);
-        
-        console.log("user credits", userCredits)
 
-        const overdueMinutes = Math.max(0,totalCumulativeMinutes - userCredits );
+        console.log("user credits", userCredits);
 
-        console.log("overdue minutes", overdueMinutes)
+        const overdueMinutes = Math.max(
+          0,
+          totalCumulativeMinutes - userCredits
+        );
+
+        console.log("overdue minutes", overdueMinutes);
 
         if (overdueMinutes > 0) {
-         
-            // Create a new overdue record
-            await Overdue.create({
-              userId: userToCharge._id,
-              overdueMinutes,
-              lastChecked: new Date(),
-            });
-          
+          // Create a new overdue record
+          await Overdue.create({
+            userId: userToCharge._id,
+            overdueMinutes,
+            lastChecked: new Date(),
+          });
 
           console.log(
             `User ${userToCharge._id} has an overdue  of  ${overdueMinutes} minutes.`
           );
-        } 
+
+          // Notify the user if credits are below 120 minutes
+          if (userCredits < 120) {
+            const emailSubject = "Low Credit Alert: Only 2 Hours Remaining";
+            const emailBody = `
+    <p>Dear ${userToCharge.firstName},</p>
+    <p>We noticed that your available credits are below 2 hours (120 minutes). Please recharge your credits to avoid being charged a premium rate for over-usage.</p>
+    <p>Thank you for using our service!</p>
+    <p>Best regards,<br>The Amplify Team</p>
+  `;
+
+            await sendEmail(userToCharge.email, emailSubject, emailBody);
+
+            console.log(
+              `Low credit alert email sent to user ${userToCharge._id} (${userToCharge.email})`
+            );
+          }
+        }
       } catch (error) {
         console.error("Error updating overdue balance:", error);
       }
