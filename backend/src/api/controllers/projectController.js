@@ -924,6 +924,42 @@ const getCreditBalance = async (req, res) => {
 
 }
 
+const getProjectMinutesUsage = async (req, res) => {
+  const { userId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  try {
+    // Step 1: Fetch the user details
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Step 2: Count total projects
+    const totalProjects = await Project.countDocuments({ createdBy: userId });
+
+    // Step 3: Calculate skip value for pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Step 4: Fetch paginated projects
+    const projects = await Project.find({ createdBy: userId })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    return res.status(200).json({
+      totalProjects, 
+      totalPages: Math.ceil(totalProjects / limit), 
+      currentPage: parseInt(page), 
+      pageSize: parseInt(limit),
+      projects, 
+    });
+  } catch (error) {
+    console.error("Error fetching projects", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+
 
 module.exports = {
   searchProjectsByFirstName,
@@ -946,5 +982,6 @@ module.exports = {
   getProjectByUserId,
   saveProgress,
   emailProjectInfo,
-  getCreditBalance
+  getCreditBalance,
+  getProjectMinutesUsage
 };
