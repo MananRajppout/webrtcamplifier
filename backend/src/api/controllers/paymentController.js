@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 const Payment = require("../models/paymentModel");
 const { default: mongoose } = require("mongoose");
 const User = require("../models/userModel");
+const { sendEmail } = require("../../config/email.config");
 dotenv.config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
@@ -126,6 +127,25 @@ const savePayment = async (req, res) => {
     // Commit the transaction
     await session.commitTransaction();
     session.endSession();
+
+    // Send email notification for successful payment
+    const emailSubject = `Payment ${status === "Completed" ? "Successful" : "Failed"}`;
+    const emailBody = `
+      <p>Dear ${user.firstName},</p>
+      <p>Your payment of <strong>$${amount.toFixed(2)}</strong> has been processed.</p>
+      <p>Status: <strong>${status}</strong></p>
+      ${status === "Completed" 
+        ? `<p>Your credits have been updated with <strong>${totalHours} hours</strong>.</p>` 
+        : `<p>Please try again or contact support for assistance.</p>`}
+      <p>Thank you for using our service!</p>
+      <p>Best regards,<br>The Amplify Team</p>
+    `;
+
+    // await sendEmail(user.email, emailSubject, emailBody);
+    await sendEmail("enayetflweb@gmail.com", emailSubject, emailBody);
+
+    console.log(`Payment ${status} email sent to ${user.email}`);
+
 
     res.status(201).json({ message: "Payment saved successfully", payment });
   } catch (error) {
