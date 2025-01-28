@@ -14,18 +14,33 @@ import toast from "react-hot-toast";
 import useSocketListen from "@/hooks/useSocketListen";
 
 const Page = () => {
+  const [meetingId, setMeetingId] = useState(null);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     image: null,
   });
-  const [imagePreview, setImagePreview] = useState(null); 
+  const [imagePreview, setImagePreview] = useState(null);
 
   const { socket } = useGlobalContext();
 
   const params = useParams();
-  const meetingId = params.id;
+ 
   const router = useRouter();
+
+
+  const fetchMeeting = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-latest/meeting/${params.id}`);
+      setMeetingId(response?.data?.meeting?._id)
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMeeting();
+  }, []);
 
   // Function to get the role based on the URL
   const getRoleFromUrl = () => {
@@ -55,42 +70,42 @@ const Page = () => {
     }
   };
 
-  useSocketListen("meeting-not-found", ()=> {
+  useSocketListen("meeting-not-found", () => {
     toast.error("Live Meeting not found");
   })
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const role = getRoleFromUrl(); 
+    const role = getRoleFromUrl();
 
- 
+
     // Emit socket event instead of making an API call
 
-    if(typeof window !== 'undefined'){
-      window.localStorage.setItem('email',formData.email);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('email', formData.email);
     }
-    
+
     // Prepare the image in Base64 format if it exists
-  let imageData = null;
-  if (formData.image) {
-    imageData = await convertImageToBase64(formData.image);
-  }
+    let imageData = null;
+    if (formData.image) {
+      imageData = await convertImageToBase64(formData.image);
+    }
 
-  // Emit socket event
-  socket.emit("participantWantToJoin", {
-    name: formData.fullName,
-    email: formData.email,
-    image: imageData, // Include the image in the expected format
-    role: role,
-    meetingId: meetingId,
-  });
+    // Emit socket event
+    socket.emit("participantWantToJoin", {
+      name: formData.fullName,
+      email: formData.email,
+      image: imageData, // Include the image in the expected format
+      role: role,
+      meetingId: meetingId,
+    });
 
-    
+
     // Listen for the response from the socket
     socket.on("participantJoinMeetingResponse", (response) => {
       if (response.message === "Participant added to waiting room") {
-        
+
         router.push(
           `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName
@@ -98,8 +113,8 @@ const Page = () => {
             formData.email
           )}&role=Participant`
         );
-      } else if (response.message === "Participant already in waiting room" || response.message === "Participant added to waiting room" ) {
-        
+      } else if (response.message === "Participant already in waiting room" || response.message === "Participant added to waiting room") {
+
         router.push(
           `/participant-waiting-room/${meetingId}?fullName=${encodeURIComponent(
             formData.fullName
@@ -117,29 +132,29 @@ const Page = () => {
         );
       } else if (response.message === "Meeting not found") {
         toast.error("Meeting not found");
-      }else {
+      } else {
         console.error("Error joining meeting:", response.message);
       }
     });
-};
+  };
 
- 
- // Helper function to convert the image to Base64
-const convertImageToBase64 = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      resolve({
-        fileBase64: reader.result, // Base64 string including MIME type
-        fileName: file.name, // Original file name
-      });
-    };
-    reader.onerror = (error) => {
-      reject(error);
-    };
-    reader.readAsDataURL(file);
-  });
-};
+
+  // Helper function to convert the image to Base64
+  const convertImageToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve({
+          fileBase64: reader.result, // Base64 string including MIME type
+          fileName: file.name, // Original file name
+        });
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   return (
     <div>

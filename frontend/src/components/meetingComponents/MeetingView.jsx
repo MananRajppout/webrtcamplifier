@@ -51,7 +51,7 @@ const MeetingView = ({
   const ModeratorType = searchParams.get("ModeratorType");
 
   const handleCopyParticipantLink = () => {
-    const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails._id}`;
+    const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meetingDetails.projectId}`;
 
     const textToCopy = `Meeting Link- ${meetingLink}`;
 
@@ -67,7 +67,7 @@ const MeetingView = ({
   };
 
   const handleCopyObserverLink = () => {
-    const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meetingDetails._id}`;
+    const meetingLink = `${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meetingDetails.projectId}`;
     const meetingPassword = `${meetingDetails.meetingPasscode}`;
     const textToCopy = `Meeting Link- ${meetingLink}\nMeeting Password - ${meetingPassword}`;
 
