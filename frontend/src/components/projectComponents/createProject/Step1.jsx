@@ -26,9 +26,21 @@ const Step1 = ({ formData, updateFormData, uniqueId }) => {
     }
   };
 
+  // const handleDateChange = (e) => {
+  //   updateFormData({ firstDateOfStreaming: e.target.value });
+  // };
+
+
   const handleDateChange = (e) => {
-    updateFormData({ firstDateOfStreaming: e.target.value });
+    const selectedDate = e.target.value;
+    if (selectedDate < today) {
+      toast.error("You cannot select a past date!");
+      return;
+    }
+    updateFormData({ firstDateOfStreaming: selectedDate });
   };
+
+  const today = new Date().toISOString().split("T")[0];
 
   return (
     <div>
@@ -80,6 +92,7 @@ const Step1 = ({ formData, updateFormData, uniqueId }) => {
             <input
               type="date"
               value={formData.firstDateOfStreaming || ""}
+              min={today} 
               onChange={handleDateChange}
               className="border p-2 rounded w-full"
             />
@@ -160,6 +173,7 @@ const Step1 = ({ formData, updateFormData, uniqueId }) => {
             <input
               type="date"
               value={formData.firstDateOfStreaming || ""}
+              min={today} 
               onChange={handleDateChange}
               className="border p-2 rounded w-full"
             />
