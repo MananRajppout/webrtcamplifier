@@ -19,7 +19,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
     ongoing: false,
     enableBreakoutRoom: false,
     moderator: [],
-    status: "Draft",
+    status: "Scheduled",
   });
   const [selectedTimeZone, setSelectedTimeZone] = useState(
     formData.timeZone || "UTC-12:00 International Date Line West"
