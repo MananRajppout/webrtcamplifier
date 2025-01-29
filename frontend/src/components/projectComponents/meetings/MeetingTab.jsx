@@ -154,8 +154,9 @@ const MeetingTab = ({
               toast.error(response.message);
             } else {
               const liveMeetingData = response.liveMeeting;
+              console.log(project._id,'Hello')
               window.open(
-                `/meeting/${meeting._id}?fullName=${encodeURIComponent(
+                `/before-meeting/${project._id}?fullName=${encodeURIComponent(
                   fullName
                 )}&role=Moderator&${
                   user.role == "AmplifyTechHost"

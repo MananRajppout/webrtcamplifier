@@ -119,6 +119,26 @@ const getAllMeetings = async (req, res) => {
   }
 };
 
+
+const getLatestMeeting = async (req, res) => {
+  try {
+    const projectId = req.params.projectId
+    // Find all meetings that match the projectId with pagination
+    const meeting = await Meeting.findOne({ projectId }).sort({ createdAt: -1 })
+
+    res.status(200).json({
+      success: true,
+      meeting
+    });
+  } catch (error) {
+    console.error("Error retrieving meetings:", error);
+    res.status(500).json({
+      message: "Failed to retrieve meetings",
+      error: error.message,
+    });
+  }
+};
+
 //Verify moderator meeting passcode
 const verifyModeratorMeetingPasscode = async (req, res) => {
   const { meetingId, passcode } = req.body;
@@ -354,4 +374,5 @@ module.exports = {
   deleteMeeting,
   editMeeting,
   bulkUploadMeeting,
+  getLatestMeeting
 };

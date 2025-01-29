@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Logo from "@/components/shared/Logo";
 import InputField from "@/components/shared/InputField";
 import joinMeetingImage from "../../../../public/join-meeting-edited.png";
@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import { useGlobalContext } from "@/context/GlobalContext";
 
 const page = () => {
+  const [meetingId, setMeetingId] = useState(null);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -24,7 +25,6 @@ const page = () => {
 
   const params = useParams();
   const router = useRouter();
-  const meetingId = params.id;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,6 +33,21 @@ const page = () => {
       [name]: value,
     });
   };
+
+
+
+  const fetchMeeting = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/get-latest/meeting/${params.id}`);
+        setMeetingId(response?.data?.meeting?._id)
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+  
+    useEffect(() => {
+      fetchMeeting();
+    }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
