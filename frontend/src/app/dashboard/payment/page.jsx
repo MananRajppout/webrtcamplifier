@@ -129,7 +129,9 @@ const Payment = () => {
             <p className="text-2xl font-bold text-custom-teal">Payment</p>
           </div>
           {/* right div */}
-          <div className="flex justify-end items-center gap-2">
+          {
+            user?.role === "Admin" && (
+              <div className="flex justify-end items-center gap-2">
             <div>
               <Button
                 children="Update Credit Card"
@@ -167,6 +169,8 @@ const Payment = () => {
               />
             </div>
           </div>
+            )
+          }
         </div>
       </div>
 

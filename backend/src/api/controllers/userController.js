@@ -48,6 +48,9 @@ const validateEmail = (email) => {
 };
 
 const signup = async (req, res) => {
+  const session = await mongoose.startSession()
+
+  session.startTransaction()
   try {
     const { firstName, lastName, email, password, terms } = req.body;
 
@@ -58,20 +61,33 @@ const signup = async (req, res) => {
     // Validate email format
     const emailError = validateEmail(email);
     if (emailError) {
+      await session.abortTransaction()
+      session.endSession()
       return res.status(400).json({ message: emailError });
     }
     // Validate password criteria
     const passwordErrors = validatePassword(password);
     if (passwordErrors) {
+      await session.abortTransaction()
+      session.endSession()
       return res.status(400).json({ message: passwordErrors.join(" ") });
     }
     // Check if the user already exists
-    const userExist = await userModel.findOne({ email }).select("_id");
+    const userExist = await userModel.findOne({ email }).select("_id").session(session);
     if (userExist) {
+      await session.abortTransaction()
+      session.endSession()
       return res.status(400).json({ message: "Email already in use" });
     }
     // Hash the password before saving it in the database
     const hashedPassword = bcrypt.hashSync(password, 8);
+
+
+    const contacts = await Contact.find({ email }).session(session);
+
+    const contactIds = contacts.map(contact => contact._id)
+
+
 
     // Create new user with all necessary data
     const newUser = new userModel({
@@ -83,18 +99,18 @@ const signup = async (req, res) => {
       isEmailVerified: false,
       termsAccepted: terms,
       termsAcceptedTime: new Date(),
+      contactIds: contactIds
     });
     // Save the new user
-    const userSavedData = await newUser.save();
+    const userSavedData = await newUser.save({ session });
 
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
 
-    const contacts = await Contact.find({ email });
-
+    
     if (contacts.length > 0) {
       // Update all matching contacts to set isUser field to true
-      await Contact.updateMany({ email }, { $set: { isUser: true } });
+      await Contact.updateMany({ email }, { $set: { isUser: true, userId: newUser._id } }, {session});
     }
 
     const newContact = new Contact({
@@ -105,15 +121,25 @@ const signup = async (req, res) => {
       roles: ["Moderator"],
       createdBy: userSavedData._id,
       isUser: true,
+      userId: newUser._id
     });
 
-    await newContact.save();
+    const savedContact = await newContact.save({session});
+
+    await userModel.findByIdAndUpdate(userSavedData._id, {$push: {contactIds: savedContact._id}},
+      {session}
+    )
+
+    await session.commitTransaction()
+    session.endSession()
 
     // Respond with success message
     return res.status(200).json({
       message: "User registered successfully. Please verify your email!",
     });
   } catch (error) {
+    await session.abortTransaction()
+      session.endSession()
     console.error("Signup error:", error);
     return res.status(500).json({ message: error.message });
   }

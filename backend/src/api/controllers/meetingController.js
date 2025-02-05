@@ -3,29 +3,53 @@ const Meeting = require("../models/meetingModel");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const LiveMeeting = require("../models/liveMeetingModel");
+const Contact = require("../models/contactModel");
+const { default: mongoose } = require("mongoose");
 // Controller to create a new project
 const createMeeting = async (req, res) => {
   const meetingData = req.body;
+  const session = await mongoose.startSession();
+  
+  session.startTransaction();
   try {
-    // Find the project by projectId
-    const project = await Project.findById(meetingData.projectId);
-
+    // ✅ Step 1: Find the project by projectId
+    const project = await Project.findById(meetingData.projectId).session(session);
     if (!project) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // Set the meetingPasscode from the project
+    // ✅ Step 2: Set the meetingPasscode from the project
     meetingData.meetingPasscode = project.projectPasscode;
 
-    // Create and save the new meeting
+    // ✅ Step 3: Create and save the new meeting
     const newMeeting = new Meeting(meetingData);
-    const savedMeeting = await newMeeting.save();
-    // Send a success response with the saved meeting details
+    const savedMeeting = await newMeeting.save({ session });
+
+    // ✅ Step 4: Update `projectIds` for all moderators in `Contact`
+    if (meetingData.moderator && meetingData.moderator.length > 0) {
+      await Contact.updateMany(
+        { _id: { $in: meetingData.moderator } },
+        { $addToSet: { projectIds: meetingData.projectId } },
+        { session }
+      );
+    }
+
+    // ✅ Step 5: Commit transaction (finalize all operations)
+    await session.commitTransaction();
+    session.endSession();
+
     res.status(201).json({
       message: "Meeting created successfully",
       meeting: savedMeeting,
     });
+
   } catch (error) {
+    // ✅ Rollback transaction in case of failure
+    await session.abortTransaction();
+    session.endSession();
+    
     console.error("Error creating meeting:", error);
     res.status(500).json({
       message: "Failed to create meeting",
@@ -33,6 +57,7 @@ const createMeeting = async (req, res) => {
     });
   }
 };
+
 
 const getAllMeetings = async (req, res) => {
   try {
@@ -197,22 +222,68 @@ const deleteMeeting = async (req, res) => {
   }
 };
 
-
-
 const editMeeting = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const data = await Meeting.findByIdAndUpdate(
-      { _id: req.body?.id },
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!data) {
+    const meetingId = req.body?.id;
+    const updatedData = req.body;
+
+    // ✅ Step 1: Find the existing meeting
+    const existingMeeting = await Meeting.findById(meetingId).session(session);
+    if (!existingMeeting) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Meeting not found" });
     }
-    return res
-      .status(200)
-      .json({ data, message: "Meeting updated successfully" });
+
+    // ✅ Step 2: Check if moderators have changed
+    const oldModerators = existingMeeting.moderator.map(id => id.toString());
+    const newModerators = updatedData.moderator ? updatedData.moderator.map(id => id.toString()) : [];
+
+    const moderatorsToRemove = oldModerators.filter(id => !newModerators.includes(id));
+    const moderatorsToAdd = newModerators.filter(id => !oldModerators.includes(id));
+
+    // ✅ Step 3: Update the meeting
+    const updatedMeeting = await Meeting.findByIdAndUpdate(
+      meetingId,
+      updatedData,
+      { new: true, runValidators: true, session }
+    );
+
+    // ✅ Step 4: Remove `projectId` from old moderators
+    if (moderatorsToRemove.length > 0) {
+      await Contact.updateMany(
+        { _id: { $in: moderatorsToRemove } },
+        { $pull: { projectIds: existingMeeting.projectId } },
+        { session }
+      );
+    }
+
+    // ✅ Step 5: Add `projectId` to new moderators
+    if (moderatorsToAdd.length > 0) {
+      await Contact.updateMany(
+        { _id: { $in: moderatorsToAdd } },
+        { $addToSet: { projectIds: existingMeeting.projectId } },
+        { session }
+      );
+    }
+
+    // ✅ Step 6: Commit transaction (finalize all operations)
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      message: "Meeting updated successfully",
+      meeting: updatedMeeting,
+    });
+
   } catch (error) {
+    // ✅ Rollback transaction in case of failure
+    await session.abortTransaction();
+    session.endSession();
+
     console.error("Error updating meeting:", error);
     return res.status(500).json({
       message: "Failed to update meeting",

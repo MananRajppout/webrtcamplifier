@@ -30,6 +30,7 @@ const userSchema = new Schema({
     enum: ['Admin', 'Moderator', 'Observer', 'Participant', 'AmplifyAdmin', 'AmplifyModerator', 'AmplifyObserver', 'AmplifyParticipant', 'AmplifyTechHost'],
     required: true
   },
+  contactIds: [{ type: Schema.Types.ObjectId, ref: "Contact", default: [] }]  ,
   status: {
     type: String,
     enum: ['Active', 'Inactive'],

@@ -28,13 +28,19 @@ const createContact = async (req, res) => {
     // Search the user collection to match the email field
     const matchingUser = await User.findOne({ email });
 
+       // Check if a contact with this email already exists (per createdBy user)
+       const existingContact = await Contact.findOne({ email, createdBy });
+       if (existingContact) {
+         return res.status(400).json({ message: "A contact with this email already exists under your account." });
+       }
+
     let isUserFlag = false;
     if (matchingUser) {
-      isUserFlag = true; // Set isUser to true if email matches a user
+      isUserFlag = true; 
     }
 
     const newContact = new Contact({
-      firstName, lastName, email, companyName, roles, createdBy, isUser: isUserFlag,
+      firstName, lastName, email, companyName, roles, createdBy, isUser: isUserFlag,userId: matchingUser ? matchingUser._id : null, projectIds: []
     });
 
 
@@ -237,18 +243,29 @@ const searchContactsByFirstName = async (req, res) => {
 // create contact from member tab
 const createContactForMemberTab = async (req, res) => {
   const { userId, projectId } = req.params;
+  console.log("req.params", req.params)
   try {
     // Fetch all contacts created by the user (userId)
     const contacts = await Contact.find({ createdBy: userId });
     // Fetch the project using projectId
+
+    console.log("contacts", contacts)
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ message: "Project not found." });
     }
+
+    console.log("project", project)
     // Extract all member user IDs from the project
-    const projectMemberIds = project.members.map(member => member.userId.toString());
+    const projectMemberIds = project.members.map(member => member.userId.toString() || null);
+
+    console.log("project memeber id", projectMemberIds)
     // Filter out contacts that are already members of the project
-    const nonMemberContacts = contacts.filter(contact => !projectMemberIds.includes(contact._id.toString()));
+    const nonMemberContacts = contacts.filter(contact => 
+      !contact.userId || !projectMemberIds.includes(contact.userId.toString()) // ✅ Include contacts with `null` userId
+    );
+
+    console.log("non member contacts", nonMemberContacts)
     // Return the filtered list of contacts to the frontend
     res.status(200).json(nonMemberContacts);
   } catch (error) {

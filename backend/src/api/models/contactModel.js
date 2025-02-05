@@ -26,6 +26,8 @@ const contactSchema = new mongoose.Schema(
     addedDate: { type: Date, default: Date.now },
     lastUpdatedOn: { type: Date, default: Date.now },
     isUser: { type: Boolean, default: false },
+    userId: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    projectIds: { type: [Schema.Types.ObjectId], ref: "Project", default: [] },
   },
   { timestamps: true }
 );

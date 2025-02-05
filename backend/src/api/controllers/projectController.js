@@ -9,6 +9,7 @@ const { sendEmail } = require("../../config/email.config");
 const dotenv = require("dotenv");
 const LiveMeeting = require("../models/liveMeetingModel");
 const ProjectForm = require("../models/projectFormSchema");
+const Contact = require("../models/contactModel");
 dotenv.config();
 
 // Controller to create a new project
@@ -212,7 +213,6 @@ const getAllProjects = async (req, res) => {
     limit = 10,
     search = "",
     startDate,
-   
     status,
     tag,
     role,
@@ -220,76 +220,61 @@ const getAllProjects = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
-    const userData = await User.findById(id);
-    if (!userData) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const userEmail = userData.email;
+    
+    
+    const user = await User.findById(id).select("contactIds email")
 
-    // Create search query
-    const searchQuery = search
-      ? {
-          $and: [
-            {
-              $or: [
-                { createdBy: id },
-                { members: { $elemMatch: { email: userEmail } } }, 
-              ],
-            },
-            {
-              $or: [
-                { name: { $regex: search, $options: "i" } }, // Case-insensitive search
-                { description: { $regex: search, $options: "i" } },
-              ],
-            },
+    if(!user)
+    {
+      return res.status(404).json({message: "User not found"})
+    }
+
+    const  contacts = await Contact.find({ _id: { $in: user.contactIds } }).select("projectIds");
+
+    const projectIdsFromContacts = [...new Set(contacts.flatMap(contact => contact.projectIds))];
+
+    const searchQuery = {
+      $or: [{ createdBy: id }, { _id: { $in: projectIdsFromContacts } }],
+    };
+
+    if (search) {
+      searchQuery.$and = [
+        {
+          $or: [
+            { name: { $regex: search, $options: "i" } }, // Case-insensitive search
+            { description: { $regex: search, $options: "i" } },
           ],
-        }
-      : { $or: [{ createdBy: id }, { "members.email": userEmail }] };
+        },
+      ];
+    }
+
     if (startDate) {
       searchQuery.startDate = { $gte: new Date(startDate) };
     }
-  
+
     if (status) {
       searchQuery.status = status;
     }
+
     if (tag) {
       searchQuery.tags = tag;
     }
+
     if (role) {
       searchQuery["members.roles"] = role;
     }
 
+
     const projects = await Project.find(searchQuery)
-      .populate("members.userId", "firstName lastName addedDate lastUpdatedOn")
-      .populate("tags", "name description color")
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+    .populate("members.userId", "firstName lastName addedDate lastUpdatedOn")
+    .populate("tags", "name description color")
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+    
+   
 
-    // Calculate cumulative minutes for each project
-    // const projectsWithMinutes = await Promise.all(
-    //   projects.map(async (project) => {
-    //     // Find related meetings
-    //     const meetings = await Meeting.find({ projectId: project._id });
-
-    //     // Find associated live meetings and calculate cumulative duration
-    //     const liveMeetings = await LiveMeeting.find({
-    //       meetingId: { $in: meetings.map((meeting) => meeting._id) },
-    //     });
-
-    //     // const cumulativeMinutes = liveMeetings.reduce(
-    //     //   (acc, liveMeeting) => acc + (liveMeeting.duration || 0),
-    //     //   0
-    //     // );
-
-    //     return {
-    //       project
-    //     };
-    //   })
-    // );
-
-    const totalDocuments = await Project.countDocuments(searchQuery); // Total number of documents matching the criteria
-    const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
+    const totalDocuments = await Project.countDocuments(searchQuery);
+    const totalPages = Math.ceil(totalDocuments / limit);
 
     res.status(200).json({
       page: parseInt(page),
