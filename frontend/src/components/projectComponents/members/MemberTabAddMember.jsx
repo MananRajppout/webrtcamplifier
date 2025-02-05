@@ -15,6 +15,8 @@ const MemberTabAddMember = ({
   const { user } = useGlobalContext();
   const [isLoading, setIsLoading] = useState(false);
 
+  console.log("peoples", peoples)
+
   const fetchContacts = async () => {
     try {
       const apiEndpoint =

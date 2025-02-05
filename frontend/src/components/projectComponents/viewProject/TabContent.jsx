@@ -157,7 +157,7 @@ const TabContent = ({
         <div className="pt-5">
           <div className="flex justify-between items-center">
             <HeadingLg children="Project Members" />
-            {(user?.role !== "AmplifyTechHost" && user?.role !== "AmplifyModerator" && user?.role !== "Moderator"  ) && (
+            {user?.role === "Admin"  && (
             <div
               className="flex justify-end items-center
                gap-5"
