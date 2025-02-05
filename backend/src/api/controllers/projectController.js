@@ -547,7 +547,6 @@ const updateBulkMembers = async (req, res) => {
       { _id: projectId },
       { $set: { members: members } }
     );
-
     if (!updatedProject) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -555,6 +554,7 @@ const updateBulkMembers = async (req, res) => {
     const populatedProject = await Project.findById(projectId).populate(
       "members.userId"
     );
+
 
     return res.status(200).json({
       message: "Members updated successfully",

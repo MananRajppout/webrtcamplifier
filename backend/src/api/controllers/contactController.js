@@ -243,29 +243,24 @@ const searchContactsByFirstName = async (req, res) => {
 // create contact from member tab
 const createContactForMemberTab = async (req, res) => {
   const { userId, projectId } = req.params;
-  console.log("req.params", req.params)
   try {
     // Fetch all contacts created by the user (userId)
     const contacts = await Contact.find({ createdBy: userId });
     // Fetch the project using projectId
 
-    console.log("contacts", contacts)
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ message: "Project not found." });
     }
 
-    console.log("project", project)
     // Extract all member user IDs from the project
     const projectMemberIds = project.members.map(member => member.userId.toString() || null);
 
-    console.log("project memeber id", projectMemberIds)
     // Filter out contacts that are already members of the project
     const nonMemberContacts = contacts.filter(contact => 
       !contact.userId || !projectMemberIds.includes(contact.userId.toString()) // ✅ Include contacts with `null` userId
     );
 
-    console.log("non member contacts", nonMemberContacts)
     // Return the filtered list of contacts to the frontend
     res.status(200).json(nonMemberContacts);
   } catch (error) {

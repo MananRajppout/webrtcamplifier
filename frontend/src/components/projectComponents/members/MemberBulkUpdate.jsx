@@ -16,18 +16,18 @@ const MemberBulkUpdate = ({ onClose, project, setLocalProjectState}) => {
     setMembers((prevMembers) =>
       prevMembers.map((member) => {
         if (member?.userId === personId) {
-          if (member.roles.includes(role)) {
+          if (member?.roles?.role?.includes(role)) {
             // Remove the role if already included
             return {
               ...member,
-              roles: member?.roles?.filter((r) => r !== role),
+              roles: { ...member.roles, role: member.roles.role.filter((r) => r !== role) },
             };
           } else {
             // Add the role if not included
             return {
               ...member,
-              roles: [...member.roles, role],
-            };
+            roles: { ...member.roles, role: [...(member.roles?.role || []), role] },
+          }
           }
         }
         return member;
@@ -78,7 +78,7 @@ const MemberBulkUpdate = ({ onClose, project, setLocalProjectState}) => {
                 <td className="px-4 py-2 border border-gray-300 text-center">
                   <input
                     type="checkbox"
-                    checked={member?.roles?.includes("Admin")}
+                    checked={member?.roles?.role?.includes("Admin") ?? false}
                     onChange={() => handleRoleChange(member?.userId, "Admin")}
                     className="cursor-pointer"
                   />
@@ -86,7 +86,7 @@ const MemberBulkUpdate = ({ onClose, project, setLocalProjectState}) => {
                 <td className="px-4 py-2 border border-gray-300 text-center">
                   <input
                     type="checkbox"
-                    checked={member?.roles.includes("Moderator")}
+                    checked={member?.roles?.role?.includes("Moderator")}
                     onChange={() =>
                       handleRoleChange(member.userId, "Moderator")
                     }
@@ -96,7 +96,7 @@ const MemberBulkUpdate = ({ onClose, project, setLocalProjectState}) => {
                 <td className="px-4 py-2 border border-gray-300 text-center">
                   <input
                     type="checkbox"
-                    checked={member?.roles.includes("Observer")}
+                    checked={member?.roles?.role?.includes("Observer")}
                     onChange={() => handleRoleChange(member.userId, "Observer")}
                     className="cursor-pointer"
                   />

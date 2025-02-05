@@ -25,7 +25,6 @@ const MembersTab = ({ project, setLocalProjectState }) => {
     const indexOfFirstMember = indexOfLastMember - membersPerPage;
     const currentMembers = project?.members?.slice(indexOfFirstMember, indexOfLastMember) || [];
   
-    
 
 
   const handleEditMember = (member) => {
@@ -105,7 +104,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
               </TableData>
               <TableData>
                 {/* {member?.roles?.role} */}
-                {member?.roles?.permissions?.join(", ")}{" "}
+                {member?.roles?.role?.join(", ")}{" "}
                 {/* Display all roles (e.g., Admin, Moderator) */}
               </TableData>
               <TableData>
