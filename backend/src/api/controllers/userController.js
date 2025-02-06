@@ -763,6 +763,9 @@ const deleteByAdmin = async (req, res) => {
 };
 
 const createAmplifyAdmin = async (req, res) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
   try {
     const token = req.cookies.token;
     const decoded = decodeToken(token);
@@ -778,10 +781,16 @@ const createAmplifyAdmin = async (req, res) => {
     ];
 
     if (!validRoles.includes(req.body?.role)) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: "Invalid role" });
     }
 
     const hashedPassword = bcrypt.hashSync(password, 8);
+
+    const contacts = await Contact.find({email})
+
+    const contactIds = contacts.map(contact => contact._id)
 
     // Create new user with all necessary data
     const newUser = new userModel({
@@ -794,10 +803,15 @@ const createAmplifyAdmin = async (req, res) => {
       termsAccepted,
       termsAcceptedTime: new Date(),
       createdById: decoded?.id,
-
+      contactIds: contactIds
     });
     // Save the new user
-    const userSavedData = await newUser.save();
+    const userSavedData = await newUser.save({ session });
+
+    if (contacts.length > 0) {
+      // Update all matching contacts to set isUser field to true
+      await Contact.updateMany({ email }, { $set: { isUser: true, userId: newUser._id } }, {session});
+    }
 
     const newContact = new Contact({
       firstName,
@@ -807,12 +821,20 @@ const createAmplifyAdmin = async (req, res) => {
       roles: role,
       createdBy: decoded.id,
       isUser: true,
+      userId: newUser._id
     });
 
-    await newContact.save();
-    // const user = await userModel.create(req.body);
+    const savedContact = await newContact.save({ session });
+
+    await userModel.findByIdAndUpdate(userSavedData._id, {$push: {contactIds: savedContact._id}}, { session })
+
+    await session.commitTransaction();
+    session.endSession();
+
     return res.status(200).json(userSavedData);
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("error in createAmplifyAdmin", error);
     return res.status(500).json({ message: error.message });
   }
