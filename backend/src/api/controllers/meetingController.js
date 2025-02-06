@@ -230,6 +230,7 @@ const editMeeting = async (req, res) => {
     const meetingId = req.body?.id;
     const updatedData = req.body;
 
+    
     // ✅ Step 1: Find the existing meeting
     const existingMeeting = await Meeting.findById(meetingId).session(session);
     if (!existingMeeting) {
@@ -270,6 +271,8 @@ const editMeeting = async (req, res) => {
       );
     }
 
+    console.log("updatedMeeting",updatedMeeting)
+
     // ✅ Step 6: Commit transaction (finalize all operations)
     await session.commitTransaction();
     session.endSession();
@@ -291,8 +294,6 @@ const editMeeting = async (req, res) => {
     });
   }
 };
-
-
 
 const bulkUploadMeeting = async (req, res) => {
   try {
@@ -434,8 +435,6 @@ const bulkUploadMeeting = async (req, res) => {
     }
   }
 };
-
-
 
 module.exports = {
   createMeeting,

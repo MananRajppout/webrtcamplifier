@@ -154,7 +154,7 @@ const MeetingTab = ({
               toast.error(response.message);
             } else {
               const liveMeetingData = response.liveMeeting;
-              console.log(project._id,'Hello')
+              console.log(project._id, "Hello");
               window.open(
                 `/before-meeting/${project._id}?fullName=${encodeURIComponent(
                   fullName
@@ -239,8 +239,6 @@ const MeetingTab = ({
     setIsEditModalOpen(true);
     closeModal();
   };
-
-
 
   const handleDuplicateMeeting = async (meeting) => {
     try {
@@ -341,29 +339,34 @@ const MeetingTab = ({
         <table className="min-w-full bg-white shadow-md rounded-lg ">
           <thead className="border-b-[0.5px] border-solid border-custom-dark-blue-1">
             <tr>
-              <th onClick={() => handleSort("title")}
+              <th
+                onClick={() => handleSort("title")}
                 className="px-3 py-3 text-left text-[12px] font-bold text-custom-dark-blue-1 capitalize tracking-wider cursor-pointer"
-                >Meeting Title{" "}
-              {sortField === "title" && (sortOrder === "asc" ? "↑" : "↓")}</th>
-              {/* <TableHead >
-                
-              </TableHead> */}
-              <th 
-              className="px-3 py-3 text-left text-[12px] font-bold text-custom-dark-blue-1 capitalize tracking-wider cursor-pointer"
-              onClick={() => handleSort("startDate")}> Start Date & Time{" "}
-              {sortField === "startDate" && (sortOrder === "asc" ? "↑" : "↓")}</th>
-              {/* <TableHead >
-               
-              </TableHead> */}
+              >
+                Meeting Title{" "}
+                {sortField === "title" && (sortOrder === "asc" ? "↑" : "↓")}
+              </th>
+              
+              <th
+                className="px-3 py-3 text-left text-[12px] font-bold text-custom-dark-blue-1 capitalize tracking-wider cursor-pointer"
+                onClick={() => handleSort("startDate")}
+              >
+                {" "}
+                Start Date & Time{" "}
+                {sortField === "startDate" && (sortOrder === "asc" ? "↑" : "↓")}
+              </th>
+              
               <TableHead>Time Zone</TableHead>
-              <th onClick={() => handleSort("moderator.firstName")}
+              <th
+                onClick={() => handleSort("moderator.firstName")}
                 className="px-3 py-3 text-left text-[12px] font-bold text-custom-dark-blue-1 capitalize tracking-wider cursor-pointer"
-                > Moderator{" "}
+              >
+                {" "}
+                Moderator{" "}
                 {sortField === "moderator.firstName" &&
-                  (sortOrder === "asc" ? "↑" : "↓")}</th>
-              {/* <TableHead >
-               
-              </TableHead> */}
+                  (sortOrder === "asc" ? "↑" : "↓")}
+              </th>
+              
               <TableHead>Participant Count</TableHead>
               <TableHead>Observer Count</TableHead>
               <TableHead>Action</TableHead>
@@ -412,7 +415,7 @@ const MeetingTab = ({
                 >
                   {meeting?.liveMeetings[0]?.observerList.length}
                 </td>
-                
+
                 <TableData>
                   <div className="flex flex-col justify-center items-center gap-2">
                     <button
@@ -470,14 +473,12 @@ const MeetingTab = ({
               >
                 Edit
               </button>
-             
             </div>
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h3 className="font-medium">Meeting Title</h3>
                 <p>{selectedMeeting?.title}</p>
               </div>
-              
             </div>
             <div>
               <h3 className="font-medium">Description</h3>

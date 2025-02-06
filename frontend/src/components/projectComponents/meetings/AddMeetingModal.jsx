@@ -45,7 +45,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
         duration: meetingToEdit.duration || "",
         ongoing: meetingToEdit.ongoing || false,
         enableBreakoutRoom: meetingToEdit.enableBreakoutRoom || false,
-        moderator: meetingToEdit.moderator || [],
+        moderator: meetingToEdit.moderator ? meetingToEdit.moderator.map(m=> m._id) : [],
         status: meetingToEdit.status || "Draft",
       });
       setSelectedTimeZone(meetingToEdit.timeZone);
@@ -116,7 +116,7 @@ const AddMeetingModal = ({ onClose, project, user, refetchMeetings, meetingToEdi
   
         return {
           ...prevFormData,
-          moderator: updatedModerators,
+          moderator: updatedModerators.map(id => id.toString()),
         };
       });
       return;
@@ -159,6 +159,7 @@ if (!formData.duration) {
     const updatedFormData = {
       ...formData,
       projectId: project._id,
+      moderator: formData.moderator.map(id => id.toString()),
     };
 
 

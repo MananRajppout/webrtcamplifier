@@ -82,7 +82,6 @@ const [sortOrder, setSortOrder] = useState("asc");
     useState(false);
   const [uploadResults, setUploadResults] = useState(null);
   const [rejectedData, setRejectedData] = useState([]);
-console.log('localProject state', localProjectState)
   // *Shared functions
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -469,7 +468,6 @@ console.log('localProject state', localProjectState)
     setIsAddMeetingModalOpen(false);
   };
 
-  console.log("meetings", meetings)
   // * use effects
   useEffect(() => {
     fetchMeetings(meetingPage);
