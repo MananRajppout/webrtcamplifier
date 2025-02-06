@@ -94,7 +94,7 @@ app.use(
 app.use("/api", uploadFileRoutes);
 
 // Cron job to run every minute
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
   console.log("Executing the overdue payment processor...");
   await processOverduePayments();
   await processIncompleteFormSent()

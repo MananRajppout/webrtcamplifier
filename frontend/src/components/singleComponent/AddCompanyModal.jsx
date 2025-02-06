@@ -94,6 +94,7 @@ const AddCompanyModal = ({ onClose }) => {
               label="Industry"
               type="text"
               name="industry"
+              placeholder="'Food', 'Electronic', 'Vehicle', 'Other'"
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
             />

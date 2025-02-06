@@ -9,8 +9,7 @@ const AddCompany = new Schema(
     },
     industry: {
       type: String,
-      enum: ['Food', 'Electronic', 'Vehicle', 'Other'],
-      default: 'Other',
+      default: '',
     },
     mobile: {
       type: String,

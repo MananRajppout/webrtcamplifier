@@ -1713,12 +1713,14 @@ const setupSocket = (server) => {
             1000 /
             60
         );
-
+        console.log("meeting duration", liveMeeting.duration)
         liveMeeting.moderator.endTime = Date.now();
         liveMeeting.moderator.status = "offline";
       }
 
       await liveMeeting.save();
+
+      console.log("live meeting", liveMeeting)
 
       try {
         // Find the Meeting document
