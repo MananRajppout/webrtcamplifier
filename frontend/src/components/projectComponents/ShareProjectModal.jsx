@@ -9,7 +9,7 @@ const ShareProjectModal = ({ project, onClose }) => {
   const handleCopyInvite = () => {
     const inviteText =
       accessLevel === "Observer Access"
-        ? `Nancy Jones has just created a Project named ${project.name}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/login\nPasscode: ${project.projectPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
+        ? `You are added as an observer in a Project named ${project.name}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/login\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
         : `Participant does not have access to the project.`;
 
     navigator.clipboard.writeText(inviteText);
@@ -52,7 +52,7 @@ const ShareProjectModal = ({ project, onClose }) => {
        
           <div className="p-4 border rounded-md mb-4">
             <p className="text-sm">
-              Nancy Jones has just created a Project named{" "}
+            You are added as an observer in a Project named{" "}
               <strong>{project.name}</strong>. The project is now accessible to
               you as an observer.
             </p>
@@ -60,10 +60,10 @@ const ShareProjectModal = ({ project, onClose }) => {
               <strong>Join Project</strong>
               <br />
               <Link
-                href={`https://new-amplify-fe-kj4c.vercel.app/login`}
+                href={`https://amplifier.hgsingalong.com/login`}
                 className="text-blue-500"
               >
-                https://new-amplify-fe-kj4c.vercel.app/login
+                https://amplifier.hgsingalong.com/login
               </Link>
             </p>
             <p className="mt-2 text-sm">
@@ -74,10 +74,10 @@ const ShareProjectModal = ({ project, onClose }) => {
               <strong>Create an account</strong>
               <br />
               <Link
-                href={`https://new-amplify-fe-kj4c.vercel.app/register`}
+                href={`https://amplifier.hgsingalong.com/register`}
                 className="text-blue-500"
               >
-                https://new-amplify-fe-kj4c.vercel.app/register
+                https://amplifier.hgsingalong.com/register
               </Link>
             </p>
           </div>

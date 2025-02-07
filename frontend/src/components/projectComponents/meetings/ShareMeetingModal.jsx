@@ -5,12 +5,13 @@ import { BsCheckCircle } from "react-icons/bs";
 
 const ShareMeetingModal = ({ meeting, onClose }) => {
   const [accessLevel, setAccessLevel] = useState("Observer Access");
+  console.log("project", meeting)
 
   const handleCopyInvite = () => {
     const inviteText =
       accessLevel === "Observer Access"
-        ? `Nancy Jones has just created a Project named ${meeting.title}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting._id}\nPasscode: ${meeting.meetingPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
-        : `Nancy Jones has invited you to a scheduled meeting for the project ${meeting.title}.\n\nTitle: Focus Group Meeting\nJoin Meeting\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting._id}`;
+        ? `You are added as an observer in a Project named ${meeting.title}. The project is now accessible to you as an observer.\n\nJoin Project\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting.projectId}\nPasscode: ${meeting.meetingPasscode}\n\nOr\n\nCreate an account\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/register`
+        : `You have been invited to a scheduled meeting for the project ${meeting.title}.\n\nJoin Meeting\n${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting.projectId}`;
 
     navigator.clipboard.writeText(inviteText);
     toast.success("Project invite copied to clipboard!");
@@ -52,17 +53,17 @@ const ShareMeetingModal = ({ meeting, onClose }) => {
         {accessLevel === "Observer Access" ? (
           <div className="p-4 border rounded-md mb-4">
             <p className="text-sm">
-              Nancy Jones has just created a meeting named {meeting.name}. The
+            You are added as an observer in a meeting named {meeting.title}. The
               meeting is now accessible to you as an observer.
             </p>
             <p className="mt-2 text-sm">
               <strong>Join Meeting</strong>
               <br />
               <Link
-                href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting._id}`}
+                href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting.projectId}`}
                 className="text-blue-500"
               >
-                {`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting._id}`}
+                {`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting-observer/${meeting.projectId}`}
               </Link>
             </p>
             <p className="mt-2 text-sm">
@@ -80,7 +81,7 @@ const ShareMeetingModal = ({ meeting, onClose }) => {
         ) : (
           <div className="p-4 border rounded-md mb-4">
             <p className="text-sm">
-              Nancy Jones has invited you to a scheduled Amplify Meeting
+              You have been invited to a scheduled Amplify Meeting
             </p>
             <p className="mt-2 text-sm">
               <strong>Title:</strong> {meeting.title}
@@ -93,10 +94,10 @@ const ShareMeetingModal = ({ meeting, onClose }) => {
               <strong>Join Meeting</strong>
               <br />
               <Link
-                href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting._id}`}
+                href={`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting.projectId}`}
                 className="text-blue-500"
               >
-                {`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting._id}`}
+                {`${process.env.NEXT_PUBLIC_FRONTEND_BASE_URL}/join-meeting/${meeting.projectId}`}
               </Link>
             </p>
           </div>
