@@ -35,6 +35,10 @@ const MemberTabAddMember = ({
     fetchContacts();
   }, []);
 
+  const existingMemberIds = new Set(project?.members?.map((member)=> member?.userId?._id))
+
+  const newPeoples = peoples.filter((person) => !existingMemberIds.has(person._id))
+
   // Handle checkbox toggle
   const handleRoleChange = (personId, role) => {
     setSelectedRoles((prevRoles) => {
@@ -56,7 +60,7 @@ const MemberTabAddMember = ({
   };
 
   const handleSubmit = async () => {
-    const selectedPeople = peoples
+    const selectedPeople = newPeoples
       .filter(
         (person) =>
           selectedRoles[person._id] && selectedRoles[person._id].length > 0
@@ -75,6 +79,7 @@ const MemberTabAddMember = ({
         }
       );
       if (response.status === 200) {
+        console.log("response.data", response.data)
         setLocalProjectState(response.data.updatedProject);
       }
       onClose();
@@ -126,7 +131,7 @@ const MemberTabAddMember = ({
               </tr>
             </thead>
             <tbody>
-              {peoples.map((person) => (
+              {newPeoples.map((person) => (
                 <tr key={person._id}>
                   <td className="px-4 py-2 border border-gray-300 text-sm font-semibold">
                     {person.firstName} {person.lastName}

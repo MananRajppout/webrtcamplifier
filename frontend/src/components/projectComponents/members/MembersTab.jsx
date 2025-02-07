@@ -20,6 +20,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
     setCurrentPage(page);
   };
 
+  console.log("project", project)
     // Calculate the current members to display
     const indexOfLastMember = currentPage * membersPerPage;
     const indexOfFirstMember = indexOfLastMember - membersPerPage;

@@ -457,18 +457,39 @@ const updateGeneralProjectInfo = async (req, res) => {
 
 const addPeopleIntoProject = async (req, res) => {
   const { projectId, people } = req.body;
+
+  console.log("req.body", req.body)
   try {
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
     people.forEach((person) => {
-      project.members.push({
-        userId: person.personId,
-        roles: person.roles,
-        email: person.email,
-      });
+      const existingMemberIndex = project.members.findIndex(
+        (member) => member.userId.toString() === person.personId
+      );
+
+      if (existingMemberIndex !== -1) {
+        // If the user already exists, update roles correctly
+        const existingRoles = new Set(project.members[existingMemberIndex].roles?.role || []);
+        person.roles.forEach((role) => existingRoles.add(role)); // Merge new roles with existing ones
+        
+        project.members[existingMemberIndex].roles.role = Array.from(existingRoles);
+      } else {
+        // Add new user correctly with the `roles` structure
+        project.members.push({
+          userId: person.personId,
+          roles: {
+            role: person.roles, // Ensure roles are stored inside the nested `role` field
+            permissions: [],
+          },
+          email: person.email,
+        });
+      }
     });
+
+
+    console.log('project', project)
     const updatedProject = await project.save();
     const populatedProject = await Project.findById(
       updatedProject._id
