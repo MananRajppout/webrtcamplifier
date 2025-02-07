@@ -24,20 +24,22 @@ const Payment = () => {
   const [remainingCredits, setRemainingCredits] = useState(null);
   const [projects, setProjects] = useState([])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (user?._id) {
-          const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/remaining-credits/${user._id}`
-          );
-          console.log("res", response.data);
-          setRemainingCredits(response.data.remainingCredits);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+  const fetchData = async () => {
+    try {
+      if (user?._id) {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/remaining-credits/${user._id}`
+        );
+        console.log("res", response.data);
+        setRemainingCredits(response.data.remainingCredits);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+   
 
     fetchData();
   }, [user?._id]);
@@ -105,6 +107,7 @@ const Payment = () => {
 
   const handleModalClose = () => {
     setIsAddPaymentModalOpen(false);
+    fetchData()
   };
 
   const handleOpenUpdateCreditCardModal = () => {

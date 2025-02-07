@@ -10,6 +10,7 @@ import AddPollModal from "./AddPollModal";
 import Button from "@/components/shared/button";
 import Pagination from "@/components/shared/Pagination";
 import { useGlobalContext } from "@/context/GlobalContext";
+import ConfirmationModal from "@/components/shared/ConfirmationModal";
 
 const PollsTab = ({
   project,
@@ -25,6 +26,8 @@ const PollsTab = ({
   const [isViewPollModalOpen, setIsViewPollModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddPollModalOpen, setIsAddPollModalOpen] = useState(false);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
+  const [pollToDelete, setPollToDelete] = useState(null)
   const { user } = useGlobalContext();
 
 
@@ -67,8 +70,14 @@ const PollsTab = ({
     setSelectedPoll(null);
   };
 
+  const confirmDeletePoll = (pollId) => {
+    setPollToDelete(pollId)
+    setIsConfirmationOpen(true)
+  }
+  
+
   const handleDeletePoll = async (pollId) => {
-    if (!window.confirm("Are you sure you want to delete this poll?")) return;
+    if (!pollToDelete) return;
 
     setIsLoading(true);
     try {
@@ -87,6 +96,8 @@ const PollsTab = ({
       toast.error("Error deleting poll");
     } finally {
       setIsLoading(false);
+      setIsConfirmationOpen(false)
+      setPollToDelete(null)
     }
   };
 
@@ -148,7 +159,7 @@ const PollsTab = ({
                       </button>
                       <button
                         className="text-red-500 hover:text-red-700"
-                        onClick={() => handleDeletePoll(poll._id)} // Trigger delete functionality
+                        onClick={() => confirmDeletePoll(poll._id)} // Trigger delete functionality
                         disabled={isLoading}
                       >
                         <IoTrashSharp />
@@ -209,6 +220,16 @@ const PollsTab = ({
           />
         </div>
       )}
+
+{ isConfirmationOpen && (
+        <ConfirmationModal
+          onCancel={() => setIsConfirmationOpen(false)}
+          onYes={handleDeletePoll}
+          heading="Delete Poll"
+          text="Are you sure you want to delete this poll? This action cannot be undone."
+        />
+      )}
+
     </div>
   );
 };
