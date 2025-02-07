@@ -8,11 +8,14 @@ import toast from "react-hot-toast";
 import EditMemberModal from "./EditMemberModal";
 import Pagination from "@/components/shared/Pagination";
 import { useGlobalContext } from "@/context/GlobalContext";
+import ConfirmationModal from "@/components/shared/ConfirmationModal";
 
 const MembersTab = ({ project, setLocalProjectState }) => {
   const [selectedMember, setSelectedMember] = useState(null); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1); 
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
+  const [memberToDelete, setMemberToDelete] = useState(null)
   const membersPerPage = 10;
   const { user } = useGlobalContext()
   // Function to handle page change
@@ -20,7 +23,6 @@ const MembersTab = ({ project, setLocalProjectState }) => {
     setCurrentPage(page);
   };
 
-  console.log("project", project)
     // Calculate the current members to display
     const indexOfLastMember = currentPage * membersPerPage;
     const indexOfFirstMember = indexOfLastMember - membersPerPage;
@@ -62,11 +64,17 @@ const MembersTab = ({ project, setLocalProjectState }) => {
     setIsModalOpen(false);
   };
 
-  const handleRemoveMember = async (memberId) => {
-    // Handle remove logic here, e.g., make an API call to remove the member
+const confirmDeleteMember = (memberId) => {
+  setMemberToDelete(memberId)
+  setIsConfirmationOpen(true)
+}
+
+
+  const handleRemoveMember = async () => {
+    if(!memberToDelete) return
     try {
       const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-member-from-project/${project._id}/${memberId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/delete-member-from-project/${project._id}/${memberToDelete}`
       );
 
       if (response.status === 200) {
@@ -78,6 +86,9 @@ const MembersTab = ({ project, setLocalProjectState }) => {
       console.error("Error removing member:", error);
       toast.error(`${error.response.data.message}`);
     }
+
+    setIsConfirmationOpen(false)
+    setMemberToDelete(null)
   };
 
 
@@ -129,7 +140,7 @@ const MembersTab = ({ project, setLocalProjectState }) => {
                   </button>
                   <button
                     className="text-red-500 hover:text-red-700"
-                    onClick={() => handleRemoveMember(member._id)}
+                    onClick={() => confirmDeleteMember(member._id)}
                   >
                     <IoTrashSharp />
                   </button>
@@ -158,6 +169,17 @@ const MembersTab = ({ project, setLocalProjectState }) => {
           onSave={handleSaveMember}
         />
       )}
+
+      {
+        isConfirmationOpen && (
+          <ConfirmationModal
+          onCancel={() => setIsConfirmationOpen(false)}
+          onYes={handleRemoveMember}
+          heading="Remove Member"
+          text="Are you sure you want to remove this member from the project? This action cannot be undone."
+          />
+        )
+      }
     </div>
   );
 };
