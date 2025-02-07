@@ -244,8 +244,8 @@ const MeetingTab = ({
     try {
       const newMeetingData = {
         ...meeting,
-        _id: undefined, // Clear the ID to create a new meeting
-        status: "Draft", // Optionally reset the status
+        _id: undefined,
+        status: "Active",
       };
 
       const response = await axios.post(
