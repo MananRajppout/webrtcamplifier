@@ -224,6 +224,8 @@ const getAllProjects = async (req, res) => {
     
     const user = await User.findById(id).select("contactIds email")
 
+    console.log("user", user)
+
     if(!user)
     {
       return res.status(404).json({message: "User not found"})
@@ -231,7 +233,11 @@ const getAllProjects = async (req, res) => {
 
     const  contacts = await Contact.find({ _id: { $in: user.contactIds } }).select("projectIds");
 
+    console.log("contacts", contacts)
+
     const projectIdsFromContacts = [...new Set(contacts.flatMap(contact => contact.projectIds))];
+
+    console.log("projectIdsFromContacts", projectIdsFromContacts)
 
     const searchQuery = {
       $or: [{ createdBy: id }, { _id: { $in: projectIdsFromContacts } }],
@@ -271,7 +277,7 @@ const getAllProjects = async (req, res) => {
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
     
-   
+   console.log("projects", projects)
 
     const totalDocuments = await Project.countDocuments(searchQuery);
     const totalPages = Math.ceil(totalDocuments / limit);

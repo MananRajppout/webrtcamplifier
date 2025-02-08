@@ -16,6 +16,8 @@ const createContact = async (req, res) => {
     });
   }
 
+  console.log("req.body", req.body)
+
   try {
     const user = await User.findById(createdBy);
 
@@ -46,6 +48,9 @@ const createContact = async (req, res) => {
 
 
     const savedContact = await newContact.save();
+
+    matchingUser.contactIds.push(savedContact._id)
+    await matchingUser.save()
 
     res.status(201).json(savedContact);
   } catch (error) {
@@ -258,7 +263,7 @@ const createContactForMemberTab = async (req, res) => {
 
     // Filter out contacts that are already members of the project
     const nonMemberContacts = contacts.filter(contact => 
-      !contact.userId || !projectMemberIds.includes(contact.userId.toString()) // ✅ Include contacts with `null` userId
+      !contact.userId || !projectMemberIds.includes(contact.userId.toString()) 
     );
 
     // Return the filtered list of contacts to the frontend
