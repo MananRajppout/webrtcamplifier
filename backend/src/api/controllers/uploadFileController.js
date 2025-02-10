@@ -1,5 +1,6 @@
 const MediaBoxModel = require('../models/mediaBox.js');
 const AWS = require('aws-sdk');
+const axios = require('axios');
 
 // Configure AWS S3
 const s3 = new AWS.S3({
@@ -61,6 +62,8 @@ exports.uploadFile = async (req, res) => {
   try {
     const { meetingId, email, role, projectId, addedBy, filename, filebase64 } = req.body;
 
+    console.log("upload file req.body", req.body)
+
     if (!req.file && !filebase64) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
@@ -73,7 +76,7 @@ exports.uploadFile = async (req, res) => {
     } else if (filebase64) {
       const base64Data = filebase64.split(';base64,').pop();
       buffer = Buffer.from(base64Data, 'base64');
-      mimetype = 'image/png'; // Default mimetype for Base64 (can be dynamic)
+      mimetype = 'image/png'; 
       originalname = filename;
     }
 
@@ -96,6 +99,8 @@ exports.uploadFile = async (req, res) => {
       },
     });
 
+    console.log('upload file new media', newMedia)
+
     // Emit Event
     const EventsEmitter = req.app.get('EventsEmitter');
     EventsEmitter.emit('mediabox:on-upload', { media: newMedia });
@@ -110,9 +115,6 @@ exports.uploadFile = async (req, res) => {
     res.status(501).json({ success: false, message: error.message });
   }
 };
-
-
-
 
 exports.uploadRecordingFile = async (req, res) => {
   try {
@@ -164,6 +166,8 @@ exports.getFileByMeetingId = async (req, res) => {
     const totalDocuments = await MediaBoxModel.countDocuments({ meetingId });
     const totalPages = Math.ceil(totalDocuments / limit);
 
+    console.log("getFileByMeetingId", media)
+
     res.status(200).json({
       success: true,
       media,
@@ -183,10 +187,13 @@ exports.getFileByProjectId = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const startIndex = (page - 1) * limit;
+    console.log("project Id", projectId)
 
     const media = await MediaBoxModel.find({ projectId }).sort({ timestamp: -1 }).skip(startIndex).limit(limit);
     const totalDocuments = await MediaBoxModel.countDocuments({ projectId });
     const totalPages = Math.ceil(totalDocuments / limit);
+
+    // console.log("getFileByProjectId", getFileByProjectId)
 
     res.status(200).json({
       success: true,
@@ -209,7 +216,7 @@ exports.deleteFile = async (req, res) => {
     if (!media) {
       return res.status(404).json({ success: false, message: 'File not found' });
     }
-
+console.log("delete id", id)
     // Delete from S3
     await deleteFromS3(media.file.public_id);
 
@@ -228,189 +235,89 @@ exports.deleteFile = async (req, res) => {
 };
 
 // PUT - Rename File
+// exports.renameFile = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { fileName } = req.body;
+
+//     const media = await MediaBoxModel.findById(id)
+//     console.log("file name", fileName)
+
+//     console.log("media", media)
+
+//     // const media = await MediaBoxModel.findByIdAndUpdate (id, {file: {name: fileName}});
+
+//     // if (!media) {
+//     //   return res.status(404).json({ success: false, message: 'File not found' });
+//     // }
+
+//     // // Emit Event
+//     // const EventsEmitter = req.app.get('EventsEmitter');
+//     // EventsEmitter.emit('mediabox:on-update', { media });
+
+//     // res.status(200).json({
+//     //   success: true,
+//     //   message: 'File Renamed Successfully',
+//     //   media,
+//     // });
+//   } catch (error) {
+//     console.error('Error renaming file:', error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
+
+
 exports.renameFile = async (req, res) => {
   try {
     const { id } = req.params;
     const { fileName } = req.body;
 
-    const media = await MediaBoxModel.findByIdAndUpdate (id, {file: {name: fileName}});
-
+    // Fetch media record from DB
+    const media = await MediaBoxModel.findById(id);
     if (!media) {
       return res.status(404).json({ success: false, message: 'File not found' });
     }
 
-    // Emit Event
-    const EventsEmitter = req.app.get('EventsEmitter');
-    EventsEmitter.emit('mediabox:on-update', { media });
+    // Get the file from S3
+    const oldFileUrl = media.file.url;
+    const oldFileKey = media.file.public_id; // Key used to delete from S3
+
+    console.log("Downloading file from S3:", oldFileUrl);
+
+    const response = await axios({
+      method: 'get',
+      url: oldFileUrl,
+      responseType: 'arraybuffer',
+    });
+
+    const fileBuffer = Buffer.from(response.data);
+    const mimetype = media.file.mimetype;
+
+    // Delete old file from S3
+    await deleteFromS3(oldFileKey);
+    console.log("Deleted old file from S3:", oldFileKey);
+
+    // Upload the file with the new name
+    const s3Response = await uploadToS3(fileBuffer, mimetype, fileName);
+    console.log("Uploaded new file to S3:", s3Response.url);
+
+    // Update the database
+    media.file.url = s3Response.url;
+    media.file.public_id = s3Response.key;
+    media.file.name = fileName;
+
+    await media.save();
 
     res.status(200).json({
       success: true,
-      message: 'File Renamed Successfully',
-      media,
+      message: 'File renamed successfully',
+      file: media,
     });
+
   } catch (error) {
     console.error('Error renaming file:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
-
-// POST - Upload File
-// exports.uploadFile = async (req, res) => {
-//   try {
-//     const {meetingId,email,role,projectId,addedBy,filename,filebase64} = req.body;
-//     let file = req.file;
-//     if (!file && !filebase64) {
-//       return res.status(400).json({ message: 'No file uploaded' });
-//     }
-  
-//     //upload file on cloudinary
-//     let cldRes;
-//     if(file){
-//       const b64 = Buffer.from(req.file.buffer).toString("base64");
-//       let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-//       cldRes = await handleUpload(dataURI,file.mimetype);
-//     }
-
-//     if(filebase64){
-//       let dataURI = "data:" + '' + ";base64," + filebase64;
-//       file = {
-//         mimetype: 'image/png',
-//         originalname: filename,
-//         size: calculateBase64Size(dataURI)
-//       }
-    
-//       cldRes = await handleUpload(dataURI,file.mimetype);
-//     }
-
-    
-
-//     //save on db
-//     const newMedia = await MediaBoxModel.create({
-//       meetingId,
-//       uploaderEmail: email,
-//       role,
-//       projectId,
-//       addedBy,
-//       file: {
-//         url: cldRes.secure_url,
-//         public_id: cldRes.public_id,
-//         name: file?.originalname,
-//         mimetype: file?.mimetype,
-//         size: file?.size
-//       }
-//     });
-
-//     const EventsEmitter = req.app.get('EventsEmitter');
-//     EventsEmitter.emit('mediabox:on-upload',{media: newMedia});
-//     res.status(201).json({
-//       success: true,
-//       message: "Upload Successfully"
-//     })
-//   } catch (error) {
-  
-//     res.status(501).json({
-//       success: false,
-//       message: error.message
-//     })
-//   } 
-
-// };
-
-
-
-//POST - Get Files By Meeting Id
-// exports.getFileByMeetingId = async (req, res) => {
-//   try {
-//     const {meetingId} = req.params;
-//     const page = parseInt(req.query.page) || 1;
-//     const limit = parseInt(req.query.limit) || 10;
-//     const startIndex = (page - 1) * limit;
-//     const media = await MediaBoxModel.find({meetingId}).sort({timestamp: -1}).skip(startIndex).limit(limit);
-//     const totalDocument = await MediaBoxModel.countDocuments;
-//     const totalPages = Math.ceil(totalDocument / limit);
-//     res.status(200).json({
-//       success: true,
-//       media,
-//       totalPages,
-//       totalDocument
-//     })
-//   } catch (error) {
-//     res.status(501).json({
-//       success: false,
-//       message: error.message
-//     })
-//   }
-// }
-
-
-//POST - Get Files By Project Id
-// exports.getFileByProjectId = async (req, res) => {
-//   try {
-//     const {projectId} = req.params;
-//     const page = parseInt(req.query.page) || 1;
-//     const limit = parseInt(req.query.limit) || 10;
-//     const startIndex = (page - 1) * limit;
-//     const media = await MediaBoxModel.find({projectId}).sort({timestamp: -1}).skip(startIndex).limit(limit);
-//     const totalDocument = (await MediaBoxModel.find({projectId})).length;
-//     const totalPages = Math.ceil(totalDocument / limit);
-    
-//     res.status(200).json({
-//       success: true,
-//       media,
-//       totalPages,
-//       totalDocument
-//     })
-//   } catch (error) {
-//     res.status(501).json({
-//       success: false,
-//       message: error.message
-//     })
-//   }
-// }
-
-
-//DELETE - Delete File
-// exports.deleteFile = async (req, res) => {
-//   try {
- 
-//     const {id} = req.params;
-//     const media = await MediaBoxModel.findOne({_id: id});
-//     await MediaBoxModel.findByIdAndDelete(id);
-   
-//     const EventsEmitter = req.app.get('EventsEmitter');
-//     EventsEmitter.emit('mediabox:on-delete',{media});
-//     res.status(200).json({
-//       success: true,
-//       message: "File Deleted Successfully"
-//     })
-//   } catch (error) {
-//     res.status(501).json({
-//       success: false,
-//       message: error.message
-//     })
-//   }
-// }
-
-
-//PUT - Rename File
-// exports.renameFile = async (req, res) => {
-//   try {
-//     const {id} = req.params;
-//     const {fileName} = req.body;
-//     const media = await MediaBoxModel.findByIdAndUpdate (id, {file: {name: fileName}});
-//     const EventsEmitter = req.app.get('EventsEmitter');
-//     EventsEmitter.emit('mediabox:on-update',{media});
-//     res.status(200).json({
-//       success: true,
-//       message: "File Renamed Successfully"
-//     })
-//   }
-//   catch (error) {
-//     res.status(501).json({
-//       success: false,
-//       message: error.message
-//     })
-//   }
-// }
