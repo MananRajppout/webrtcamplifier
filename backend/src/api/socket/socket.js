@@ -151,6 +151,7 @@ const setupSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected");
 
+
     socket.on(
       "join-room",
       async ({ roomid, name, email, roomname, role, isTechHost }, callback) => {
@@ -243,7 +244,7 @@ const setupSocket = (server) => {
                 liveMeeting.moderator,
                 ...liveMeeting.observerList,
               ];
-
+              console.log("live join observer")
               io.to(liveMeeting.meetingId.toString()).emit(
                 "getObserverListResponse",
                 {
@@ -576,9 +577,8 @@ const setupSocket = (server) => {
 
         socket.emit("getStreamingStatusResponse", {
           success: true,
-          message: `Streaming ${
-            liveMeeting.isStreaming ? "started" : "stopped"
-          } successfully`,
+          message: `Streaming ${liveMeeting.isStreaming ? "started" : "stopped"
+            } successfully`,
           isStreaming: liveMeeting.isStreaming,
         });
 
@@ -601,6 +601,7 @@ const setupSocket = (server) => {
     });
 
     socket.on("observerJoinMeeting", async (data) => {
+      console.log("observer join")
       const { meetingId, name, role, passcode, email } = data;
 
       const meeting = await checkMeetingExists(
@@ -627,7 +628,7 @@ const setupSocket = (server) => {
       if (!liveMeeting) return;
 
       const isInObserverList = liveMeeting.observerList.some(
-        (observer) => observer.name === name
+        (observer) => observer.email === email
       );
       if (isInObserverList) {
         socket.emit("observerJoinMeetingResponse", {
@@ -640,19 +641,25 @@ const setupSocket = (server) => {
 
       const observerId = uuidv4();
 
-      liveMeeting.observerList.push({ name, role, id: observerId, email });
+      liveMeeting.observerList.push({ name, role, id: observerId, email, status: "online" });
       await liveMeeting.save();
 
       const fullObserverList = [
         liveMeeting.moderator,
         ...liveMeeting.observerList,
       ];
-
-      io.to(meetingId).emit("getObserverListResponse", {
-        success: true,
-        message: "Observer list retrieved successfully",
-        observersList: fullObserverList,
-      });
+      console.log("observer join 1")
+      try {
+        io.to(meetingId).emit("getObserverListResponse", {
+          success: true,
+          message: "Observer list retrieved successfully",
+          observersList: fullObserverList,
+        });
+      } catch (error) {
+        console.log(error.message,"errror aaaaaaaaaaaaaaaaaaaaaaaaaa")
+      }
+      
+      console.log("observer join 2")
 
       socket.emit("observerJoinMeetingResponse", {
         success: true,
@@ -1603,7 +1610,7 @@ const setupSocket = (server) => {
               question: response.question,
               answer:
                 Array.isArray(response.answer) &&
-                response.type === "multiple-choice"
+                  response.type === "multiple-choice"
                   ? response.answer.join(", ") // Join answers for multiple-choice
                   : response.answer, // Use the answer directly for other types
             }))
@@ -1667,6 +1674,12 @@ const setupSocket = (server) => {
       socket.to(data.meetingId).emit("whiteboard-toggle", data);
     });
 
+    //caption
+    socket.on("caption:send",(data) => {
+      console.log(data,"data")
+      io.to(data.meetingId).emit("caption:receive",data);
+    });
+
     // * disconnect
     socket.on("disconnect", async () => {
       console.log("User disconnected", usernames[socket.id]);
@@ -1710,8 +1723,8 @@ const setupSocket = (server) => {
         liveMeeting.endTime = Date.now();
         liveMeeting.duration = Math.ceil(
           (new Date(liveMeeting.endTime) - new Date(liveMeeting.startTime)) /
-            1000 /
-            60
+          1000 /
+          60
         );
         console.log("meeting duration", liveMeeting.duration)
         liveMeeting.moderator.endTime = Date.now();
@@ -1719,6 +1732,29 @@ const setupSocket = (server) => {
       }
 
       await liveMeeting.save();
+
+      const fullParticipantList = [
+        liveMeeting.moderator,
+        ...liveMeeting.participantsList,
+      ];
+
+      const fullObserverList = [
+        liveMeeting.moderator,
+        ...liveMeeting.observerList,
+      ];
+
+      io.to(liveMeeting.meetingId.toString()).emit("getObserverListResponse", {
+        success: true,
+        message: "Observer list retrieved successfully",
+        observersList: fullObserverList,
+      });
+
+      io.to(liveMeeting.meetingId.toString()).emit("participantList", {
+        success: true,
+        message: "Participant added to participants list",
+        waitingRoom: liveMeeting.waitingRoom,
+        participantList: fullParticipantList,
+      });
 
       console.log("live meeting", liveMeeting)
 
@@ -1750,17 +1786,17 @@ const setupSocket = (server) => {
           return;
         }
 
-           // Check all meetings within the project
-    const projectMeetings = await Meeting.find({ projectId: project._id });
+        // Check all meetings within the project
+        const projectMeetings = await Meeting.find({ projectId: project._id });
 
-    const hasScheduledMeetings = projectMeetings.some(
-      (m) => m.status === "Scheduled"
-    );
+        const hasScheduledMeetings = projectMeetings.some(
+          (m) => m.status === "Scheduled"
+        );
 
-    if (!hasScheduledMeetings) {
-      // Send email about no active meetings
-      const emailSubject = "No Active Meetings in Your Project";
-      const emailBody = `
+        if (!hasScheduledMeetings) {
+          // Send email about no active meetings
+          const emailSubject = "No Active Meetings in Your Project";
+          const emailBody = `
         <p>Dear ${userToCharge.firstName},</p>
         <p>We noticed that there are no active or scheduled meetings in your project "<strong>${project.name}</strong>".</p>
         <p>If you do not add a new meeting within the next 7 days, the project will be automatically closed.</p>
@@ -1769,12 +1805,12 @@ const setupSocket = (server) => {
         <p>Best regards,<br>The Amplify Team</p>
       `;
 
-      await sendEmail(userToCharge.email, emailSubject, emailBody);
+          await sendEmail(userToCharge.email, emailSubject, emailBody);
 
-      console.log(
-        `No active meetings email sent to user ${userToCharge._id} (${userToCharge.email})`
-      );
-    }
+          console.log(
+            `No active meetings email sent to user ${userToCharge._id} (${userToCharge.email})`
+          );
+        }
 
         // Update cumulativeMinutes in the Project document
         const cumulativeMinutes = parseInt(
@@ -1851,28 +1887,7 @@ const setupSocket = (server) => {
         console.error("Error updating overdue balance:", error);
       }
 
-      const fullParticipantList = [
-        liveMeeting.moderator,
-        ...liveMeeting.participantsList,
-      ];
 
-      const fullObserverList = [
-        liveMeeting.moderator,
-        ...liveMeeting.observerList,
-      ];
-
-      io.to(liveMeeting.meetingId.toString()).emit("getObserverListResponse", {
-        success: true,
-        message: "Observer list retrieved successfully",
-        observersList: fullObserverList,
-      });
-
-      io.to(liveMeeting.meetingId.toString()).emit("participantList", {
-        success: true,
-        message: "Participant added to participants list",
-        waitingRoom: liveMeeting.waitingRoom,
-        participantList: fullParticipantList,
-      });
     });
   });
 

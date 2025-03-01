@@ -42,7 +42,10 @@ const MeetingView = ({
   setIsPollResultModalOpen,
   projectId,
   user,
-  micmuteByModerator
+  micmuteByModerator,
+  myAudioTracksRef,
+  handleGenerateCaption,
+  captionON
 }) => {
   const searchParams = useSearchParams();
   const roomname = searchParams.get("roomname");
@@ -188,6 +191,7 @@ const MeetingView = ({
                 endMeeting={endMeeting}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
+                myAudioTracksRef={myAudioTracksRef}
                 isMeetingEnd={isMeetingEnd}
                 setting={setting}
                 setSetting={setSetting}
@@ -197,6 +201,8 @@ const MeetingView = ({
                 isWhiteBoardOpen={isWhiteBoardOpen}
                 handleMediaUpload={handleMediaUpload}
                 micmuteByModerator={micmuteByModerator}
+                handleGenerateCaption={handleGenerateCaption}
+              captionON={captionON}
               />
             </div>
           </>

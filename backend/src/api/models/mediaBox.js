@@ -10,6 +10,8 @@ function getterFIle(url) {
     return url; // Return the original URL if the condition is not met
   }
 
+
+
 const mediaBoxSchema = new mongoose.Schema({
     meetingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
     uploaderEmail: { type: String, default: undefined },
@@ -18,12 +20,15 @@ const mediaBoxSchema = new mongoose.Schema({
         public_id: { type: String },
         name: { type: String },
         mimetype: { type: String },
-        size: { type: Number }
-    },
-    timestamp: { type: Date, default: Date.now },
-    role: { type: String, required: false },
-    projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: false },
-    addedBy: { type: String, required: false, default: 'unknown' },
+        size: { type: Number },
+        words: {type: String, default: undefined,get: getterFIle},
+        transcribtion: {type: String, default: undefined,get: getterFIle},
+      },
+      timestamp: { type: Date, default: Date.now },
+      role: { type: String, required: false },
+      projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: false },
+      addedBy: { type: String, required: false, default: 'unknown' },
+
 });
 
 

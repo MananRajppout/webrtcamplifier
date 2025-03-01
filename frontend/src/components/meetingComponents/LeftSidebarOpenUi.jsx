@@ -119,6 +119,10 @@ const LeftSidebarOpenUi = ({
   const [isPollModelOpen, setIsPollModelOpen] = useState(false);
   const [selectedPollId, setSelectedPollId] = useState(null);
 
+
+  console.log(participantsMicMuted,"participantsMicMuted")
+
+
   const handlePollResultClick = (pollId, meetingId) => {
     setSelectedPollId(pollId);
     handleGetPollResults(pollId, meetingId); 
@@ -354,22 +358,31 @@ const LeftSidebarOpenUi = ({
 
   const handleMicMuteUnmute = useCallback((type, email) => {
     const audioElement = document.getElementById(email);
+    console.log(audioElement,type)
     if (type == "mute") {
-      setParticipantsMicMuted((prev) => ({ ...prev, [email]: false }));
+      setParticipantsMicMuted((prev) => ({ ...prev, [email]: 0 }));
       if (audioElement) {
-        audioElement.muted = false;
+        audioElement.volume = 0;
       }
     } else {
-      setParticipantsMicMuted((prev) => ({ ...prev, [email]: true }));
+      setParticipantsMicMuted((prev) => ({ ...prev, [email]: 1 }));
       if (audioElement) {
-        audioElement.muted = true;
+        audioElement.volume = 1;
       }
     }
   }, []);
 
+  const handleChangeVoulme = useCallback((email,volume) => {
+    const audioElement = document.getElementById(email);
+    audioElement.volume = volume;
+    setParticipantsMicMuted((prev) => ({ ...prev, [email]: volume }));
+  },[]);
+
+
+
   useEffect(() => {
     const mutedParticipantLength = Object.values(participantsMicMuted).filter(
-      (value) => value === true
+      (value) => value === 0
     ).length;
 
     const userLength = users
@@ -828,14 +841,14 @@ const LeftSidebarOpenUi = ({
               {isAllParticipantMuted ? (
                 <button
                   className="text-blue-500"
-                  onClick={() => handleMuteAll("mute")}
+                  onClick={() => handleMuteAll("unmute")}
                 >
                   unmute all
                 </button>
               ) : (
                 <button
                   className="text-blue-500"
-                  onClick={() => handleMuteAll("unmute")}
+                  onClick={() => handleMuteAll("mute")}
                 >
                   mute all
                 </button>
@@ -881,10 +894,10 @@ const LeftSidebarOpenUi = ({
                   <div className="flex items-center gap-2">
                     {(role == "Observer" || role == "Moderator") && (
                       <>
-                        {participantsMicMuted[user.email] ? (
+                        {participantsMicMuted[user.email] == 0  ? (
                           <button
                             onClick={() =>
-                              handleMicMuteUnmute("mute", user.email)
+                              handleMicMuteUnmute("unmute", user.email)
                             }
                             className="cursor-pointer"
                           >
@@ -893,13 +906,14 @@ const LeftSidebarOpenUi = ({
                         ) : (
                           <button
                             onClick={() =>
-                              handleMicMuteUnmute("unmute", user.email)
+                              handleMicMuteUnmute("mute", user.email)
                             }
                             className="cursor-pointer"
                           >
                             <IoMdMic size={20} />
                           </button>
                         )}
+                        <input className="w-[4rem]" type="range" defaultValue={1} value={participantsMicMuted[user.email]} min="0" max="1" step="0.01" onChange={(e) => handleChangeVoulme(user.email,e.target.value)}/>
                       </>
                     )}
 

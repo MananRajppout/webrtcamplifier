@@ -4,11 +4,15 @@ import http from 'http';
 import { config } from 'dotenv';
 import { initRecordingServer } from './config/recordingServerConfig.js';
 import path from 'path';
+import cors from "cors";
 config();
 
 
 // Initialize Express app
 const app = express();
+app.use(cors({
+  origin: "http://localhost:3000"
+}))
 app.use(express.static(path.join(process.cwd(), 'public')));
 const PORT = process.env.PORT || 6756;
 const server = http.createServer(app);

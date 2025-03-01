@@ -1,0 +1,44 @@
+[
+    {
+        "word": "hello",
+        "start": 1.68,
+        "end": 2.56,
+        "confidence": 0.98338807,
+        "punctuated_word": "Hello"
+    },
+    {
+        "word": "can",
+        "start": 2.56,
+        "end": 2.96,
+        "confidence": 0.7169995,
+        "punctuated_word": "can"
+    },
+    {
+        "word": "you",
+        "start": 2.96,
+        "end": 3.1999998,
+        "confidence": 0.99918467,
+        "punctuated_word": "you"
+    },
+    {
+        "word": "hear",
+        "start": 3.1999998,
+        "end": 3.4399998,
+        "confidence": 0.99918133,
+        "punctuated_word": "hear"
+    },
+    {
+        "word": "me",
+        "start": 3.4399998,
+        "end": 4.08,
+        "confidence": 0.99982256,
+        "punctuated_word": "me"
+    },
+    {
+        "word": "hello",
+        "start": 4.4,
+        "end": 5.04,
+        "confidence": 0.96285504,
+        "punctuated_word": "hello"
+    }
+]

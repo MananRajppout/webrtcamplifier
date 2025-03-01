@@ -4,11 +4,12 @@ import TableHead from "@/components/shared/TableHead";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Pagination from "@/components/shared/Pagination";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import WatchRecording from "@/components/WatchRecording";
 
 
-export function bytesToMbs (size){
-  return (size / (1024**2)).toFixed(2);
+export function bytesToMbs(size) {
+  return (size / (1024 ** 2)).toFixed(2);
 }
 
 const RepositoryTab = ({
@@ -25,8 +26,10 @@ const RepositoryTab = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(totalAllRepoPages);
 
-  const fetchRepositoriesData = async (page,isPageChange) => {
-    if(!isPageChange){
+  const [watchRecordingVideo, setWatchRecordingVideo] = useState(null);
+
+  const fetchRepositoriesData = async (page, isPageChange) => {
+    if (!isPageChange) {
       setCurrentPage(1);
       page = 1;
     }
@@ -43,11 +46,11 @@ const RepositoryTab = ({
   };
 
   useEffect(() => {
-    fetchRepositoriesData(currentPage,false);
+    fetchRepositoriesData(currentPage, false);
   }, [selectedRepositoryMeetingTab]);
 
   const handlePageChange = (page) => {
-    fetchRepositoriesData(page,true);
+    fetchRepositoriesData(page, true);
     setCurrentPage(page);
   };
 
@@ -96,8 +99,8 @@ const RepositoryTab = ({
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        if(typeof window !== 'undefined'){
-          window.open(url,'__blank');
+        if (typeof window !== 'undefined') {
+          window.open(url, '__blank');
         }
         throw new Error("Failed to fetch the file");
       }
@@ -120,14 +123,19 @@ const RepositoryTab = ({
     }
   };
 
+
+  const openWatchDialog = useCallback((transcription, video) => {
+    setWatchRecordingVideo({ transcription, video });
+  }, []);
+
   const filteredRepositories =
     selectedRepositoryMeetingTab === "All"
       ? repositories
       : selectedRepositoryMeetingTab
-      ? repositories.filter(
+        ? repositories.filter(
           (repo) => repo.meetingId === selectedRepositoryMeetingTab._id
         )
-      : [];
+        : [];
 
   const displayRepositories = filteredRepositories.filter((repo) => {
     if (selectedDocAndMediaTab === "Documents") {
@@ -190,15 +198,59 @@ const RepositoryTab = ({
                           className=" text-xs px-2   font-semibold"
                           onClick={() => deleteFile(repo._id)}
                         ></Button>
-                        <Button
-                          onClick={() =>
-                            downloadFile(repo.file.url, repo.file.name)
-                          }
-                          children={"Download"}
-                          type="button"
-                          variant="plain"
-                          className=" text-xs px-2 font-semibold"
-                        ></Button>
+
+                        {
+                          repo.file.public_id != "recording_server" &&
+                          <Button
+                            onClick={() =>
+                              downloadFile(repo.file.url, repo.file.name)
+                            }
+                            children={"Download"}
+                            type="button"
+                            variant="plain"
+                            className=" text-xs px-2 font-semibold"
+                          ></Button>
+                        }
+
+                        {
+                          repo.file.public_id == "recording_server" &&
+                          <Button
+                            onClick={() =>
+                              downloadFile(repo.file.url, repo.file.name)
+                            }
+                            children={"Download Recording"}
+                            type="button"
+                            variant="plain"
+                            className=" text-xs px-2 font-semibold"
+                          ></Button>
+                        }
+
+                        {
+                          repo.file.public_id == "recording_server" &&
+                          <Button
+                            onClick={() =>
+                              downloadFile(repo.file.transcribtion, `${repo.file.name?.replace("mp4", "")}-trancription.txt`)
+                            }
+                            children={"Download Transcription"}
+                            type="button"
+                            variant="plain"
+                            className=" text-xs px-2 font-semibold"
+                          ></Button>
+                        }
+
+                        {
+                          repo.file.public_id == "recording_server" &&
+                          <Button
+                            onClick={() =>
+                              openWatchDialog(repo.file.words, repo.file.url)
+                            }
+                            children={"Watch Recording"}
+                            type="button"
+                            variant="plain"
+                            className=" text-xs px-2 font-semibold"
+                          ></Button>
+                        }
+
                       </div>
                     </TableData>
                   </tr>
@@ -223,16 +275,27 @@ const RepositoryTab = ({
 
 
   return (
-    <div>
-      {selectedRepositoryMeetingTab ? (
-        renderContent()
-      ) : (
-        <p className="text-center pt-5 font-bold text-custom-orange-1">
-          Please select a meeting and a tab (Documents or Media) to view
-          repository items.
-        </p>
-      )}
-    </div>
+    <>
+
+      <div>
+        {selectedRepositoryMeetingTab ? (
+          renderContent()
+        ) : (
+          <p className="text-center pt-5 font-bold text-custom-orange-1">
+            Please select a meeting and a tab (Documents or Media) to view
+            repository items.
+          </p>
+        )}
+      </div>
+      
+
+      {
+        watchRecordingVideo != null &&
+        <WatchRecording transcriptionurl={watchRecordingVideo.transcription} videourl={watchRecordingVideo.video} onClose={() => setWatchRecordingVideo(null)}/>
+      }
+
+    
+    </>
   );
 };
 

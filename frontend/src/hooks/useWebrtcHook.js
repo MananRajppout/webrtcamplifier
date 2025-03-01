@@ -32,7 +32,7 @@ let params = {
 
 
 
-const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role,setting,setSetting,myEmailRef,allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks) => {
+const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef,canvasRef,isBlur,isScreenShare,setSuperForceRender,setPermisstionOpen,setIsScreenShare, setSelected,role,setting,setSetting,myEmailRef,allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks,myAudioTracksRef) => {
   const [socketId, setSocketId] = useState(null);
   const [, forceRender] = useState(false);
 
@@ -359,6 +359,7 @@ const useWebrtcManage = (room_id, username,isWebCamMute,isMicMute,videoCanvasRef
         videoTrackRef.current = userMedia[0];
         audioTrackRef.current = userMedia[1];
         allPaericipantsAudioTracksRef.current.push({track: audioTrackRef.current,socket_id: socketId})
+        myAudioTracksRef.current = audioTrackRef.current;
         setAllParticipantsAudioTracks(prev => [...prev, {track: audioTrackRef.current,socket_id: socketId}]);
         
 

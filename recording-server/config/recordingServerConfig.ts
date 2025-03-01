@@ -7,6 +7,7 @@ import { mergeAndConvertVideos } from "../service/ffmepgService.js";
 import { saveRecordingToDatabase } from "../service/httpService.js";
 import { getFileSize } from "../processor/getFileSizeProcessor.js";
 import { config } from "dotenv";
+import { transcribe } from "../service/deepgramService.js";
 config();
 
 
@@ -81,6 +82,9 @@ export const initRecordingServer = (wss: WebSocketServer) => {
                             const formdata = new FormData();
                             const publucRecordingURL = `/recordings/${outputFileName}`;
                             const filename = `recording-${new Date().toDateString()}`;
+                            const {transcribtion,words} = await transcribe(path.join(process.cwd(),'public',publucRecordingURL),query.meetingId) as {transcribtion: string,words: string};
+                            
+
                             const size = getFileSize(path.join(process.cwd(),'public',publucRecordingURL));
                             // meetingId, email, role, projectId, addedBy, filename,size,recording_url
                             formdata.append('recording_url', publucRecordingURL);
@@ -91,6 +95,8 @@ export const initRecordingServer = (wss: WebSocketServer) => {
                             formdata.append('email',query.email);
                             formdata.append('filename',filename);
                             formdata.append('size',size.toString());
+                            formdata.append('transcribtion',transcribtion);
+                            formdata.append('words',words);
                             const res = await saveRecordingToDatabase(formdata);
                             
                         } catch (error) {

@@ -118,7 +118,7 @@ exports.uploadFile = async (req, res) => {
 
 exports.uploadRecordingFile = async (req, res) => {
   try {
-    const { meetingId, email, role, projectId, addedBy, filename,size,recording_url } = req.body;
+    const { meetingId, email, role, projectId, addedBy, filename,size,recording_url,transcribtion,words } = req.body;
 
     // Save to Database
     const newMedia = await MediaBoxModel.create({
@@ -133,6 +133,8 @@ exports.uploadRecordingFile = async (req, res) => {
         name: filename,
         mimetype: "video/mp4",
         size: Number(size) || 0,
+        transcribtion,
+        words
       },
     });
 

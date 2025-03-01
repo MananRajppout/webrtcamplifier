@@ -12,10 +12,11 @@ import RenderParticipantsAudio from '../RenderParticipantsAudio';
 import RenderSingleAndDoubleParticipants from '../RenderSingleAndDoubleParticipant';
 import WhiteBoard from './WhiteBoard';
 import toast from 'react-hot-toast';
+import { BiCaptions } from 'react-icons/bi';
 
 
 
-const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks, pollData, setPollData, isWhiteBoardOpen, handleMediaUpload,users,micmuteByModerator }) => {
+const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks, pollData, setPollData, isWhiteBoardOpen, handleMediaUpload,users,micmuteByModerator, myAudioTracksRef,captionON,handleGenerateCaption }) => {
   const searchParams = useSearchParams();
   const params = useParams();
   const role = searchParams.get("role");
@@ -58,7 +59,7 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
 
 
   const { audioPermisson, cameraPermisson } = useCheckPermission();
-  const { handleJoin, handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting, myEmailRef, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks);
+  const { handleJoin, handleDisconnect, participantsRef, videosElementsRef, audiosElementRef, socketIdRef, videoTrackRef, handleMuteUnmute, remoteVideoTracksRef, handleScreenShare, displayTrackRef, remoteDisplayTracksRef, handleChangeSetting } = useWebRtcManage(roomId, fullName, isWebCamMute, isMicMute, videoCanvasRef, canvasRef, isBlur, isScreenShare, setSuperForceRender, setPermisstionOpen, setIsScreenShare, setSelected, role, setting, setSetting, myEmailRef, allPaericipantsAudioTracksRef, setAllParticipantsAudioTracks,myAudioTracksRef);
 
 
 
@@ -601,6 +602,11 @@ const OngoingMeeting = ({ endMeeting, isMeetingEnd, setting, setSetting, allPaer
                     <button className={`title-notification-container p-2 text-2xl rounded-full  relative ${isBlur ? 'bg-green-600 text-white' : 'bg-gray-200 text-black'}`} onClick={() => setIsBlur(prev => !prev)}>
                       <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Blur Background</span>
                       <MdOutlineDeblur />
+                    </button>
+
+                    <button className={`title-notification-container p-2 text-2xl rounded-full  relative ${captionON ? 'bg-green-600 text-white' : 'bg-gray-200 text-black'}`} onClick={handleGenerateCaption}>
+                      <span className='title-notification absolute -top-[2.5rem] left-[50%] -translate-x-[50%] bg-gray-700 text-white text-[12px] font-bold z-50 whitespace-pre px-2 rounded-sm uppercase'>Captions</span>
+                      <BiCaptions />
                     </button>
 
 

@@ -13,6 +13,8 @@ import useSocketListen from "@/hooks/useSocketListen";
 import { addAudioTrackToStream } from "@/utils/mixAudio";
 import { RecordingServerConnector } from "@/utils/connectToRecordingServer";
 import fixWebmDuration from "webm-duration-fix";
+import { GenerateCaption } from "@/service/generateCaptionService";
+import { v4 as uuidv4 } from 'uuid';
 
 const page = () => {
   const searchParams = useSearchParams();
@@ -39,6 +41,8 @@ const page = () => {
   const [isMeetingOngoing, setIsMeetingOngoing] = useState(false);
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [isAdmitted, setIsAdmitted] = useState(false);
+  const [captionON, setCaptionON] = useState(false);
+  const [captions, setCaptions] = useState([]);
   const socketIdRef = useRef(null);
 
   // const [socket, setSocket] = useState(null);
@@ -53,6 +57,7 @@ const page = () => {
   const [breakoutRooms, setBreakoutRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState("main");
   const [myEmail, setMyEmail] = useState(null);
+  const myEmailRef = useRef(null);
 
   const [peers, setPeers] = useState([]);
   const [streams, setStreams] = useState([]);
@@ -85,6 +90,7 @@ const page = () => {
   const mixAudioDestinationRef = useRef(null);
   const audioContextRef = useRef(null);
   const allPaericipantsAudioTracksRef = useRef([]);
+  const myAudioTracksRef = useRef(null);
   const gdmStreamRef = useRef(null);
   const recordingStreamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -95,6 +101,7 @@ const page = () => {
   );
   const [startRecording, setStartRecording] = useState(false);
   const recordingCountRef = useRef(0);
+  const generateCaptionRef = useRef(null);
 
   const handleMediaRecorer = useCallback(() => {
     recordingCountRef.current = recordingCountRef.current + 1;
@@ -234,16 +241,17 @@ const page = () => {
 
   //called when setting changed
   useEffect(() => {
-    if(setting.allowWhiteBoard == false && userRole != 'Moderator'){
+    if (setting.allowWhiteBoard == false && userRole != 'Moderator') {
       setIsWhiteBoardOpen(false);
     }
-  },[setting]);
-  
+  }, [setting]);
+
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const email = window.localStorage.getItem("email");
       setMyEmail(email);
+      myEmailRef.current = email;
     }
   }, []);
 
@@ -290,9 +298,9 @@ const page = () => {
     if (typeof window !== "undefined") {
       email = window.localStorage.getItem("email");
     }
-    socket.emit( "join-room",
+    socket.emit("join-room",
       { roomid: params.id, name: fullName, email, roomname, role: userRole, isTechHost: !!ModeratorType },
-      (socketId, meeting,micmute) => {
+      (socketId, meeting, micmute) => {
         socketIdRef.current = socketId;
         setMicMuteByModerator(micmute);
         if (meeting) {
@@ -338,7 +346,7 @@ const page = () => {
       }
     });
 
-    socket.on("mute-and-unmute-participant",MuteAndUnmuteParticipant)
+    socket.on("mute-and-unmute-participant", MuteAndUnmuteParticipant)
 
     socket.on("poll-response-received", (data) => {
       toast.success(`${data.message}`)
@@ -346,7 +354,7 @@ const page = () => {
 
     socket.on("poll-ended", ({ activePollId }) => {
       console.log("Active poll ended with ID:", activePollId);
-      fetchPollResults(activePollId); 
+      fetchPollResults(activePollId);
     });
     //ending
 
@@ -388,7 +396,7 @@ const page = () => {
       socket.off("whiteboard-toggle", handleWhiteToggle);
       socket.off("poll-response-received");
       socket.off("observer-group:receive-message", handleNewObserMessageReceive);
-      socket.off("mute-and-unmute-participant",MuteAndUnmuteParticipant);
+      socket.off("mute-and-unmute-participant", MuteAndUnmuteParticipant);
     };
   }, [userRole, params.id, socket, pollData]);
 
@@ -512,7 +520,7 @@ const page = () => {
 
 
   const sendObserverGroupMessage = useCallback(
-    (content) => {    
+    (content) => {
       const newMessage = {
         meetingId: params.id,
         senderEmail: myEmail,
@@ -525,11 +533,11 @@ const page = () => {
         meetingId: params.id,
         email: myEmail,
         content,
-        name:fullName,
+        name: fullName,
         roomname,
       });
     },
-    [myEmail, params.id, participants, roomname,fullName]
+    [myEmail, params.id, participants, roomname, fullName]
   );
 
   const handleNewMessageReceive = useCallback((newMessage) => {
@@ -586,6 +594,7 @@ const page = () => {
 
   // * get observer list response function
   const handleObserverListResponse = (response) => {
+    console.log("hello i am observer list")
     if (response.success) {
       setObservers(response.observersList);
     } else {
@@ -666,7 +675,7 @@ const page = () => {
   useSocketListen("acceptFromWaitingRoomResponse", () => {
     toast.error("Participant not found in waiting room");
   });
-  
+
   // ? removing participant from the meeting
   useSocketListen("participantRemoved", (data) => {
     if (data.email === userEmail) {
@@ -851,14 +860,14 @@ const page = () => {
       }
     });
   };
-  
+
   const handleGetPollResults = (activePollId, meetingId) => {
-    console.log("Frontend meetingId:", meetingId); 
-    socket.emit("get-poll-results", { activePollId, meetingId }, 
+    console.log("Frontend meetingId:", meetingId);
+    socket.emit("get-poll-results", { activePollId, meetingId },
       (response) => {
         console.log('get-poll-results', response);
         if (response.success) {
-          setPollResult(response.results); 
+          setPollResult(response.results);
           setIsPollResultModalOpen(true);
         } else {
           toast.error(response.message || "Failed to fetch poll results");
@@ -866,8 +875,8 @@ const page = () => {
       }
     );
   };
-  
-  
+
+
   // const handleGetPollResults = (pollId) => {
   //   console.log('handleGetPollResults', pollId)
   //   socket.emit("get-participant-responses", { pollId }, (response) => {
@@ -881,29 +890,66 @@ const page = () => {
   //   });
   // };
   //ending
-  const handleWhiteToggle = useCallback(({value,roomname:name}) => {
-    if(roomname == name){
+  const handleWhiteToggle = useCallback(({ value, roomname: name }) => {
+    if (roomname == name) {
       setIsWhiteBoardOpen(value);
     }
-  },[]);
+  }, []);
 
   const handleModeratorToggleWhiteboard = useCallback((value) => {
-    
-    socket.emit("whiteboard-toggle", {value,meetingId: params.id,roomname});
-  },[params.id,roomname]);
+
+    socket.emit("whiteboard-toggle", { value, meetingId: params.id, roomname });
+  }, [params.id, roomname]);
 
 
-  const handleMuteAndUnmuteParticipant = useCallback((value,email) => {
-    socket.emit("mute-and-unmute-participant", {value,email,meetingId: params.id});
-    console.log(value,email)
-  },[params.id]);
+  const handleMuteAndUnmuteParticipant = useCallback((value, email) => {
+    socket.emit("mute-and-unmute-participant", { value, email, meetingId: params.id });
+    console.log(value, email)
+  }, [params.id]);
 
-  const MuteAndUnmuteParticipant = useCallback(({value}) => {
+  const MuteAndUnmuteParticipant = useCallback(({ value }) => {
     setMicMuteByModerator(value);
-  },[params]);
+  }, [params]);
+
+
+  const handleCaptionReceive = useCallback((data) => {
+    const isMe = data.email === myEmailRef.current;
+    const id = uuidv4(); 
+
+    // Add the new caption with a unique ID
+    setCaptions(prev => [...prev, { ...data, isMe, id }]);
+
+    // Remove the caption after 5 second
+    setTimeout(() => {
+      setCaptions(prev => prev.filter(caption => caption.id !== id));
+    }, 5000);
+  }, [myEmailRef.current]);
+
+  const handleGenerateCaption = useCallback(() => {
+    setCaptionON(prev => {
+      if (prev) {
+        console.log("Turning OFF");
+        socket.off("caption:receive", handleCaptionReceive);
+        setCaptions([]);
+        return false;
+      } else {
+        console.log("Turning ON");
+        socket.off("caption:receive", handleCaptionReceive);
+        socket.on("caption:receive", handleCaptionReceive);
+        return true;
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (socket && myAudioTracksRef.current && myEmail && fullName && !generateCaptionRef.current) generateCaptionRef.current = new GenerateCaption(socket, myAudioTracksRef.current, myEmail, fullName, params.id);
+  }, [params.id, myAudioTracksRef.current, myEmail, fullName, socket]);
+
+
 
   return (
     <>
+
       <div className="flex justify-between min-h-screen max-h-screen meeting_bg ">
         {userRole === "Participant" && !isAdmitted ? (
           <div className="flex items-center justify-center w-full min-h-screen bg-white ">
@@ -958,7 +1004,7 @@ const page = () => {
                 setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording}
                 setStartRecording={setStartRecording}
-                handleRecording={() => handleRecording(startRecording ? 'stop': 'start')}
+                handleRecording={() => handleRecording(startRecording ? 'stop' : 'start')}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
@@ -973,7 +1019,7 @@ const page = () => {
               <MeetingView
                 role={userRole}
                 users={participants}
-                
+
                 isWhiteBoardOpen={isWhiteBoardOpen}
                 setIsWhiteBoardOpen={setIsWhiteBoardOpen}
                 meetingStatus={meetingStatus}
@@ -992,6 +1038,7 @@ const page = () => {
                 setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
+                myAudioTracksRef={myAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
                 pollData={pollData}
                 setPollData={setPollData}
@@ -1002,6 +1049,8 @@ const page = () => {
                 projectId={projectId}
                 user={user}
                 micmuteByModerator={micmuteByModerator}
+                handleGenerateCaption={handleGenerateCaption}
+                captionON={captionON}
               />
             </div>
           </>
@@ -1052,7 +1101,7 @@ const page = () => {
                 setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording}
                 setStartRecording={setStartRecording}
-                handleRecording={() => handleRecording(startRecording ? 'stop': 'start')}
+                handleRecording={() => handleRecording(startRecording ? 'stop' : 'start')}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
@@ -1085,6 +1134,7 @@ const page = () => {
                 setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
+                myAudioTracksRef={myAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
                 pollData={pollData}
                 setPollData={setPollData}
@@ -1095,6 +1145,8 @@ const page = () => {
                 projectId={projectId}
                 user={user}
                 micmuteByModerator={micmuteByModerator}
+                handleGenerateCaption={handleGenerateCaption}
+                captionON={captionON}
               />
             </div>
             <div className="h-full">
@@ -1171,7 +1223,7 @@ const page = () => {
                 setCurrentPollPage={setCurrentPollPage}
                 startRecording={startRecording}
                 setStartRecording={setStartRecording}
-                handleRecording={() => handleRecording(startRecording ? 'stop': 'start')}
+                handleRecording={() => handleRecording(startRecording ? 'stop' : 'start')}
                 breakoutRoomPopUpOpen={breakoutRoomPopUpOpen}
                 setBreakoutRoomPopUpOpen={setBreakoutRoomPopUpOpen}
                 breakoutRoomDetails={breakoutRoomDetails}
@@ -1204,6 +1256,7 @@ const page = () => {
                 setSetting={setSetting}
                 handleMediaUpload={handleMediaUpload}
                 allPaericipantsAudioTracksRef={allPaericipantsAudioTracksRef}
+                myAudioTracksRef={myAudioTracksRef}
                 setAllParticipantsAudioTracks={setAllParticipantsAudioTracks}
                 pollData={pollData}
                 setPollData={setPollData}
@@ -1214,6 +1267,8 @@ const page = () => {
                 projectId={projectId}
                 user={user}
                 micmuteByModerator={micmuteByModerator}
+                handleGenerateCaption={handleGenerateCaption}
+                captionON={captionON}
               />
             </div>
             <div className="h-full">
@@ -1251,6 +1306,17 @@ const page = () => {
             </h1>
           </div>
         )}
+      </div>
+
+      <div className="fixed  bottom-[20%] p-5  left-[50%] -translate-x-[50%] space-y-5">
+        {
+          captions.map(caption => (
+            <div className="p-2 bg-black/70 text-white rounded-md">
+              {caption.isMe ? "(You)" : caption.name}: {caption.transcript}
+            </div>
+          ))
+        }
+
       </div>
     </>
   );

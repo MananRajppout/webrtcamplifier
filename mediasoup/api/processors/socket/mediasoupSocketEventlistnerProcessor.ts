@@ -16,8 +16,8 @@ class createMediasoupListener {
     private _io: Server;
     // private mediasoupConnection;
 
-    constructor(io:Server) {
-       
+    constructor(io: Server) {
+
         this._io = io;
         // this.mediasoupConnection = this._io.of('/mediasoup');
     }
@@ -31,18 +31,18 @@ class createMediasoupListener {
         const connection = this._io;
         connection.on('connection', (socket) => {
             console.log('user connect ', socket.id);
-            socket.on(JOIN_ROOM, async ({ room_id, username,isMicMute,isWebCamMute,email,role = "participant",settings={}  }, callback) => {
+            socket.on(JOIN_ROOM, async ({ room_id, username, isMicMute, isWebCamMute, email, role = "participant", settings = {} }, callback) => {
                 console.log(settings);
                 socket.join(room_id);
-                const router = await this.createRoom(room_id, socket.id,settings,role);
+                const router = await this.createRoom(room_id, socket.id, settings, role);
                 const isAdmin = rooms.get(room_id) ? false : true;
-                
-                const newPeer: PeerService = new PeerService(socket.id, isAdmin, username, room_id,isWebCamMute,isMicMute,false,email,role);
+
+                const newPeer: PeerService = new PeerService(socket.id, isAdmin, username, room_id, isWebCamMute, isMicMute, false, email, role);
 
                 peers.set(socket.id, newPeer);
                 const rtpCapabilities: mediasoup.types.RtpCapabilities = router.rtpCapabilities;
-                
-               
+
+
 
                 const participants: PeerService[] = [];
                 peers.forEach((peer: PeerService) => {
@@ -51,17 +51,17 @@ class createMediasoupListener {
                     }
                 })
 
-                
 
-                
-                const roomSettings:ISetting = rooms.get(room_id)?.settings;
-                callback(socket.id, rtpCapabilities, participants,roomSettings);
+
+
+                const roomSettings: ISetting = rooms.get(room_id)?.settings;
+                callback(socket.id, rtpCapabilities, participants, roomSettings);
                 // connection.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute });
-                socket.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id,isMicMute,isWebCamMute,role,email });
+                socket.to(room_id).emit(NEW_PARTCIPANT_JOIN, { username, socketId: socket.id, isMicMute, isWebCamMute, role, email });
             });
 
 
-            
+
 
 
             socket.on(DISCONNECT, () => {
@@ -88,7 +88,7 @@ class createMediasoupListener {
                 const roomRef: RoomsService = rooms.get(room_id);
 
                 roomRef.createWebRtcTransport().then((transport) => {
-                    
+
                     callback({
                         params: {
                             id: transport.id,
@@ -99,7 +99,7 @@ class createMediasoupListener {
                     });
 
                     this.addTransport(transport, room_id, consumer, socket.id);
-                    
+
 
                 }).catch((error: Error) => {
                     callback({
@@ -115,24 +115,24 @@ class createMediasoupListener {
 
             socket.on(CONNECT_TRANSPORT, async ({ dtlsParameters }) => {
                 try {
-                    
+
                     await transportsContainer.getTranport(socket.id)?.connect({ dtlsParameters });
                     console.log('transport connected')
                 } catch (error) {
-                    console.log('error:',(error as Error).message)
+                    console.log('error:', (error as Error).message)
                 }
             });
 
 
             socket.on(PRODUCE_TRANSPORT, async ({ kind, rtpParameters, appData }, callback) => {
-                
+
 
                 const producer = await transportsContainer.getTranport(socket.id)?.produce({
                     kind,
                     rtpParameters,
                 })
 
-                if(!producer){
+                if (!producer) {
                     return
                 }
 
@@ -140,13 +140,13 @@ class createMediasoupListener {
 
                 // add producer to the producers array
                 const room_id = peers.get(socket.id).room_id;
-               
-                this.addProducer(producer, room_id, socket.id,appData?.type);
+
+                this.addProducer(producer, room_id, socket.id, appData?.type);
 
 
 
                 console.log('Producer ID: ', producer.id, producer.kind, appData?.type)
-                socket.to(room_id).emit(NEW_PRODUCER,{producerId: producer.id,socketId: socket.id,type: appData?.type})
+                socket.to(room_id).emit(NEW_PRODUCER, { producerId: producer.id, socketId: socket.id, type: appData?.type })
 
                 producer.on('transportclose', () => {
                     console.log('transport for this producer closed ')
@@ -158,7 +158,7 @@ class createMediasoupListener {
                 callback({
                     id: producer.id,
                     producersExist: producersContainer.getAllProducer(room_id, socket.id).length > 0 ? true : false,
-                    
+
                 })
             });
 
@@ -167,7 +167,7 @@ class createMediasoupListener {
             socket.on(GET_PRODUCERS, (callback) => {
                 const room_id = peers.get(socket.id).room_id;
                 const producerIds = producersContainer.getAllProducer(room_id, socket.id);
-                console.log(producerIds,'producdersss')
+                console.log(producerIds, 'producdersss')
                 callback(producerIds);
             })
 
@@ -179,7 +179,7 @@ class createMediasoupListener {
                 try {
                     await consumerTransport?.connect({ dtlsParameters });
                 } catch (error) {
-                    console.log('error:',(error as Error).message)
+                    console.log('error:', (error as Error).message)
                 }
             })
 
@@ -189,7 +189,7 @@ class createMediasoupListener {
                     const room_id: string = peers.get(socket.id).room_id;
                     const router: Router = rooms.get(room_id).router;
                     const consumerTransport = transportsContainer.getTransportById(serverConsumerTransportId);
-                    if(!consumerTransport){
+                    if (!consumerTransport) {
                         return
                     }
 
@@ -204,7 +204,7 @@ class createMediasoupListener {
                             paused: true,
                         })
 
-                        if(!consumer){
+                        if (!consumer) {
                             return
                         }
 
@@ -223,7 +223,12 @@ class createMediasoupListener {
                             consumerContainer.removeByConsumerId(consumer.id)
                         })
 
-                        this.addConsumer(consumer, room_id,socket.id);
+                        //rtp packets
+                        consumer.on("rtp", (rtpPacket) => {
+                            console.log(rtpPacket,"rtp packets")
+                        });
+
+                        this.addConsumer(consumer, room_id, socket.id);
 
                         // from the consumer extract the following params
                         // to send back to the Client
@@ -248,27 +253,27 @@ class createMediasoupListener {
                 }
             });
 
-            socket.on(CONSUME_RESUME,async ({ serverConsumerId }) => {
-               const consumer = consumerContainer.findConsumerId(serverConsumerId);              
-               await consumer?.resume();
+            socket.on(CONSUME_RESUME, async ({ serverConsumerId }) => {
+                const consumer = consumerContainer.findConsumerId(serverConsumerId);
+                await consumer?.resume();
             })
 
 
-            socket.on(MUTE_UNMUTE,({value, type, socketId}) => {
-                const peer:PeerService = peers.get(socket.id);
-                muteUnmuteProcessor(type,peer,value,socketId,socket);
+            socket.on(MUTE_UNMUTE, ({ value, type, socketId }) => {
+                const peer: PeerService = peers.get(socket.id);
+                muteUnmuteProcessor(type, peer, value, socketId, socket);
             })
 
-            socket.on(ROOM_SETTING_CHANGE,({room_id,role,settings}) => {
-                const room:RoomsService = rooms.get(room_id);
-                room.changeRoomSetting(settings,role);
-                socket.to(room_id).emit(ROOM_SETTING_CHANGE,settings);
+            socket.on(ROOM_SETTING_CHANGE, ({ room_id, role, settings }) => {
+                const room: RoomsService = rooms.get(room_id);
+                room.changeRoomSetting(settings, role);
+                socket.to(room_id).emit(ROOM_SETTING_CHANGE, settings);
             })
 
         })
     }
 
-    private async createRoom(room_id: string, socketId: string,settings:ISetting,role:string): Promise<mediasoup.types.Router> {
+    private async createRoom(room_id: string, socketId: string, settings: ISetting, role: string): Promise<mediasoup.types.Router> {
         let router: mediasoup.types.Router;
         if (rooms.get(room_id)) {
             const roomRef: RoomsService = rooms.get(room_id);
@@ -276,7 +281,7 @@ class createMediasoupListener {
             router = roomRef.router;
         } else {
             router = await mediasoupService.getRouter();
-            const newRoom = new RoomsService(router, socketId,settings,role);
+            const newRoom = new RoomsService(router, socketId, settings, role);
             rooms.set(room_id, newRoom)
         }
         return router;
@@ -296,11 +301,11 @@ class createMediasoupListener {
     }
 
 
-    private addProducer(producer: mediasoup.types.Producer, room_id: string, socketId: string,type: 'webcam' | 'mic' | 'display') {
-     
-        const newProducer: Producer = new Producer(socketId, producer, room_id,type);
+    private addProducer(producer: mediasoup.types.Producer, room_id: string, socketId: string, type: 'webcam' | 'mic' | 'display') {
+
+        const newProducer: Producer = new Producer(socketId, producer, room_id, type);
         producersContainer.addProducer(newProducer);
-        console.log(newProducer.producer.id,'producer id')
+        console.log(newProducer.producer.id, 'producer id')
 
         const peerRef: PeerService = peers.get(socketId);
         peerRef.producers = [...peerRef.producers, producer.id]
